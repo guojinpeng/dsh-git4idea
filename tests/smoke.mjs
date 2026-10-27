@@ -1501,12 +1501,13 @@ test('the settings entry draws a gear, not a sunburst', () => {
   // The rail's settings button used to render a centre dot with eight rays — a
   // brightness glyph users read as "sun" — under the name `settings`. The entry
   // now carries the official product gear (toothed contour + centre hole).
-  const table = client.slice(client.indexOf('const ICONS = {'), client.indexOf('const NATIVE_ID'))
-  const line = table.slice(table.indexOf('settings: ['), table.indexOf('settings: [') + 2400)
-  const paths = [...line.slice(0, line.indexOf('],')).matchAll(/'([^']*)'/g)].map((match) => match[1])
-  assert.equal(paths.length, 2, 'a gear is a toothed contour plus a centre hole')
-  assert.ok(paths[0].length > 500, 'the contour must be the long toothed outline, not a small circle')
-  assert.ok(paths[1].length > 60 && paths[1].length < 400, 'the hole is the short circle path')
+  const start = client.indexOf('settings: [')
+  assert.ok(start > 0, 'the settings entry must stay in the icon table')
+  const line = client.slice(start, client.indexOf('],', start))
+  const paths = [...line.matchAll(/"d":"([^"]*)"/g)].map((match) => match[1])
+  assert.equal(paths.length, 1, 'the IDE gear is one contour with an even-odd hole')
+  assert.ok(paths[0].length > 300, 'the contour must be the long toothed outline, not a small circle')
+  assert.match(line, /"f":1/, 'the gear is a filled silhouette')
   for (const ray of ['M8 1.8v1.5', 'M8 12.7v1.5', 'M1.8 8h1.5', 'M12.7 8h1.5']) {
     assert.ok(line.indexOf(ray) < 0, 'no sun ray survives in the gear: ' + ray)
   }

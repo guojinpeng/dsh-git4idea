@@ -43,7 +43,8 @@
     "cordis.patch.yml",
     "dsh.plugin.json",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md"
   ],
   "scripts": {
     "test": "node --test tests/smoke.mjs tests/api.test.mjs tests/graph.test.mjs tests/repos.test.mjs",

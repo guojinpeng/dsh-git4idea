@@ -63,12 +63,54 @@ window.__ModuleLoader__.load({
     /* The namespace this plugin's dictionaries are published under in the DSH
        locale registry. */
     const LOCALE_NS = 'dsh-git4idea'
-    const LANE_WIDTH = 14
+    /* IDEA log metrics (platform/vcs-log/.../paint/PaintParameters.java): a
+       22px row carries a 16px lane pitch, a 1.5px stem and a 4px node radius,
+       and the painter scales all three by the row height it actually gets. The
+       history rows here are 26px tall, so GraphCell derives its geometry from
+       the height it is handed instead of hard-coding a lane width. */
+    const GRAPH_ROW_UNIT = 22
+    const GRAPH_NODE_WIDTH = 16
+    const GRAPH_STEM = 1.5
+    const GRAPH_NODE_RADIUS = 4
     /* Hard cap on the drawn lane columns. Lanes beyond the cap collapse into
        the last column: without the cap a branchy repository pushed the graph
        wider than the panel and shoved the subject column out of view. */
     const GRAPH_MAX_LANES = 7
-    const LANE_COLORS = ['#4d6bfe', '#e2a03f', '#3fb950', '#d2679b', '#59b0d6', '#b083f0', '#d2694a', '#8a9aa8']
+    /* IDEA's DefaultColorGenerator seeds a hue from the lane index and then
+       forces the theme's saturation/brightness; Rebased runs the log at
+       0.6/0.6, the muted olive/teal/purple sequence of the IDE. */
+    const LANE_COLORS = buildLaneColors()
+
+    function buildLaneColors() {
+      const colors = []
+      for (let index = 0; index < 12; index += 1) {
+        const r = (Math.abs((index * 200 + 30) % 100) + 70) / 255
+        const g = (Math.abs((index * 130 + 50) % 100) + 70) / 255
+        const b = (Math.abs((index * 90 + 100) % 100) + 70) / 255
+        const max = Math.max(r, g, b)
+        const min = Math.min(r, g, b)
+        const delta = max - min
+        let hue = 0
+        if (delta > 0) {
+          if (max === r) hue = ((g - b) / delta) % 6
+          else if (max === g) hue = (b - r) / delta + 2
+          else hue = (r - g) / delta + 4
+          hue = (hue * 60 + 360) % 360
+        }
+        colors.push(hsbToCss(hue, 0.6, 0.6))
+      }
+      return colors
+    }
+
+    function hsbToCss(hue, saturation, brightness) {
+      const chroma = brightness * saturation
+      const x = chroma * (1 - Math.abs(((hue / 60) % 2) - 1))
+      const m = brightness - chroma
+      const sector = Math.floor(hue / 60) % 6
+      const rgb = [[chroma, x, 0], [x, chroma, 0], [0, chroma, x], [0, x, chroma], [x, 0, chroma], [chroma, 0, x]][sector]
+      const hex = (value) => Math.round((value + m) * 255).toString(16).padStart(2, '0')
+      return '#' + hex(rgb[0]) + hex(rgb[1]) + hex(rgb[2])
+    }
     const AUTO_REFRESH_MS = 12000
     const REPO_KEY = 'dsh-git4idea.repo.v1'
     const COMPACT_MAX_WIDTH = 400
@@ -8491,40 +8533,52 @@ window.__ModuleLoader__.load({
     /* Memoised: rows come from a useMemo, so a row object is referentially
        stable across re-renders unless the commit list actually changed — the
        26px graph cells then skip re-rendering on every filter keystroke. */
+    /* IDEA paints no curves: a lane is a vertical stem, and a branch edge
+       leaves the node at the row centre and reaches the parent lane at the row
+       bottom as a straight diagonal (SimpleGraphCellPainter.kt). The next
+       row's stem then starts at its own top edge, so consecutive rows read as
+       one continuous wiring — the elbow look of the IDE log. */
     const GraphCell = memo(function GraphCell(props) {
       const row = props.row
       const height = props.height
-      const width = Math.min(Math.max(1, row.width), GRAPH_MAX_LANES) * LANE_WIDTH + 8
+      const scale = height / GRAPH_ROW_UNIT
+      const laneWidth = GRAPH_NODE_WIDTH * scale
+      const stem = GRAPH_STEM * scale
+      const radius = GRAPH_NODE_RADIUS * scale
+      const width = Math.min(Math.max(1, row.width), GRAPH_MAX_LANES) * laneWidth + 8
       const middle = height / 2
       const children = []
       /* Lanes beyond the cap share the last column: the geometry stays bounded
          and the subject column keeps its room. */
-      const x = (lane) => 8 + Math.min(lane, GRAPH_MAX_LANES - 1) * LANE_WIDTH
+      const x = (lane) => 8 + Math.min(lane, GRAPH_MAX_LANES - 1) * laneWidth
       const color = (lane) => LANE_COLORS[lane % LANE_COLORS.length]
       for (const segment of laneSegments(row, height)) {
         children.push(E('line', {
           key: 'lane-' + segment.lane,
           'data-lane': String(segment.lane),
           x1: x(segment.lane), y1: segment.y1, x2: x(segment.lane), y2: segment.y2,
-          stroke: color(segment.lane), strokeWidth: 2, strokeLinecap: 'round',
+          stroke: color(segment.lane), strokeWidth: stem, strokeLinecap: 'round',
         }))
       }
       for (const parentLane of row.parentLanes) {
         if (parentLane === row.lane) continue
-        children.push(E('path', {
+        children.push(E('line', {
           key: 'edge-' + parentLane,
           'data-lane': String(parentLane),
-          d: 'M ' + x(row.lane) + ' ' + middle + ' C ' + x(row.lane) + ' ' + height + ', ' + x(parentLane) + ' ' + middle + ', ' + x(parentLane) + ' ' + height,
-          fill: 'none',
-          stroke: color(parentLane),
-          strokeWidth: 2,
-          strokeLinecap: 'round',
+          x1: x(row.lane), y1: middle, x2: x(parentLane), y2: height,
+          stroke: color(parentLane), strokeWidth: stem, strokeLinecap: 'round',
         }))
       }
       const isHead = Array.isArray(row.commit.refs) && row.commit.refs.some((ref) => String(ref).indexOf('HEAD') >= 0)
+      /* HeadNodePainter draws three circles on the lane colour: a filled disc of
+         r+2, a background disc of r, and a core dot of r/2. Painted as one ring
+         stroke instead, the same silhouette costs two elements and needs no
+         background colour: the ring spans r..r+2, the core sits at r/2. */
       children.push(isHead
-        ? E('circle', { key: 'dot', 'data-lane': String(row.lane), cx: x(row.lane), cy: middle, r: 3.8, fill: 'none', stroke: color(row.lane), strokeWidth: 2 })
-        : E('circle', { key: 'dot', 'data-lane': String(row.lane), cx: x(row.lane), cy: middle, r: 3.6, fill: color(row.lane) }))
+        ? E('g', { key: 'dot' },
+          E('circle', { 'data-lane': String(row.lane), cx: x(row.lane), cy: middle, r: radius * 1.25, fill: 'none', stroke: color(row.lane), strokeWidth: radius * 0.5 }),
+          E('circle', { cx: x(row.lane), cy: middle, r: radius * 0.5, fill: color(row.lane) }))
+        : E('circle', { key: 'dot', 'data-lane': String(row.lane), cx: x(row.lane), cy: middle, r: radius, fill: color(row.lane) }))
       return E('svg', { className: 'git4idea-graph', width: width, height: height, viewBox: '0 0 ' + width + ' ' + height }, children)
     }, (prev, next) => prev.row === next.row && prev.height === next.height)
 
@@ -9467,102 +9521,194 @@ window.__ModuleLoader__.load({
 
     /* ============================== ui kit ============================== */
 
-    /* Icon set (v2): redrawn on an IDE grid instead of the thin codicon set.
-       Every glyph lives in a 16x16 box with content inside 2..14, stems at 1.6,
-       nodes and arrow heads solid (the way IDE toolbars draw them) and corners
-       kept orthogonal where the metaphor allows. The geometry was rebuilt on
-       this grid; no glyph is copied from a third-party icon package. */
+    /* Icon set (v3): the path data is copied verbatim from the IntelliJ
+       Platform icons that Rebased ships (platform/icons/src/expui/**, plus
+       vcs/branch.svg), so the rail and the tree read like the IDE instead of
+       like a lookalike. Those files are Apache 2.0 — see
+       THIRD_PARTY_NOTICES.md for the source list and the licence text.
+       Fields: d (path), rect [w,h] with x/y/rx, circle [cx,cy,r], f = filled,
+       sw = stroke width, eo = even-odd fill rule. */
     const ICONS = {
       branch: [
-        'M4.6 5.1V10.9', 'M4.6 9.2H9.4',
-        { d: 'M4.6 1.6a1.7 1.7 0 1 0 0 3.4 1.7 1.7 0 0 0 0-3.4Z', fill: true },
-        { d: 'M4.6 10.9a1.7 1.7 0 1 0 0 3.4 1.7 1.7 0 0 0 0-3.4Z', fill: true },
-        { d: 'M11.1 7.5a1.7 1.7 0 1 0 0 3.4 1.7 1.7 0 0 0 0-3.4Z', fill: true },
+        {"d":"M12.1232 2.67714C11.7828 2.33692 11.3696 2.16676 10.8834 2.16676C10.3975 2.16676 9.98427 2.33682 9.64395 2.67714C9.30375 3.01737 9.13366 3.43051 9.13366 3.91672C9.13366 4.23268 9.21242 4.52588 9.37041 4.79626C9.52838 5.06666 9.74087 5.27787 10.0084 5.42971C10.0084 5.74567 9.98273 6.02377 9.93118 6.26375C9.87939 6.50373 9.79441 6.71478 9.67597 6.8972C9.55721 7.07953 9.43442 7.23436 9.30672 7.36203C9.17899 7.4897 8.99973 7.60961 8.76885 7.72208C8.538 7.83449 8.32366 7.92857 8.12624 8.00464C7.92881 8.08047 7.66288 8.17008 7.32869 8.27342C6.72097 8.46187 6.25317 8.63491 5.92501 8.793V4.26292C6.19238 4.11111 6.40507 3.89993 6.56303 3.62953C6.72097 3.35912 6.79995 3.06589 6.79995 2.74993C6.79995 2.26388 6.62988 1.85064 6.28956 1.51042C5.94937 1.17022 5.53623 1 5.05005 1C4.56383 1 4.15069 1.1701 3.81037 1.51042C3.47018 1.85064 3.29999 2.26388 3.29999 2.74993C3.29999 3.06589 3.37897 3.35912 3.5369 3.62953C3.69487 3.89993 3.90752 4.11111 4.17492 4.26292V11.7371C3.90752 11.8888 3.69487 12.1002 3.5369 12.3705C3.37897 12.641 3.29999 12.9343 3.29999 13.2501C3.29999 13.7362 3.47005 14.1494 3.81037 14.4896C4.15069 14.8298 4.56393 15 5.05005 15C5.53614 15 5.94937 14.8298 6.28956 14.4896C6.62979 14.1494 6.79995 13.7362 6.79995 13.2501C6.79995 12.9343 6.72097 12.641 6.56303 12.3705C6.40504 12.1002 6.19238 11.8888 5.92501 11.7371V11.5001C5.92501 11.0809 6.05109 10.7772 6.30323 10.5888C6.55537 10.4003 7.07035 10.1846 7.84823 9.94163C8.66867 9.68029 9.28553 9.43405 9.6987 9.20307C11.0598 8.43155 11.7464 7.17367 11.7585 5.42968C12.0261 5.27787 12.2386 5.06663 12.3965 4.79622C12.5544 4.52582 12.6335 4.23265 12.6335 3.91669C12.6336 3.4306 12.4634 3.01746 12.1232 2.67714Z","f":1},
       ],
       commit: [
-        'M8 1.7V5.5', 'M8 10.5V14.3',
-        { d: 'M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Z', fill: true },
+        {"d":"M8 10C9.10457 10 10 9.10457 10 8C10 6.89543 9.10457 6 8 6C6.89543 6 6 6.89543 6 8C6 9.10457 6.89543 10 8 10ZM10.9585 7.5C10.7205 6.08114 9.4865 5 8 5C6.5135 5 5.27952 6.08114 5.04148 7.5H0.5C0.223858 7.5 0 7.72386 0 8C0 8.27614 0.223858 8.5 0.5 8.5H5.04148C5.27952 9.91886 6.5135 11 8 11C9.4865 11 10.7205 9.91886 10.9585 8.5H15.5C15.7761 8.5 16 8.27614 16 8C16 7.72386 15.7761 7.5 15.5 7.5H10.9585Z","f":1,"eo":1},
       ],
-      refresh: ['M12.9 8a4.9 4.9 0 1 1-1.55-3.6', 'M12.9 2.8v3.2h-3.2'],
-      /* Sync icons: one ground rail (the local side) plus an arrow that differs
-         per action — fetch's stem is broken (references come down, nothing is
-         merged), pull's lands here, push's goes out. Heads are solid triangles
-         so the direction survives at 13px. */
-      fetch: [{ d: 'M8 1.9v4.6', dash: '2 2' }, { d: 'M4.9 6.6 8 10.4 11.1 6.6Z', fill: true }, { d: 'M2.8 13.2h10.4', w: 2 }],
-      pull: ['M8 1.9v4.6', { d: 'M4.9 6.6 8 10.4 11.1 6.6Z', fill: true }, { d: 'M2.8 13.2h10.4', w: 2 }],
-      push: ['M8 10.6V5.9', { d: 'M4.9 5.9 8 2.1 11.1 5.9Z', fill: true }, { d: 'M2.8 13.2h10.4', w: 2 }],
-      plus: ['M8 3.2v9.6', 'M3.2 8h9.6'],
-      minus: ['M3.2 8h9.6'],
-      undo: ['M5.2 5.8H2.2V2.8', 'M2.7 6.3a5.4 5.4 0 1 1 1.75 4.9'],
-      chevron: ['M5.2 6.6 8 9.4l2.8-2.8'],
-      close: ['M4.4 4.4l7.2 7.2', 'M11.6 4.4l-7.2 7.2'],
-      star: ['M8 2.2l1.8 3.8 4 .5-2.9 2.7.8 4-3.7-2.1-3.7 2.1.8-4L2.2 6.5l4-.5z'],
-      folder: ['M2 4.4h3.9L7.3 6H14v6.6H2z'],
-      file: ['M4.2 1.9h4.9l3.1 3.1v9.1H4.2z', 'M9.1 1.9v3.1h3.1'],
-      /* diff: a document whose right half carries + above −, so it reads as
-         "what changed" rather than just "a file". branchCreate is the branch
-         glyph with its new tip replaced by a +. */
-      diff: ['M3.5 2h6l3.5 3.5V14h-9.5z', 'M9.5 2v3.5H13', 'M8 6.2v3', 'M6.5 7.7h3', 'M6.5 11h3'],
-      branchCreate: [
-        'M4.6 5.1V10.9', 'M4.6 9.2H8.6',
-        { d: 'M4.6 1.6a1.7 1.7 0 1 0 0 3.4 1.7 1.7 0 0 0 0-3.4Z', fill: true },
-        { d: 'M4.6 10.9a1.7 1.7 0 1 0 0 3.4 1.7 1.7 0 0 0 0-3.4Z', fill: true },
-        'M12.1 7.4v3.6', 'M10.3 9.2h3.6',
+      refresh: [
+        {"d":"M2.5 9V8C2.5 4.96243 4.96243 2.5 8 2.5C9.10679 2.5 10.1372 2.82692 11 3.38947","sw":1},
+        {"d":"M5 12.6105C5.86278 13.1731 6.89321 13.5 8 13.5C11.0376 13.5 13.5 11.0376 13.5 8V7","sw":1},
+        {"d":"M0.49997 7.50027L2.5 9.5L4.49998 7.50023","sw":1},
+        {"d":"M11.5 8.49982L13.5 6.5L15.5 8.49982","sw":1},
       ],
-      trash: ['M3 5h10', 'M6.5 5V3.5h3V5', 'M4.5 5l.6 8.5h5.8L11.5 5', 'M6.8 7v4', 'M9.2 7v4'],
-      checkout: ['M3.2 8H9', { d: 'M9 5.6 12.8 8 9 10.4Z', fill: true }, 'M13.6 3.4v9.2'],
-      compare: ['M4 4h7', 'M4 12h7', 'M6.5 1.5 4 4l2.5 2.5', 'M9.5 9.5 12 12l-2.5 2.5'],
-      stash: ['M2.5 3.5h11V6h-11z', 'M3.5 6v6.5h9V6', 'M6.5 8.5h3'],
-      tag: ['M2.5 7.5 7.5 2.5h6v6l-5 5z', 'M10.5 5.5h.01'],
-      // A real gear: the toothed contour plus the centre hole, taken from the
-      // official product icon set (ui-primitives IconSettingsOutlineMedium, same
-      // 16x16 grid and currentColor stroke) because the previous entry was a
-      // centre dot with eight rays — a sunburst, not a settings control.
-      settings: ['M13.0107 7.79377C12.9505 7.89401 12.9205 7.94413 12.9205 7.99951C12.9205 8.0549 12.9505 8.10502 13.0106 8.20528L13.9849 9.83006C14.045 9.93029 14.0751 9.9804 14.0751 10.0358C14.0751 10.0911 14.045 10.1413 13.9849 10.2415L13.0037 11.8777C12.9468 11.9726 12.9184 12.0201 12.8725 12.0461C12.8267 12.072 12.7713 12.072 12.6607 12.072H10.6704C10.5598 12.072 10.5045 12.072 10.4586 12.098C10.4128 12.1239 10.3843 12.1714 10.3274 12.2662L9.33825 13.9142C9.28133 14.009 9.25287 14.0564 9.20703 14.0823C9.16118 14.1083 9.10588 14.1083 8.99529 14.1083H7.00486C6.89426 14.1083 6.83896 14.1083 6.79312 14.0823C6.74727 14.0564 6.71881 14.009 6.6619 13.9142L5.67273 12.2662C5.61581 12.1714 5.58735 12.1239 5.54151 12.098C5.49566 12.072 5.44036 12.072 5.32977 12.072H3.33945C3.2288 12.072 3.17347 12.072 3.12761 12.0461C3.08176 12.0201 3.0533 11.9726 2.9964 11.8777L2.0152 10.2415C1.9551 10.1413 1.92505 10.0911 1.92505 10.0358C1.92505 9.9804 1.9551 9.93029 2.0152 9.83006L2.98951 8.20528C3.04963 8.10502 3.07969 8.0549 3.07969 7.99951C3.07968 7.94413 3.04961 7.89401 2.98946 7.79377L2.01529 6.17011C1.95514 6.06987 1.92507 6.01975 1.92507 5.96437C1.92506 5.90899 1.95512 5.85886 2.01524 5.7586L2.9964 4.1224C3.0533 4.0275 3.08176 3.98005 3.12761 3.95408C3.17347 3.92811 3.2288 3.92811 3.33945 3.92811H5.32977C5.44036 3.92811 5.49566 3.92811 5.54151 3.90216C5.58735 3.87621 5.61581 3.82879 5.67273 3.73397L6.6619 2.08599C6.71881 1.99116 6.74727 1.94375 6.79312 1.9178C6.83896 1.89185 6.89426 1.89185 7.00486 1.89185H8.99529C9.10588 1.89185 9.16118 1.89185 9.20703 1.9178C9.25287 1.94375 9.28133 1.99116 9.33825 2.08599L10.3274 3.73397C10.3843 3.82879 10.4128 3.87621 10.4586 3.90216C10.5045 3.92811 10.5598 3.92811 10.6704 3.92811H12.6607C12.7713 3.92811 12.8267 3.92811 12.8725 3.95408C12.9184 3.98005 12.9468 4.0275 13.0037 4.1224L13.9849 5.7586C14.045 5.85886 14.0751 5.90899 14.0751 5.96437C14.0751 6.01975 14.045 6.06987 13.9849 6.17011L13.0107 7.79377Z', 'M8 9.75012C8.9665 9.75012 9.75 8.96662 9.75 8.00012C9.75 7.03362 8.9665 6.25012 8 6.25012C7.0335 6.25012 6.25 7.03362 6.25 8.00012C6.25 8.96662 7.0335 9.75012 8 9.75012Z'],
-      more: ['M3.6 8h0.01', 'M8 8h0.01', 'M12.4 8h0.01'],
-      eye: ['M1.5 8S4.1 3.8 8 3.8 14.5 8 14.5 8 11.9 12.2 8 12.2 1.5 8 1.5 8Z', 'M8 6.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Z'],
-      eyeOff: ['M1.6 8S4.2 4 8 4c1 0 1.9.2 2.7.6', 'M13 5.6c.9 1.1 1.5 2.4 1.5 2.4S11.9 12 8 12c-.9 0-1.7-.2-2.4-.5', 'M2.6 2.6l10.8 10.8'],
-      up: ['M8 13V6.6', { d: 'M4.9 6.6 8 2.8 11.1 6.6Z', fill: true }],
-      down: ['M8 3v6.4', { d: 'M4.9 9.4 8 13.2 11.1 9.4Z', fill: true }],
-      grip: ['M5.6 4.6h4.8', 'M5.6 8h4.8', 'M5.6 11.4h4.8'],
-      filter: ['M2 3.6h12l-4.6 5.2v4.2l-2.8-1.4V8.8z'],
-      check: ['M3.4 8.5 6.6 11.7 12.8 5.2'],
-      copy: ['M5.5 5.5h8v8h-8z', 'M10.5 5.5v-3h-8v8h3'],
-      // dock actions (official right sidebar): lift a panel out, drop it back into
-      // the dock, split the pane, and the full-screen pair reuses expand/collapse.
-      float: ['M2.5 6.5v7h7v-3', 'M6 10 13.2 2.8', 'M9.4 2.8h3.8v3.8'],
-      dock: ['M2.5 3h11v10h-11z', 'M8 5.2v5.6', 'M5.4 8.2 8 10.8l2.6-2.6'],
-      split: ['M2.5 3h11v10h-11z', 'M8 3v10'],
-      expand: ['M4.5 6.2 8 9.7l3.5-3.5', 'M3 12.4h10'],
-      collapse: ['M4.5 9.8 8 6.3l3.5 3.5', 'M3 3.6h10'],
-      // "Send to chat": a paper plane — the shared glyph of the three context
-      // menus that drop a reference / hash / branch name into the composer.
-      send: ['M14.3 1.7 1.7 7.4l4.9 1.9 1.9 4.9L14.3 1.7Z', 'M6.6 9.3 14.3 1.7'],
+      fetch: [
+        {"d":"M12.8536 3.14645C13.0488 3.34171 13.0488 3.65829 12.8536 3.85355L11.4393 5.26777C11.2441 5.46303 10.9275 5.46303 10.7322 5.26777C10.537 5.0725 10.537 4.75592 10.7322 4.56066L12.1464 3.14645C12.3417 2.95118 12.6583 2.95118 12.8536 3.14645Z","f":1},
+        {"d":"M10.0251 5.97487C10.2204 6.17014 10.2204 6.48672 10.0251 6.68198L8.61091 8.09619C8.41565 8.29146 8.09907 8.29146 7.90381 8.09619C7.70854 7.90093 7.70854 7.58435 7.90381 7.38909L9.31802 5.97487C9.51328 5.77961 9.82986 5.77961 10.0251 5.97487Z","f":1},
+        {"d":"M7.1967 8.8033C7.39196 8.99856 7.39196 9.31515 7.1967 9.51041L5.78249 10.9246C5.58722 11.1199 5.27064 11.1199 5.07538 10.9246C4.88012 10.7294 4.88012 10.4128 5.07538 10.2175L6.48959 8.8033C6.68485 8.60804 7.00144 8.60804 7.1967 8.8033Z","f":1},
+        {"d":"M3.5 5C3.77614 5 4 5.22386 4 5.5V7.5C4 7.77614 3.77614 8 3.5 8C3.22386 8 3 7.77614 3 7.5V5.5C3 5.22386 3.22386 5 3.5 5Z","f":1},
+        {"d":"M3.5 9C3.77614 9 4 9.22386 4 9.5V12H6.5C6.77614 12 7 12.2239 7 12.5C7 12.7761 6.77614 13 6.5 13H3.5C3.22386 13 3 12.7761 3 12.5V9.5C3 9.22386 3.22386 9 3.5 9Z","f":1},
+        {"d":"M8 12.5C8 12.2239 8.22386 12 8.5 12H10.5C10.7761 12 11 12.2239 11 12.5C11 12.7761 10.7761 13 10.5 13H8.5C8.22386 13 8 12.7761 8 12.5Z","f":1},
+      ],
+      pull: [
+        {"d":"M12.8536 3.85355C13.0488 3.65829 13.0488 3.34171 12.8536 3.14645C12.6583 2.95118 12.3417 2.95118 12.1464 3.14645L4 11.2929V5.5C4 5.22386 3.77614 5 3.5 5C3.22386 5 3 5.22386 3 5.5V12.5C3 12.5683 3.01368 12.6333 3.03844 12.6926C3.06171 12.7484 3.09556 12.8009 3.13998 12.847C3.14425 12.8514 3.1486 12.8557 3.15303 12.86C3.24295 12.9467 3.36525 13 3.5 13H10.5C10.7761 13 11 12.7761 11 12.5C11 12.2239 10.7761 12 10.5 12H4.70711L12.8536 3.85355Z","f":1,"eo":1},
+      ],
+      push: [
+        {"d":"M3.14646 12.1464C2.9512 12.3417 2.9512 12.6583 3.14646 12.8536C3.34172 13.0488 3.6583 13.0488 3.85357 12.8536L12 4.70715V10.5C12 10.7761 12.2238 11 12.5 11C12.7761 11 13 10.7761 13 10.5V3.5C13 3.22386 12.7761 3 12.5 3H5.49997C5.22383 3 4.99997 3.22386 4.99997 3.5C4.99997 3.77614 5.22383 4 5.49997 4H11.2929L3.14646 12.1464Z","f":1,"eo":1},
+      ],
+      plus: [
+        {"d":"M7.5 1C7.77614 1 8 1.22386 8 1.5V7H13.5C13.7761 7 14 7.22386 14 7.5C14 7.77614 13.7761 8 13.5 8H8V13.5C8 13.7761 7.77614 14 7.5 14C7.22386 14 7 13.7761 7 13.5V8H1.5C1.22386 8 1 7.77614 1 7.5C1 7.22386 1.22386 7 1.5 7H7V1.5C7 1.22386 7.22386 1 7.5 1Z","f":1,"eo":1},
+      ],
+      minus: [
+        {"d":"M1 7.5C1 7.77614 1.22386 8 1.5 8L13.5 8C13.7761 8 14 7.77614 14 7.5C14 7.22386 13.7761 7 13.5 7L1.5 7C1.22386 7 1 7.22386 1 7.5Z","f":1,"eo":1},
+      ],
+      undo: [
+        {"d":"M1.62632 9.66782C1.44286 9.87421 1.46145 10.1902 1.66785 10.3737C1.87424 10.5572 2.19027 10.5386 2.37373 10.3322L1.62632 9.66782ZM14 10.5C14 10.7761 14.2239 11 14.5 11C14.7761 11 15 10.7761 15 10.5H14ZM2 7.5C2 7.22386 1.77614 7 1.5 7C1.22386 7 1 7.22386 1 7.5H2ZM1.5 10.5H1V11H1.5V10.5ZM4.5 11C4.77614 11 5 10.7761 5 10.5C5 10.2239 4.77614 10 4.5 10V11ZM2.00003 10C2.37373 10.3322 2.37368 10.3322 2.37364 10.3323C2.37364 10.3323 2.37362 10.3323 2.37363 10.3323C2.37366 10.3323 2.37375 10.3322 2.37389 10.332C2.37419 10.3317 2.37473 10.3311 2.3755 10.3302C2.37705 10.3285 2.37955 10.3257 2.38299 10.3219C2.38987 10.3142 2.40049 10.3025 2.41472 10.287C2.44318 10.2558 2.48606 10.2094 2.54224 10.15C2.65466 10.0309 2.82016 9.85969 3.03001 9.65366C3.45029 9.24102 4.04545 8.69176 4.74568 8.14375C6.17384 7.02606 7.93178 6 9.50003 6V5C7.56827 5 5.57621 6.22394 4.12937 7.35625C3.39211 7.93324 2.76851 8.50898 2.32942 8.94009C2.10958 9.15594 1.93524 9.33626 1.81523 9.46333C1.75521 9.52688 1.70873 9.57717 1.67689 9.61197C1.66096 9.62938 1.6487 9.64292 1.64023 9.65231C1.63599 9.65701 1.6327 9.66068 1.63038 9.66327C1.62922 9.66457 1.6283 9.6656 1.62762 9.66636C1.62728 9.66674 1.627 9.66705 1.62679 9.66729C1.62668 9.66742 1.62656 9.66755 1.62651 9.66761C1.62641 9.66772 1.62632 9.66782 2.00003 10ZM9.50003 6C10.6625 6 11.5012 6.28919 12.1133 6.69727C12.7285 7.10745 13.1449 7.65792 13.4278 8.22361C13.7116 8.79125 13.856 9.36494 13.9287 9.80095C13.9648 10.0178 13.9827 10.1974 13.9915 10.3208C13.9959 10.3824 13.998 10.4298 13.9991 10.4605C13.9996 10.4759 13.9998 10.487 13.9999 10.4937C14 10.4971 14 10.4993 14 10.5003C14 10.5009 14 10.5011 14 10.5011C14 10.501 14 10.5009 14 10.5008C14 10.5007 14 10.5005 14 10.5004C14 10.5002 14 10.5 14.5 10.5C15 10.5 15 10.4997 15 10.4995C15 10.4993 15 10.499 15 10.4988C15 10.4983 15 10.4978 15 10.4971C15 10.4959 15 10.4943 15 10.4924C14.9999 10.4887 14.9999 10.4837 14.9998 10.4776C14.9996 10.4654 14.9992 10.4485 14.9985 10.4272C14.9971 10.3847 14.9943 10.3246 14.989 10.2495C14.9782 10.0995 14.9571 9.88848 14.9151 9.63655C14.8315 9.13506 14.6634 8.45875 14.3222 7.77639C13.9801 7.09208 13.459 6.39255 12.668 5.86523C11.8739 5.33581 10.8375 5 9.50003 5V6ZM1 7.5V10.5H2V7.5H1ZM1.5 11H4.5V10H1.5V11Z","f":1},
+      ],
+      chevron: [
+        {"d":"M11.5 6.25L8 9.75L4.5 6.25","sw":1},
+      ],
+      close: [
+        {"d":"M11.4939 4.48784C11.3002 4.28007 10.9724 4.27548 10.7729 4.47775L8.00074 7.28849L5.22871 4.47788C5.02922 4.27561 4.70143 4.2802 4.50768 4.48797C4.32506 4.68382 4.32933 4.98882 4.51736 5.17947L7.29908 7.99991L4.51756 10.8201C4.32953 11.0108 4.32526 11.3158 4.50788 11.5116C4.70163 11.7194 5.02942 11.724 5.22892 11.5217L8.00074 8.71133L10.7727 11.5219C10.9722 11.7241 11.3 11.7196 11.4937 11.5118C11.6764 11.3159 11.6721 11.0109 11.484 10.8203L8.7024 7.99991L11.4843 5.17934C11.6723 4.98869 11.6766 4.68368 11.4939 4.48784Z","f":1,"eo":1},
+      ],
+      star: [
+        {"d":"M8.46197 2.38123C8.38441 2.19475 8.20227 2.07324 8.00031 2.07324C7.79834 2.07324 7.61621 2.19475 7.53865 2.38123L6.06891 5.9149L2.25401 6.22074C2.05269 6.23688 1.88085 6.37255 1.81844 6.56463C1.75603 6.75671 1.8153 6.96748 1.96869 7.09887L4.87524 9.58864L3.98724 13.3113C3.94038 13.5078 4.01631 13.7131 4.1797 13.8319C4.3431 13.9506 4.56186 13.9593 4.73422 13.854L8.00031 11.8591L11.2664 13.854C11.4387 13.9593 11.6575 13.9506 11.8209 13.8319C11.9843 13.7131 12.0602 13.5078 12.0134 13.3113L11.1254 9.58864L14.0319 7.09887C14.1853 6.96748 14.2446 6.75671 14.1822 6.56463C14.1198 6.37255 13.9479 6.23688 13.7466 6.22074L9.9317 5.9149L8.46197 2.38123Z","f":1,"eo":1},
+      ],
+      folder: [
+        {"d":"M8.10584 4.34613L8.25344 4.5H8.46667H13C13.8284 4.5 14.5 5.17157 14.5 6V12.1333C14.5 12.9529 13.932 13.5 13.3667 13.5H2.63333C2.06804 13.5 1.5 12.9529 1.5 12.1333V3.86667C1.5 3.04707 2.06804 2.5 2.63333 2.5H6.1217C6.25792 2.5 6.38824 2.55557 6.48253 2.65387L8.10584 4.34613Z","sw":1},
+      ],
+      file: [
+        {"x":2,"y":12,"rect":[8,1],"rx":0.5,"f":1},
+        {"x":2,"y":6,"rect":[8,1],"rx":0.5,"f":1},
+        {"x":2,"y":9,"rect":[12,1],"rx":0.5,"f":1},
+        {"x":2,"y":3,"rect":[12,1],"rx":0.5,"f":1},
+      ],
+      diff: [
+        {"d":"M5.85355 8.14645C5.65829 7.95118 5.34171 7.95118 5.14645 8.14645C4.95118 8.34171 4.95118 8.65829 5.14645 8.85355L7.29289 11H0.5C0.223858 11 0 11.2239 0 11.5C0 11.7761 0.223858 12 0.5 12H7.29289L5.14645 14.1464C4.95118 14.3417 4.95118 14.6583 5.14645 14.8536C5.34171 15.0488 5.65829 15.0488 5.85355 14.8536L8.85355 11.8536L9.20711 11.5L8.85355 11.1464L5.85355 8.14645Z","f":1,"eo":1},
+        {"d":"M10.1464 1.14645C10.3417 0.951185 10.6583 0.951185 10.8536 1.14645C11.0488 1.34171 11.0488 1.65829 10.8536 1.85355L8.70711 4H15.5C15.7761 4 16 4.22386 16 4.5C16 4.77614 15.7761 5 15.5 5H8.70711L10.8536 7.14645C11.0488 7.34171 11.0488 7.65829 10.8536 7.85355C10.6583 8.04882 10.3417 8.04882 10.1464 7.85355L7.14645 4.85355L6.79289 4.5L7.14645 4.14645L10.1464 1.14645Z","f":1,"eo":1},
+      ],
+      trash: [
+        {"d":"M7 2H9C9.55228 2 10 2.44772 10 3H6C6 2.44772 6.44772 2 7 2ZM5 3C5 1.89543 5.89543 1 7 1H9C10.1046 1 11 1.89543 11 3H13C13.5523 3 14 3.44772 14 4V5V6H13V13C13 14.1046 12.1046 15 11 15H5C3.89543 15 3 14.1046 3 13V6H2V5V4C2 3.44772 2.44772 3 3 3H5ZM11 4H10H6H5H3V5H4H12H13V4H11ZM4 6H12V13C12 13.5523 11.5523 14 11 14H5C4.44772 14 4 13.5523 4 13V6ZM6.5 7C6.22386 7 6 7.22386 6 7.5V11.5C6 11.7761 6.22386 12 6.5 12C6.77614 12 7 11.7761 7 11.5V7.5C7 7.22386 6.77614 7 6.5 7ZM9 7.5C9 7.22386 9.22386 7 9.5 7C9.77614 7 10 7.22386 10 7.5V11.5C10 11.7761 9.77614 12 9.5 12C9.22386 12 9 11.7761 9 11.5V7.5Z","f":1,"eo":1},
+      ],
+      tag: [
+        {"d":"M6.36812 4.9736C6.62969 4.77016 6.67681 4.39319 6.47337 4.13163C6.26992 3.87006 5.89296 3.82294 5.63139 4.02638L0.522461 7.99999L5.63139 11.9736C5.89296 12.177 6.26992 12.1299 6.47337 11.8684C6.67681 11.6068 6.62969 11.2298 6.36812 11.0264L2.47705 7.99999L6.36812 4.9736Z","f":1},
+        {"d":"M9.63139 4.9736C9.36983 4.77016 9.3227 4.39319 9.52615 4.13163C9.72959 3.87006 10.1066 3.82294 10.3681 4.02638L15.4771 7.99999L10.3681 11.9736C10.1066 12.177 9.72959 12.1299 9.52615 11.8684C9.3227 11.6068 9.36983 11.2298 9.63139 11.0264L13.5225 7.99999L9.63139 4.9736Z","f":1},
+      ],
+      settings: [
+        {"d":"M3.22655 4.36961C2.92233 4.76924 2.66735 5.20781 2.47037 5.67626L3.30992 7.0943C3.6406 7.65283 3.6406 8.34718 3.30992 8.9057L2.47037 10.3237C2.66736 10.7922 2.92233 11.2308 3.22656 11.6304L4.87261 11.6124C5.52165 11.6053 6.12297 11.9524 6.44133 12.5181L7.24899 13.953C7.49593 13.984 7.74792 14 8.00408 14C8.2602 14 8.51214 13.984 8.75904 13.9531L9.56671 12.5181C9.88507 11.9524 10.4864 11.6053 11.1354 11.6124L12.7816 11.6304C13.0858 11.2308 13.3408 10.7923 13.5377 10.3239L12.6981 8.9057C12.3674 8.34718 12.3674 7.65283 12.6981 7.0943L13.5377 5.67613C13.3408 5.20773 13.0858 4.76921 12.7816 4.36961L11.1354 4.38764C10.4864 4.39475 9.88507 4.04758 9.56671 3.48194L8.75904 2.04693C8.51214 2.01599 8.2602 2 8.00408 2C7.74792 2 7.49594 2.016 7.24899 2.04695L6.44133 3.48194C6.12297 4.04758 5.52165 4.39475 4.87261 4.38764L3.22655 4.36961ZM10.655 8.00001C10.655 9.46412 9.46811 10.651 8.004 10.651C6.5399 10.651 5.353 9.46412 5.353 8.00001C5.353 6.53591 6.5399 5.34902 8.004 5.34902C9.46811 5.34902 10.655 6.53591 10.655 8.00001ZM4.88356 3.3877C5.16752 3.39081 5.4306 3.23892 5.56988 2.99146L6.43817 1.44875C6.54914 1.25159 6.7401 1.1101 6.96387 1.07676C7.30327 1.0262 7.65062 1 8.00408 1C8.3575 1 8.7048 1.02619 9.04414 1.07674C9.26792 1.11007 9.45889 1.25157 9.56986 1.44873L10.4382 2.99146C10.5774 3.23892 10.8405 3.39081 11.1245 3.3877L12.8938 3.36832C13.1196 3.36585 13.3372 3.46012 13.4781 3.63661C13.9099 4.17766 14.2632 4.78416 14.5207 5.43884C14.6034 5.6491 14.5763 5.88489 14.4612 6.07931L13.5586 7.60376C13.4139 7.84811 13.4139 8.15189 13.5586 8.39625L14.4612 9.92069C14.5763 10.1151 14.6034 10.3509 14.5207 10.5612C14.2632 11.2158 13.9099 11.8223 13.4781 12.3634C13.3372 12.5399 13.1196 12.6342 12.8938 12.6317L11.1245 12.6123C10.8405 12.6092 10.5774 12.7611 10.4382 13.0085L9.56986 14.5513C9.45889 14.7484 9.26792 14.8899 9.04414 14.9233C8.7048 14.9738 8.3575 15 8.00408 15C7.65062 15 7.30327 14.9738 6.96387 14.9232C6.7401 14.8899 6.54914 14.7484 6.43817 14.5512L5.56988 13.0085C5.4306 12.7611 5.16752 12.6092 4.88356 12.6123L3.1144 12.6317C2.8886 12.6342 2.67096 12.5399 2.5301 12.3634C2.09822 11.8223 1.74489 11.2158 1.48738 10.561C1.40469 10.3508 1.43184 10.115 1.54695 9.92057L2.44942 8.39625C2.5941 8.15189 2.5941 7.84811 2.44942 7.60376L1.54695 6.07944C1.43184 5.88502 1.40469 5.64924 1.48738 5.43898C1.74489 4.78425 2.09822 4.1777 2.53009 3.63661C2.67096 3.46012 2.8886 3.36585 3.1144 3.36832L4.88356 3.3877ZM9.655 8.00001C9.655 8.91183 8.91582 9.65101 8.004 9.65101C7.09218 9.65101 6.353 8.91183 6.353 8.00001C6.353 7.08819 7.09218 6.34902 8.004 6.34902C8.91582 6.34902 9.655 7.08819 9.655 8.00001Z","f":1,"eo":1},
+      ],
+      more: [
+        {"circle":[8,3,1],"f":1},
+        {"circle":[8,8,1],"f":1},
+        {"circle":[8,13,1],"f":1},
+      ],
+      eye: [
+        {"circle":[8,8,2.5],"sw":1},
+        {"d":"M3.34803 11.4645C2.03281 10.5496 1.01443 9.31863 0.529751 8C1.01443 6.68137 2.03281 5.45039 3.34803 4.53545C4.71396 3.58524 6.36604 3 8 3C9.63396 3 11.286 3.58524 12.652 4.53545C13.9672 5.45039 14.9856 6.68137 15.4702 8C14.9856 9.31863 13.9672 10.5496 12.652 11.4645C11.286 12.4148 9.63396 13 8 13C6.36604 13 4.71396 12.4148 3.34803 11.4645Z","sw":1},
+      ],
+      eyeOff: [
+        {"d":"M2 8.5C1.72386 8.5 1.5 8.27614 1.5 8C1.5 7.72386 1.72386 7.5 2 7.5L2 8.5ZM14 7.5C14.2761 7.5 14.5 7.72386 14.5 8C14.5 8.27614 14.2761 8.5 14 8.5L14 7.5ZM2 7.5L14 7.5L14 8.5L2 8.5L2 7.5Z","f":1},
+      ],
+      up: [
+        {"d":"M11.8536 5.85354C12.0488 6.0488 12.0488 6.36538 11.8536 6.56064C11.6583 6.75591 11.3417 6.75591 11.1464 6.56064L8.5 3.9142L8.5 11.5071C8.5 11.7832 8.27615 12.0071 8 12.0071C7.72386 12.0071 7.5 11.7832 7.5 11.5071L7.5 3.91419L4.85355 6.56064C4.65829 6.7559 4.34171 6.7559 4.14645 6.56064C3.95118 6.36538 3.95118 6.0488 4.14645 5.85353L7.64645 2.35354L8 1.99998L8.35355 2.35354L11.8536 5.85354Z","f":1,"eo":1},
+        {"x":2,"y":13.0071,"rect":[12,1],"rx":0.5,"f":1},
+      ],
+      down: [
+        {"x":2,"y":2,"rect":[12,1],"rx":0.5,"f":1},
+        {"d":"M11.8536 10.1535C12.0488 9.95828 12.0488 9.6417 11.8536 9.44644C11.6583 9.25117 11.3417 9.25117 11.1464 9.44644L8.5 12.0929L8.5 4.5C8.5 4.22386 8.27615 4 8 4C7.72386 4 7.5 4.22386 7.5 4.5L7.5 12.0929L4.85355 9.44644C4.65829 9.25118 4.34171 9.25118 4.14645 9.44644C3.95118 9.6417 3.95118 9.95828 4.14645 10.1535L7.64645 13.6535L8 14.0071L8.35355 13.6535L11.8536 10.1535Z","f":1,"eo":1},
+      ],
+      grip: [
+        {"circle":[5.5,2.5,1.5],"f":1},
+        {"circle":[11.5,2.5,1.5],"f":1},
+        {"circle":[5.5,7.5,1.5],"f":1},
+        {"circle":[11.5,7.5,1.5],"f":1},
+        {"circle":[5.5,12.5,1.5],"f":1},
+        {"circle":[11.5,12.5,1.5],"f":1},
+      ],
+      filter: [
+        {"d":"M13.5 2.5H2.5L6.5 7.5V14L9.5 12V7.5L13.5 2.5Z","sw":1},
+      ],
+      check: [
+        {"d":"M2.5 8.25L6 11.75L13.5 4.25","sw":1.5},
+      ],
+      copy: [
+        {"x":2.5,"y":3.5,"rect":[9,10],"rx":1.5,"sw":1},
+        {"x":5,"y":6,"rect":[4,1],"rx":0.5,"f":1},
+        {"x":5,"y":8,"rect":[4,1],"rx":0.5,"f":1},
+        {"x":5,"y":10,"rect":[4,1],"rx":0.5,"f":1},
+        {"d":"M11.0017 2H11.5998C12.373 2 12.9998 2.6268 12.9998 3.4V3.91081C13.0011 3.94038 13.0017 3.97011 13.0017 4V11.5482C13.6063 11.1124 13.9998 10.4021 13.9998 9.6V3.4C13.9998 2.07452 12.9253 1 11.5998 1H6.39978C5.59677 1 4.88587 1.39437 4.4502 2H6.39978H11.0017Z","f":1,"eo":1},
+      ],
+      float: [
+        {"d":"M4 14C2.89543 14 2 13.1046 2 12L2 4C2 2.89543 2.89543 2 4 2L6.5 2C6.77614 2 7 2.22386 7 2.5C7 2.77614 6.77614 3 6.5 3L4 3C3.44772 3 3 3.44772 3 4L3 12C3 12.5523 3.44772 13 4 13H12C12.5523 13 13 12.5523 13 12V9.5C13 9.22386 13.2239 9 13.5 9C13.7761 9 14 9.22386 14 9.5V12C14 13.1046 13.1046 14 12 14H4Z","f":1,"eo":1},
+        {"d":"M14 2V6.5C14 6.77614 13.7761 7 13.5 7C13.2239 7 13 6.77614 13 6.5V3.70711L8.85355 7.85355C8.65829 8.04882 8.34171 8.04882 8.14645 7.85355C7.95118 7.65829 7.95118 7.34171 8.14645 7.14645L12.2929 3L9.5 3C9.22386 3 9 2.77614 9 2.5C9 2.22386 9.22386 2 9.5 2L14 2Z","f":1,"eo":1},
+      ],
+      dock: [
+        {"d":"M9 7L5.5 10.5","sw":1},
+        {"d":"M8.5 10.5L5.5 10.5L5.5 7.5","sw":1},
+        {"x":2.5,"y":2.5,"rect":[11,11],"rx":1.5,"sw":1},
+      ],
+      split: [
+        {"d":"M8.5 3H12C12.5523 3 13 3.44772 13 4V12C13 12.5523 12.5523 13 12 13H8.5V3ZM7.5 2H8.5H12C13.1046 2 14 2.89543 14 4V12C14 13.1046 13.1046 14 12 14H8.5H7.5H4C2.89543 14 2 13.1046 2 12V4C2 2.89543 2.89543 2 4 2H7.5ZM7.5 13H4C3.44772 13 3 12.5523 3 12V4C3 3.44772 3.44772 3 4 3H7.5V13Z","f":1,"eo":1},
+      ],
+      expand: [
+        {"d":"M4.5 5.5L8 2L11.5 5.5","sw":1},
+        {"d":"M4.5 10.5L8 14L11.5 10.5","sw":1},
+      ],
+      collapse: [
+        {"d":"M4.5 2.5L8 6L11.5 2.5","sw":1},
+        {"d":"M4.5 13.5L8 10L11.5 13.5","sw":1},
+      ],
+      stash: [
+        {"d":"M4.64645 5.14645C4.45118 5.34171 4.45118 5.65829 4.64645 5.85355L7.64645 8.85355C7.84171 9.04882 8.15829 9.04882 8.35355 8.85355L11.3536 5.85355C11.5488 5.65829 11.5488 5.34171 11.3536 5.14645C11.1583 4.95118 10.8417 4.95118 10.6464 5.14645L8.5 7.29289V1.5C8.5 1.22386 8.27614 1 8 1C7.72386 1 7.5 1.22386 7.5 1.5V7.29289L5.35355 5.14645C5.15829 4.95118 4.84171 4.95118 4.64645 5.14645Z","f":1},
+        {"d":"M4.77639 8.55279L5.5 10H10.5L11.2236 8.55279C11.393 8.214 11.7393 8 12.118 8H14C14.5523 8 15 8.44772 15 9V13C15 13.5523 14.5523 14 14 14H2C1.44772 14 1 13.5523 1 13V9C1 8.44772 1.44772 8 2 8H3.88197C4.26074 8 4.607 8.214 4.77639 8.55279ZM3.88197 9L4.88197 11H11.118L12.118 9H14V13H2V9H3.88197Z","f":1,"eo":1},
+      ],
+      compare: [
+        {"d":"M1.5 7.5H14.5M1.5 7.5L5.5 11.5M1.5 7.5L5.5 3.5M14.5 7.5L10.5 11.5M14.5 7.5L10.5 3.5","sw":1},
+      ],
+      checkout: [
+        {"d":"M9.14535 3.14742C8.95009 3.34269 8.95009 3.65927 9.14535 3.85453L12.2916 7.00074L2.49805 7.00074C2.2219 7.00074 1.99805 7.2246 1.99805 7.50074C1.99805 7.77688 2.2219 8.00074 2.49805 8.00074L12.292 8.00074L9.14535 11.1474C8.95008 11.3427 8.95008 11.6593 9.14535 11.8545C9.34061 12.0498 9.65719 12.0498 9.85245 11.8545L13.8525 7.85453C13.9462 7.76076 13.9989 7.63359 13.9989 7.50098C13.9989 7.36837 13.9462 7.24119 13.8525 7.14742L9.85245 3.14742C9.65719 2.95216 9.34061 2.95216 9.14535 3.14742Z","f":1},
+      ],
+      toolWindow: [
+        {"d":"M11.9091 3.50552L12.0543 3.66053H12.2667L14 3.66053C14.2818 3.66053 14.5102 3.88895 14.5102 4.17073V6.90732C14.5102 7.31554 14.2421 7.5102 14.0667 7.5102H8.93333C8.75795 7.5102 8.4898 7.31554 8.4898 6.90732V3.09268C8.4898 2.68446 8.75795 2.4898 8.93333 2.4898H10.9226C10.9452 2.4898 10.9668 2.49915 10.9822 2.51563L11.9091 3.50552Z","sw":0.979592},
+        {"d":"M11.9091 11.5055L12.0543 11.6605H12.2667L14 11.6605C14.2818 11.6605 14.5102 11.889 14.5102 12.1707V14.9073C14.5102 15.3155 14.2421 15.5102 14.0667 15.5102H8.93333C8.75795 15.5102 8.4898 15.3155 8.4898 14.9073V11.0927C8.4898 10.6845 8.75795 10.4898 8.93333 10.4898H10.9226C10.9452 10.4898 10.9668 10.4991 10.9822 10.5156L11.9091 11.5055Z","sw":0.979592},
+        {"d":"M1.5 1.5V4.5M1.5 4.5H6.5M1.5 4.5V12C1.5 12.2761 1.72386 12.5 2 12.5H6.5","sw":1},
+      ],
+      chevronLeft: [
+        {"d":"M9.5 11.5L6 8L9.5 4.5","sw":1},
+      ],
+      chevronRight: [
+        {"d":"M6 11.5L9.5 8L6 4.5","sw":1},
+      ],
     }
+
+    /* No branch-plus glyph exists in the IDE set: the New Branch action wears
+       the plain branch icon there, and the row label carries the rest. */
+    ICONS.branchCreate = ICONS.branch
+    /* The send-to-chat plane has no IDE counterpart; it keeps the drawn path. */
+    ICONS.send = [
+      { d: 'M14.3 1.7 1.7 7.4l4.9 1.9 1.9 4.9L14.3 1.7Z', sw: 1.1 },
+      { d: 'M6.6 9.3 14.3 1.7', sw: 1.1 },
+    ]
 
     function Icon(props) {
       const size = props.size === undefined ? 14 : props.size
       const shape = ICONS[props.name] === undefined ? ICONS.commit : ICONS[props.name]
-      const weight = props.name === 'more' ? 2.5 : props.name === 'grip' ? 1.8 : 1.6
-      /* A shape entry is either a plain d string or { d, w, dash, fill }:
-         - w: per-path stroke width (the sync trio's ground rail is heavier);
-         - dash: a real stroke-dasharray (fetch's broken stem, whose hand-drawn
-           gaps get re-filled by the round line caps at 13px);
-         - fill: draw the path solid rather than stroked (nodes, arrow heads) —
-           the weight that makes the set read as IDE chrome. */
+      /* One <svg> per glyph; every shape carries its own paint, because the
+         IDE set mixes filled silhouettes with 1px strokes inside one icon. */
       return E('svg', {
         className: 'git4idea-icon', width: size, height: size, viewBox: '0 0 16 16',
-        fill: 'none', stroke: 'currentColor', strokeWidth: weight,
-        strokeLinecap: 'round', strokeLinejoin: 'round',
+        fill: 'none', stroke: 'currentColor', strokeLinecap: 'round', strokeLinejoin: 'round',
       }, shape.map((entry, index) => {
-        const path = typeof entry === 'string' ? { d: entry } : entry
-        return E('path', {
-          key: index, d: path.d,
-          fill: path.fill === true ? 'currentColor' : 'none',
-          stroke: path.fill === true ? 'none' : 'currentColor',
-          strokeWidth: path.w === undefined ? undefined : path.w,
-          strokeDasharray: path.dash === undefined ? undefined : path.dash,
-        })
+        const filled = entry.f === 1
+        const common = {
+          key: index,
+          fill: filled ? 'currentColor' : 'none',
+          stroke: filled ? 'none' : 'currentColor',
+          strokeWidth: filled ? undefined : (entry.sw === undefined ? 1 : entry.sw),
+          fillRule: entry.eo === 1 ? 'evenodd' : undefined,
+        }
+        if (entry.rect !== undefined) return E('rect', Object.assign({ x: entry.x, y: entry.y, width: entry.rect[0], height: entry.rect[1], rx: entry.rx }, common))
+        if (entry.circle !== undefined) return E('circle', Object.assign({ cx: entry.circle[0], cy: entry.circle[1], r: entry.circle[2] }, common))
+        return E('path', Object.assign({ d: entry.d }, common))
       }))
     }
 
@@ -10942,7 +11088,18 @@ window.__ModuleLoader__.load({
             className: 'git4idea-input git4idea-input-compact', value: filter, spellCheck: false,
             placeholder: t('branches.filter'),
             onChange: (event) => setFilter(event.target.value),
-          })),
+          }),
+          /* The IDE log folds the branch pane from its own header chevron
+             (the stripe's first button); the same gesture lives here so the
+             pane can be collapsed without reaching for the rail. */
+          typeof props.onCollapse === 'function' ? E('button', {
+            type: 'button',
+            className: 'git4idea-icon-btn',
+            'data-action': 'tree-collapse',
+            title: t('toolbar.tree'),
+            'aria-label': t('toolbar.tree'),
+            onClick: () => props.onCollapse(),
+          }, E(Icon, { name: 'chevronLeft', size: 14 })) : null),
         E('div', {
           className: 'git4idea-tree-scroll',
           ref: treeScrollRef,
@@ -14258,19 +14415,25 @@ window.__ModuleLoader__.load({
               title: t('toolbar.tree'),
               onClick: () => foldTree(!treeOpen),
             }, E(Icon, { name: treeOpen ? 'eye' : 'eyeOff' }))),
-          treeOpen ? E('div', { className: 'git4idea-compact-tree', 'data-pane': 'tree', style: paneStyle('tree') }, E(BranchTree, { t: t, branches: branches, favorites: favorites, onCheckout: checkout, onBrowse: browseBranch, onBranchMenu: branchMenu, onDeleteEntries: deleteBranchEntries, onCopyValues: copyValues, onPicksChange: onBranchPicks, clearSignal: pickEpochs.tree })) : null,
+          treeOpen ? E('div', { className: 'git4idea-compact-tree', 'data-pane': 'tree', style: paneStyle('tree') }, E(BranchTree, { t: t, branches: branches, favorites: favorites, onCheckout: checkout, onBrowse: browseBranch, onBranchMenu: branchMenu, onDeleteEntries: deleteBranchEntries, onCopyValues: copyValues, onPicksChange: onBranchPicks, clearSignal: pickEpochs.tree, onCollapse: () => foldTree(false) })) : null,
           treeOpen ? gutter('tree', 'prev') : null,
           view === 'changes' ? changesPane : E('div', { className: 'git4idea-pane git4idea-pane-main' }, historyPane, diffGutter, diffPane))
       } else if (columns) {
         body = E('div', { className: 'git4idea-body git4idea-body-columns', ref: bodyRef },
-          treeOpen ? E('div', { className: 'git4idea-pane git4idea-pane-tree', 'data-pane': 'tree', style: paneStyle('tree') }, E(BranchTree, { t: t, branches: branches, favorites: favorites, onCheckout: checkout, onBrowse: browseBranch, onBranchMenu: branchMenu, onDeleteEntries: deleteBranchEntries, onCopyValues: copyValues, onPicksChange: onBranchPicks, clearSignal: pickEpochs.tree })) : null,
+          treeOpen === false ? E('div', { className: 'git4idea-tree-strip' },
+            E('button', {
+              type: 'button', className: 'git4idea-icon-btn', 'data-action': 'tree-expand',
+              title: t('toolbar.tree'), 'aria-label': t('toolbar.tree'),
+              onClick: () => foldTree(true),
+            }, E(Icon, { name: 'chevronRight', size: 14 }))) : null,
+          treeOpen ? E('div', { className: 'git4idea-pane git4idea-pane-tree', 'data-pane': 'tree', style: paneStyle('tree') }, E(BranchTree, { t: t, branches: branches, favorites: favorites, onCheckout: checkout, onBrowse: browseBranch, onBranchMenu: branchMenu, onDeleteEntries: deleteBranchEntries, onCopyValues: copyValues, onPicksChange: onBranchPicks, clearSignal: pickEpochs.tree, onCollapse: () => foldTree(false) })) : null,
           treeOpen ? gutter('tree', 'prev') : null,
           E('div', { className: 'git4idea-pane git4idea-pane-main' }, historyPane, diffGutter, diffPane),
           gutter('changes', 'next'),
           E('div', { className: 'git4idea-pane git4idea-pane-changes', 'data-pane': 'changes', style: paneStyle('changes') }, changesPane))
       } else {
         body = E('div', { className: 'git4idea-body git4idea-body-stack', ref: bodyRef },
-          treeOpen ? E('div', { className: 'git4idea-pane git4idea-pane-tree-stack', 'data-pane': 'tree', style: paneStyle('tree') }, E(BranchTree, { t: t, branches: branches, favorites: favorites, onCheckout: checkout, onBrowse: browseBranch, onBranchMenu: branchMenu, onDeleteEntries: deleteBranchEntries, onCopyValues: copyValues, onPicksChange: onBranchPicks, clearSignal: pickEpochs.tree })) : null,
+          treeOpen ? E('div', { className: 'git4idea-pane git4idea-pane-tree-stack', 'data-pane': 'tree', style: paneStyle('tree') }, E(BranchTree, { t: t, branches: branches, favorites: favorites, onCheckout: checkout, onBrowse: browseBranch, onBranchMenu: branchMenu, onDeleteEntries: deleteBranchEntries, onCopyValues: copyValues, onPicksChange: onBranchPicks, clearSignal: pickEpochs.tree, onCollapse: () => foldTree(false) })) : null,
           treeOpen ? gutter('tree', 'prev') : null,
           E('div', { className: 'git4idea-pane git4idea-pane-changes-stack', 'data-pane': 'changes', style: paneStyle('changes') }, changesPane),
           gutter('changes', 'prev'),
@@ -14781,7 +14944,9 @@ window.__ModuleLoader__.load({
       '.git4idea-seg-item{border:none;background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;font-weight:500;padding:2px 10px;border-radius:calc(var(--dsw-radius-sm,8px) - 2px);cursor:pointer;white-space:nowrap}',
       '.git4idea-seg-item:hover{color:var(--dsw-alias-label-primary)}',
       '.git4idea-seg-item[data-active="true"]{background:var(--dsw-alias-bg-layer-2,var(--dsw-alias-bg-layer-1));color:var(--dsw-alias-label-primary)}',
-      '.git4idea-search{padding:4px 6px;flex:none}',
+      '.git4idea-search{padding:4px 6px;flex:none;display:flex;align-items:center;gap:6px}',
+      '.git4idea-search .git4idea-input{flex:1;min-width:0}',
+      '.git4idea-tree-strip{width:29px;flex:none;display:flex;justify-content:center;padding-top:4px;border-right:1px solid var(--dsw-alias-border-l2)}',
       '.git4idea-input{width:100%;box-sizing:border-box;padding:4px 6px;border-radius:var(--dsw-radius-sm,8px);border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);font:inherit;outline:none}',
       '.git4idea-input::placeholder{color:var(--dsw-alias-label-tertiary)}',
       '.git4idea-input:focus{border-color:var(--dsw-alias-state-business-primary,var(--dsw-alias-brand-primary))}',

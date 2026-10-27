@@ -44,3 +44,5 @@ npm test   # smoke + api + graph + repos
 ## 许可
 
 MIT。原始实现版权归 KannaKuron（见 `LICENSE`）。
+
+图标路径数据取自 IntelliJ Platform（`platform/icons/src/expui/**` 与 `platform/icons/src/vcs/branch.svg`，经 Rebased 源码树取得），Apache License 2.0，版权归 JetBrains s.r.o.。来源清单与许可证全文见 `THIRD_PARTY_NOTICES.md`。
