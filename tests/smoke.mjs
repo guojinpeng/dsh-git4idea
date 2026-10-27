@@ -1847,6 +1847,22 @@ test('the composer dock pill keeps only the branch, left of the session statisti
   assert.match(client, /\.git4idea-cs-pill\[aria-expanded=true\]/, 'the open menu keeps the pill lit')
 })
 
+test('the popover new branch is a modal that creates and checks out (m02016)', () => {
+  // The inline field is gone: naming a branch is now a modal card with an
+  // explicit Cancel and Create, so an accidental Enter cannot half-create a ref.
+  assert.doesNotMatch(client, /git4idea-cs-newline/, 'the inline new-branch row is gone')
+  assert.match(client, /className: 'git4idea-cs-menu git4idea-cs-dialog'/, 'the popover swaps the tree for the dialog')
+  assert.match(client, /t\('toolbar\.newBranch'\)/, 'the dialog is titled like the panel dialog')
+  // Create and switch are ONE git command, the same verb the panel dialog runs.
+  assert.match(client, /await request\('checkout', payload\)/, 'the confirm runs checkout')
+  assert.match(client, /branch: name, create: true, confirm: true/, 'the checkout creates the branch')
+  assert.match(client, /if \(newBranchTrack === true\) payload\.track = true/, 'a remote start point binds its upstream, a local one does not')
+  // Cancel and Escape both drop the draft; the confirm starts disabled.
+  assert.match(client, /event\.key === 'Escape'\) closeNewBranch\(\)/, 'Escape cancels')
+  assert.match(client, /disabled: newBranchName\.trim\(\) === '' \|\| csBusy !== '' \|\| repoRoot === null/, 'an empty name cannot be submitted')
+  assert.match(client, /if \(newBranchOpen === true\) \{\n              return E\('div'/, 'the dialog returns before the tree renders')
+})
+
 test('long branch names cap at 220px and scroll only on hover, seamlessly (v0.19.13)', () => {
   // Past the cap the label switches to a duplicated-chunk structure measured
   // after paint, and ONLY :hover starts the marquee — short names keep the

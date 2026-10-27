@@ -15439,8 +15439,18 @@ window.__ModuleLoader__.load({
       '.git4idea-cs-tool[aria-disabled="true"]{opacity:.4;cursor:default}',
       '.git4idea-cs-sections{flex:1;min-height:0;overflow:auto;padding:0 4px 4px}',
       '.git4idea-cs-head{padding:5px 8px 2px;color:var(--dsw-alias-label-tertiary);font-size:11px;font-weight:600;text-transform:none}',
-      '.git4idea-cs-newline{display:flex;align-items:center;gap:4px;padding:4px 6px;flex:none;flex-wrap:wrap}',
-      '.git4idea-cs-newfrom{flex:1 0 100%;padding:0 2px;color:var(--dsw-alias-label-tertiary);font-size:11px;line-height:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+      /* New-branch dialog (m02016): the popover box swaps the tree for this card. */
+      '.git4idea-cs-dialog{display:flex;flex-direction:column;gap:8px;padding:8px;overflow:visible;max-height:none}',
+      '.git4idea-cs-dialog-title{font-size:12px;font-weight:700;color:var(--dsw-alias-label-primary)}',
+      '.git4idea-cs-dialog-sub{color:var(--dsw-alias-label-tertiary);font-size:11px;line-height:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+      '.git4idea-cs-dialog-input{flex:none;width:100%}',
+      '.git4idea-cs-dialog-error{margin:0}',
+      '.git4idea-cs-dialog-actions{display:flex;justify-content:flex-end;gap:6px}',
+      '.git4idea-cs-dialog-btn{height:24px;padding:0 12px;flex:none;border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-sm,8px);background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;font-size:12px;font-weight:600;cursor:pointer}',
+      '.git4idea-cs-dialog-btn:hover{background:var(--dsw-alias-interactive-bg-hover)}',
+      '.git4idea-cs-dialog-ok{border-color:transparent;background:var(--dsw-alias-brand-primary);color:var(--dsw-alias-brand-on-primary,#fff)}',
+      '.git4idea-cs-dialog-ok:hover{background:var(--dsw-alias-brand-primary)}',
+      '.git4idea-cs-dialog-ok:disabled{opacity:.45;cursor:default}',
       /* Inline secondary menu (m01737 #5): one row per verb, indented under
          the branch row it belongs to. */
       '.git4idea-cs-sub{display:flex;flex-direction:column;gap:1px;margin:2px 4px 4px 18px;padding:3px;border-radius:var(--dsw-radius-sm,8px);background:var(--dsw-alias-interactive-bg-hover)}',
@@ -15907,6 +15917,10 @@ window.__ModuleLoader__.load({
          inline name field with this ref, so "new branch from 'origin/x'" is one
          step instead of a checkout first. */
       const [newBranchFrom, setNewBranchFrom] = useState('')
+      /* Only a REMOTE start point may bind an upstream. A local branch with a
+         slash in its name is not a tracking ref, and `--track` on it makes git
+         refuse the whole checkout. */
+      const [newBranchTrack, setNewBranchTrack] = useState(false)
       /* Folded folders of the popover tree, keyed by slash path. Absent means
          open — the tree starts expanded like the IDE's branch chooser. */
       const [csFolded, setCsFolded] = useState({})
@@ -16112,14 +16126,38 @@ window.__ModuleLoader__.load({
           }
         } catch (caught) { void caught }
       }
+      /* Create-and-switch in one step (m02016): the dialog's confirm runs
+         `git checkout -b` — the same verb the panel's dialog uses — so the new
+         branch is never a dangling ref the user still has to check out. A
+         remote start point also binds the upstream, like every other path here. */
       const createBranch = async () => {
         const name = newBranchName.trim()
-        if (name === '') return
-        const payload = { name: name }
-        if (newBranchFrom !== '') payload.startPoint = newBranchFrom
-        await csCall('branchCreate', payload)
+        if (name === '' || repoRoot === null || csBusy !== '') return
+        setCsBusy('newBranch')
+        try {
+          const payload = {
+            cwd: cwd, repoRoot: repoRoot, branch: name, create: true, confirm: true,
+          }
+          if (newBranchFrom !== '') {
+            payload.startPoint = newBranchFrom
+            if (newBranchTrack === true) payload.track = true
+          }
+          await request('checkout', payload)
+          setNewBranchName('')
+          setNewBranchFrom('')
+          setNewBranchTrack(false)
+          setNewBranchOpen(false)
+          setMenu(null)
+          setTick((value) => value + 1)
+          notifyBranchSwitched(sessionId, repoRoot)
+        } catch (caught) {
+          setError(caught instanceof Error ? caught.message : String(caught))
+        } finally { setCsBusy('') }
+      }
+      const closeNewBranch = () => {
         setNewBranchName('')
         setNewBranchFrom('')
+        setNewBranchTrack(false)
         setNewBranchOpen(false)
       }
       /* A remote row that has no local twin is checked out as a tracking branch
@@ -16186,7 +16224,9 @@ window.__ModuleLoader__.load({
             label: t(kind === 'remote' ? 'action.createLocalBranch' : 'action.newBranchFrom'),
             run: () => {
               setCsMenu(null)
+              setError('')
               setNewBranchFrom(entry.name)
+              setNewBranchTrack(kind === 'remote')
               setNewBranchName(kind === 'remote' ? entry.name.slice(entry.name.indexOf('/') + 1) : '')
               setNewBranchOpen(true)
             },
@@ -16315,6 +16355,38 @@ window.__ModuleLoader__.load({
               csTree('remote', t('branches.remote'), csEntries(branchList.remote), 'remote') || [],
               csTree('tags', t('branches.tags'), csEntries(branchList.tags), 'tags') || [],
             )
+            /* New-branch dialog (m02016): the popover ITSELF becomes the dialog
+               while a name is being typed. A card floating inside the scrollable
+               tree would be clipped or dragged by the tree's scroll offset; one
+               box that swaps content has neither failure mode, and Cancel gets
+               the tree back. Create runs the checkout, so the new branch is
+               also the current one. */
+            if (newBranchOpen === true) {
+              return E('div', {
+                className: 'git4idea-cs-menu git4idea-cs-dialog', 'data-cordis-panel': '',
+                onKeyDown: (event) => { if (event.key === 'Escape') closeNewBranch() },
+              },
+                E('div', { className: 'git4idea-cs-dialog-title' }, t('toolbar.newBranch')),
+                newBranchFrom !== '' ? E('div', { className: 'git4idea-cs-dialog-sub', title: newBranchFrom },
+                  t('action.newBranchFrom') + ' · ' + newBranchFrom) : null,
+                E('input', {
+                  className: 'git4idea-cs-input git4idea-cs-dialog-input', value: newBranchName,
+                  spellCheck: false, autoFocus: true,
+                  placeholder: t('prompt.newBranch'),
+                  onChange: (event) => setNewBranchName(event.target.value),
+                  onKeyDown: (event) => { if (event.key === 'Enter') void createBranch() },
+                }),
+                error !== '' ? E('div', { className: 'git4idea-cs-errorbar git4idea-cs-dialog-error', title: error }, error) : null,
+                E('div', { className: 'git4idea-cs-dialog-actions' },
+                  E('button', {
+                    type: 'button', className: 'git4idea-cs-dialog-btn', onClick: closeNewBranch,
+                  }, t('confirm.cancel')),
+                  E('button', {
+                    type: 'button', className: 'git4idea-cs-dialog-btn git4idea-cs-dialog-ok',
+                    disabled: newBranchName.trim() === '' || csBusy !== '' || repoRoot === null,
+                    onClick: () => { void createBranch() },
+                  }, t('confirm.ok'))))
+            }
             return E('div', { className: 'git4idea-cs-menu git4idea-cs-branches', 'data-cordis-panel': '' },
               E('div', { className: 'git4idea-cs-search' },
                 E('input', {
@@ -16344,24 +16416,12 @@ window.__ModuleLoader__.load({
                   type: 'button', className: 'git4idea-cs-action', title: t('toolbar.newBranch'),
                   onClick: () => {
                     setNewBranchFrom('')
+                    setNewBranchTrack(false)
                     setNewBranchName('')
-                    setNewBranchOpen((open) => open !== true)
+                    setError('')
+                    setNewBranchOpen(true)
                   },
                 }, E(Icon, { name: 'plus', size: 12 }), E('span', null, t('toolbar.newBranch')))),
-              newBranchOpen === true ? E('div', { className: 'git4idea-cs-newline' },
-                newBranchFrom !== '' ? E('div', { className: 'git4idea-cs-newfrom', title: newBranchFrom },
-                  t('action.newBranchFrom') + ' · ' + newBranchFrom) : null,
-                E('input', {
-                  className: 'git4idea-cs-input', value: newBranchName, spellCheck: false, autoFocus: true,
-                  placeholder: t('prompt.newBranch'),
-                  onChange: (event) => setNewBranchName(event.target.value),
-                  onKeyDown: (event) => { if (event.key === 'Enter') void createBranch() },
-                }),
-                E('button', {
-                  type: 'button', className: 'git4idea-cs-ok',
-                  disabled: newBranchName.trim() === '' || csBusy !== '',
-                  onClick: () => { void createBranch() },
-                }, t('confirm.ok'))) : null,
               E('div', { className: 'git4idea-cs-sections' },
                 sections.length === 0 ? E('div', { className: 'git4idea-cs-item git4idea-cs-static' }, t('filter.none')) : sections),
               )
