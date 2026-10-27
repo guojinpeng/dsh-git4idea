@@ -294,22 +294,16 @@ window.__ModuleLoader__.load({
       'settings.card.desc': '面板放置、动作条按钮与 AI 提交信息',
       'settings.placement.title': '面板放置',
       'settings.placement.tab': '在主对话区显示 Git 标签页',
-      'settings.composer.title': '输入框 Git 状态',
-      'settings.composer.hint': '在输入框工具条显示仓库与分支(可点击切换,与 Git 面板联动);关闭后输入框不再显示。',
-      'composer.repoHint': '切换仓库',
+      'settings.composer.title': '输入框下方分支状态',
+      'settings.composer.hint': '在输入框下方(会话统计左侧)显示当前分支(可点击切换,与 Git 面板联动);关闭后不再显示。',
       'composer.branchHint': '切换分支',
       'composer.detached': 'HEAD(游离)',
-      'composer.changesHint': '未提交变更数',
-      'composer.fileHint': '新增 {a} · 删除 {d} 个文件',
-      'composer.linesHint': '+{ins} −{del} 行',
       'modelRoute.pick': '选择模型',
       'modelRoute.trigger': 'AI 提交信息模型',
       'modelRoute.modelRow': '模型',
       'modelRoute.effortRow': '思考',
       'modelRoute.effortDefault': '跟随默认',
       'modelRoute.empty': '暂无可用模型',
-      'composer.behindHint': '远程新提交(可拉取)',
-      'composer.aheadHint': '本地待推送提交',
       'composer.inWorktree': '已被其他工作树签出',
       'composer.busy': 'Git 操作进行中…',
       'settings.placement.tabHint': '关闭后仍可从右侧栏或底部面板打开。',
@@ -636,22 +630,16 @@ window.__ModuleLoader__.load({
       'settings.card.desc': 'Placement, action rail buttons and AI commit message',
       'settings.placement.title': 'Placement',
       'settings.placement.tab': 'Show the Git tab in the conversation area',
-      'settings.composer.title': 'Git status in the input bar',
-      'settings.composer.hint': 'Show repository and branch beside the composer tool row — click to switch, synced with the Git panel. Off, the input bar stays clean.',
-      'composer.repoHint': 'Switch repository',
+      'settings.composer.title': 'Branch below the composer',
+      'settings.composer.hint': 'Show the current branch under the composer, left of the session statistics — click to switch, synced with the Git panel. Off hides it.',
       'composer.branchHint': 'Switch branch',
       'composer.detached': 'HEAD (detached)',
-      'composer.changesHint': 'Uncommitted changes',
-      'composer.fileHint': '{a} added · {d} deleted files',
-      'composer.linesHint': '+{ins} −{del} lines',
       'modelRoute.pick': 'Pick a model',
       'modelRoute.trigger': 'AI commit message model',
       'modelRoute.modelRow': 'Model',
       'modelRoute.effortRow': 'Reasoning',
       'modelRoute.effortDefault': 'Follow default',
       'modelRoute.empty': 'No models available',
-      'composer.behindHint': 'New upstream commits (pullable)',
-      'composer.aheadHint': 'Local commits waiting to push',
       'composer.inWorktree': 'Checked out in another worktree',
       'composer.busy': 'Git operation in progress…',
       'settings.placement.tabHint': 'Off, the panel stays reachable from the right sidebar and the bottom panel.',
@@ -986,22 +974,16 @@ window.__ModuleLoader__.load({
         'settings.card.desc': '面板放置、動作列按鈕與 AI 提交訊息',
         'settings.placement.title': '面板放置',
         'settings.placement.tab': '喺主對話區顯示 Git 分頁',
-      'settings.composer.title': '輸入框 Git 狀態',
-      'settings.composer.hint': '喺輸入框工具列顯示儲存庫同分支(可以點擊切換,同 Git 面板聯動);關閉之後輸入框就唔會再顯示。',
-      'composer.repoHint': '切換儲存庫',
+      'settings.composer.title': '輸入框下面分支狀態',
+      'settings.composer.hint': '喺輸入框下面(會話統計左邊)顯示目前分支(可以點擊切換,同 Git 面板聯動);關閉之後就唔會再顯示。',
       'composer.branchHint': '切換分支',
       'composer.detached': 'HEAD(游離)',
-      'composer.changesHint': '未提交變更數',
-      'composer.fileHint': '新增 {a} · 刪除 {d} 個檔案',
-      'composer.linesHint': '+{ins} −{del} 行',
       'modelRoute.pick': '選擇模型',
       'modelRoute.trigger': 'AI 提交訊息模型',
       'modelRoute.modelRow': '模型',
       'modelRoute.effortRow': '思考',
       'modelRoute.effortDefault': '跟隨預設',
       'modelRoute.empty': '暫無可用模型',
-      'composer.behindHint': '遠端新提交(可以拉取)',
-      'composer.aheadHint': '本地等待推送提交',
       'composer.inWorktree': '已經喺其他工作樹簽出',
       'composer.busy': 'Git 操作進行中…',
         'settings.placement.tabHint': '關閉之後仍可從右側欄或底部面板開啟。',
@@ -1328,22 +1310,16 @@ window.__ModuleLoader__.load({
         'settings.card.desc': '面板放置、動作列按鈕與 AI 提交訊息',
         'settings.placement.title': '面板放置',
         'settings.placement.tab': '在主對話區顯示 Git 分頁',
-      'settings.composer.title': '輸入框 Git 狀態',
-      'settings.composer.hint': '在輸入框工具列顯示儲存庫與分支(可點擊切換,並與 Git 面板連動);關閉後輸入框不再顯示。',
-      'composer.repoHint': '切換儲存庫',
+      'settings.composer.title': '輸入框下方分支狀態',
+      'settings.composer.hint': '在輸入框下方(工作階段統計左側)顯示目前分支(可點擊切換,並與 Git 面板連動);關閉後不再顯示。',
       'composer.branchHint': '切換分支',
       'composer.detached': 'HEAD(分離)',
-      'composer.changesHint': '未提交變更數',
-      'composer.fileHint': '新增 {a} · 刪除 {d} 個檔案',
-      'composer.linesHint': '+{ins} −{del} 行',
       'modelRoute.pick': '選擇模型',
       'modelRoute.trigger': 'AI 提交訊息模型',
       'modelRoute.modelRow': '模型',
       'modelRoute.effortRow': '思考',
       'modelRoute.effortDefault': '跟隨預設',
       'modelRoute.empty': '暫無可用模型',
-      'composer.behindHint': '遠端新提交(可拉取)',
-      'composer.aheadHint': '本地待推送提交',
       'composer.inWorktree': '已被其他工作樹簽出',
       'composer.busy': 'Git 操作進行中…',
         'settings.placement.tabHint': '關閉之後仍可從右側欄或底部面板開啟。',
@@ -1670,22 +1646,16 @@ window.__ModuleLoader__.load({
         'settings.card.desc': '面板放置、動作列按鈕與 AI 提交訊息',
         'settings.placement.title': '面板放置',
         'settings.placement.tab': '喺主對話區顯示 Git 分頁',
-      'settings.composer.title': '輸入框 Git 狀態',
-      'settings.composer.hint': '喺輸入框工具列顯示儲存庫同分支(可以點擊切換,同 Git 面板聯動);關閉之後輸入框就唔會再顯示。',
-      'composer.repoHint': '切換儲存庫',
+      'settings.composer.title': '輸入框下方分支狀態',
+      'settings.composer.hint': '在輸入框下方(工作階段統計左側)顯示目前分支(可點擊切換,並與 Git 面板連動);關閉後不再顯示。',
       'composer.branchHint': '切換分支',
       'composer.detached': 'HEAD(游離)',
-      'composer.changesHint': '未提交變更數',
-      'composer.fileHint': '新增 {a} · 刪除 {d} 個檔案',
-      'composer.linesHint': '+{ins} −{del} 行',
       'modelRoute.pick': '選擇模型',
       'modelRoute.trigger': 'AI 提交訊息模型',
       'modelRoute.modelRow': '模型',
       'modelRoute.effortRow': '思考',
       'modelRoute.effortDefault': '跟隨預設',
       'modelRoute.empty': '暫無可用模型',
-      'composer.behindHint': '遠端新提交(可以拉取)',
-      'composer.aheadHint': '本地等待推送提交',
       'composer.inWorktree': '已經喺其他工作樹簽出',
       'composer.busy': 'Git 操作進行中…',
         'settings.placement.tabHint': '關閉之後仍可從右側欄或底部面板開啟。',
@@ -2012,22 +1982,16 @@ window.__ModuleLoader__.load({
         'settings.card.desc': 'パネル配置、アクションレールのボタンと AI コミットメッセージ',
         'settings.placement.title': 'パネル配置',
         'settings.placement.tab': '会話エリアに Git タブを表示',
-      'settings.composer.title': '入力欄の Git ステータス',
-      'settings.composer.hint': '入力欄ツールバーにリポジトリとブランチを表示します(クリックで切り替え、Git パネルと連動)。オフにすると入力欄には表示されません。',
-      'composer.repoHint': 'リポジトリを切り替え',
+      'settings.composer.title': '入力欄下のブランチ',
+      'settings.composer.hint': '入力欄の下(セッション統計の左)に現在のブランチを表示します(クリックで切り替え、Git パネルと連動)。オフにすると表示されません。',
       'composer.branchHint': 'ブランチを切り替え',
       'composer.detached': 'HEAD(切断)',
-      'composer.changesHint': '未コミットの変更数',
-      'composer.fileHint': '追加 {a} · 削除 {d} ファイル',
-      'composer.linesHint': '+{ins} −{del} 行',
       'modelRoute.pick': 'モデルを選択',
       'modelRoute.trigger': 'AI コミットメッセージのモデル',
       'modelRoute.modelRow': 'モデル',
       'modelRoute.effortRow': '思考',
       'modelRoute.effortDefault': 'デフォルトに従う',
       'modelRoute.empty': '利用可能なモデルがありません',
-      'composer.behindHint': 'リモートの新規コミット(取得可能)',
-      'composer.aheadHint': 'プッシュ待ちのローカルコミット',
       'composer.inWorktree': '別のワークツリーでチェックアウト中',
       'composer.busy': 'Git 操作を実行中…',
         'settings.placement.tabHint': 'オフにしても右サイドバーと下部パネルから開けます。',
@@ -2354,22 +2318,16 @@ window.__ModuleLoader__.load({
         'settings.card.desc': '패널 배치, 액션 레일 버튼 및 AI 커밋 메시지',
         'settings.placement.title': '패널 배치',
         'settings.placement.tab': '대화 영역에 Git 탭 표시',
-      'settings.composer.title': '입력창 Git 상태',
-      'settings.composer.hint': '입력창 도구 모음에 저장소와 브랜치를 표시합니다(클릭하여 전환, Git 패널과 연동). 끄면 입력창에 표시되지 않습니다.',
-      'composer.repoHint': '저장소 전환',
+      'settings.composer.title': '입력창 아래 브랜치',
+      'settings.composer.hint': '입력창 아래(세션 통계 왼쪽)에 현재 브랜치를 표시합니다(클릭하여 전환, Git 패널과 연동). 끄면 표시되지 않습니다.',
       'composer.branchHint': '브랜치 전환',
       'composer.detached': 'HEAD(분리됨)',
-      'composer.changesHint': '커밋되지 않은 변경 수',
-      'composer.fileHint': '추가 {a} · 삭제 {d}개 파일',
-      'composer.linesHint': '+{ins} −{del}줄',
       'modelRoute.pick': '모델 선택',
       'modelRoute.trigger': 'AI 커밋 메시지 모델',
       'modelRoute.modelRow': '모델',
       'modelRoute.effortRow': '추론',
       'modelRoute.effortDefault': '기본값 따르기',
       'modelRoute.empty': '사용 가능한 모델이 없습니다',
-      'composer.behindHint': '원격 새 커밋(가져오기 가능)',
-      'composer.aheadHint': '푸시 대기 중인 로컬 커밋',
       'composer.inWorktree': '다른 작업 트리에서 체크아웃됨',
       'composer.busy': 'Git 작업 진행 중…',
         'settings.placement.tabHint': '꺼도 오른쪽 사이드바와 하단 패널에서 열 수 있습니다.',
@@ -2696,22 +2654,16 @@ window.__ModuleLoader__.load({
         'settings.card.desc': 'Panel-Platzierung, Aktionsleisten-Schaltflächen und KI-Commit-Nachricht',
         'settings.placement.title': 'Panel-Platzierung',
         'settings.placement.tab': 'Git-Tab im Gesprächsbereich anzeigen',
-      'settings.composer.title': 'Git-Status in der Eingabeleiste',
-      'settings.composer.hint': 'Repository und Zweig neben der Eingabeleiste zeigen — anklickbar zum Wechseln, mit dem Git-Panel synchron. Aus schaltet die Anzeige ab.',
-      'composer.repoHint': 'Repository wechseln',
+      'settings.composer.title': 'Branch unter der Eingabe',
+      'settings.composer.hint': 'Zeigt den aktuellen Branch unter der Eingabe links neben den Sitzungsstatistiken — anklickbar zum Wechseln, mit dem Git-Panel synchron. Aus blendet ihn aus.',
       'composer.branchHint': 'Zweig wechseln',
       'composer.detached': 'HEAD (detached)',
-      'composer.changesHint': 'Uncommittete Änderungen',
-      'composer.fileHint': '{a} hinzugefügt · {d} gelöscht',
-      'composer.linesHint': '+{ins} −{del} Zeilen',
       'modelRoute.pick': 'Modell wählen',
       'modelRoute.trigger': 'Modell für KI-Commits',
       'modelRoute.modelRow': 'Modell',
       'modelRoute.effortRow': 'Denken',
       'modelRoute.effortDefault': 'Standard folgen',
       'modelRoute.empty': 'Keine Modelle verfügbar',
-      'composer.behindHint': 'Neue Upstream-Commits (abrufbar)',
-      'composer.aheadHint': 'Lokale Commits zum Pushen',
       'composer.inWorktree': 'In anderem Worktree ausgecheckt',
       'composer.busy': 'Git-Aktion läuft…',
         'settings.placement.tabHint': 'Ausgeschaltet bleibt das Panel über rechte Seitenleiste und unteres Panel erreichbar.',
@@ -3038,22 +2990,16 @@ window.__ModuleLoader__.load({
         'settings.card.desc': 'Placement du panneau, boutons de la barre d’actions et message de commit par IA',
         'settings.placement.title': 'Placement du panneau',
         'settings.placement.tab': 'Afficher l’onglet Git dans la zone de conversation',
-      'settings.composer.title': 'Statut Git dans la barre de saisie',
-      'settings.composer.hint': 'Affiche le dépôt et la branche à côté de la barre de saisie — cliquables pour basculer, synchronisés avec le panneau Git. Désactivé, la barre reste épurée.',
-      'composer.repoHint': 'Changer de dépôt',
+      'settings.composer.title': 'Branche sous la saisie',
+      'settings.composer.hint': 'Affiche la branche actuelle sous la saisie, à gauche des statistiques de session — cliquer pour basculer, synchronisé avec le panneau Git. Désactivé, elle est masquée.',
       'composer.branchHint': 'Changer de branche',
       'composer.detached': 'HEAD (détaché)',
-      'composer.changesHint': 'Modifications non commitées',
-      'composer.fileHint': '{a} ajoutés · {d} supprimés',
-      'composer.linesHint': '+{ins} −{del} lignes',
       'modelRoute.pick': 'Choisir un modèle',
       'modelRoute.trigger': 'Modèle des messages de commit IA',
       'modelRoute.modelRow': 'Modèle',
       'modelRoute.effortRow': 'Raisonnement',
       'modelRoute.effortDefault': 'Suivre la valeur par défaut',
       'modelRoute.empty': 'Aucun modèle disponible',
-      'composer.behindHint': 'Nouveaux commits amont (récupérables)',
-      'composer.aheadHint': 'Commits locaux en attente d’envoi',
       'composer.inWorktree': 'Extrait dans un autre arbre de travail',
       'composer.busy': 'Opération Git en cours…',
         'settings.placement.tabHint': 'Désactivé, le panneau reste accessible depuis la barre latérale droite et le panneau inférieur.',
@@ -3380,22 +3326,16 @@ window.__ModuleLoader__.load({
         'settings.card.desc': 'Размещение панели, кнопки панели действий и сообщение коммита от ИИ',
         'settings.placement.title': 'Размещение панели',
         'settings.placement.tab': 'Показывать вкладку Git в области диалога',
-      'settings.composer.title': 'Статус Git в строке ввода',
-      'settings.composer.hint': 'Показывает репозиторий и ветку рядом с панелью ввода — клик переключает, синхронно с панелью Git. Выключено — строка ввода остаётся чистой.',
-      'composer.repoHint': 'Сменить репозиторий',
+      'settings.composer.title': 'Ветка под строкой ввода',
+      'settings.composer.hint': 'Показывает текущую ветку под строкой ввода слева от статистики сеанса — щелчок переключает, синхронно с панелью Git. Выключено — скрыто.',
       'composer.branchHint': 'Сменить ветку',
       'composer.detached': 'HEAD (отделён)',
-      'composer.changesHint': 'Незакоммиченные изменения',
-      'composer.fileHint': 'добавлено: {a} · удалено: {d}',
-      'composer.linesHint': '+{ins} −{del} строк',
       'modelRoute.pick': 'Выбрать модель',
       'modelRoute.trigger': 'Модель сообщений коммитов ИИ',
       'modelRoute.modelRow': 'Модель',
       'modelRoute.effortRow': 'Рассуждение',
       'modelRoute.effortDefault': 'По умолчанию',
       'modelRoute.empty': 'Нет доступных моделей',
-      'composer.behindHint': 'Новые коммиты upstream (можно забрать)',
-      'composer.aheadHint': 'Локальные коммиты, ожидающие отправки',
       'composer.inWorktree': 'Выверен в другом worktree',
       'composer.busy': 'Операция Git выполняется…',
         'settings.placement.tabHint': 'В выключенном виде панель доступна из правой боковой панели и нижней панели.',
@@ -3722,22 +3662,16 @@ window.__ModuleLoader__.load({
         'settings.card.desc': 'Posição do painel, botões da barra de ações e mensagem de commit por IA',
         'settings.placement.title': 'Posição do painel',
         'settings.placement.tab': 'Mostrar a aba Git na área de conversa',
-      'settings.composer.title': 'Status do Git na barra de entrada',
-      'settings.composer.hint': 'Mostra repositório e branch ao lado da barra de entrada — clique para alternar, em sincronia com o painel Git. Desligado, a barra fica limpa.',
-      'composer.repoHint': 'Trocar repositório',
+      'settings.composer.title': 'Branch sob a entrada',
+      'settings.composer.hint': 'Mostra o branch atual sob a caixa de entrada, à esquerda das estatísticas da sessão — clique para alternar, em sincronia com o painel Git. Desligado, ele fica oculto.',
       'composer.branchHint': 'Trocar branch',
       'composer.detached': 'HEAD (destacado)',
-      'composer.changesHint': 'Alterações não commitadas',
-      'composer.fileHint': '{a} adicionados · {d} removidos',
-      'composer.linesHint': '+{ins} −{del} linhas',
       'modelRoute.pick': 'Escolher modelo',
       'modelRoute.trigger': 'Modelo da mensagem de commit por IA',
       'modelRoute.modelRow': 'Modelo',
       'modelRoute.effortRow': 'Raciocínio',
       'modelRoute.effortDefault': 'Seguir o padrão',
       'modelRoute.empty': 'Nenhum modelo disponível',
-      'composer.behindHint': 'Novos commits remotos (para pull)',
-      'composer.aheadHint': 'Commits locais aguardando push',
       'composer.inWorktree': 'Em checkout em outra worktree',
       'composer.busy': 'Operação Git em andamento…',
         'settings.placement.tabHint': 'Desligado, o painel continua disponível na barra lateral direita e no painel inferior.',
@@ -4064,22 +3998,16 @@ window.__ModuleLoader__.load({
         'settings.card.desc': 'Posizione del pannello, pulsanti della barra azioni e messaggio di commit con IA',
         'settings.placement.title': 'Posizione del pannello',
         'settings.placement.tab': 'Mostra la scheda Git nell’area conversazione',
-      'settings.composer.title': 'Stato Git nella barra di inserimento',
-      'settings.composer.hint': 'Mostra repository e ramo accanto alla barra di inserimento — cliccabili per cambiare, sincronizzati con il pannello Git. Disattivato, la barra resta pulita.',
-      'composer.repoHint': 'Cambia repository',
+      'settings.composer.title': 'Ramo sotto la casella di input',
+      'settings.composer.hint': 'Mostra il ramo corrente sotto la casella di input, a sinistra delle statistiche di sessione — clic per cambiare, sincronizzato con il pannello Git. Disattivato, resta nascosto.',
       'composer.branchHint': 'Cambia ramo',
       'composer.detached': 'HEAD (staccato)',
-      'composer.changesHint': 'Modifiche non ancora committate',
-      'composer.fileHint': '{a} aggiunti · {d} eliminati',
-      'composer.linesHint': '+{ins} −{del} righe',
       'modelRoute.pick': 'Scegli modello',
       'modelRoute.trigger': 'Modello dei messaggi di commit IA',
       'modelRoute.modelRow': 'Modello',
       'modelRoute.effortRow': 'Ragionamento',
       'modelRoute.effortDefault': 'Segui il predefinito',
       'modelRoute.empty': 'Nessun modello disponibile',
-      'composer.behindHint': 'Nuovi commit upstream (scaricabili)',
-      'composer.aheadHint': 'Commit locali in attesa di push',
       'composer.inWorktree': 'Estratto in un altro worktree',
       'composer.busy': 'Operazione Git in corso…',
         'settings.placement.tabHint': 'Da spento, il pannello resta raggiungibile dalla barra laterale destra e dal pannello inferiore.',
@@ -4406,22 +4334,16 @@ window.__ModuleLoader__.load({
         'settings.card.desc': 'Paneelplaatsing, knoppen van de actiebalk en AI-commitbericht',
         'settings.placement.title': 'Paneelplaatsing',
         'settings.placement.tab': 'Git-tabblad in het gespreksgebied tonen',
-      'settings.composer.title': 'Git-status in de invoerbalk',
-      'settings.composer.hint': 'Toont repository en branch naast de invoerbalk — klikbaar om te wisselen, gesynchroniseerd met het Git-paneel. Uit houdt de balk schoon.',
-      'composer.repoHint': 'Repository wisselen',
+      'settings.composer.title': 'Branch onder de invoerbalk',
+      'settings.composer.hint': 'Toont de huidige branch onder de invoerbalk, links van de sessiestatistieken — klik om te wisselen, gesynchroniseerd met het Git-paneel. Uit verbergt hem.',
       'composer.branchHint': 'Branch wisselen',
       'composer.detached': 'HEAD (los)',
-      'composer.changesHint': 'Ongecommitte wijzigingen',
-      'composer.fileHint': '{a} toegevoegd · {d} verwijderd',
-      'composer.linesHint': '+{ins} −{del} regels',
       'modelRoute.pick': 'Kies een model',
       'modelRoute.trigger': 'Model voor AI-commitberichten',
       'modelRoute.modelRow': 'Model',
       'modelRoute.effortRow': 'Redeneren',
       'modelRoute.effortDefault': 'Standaard volgen',
       'modelRoute.empty': 'Geen modellen beschikbaar',
-      'composer.behindHint': 'Nieuwe upstream-commits (op te halen)',
-      'composer.aheadHint': 'Lokale commits die wachten op push',
       'composer.inWorktree': 'Uitgecheckt in een andere worktree',
       'composer.busy': 'Git-actie gaande…',
         'settings.placement.tabHint': 'Uitgeschakeld blijft het paneel bereikbaar via de rechterzijbalk en het onderpaneel.',
@@ -4748,22 +4670,16 @@ window.__ModuleLoader__.load({
         'settings.card.desc': 'Rozmieszczenie panelu, przyciski paska akcji i wiadomość commita od AI',
         'settings.placement.title': 'Rozmieszczenie panelu',
         'settings.placement.tab': 'Pokazuj kartę Git w obszarze rozmowy',
-      'settings.composer.title': 'Status Git w pasku wprowadzania',
-      'settings.composer.hint': 'Pokazuje repozytorium i gałąź obok paska wprowadzania — kliknij, aby przełączyć; synchronizacja z panelem Git. Wyłączone — pasek pozostaje czysty.',
-      'composer.repoHint': 'Przełącz repozytorium',
+      'settings.composer.title': 'Gałąź pod polem wprowadzania',
+      'settings.composer.hint': 'Pokazuje bieżącą gałąź pod polem wprowadzania, po lewej stronie statystyk sesji — kliknij, aby przełączyć; synchronizacja z panelem Git. Wyłączone — ukryta.',
       'composer.branchHint': 'Przełącz gałąź',
       'composer.detached': 'HEAD (odłączony)',
-      'composer.changesHint': 'Niezatwierdzone zmiany',
-      'composer.fileHint': 'dodane: {a} · usunięte: {d}',
-      'composer.linesHint': '+{ins} −{del} linii',
       'modelRoute.pick': 'Wybierz model',
       'modelRoute.trigger': 'Model wiadomości commitów AI',
       'modelRoute.modelRow': 'Model',
       'modelRoute.effortRow': 'Rozumowanie',
       'modelRoute.effortDefault': 'Domyślne',
       'modelRoute.empty': 'Brak dostępnych modeli',
-      'composer.behindHint': 'Nowe commity upstream (do pobrania)',
-      'composer.aheadHint': 'Lokalne commity oczekujące na wysłanie',
       'composer.inWorktree': 'Wybrane w innym drzewie roboczym',
       'composer.busy': 'Operacja Git w toku…',
         'settings.placement.tabHint': 'Po wyłączeniu panel pozostaje dostępny z prawego paska bocznego i dolnego panelu.',
@@ -5090,22 +5006,16 @@ window.__ModuleLoader__.load({
         'settings.card.desc': 'Panelplacering, knappar i åtgärdsfältet och AI-commitmeddelande',
         'settings.placement.title': 'Panelplacering',
         'settings.placement.tab': 'Visa Git-fliken i konversationsytan',
-      'settings.composer.title': 'Git-status i inmatningsfältet',
-      'settings.composer.hint': 'Visar repo och gren bredvid inmatningsfältet — klicka för att växla, synkat med Git-panelen. Av stänger av visningen.',
-      'composer.repoHint': 'Byt repo',
+      'settings.composer.title': 'Gren under inmatningen',
+      'settings.composer.hint': 'Visar aktuell gren under inmatningsfältet, till vänster om sessionsstatistiken — klicka för att växla, synkat med Git-panelen. Av döljer den.',
       'composer.branchHint': 'Byt gren',
       'composer.detached': 'HEAD (frånkopplad)',
-      'composer.changesHint': 'Ocommittade ändringar',
-      'composer.fileHint': '{a} tillagda · {d} borttagna',
-      'composer.linesHint': '+{ins} −{del} rader',
       'modelRoute.pick': 'Välj modell',
       'modelRoute.trigger': 'Modell för AI-commit-meddelanden',
       'modelRoute.modelRow': 'Modell',
       'modelRoute.effortRow': 'Resonemang',
       'modelRoute.effortDefault': 'Följ standard',
       'modelRoute.empty': 'Inga modeller tillgängliga',
-      'composer.behindHint': 'Nya upstream-commits (hämtbara)',
-      'composer.aheadHint': 'Lokala commits som väntar på push',
       'composer.inWorktree': 'Utcheckad i ett annat arbetsträd',
       'composer.busy': 'Git-åtgärd pågår…',
         'settings.placement.tabHint': 'Avstängd finns panelen kvar via höger sidopanel och nedre panelen.',
@@ -5432,22 +5342,16 @@ window.__ModuleLoader__.load({
         'settings.card.desc': 'Panel yerleşimi, eylem çubuğu düğmeleri ve AI commit mesajı',
         'settings.placement.title': 'Panel yerleşimi',
         'settings.placement.tab': 'Konuşma alanında Git sekmesini göster',
-      'settings.composer.title': 'Giriş çubuğunda Git durumu',
-      'settings.composer.hint': 'Giriş çubuğu yanında depo ve dal gösterir — geçiş için tıklayın, Git paneliyle eşitlenir. Kapalıyken giriş çubuğu temiz kalır.',
-      'composer.repoHint': 'Depo değiştir',
+      'settings.composer.title': 'Giriş altında dal',
+      'settings.composer.hint': 'Geçerli dalı giriş alanının altında, oturum istatistiklerinin solunda gösterir — geçiş için tıklayın, Git paneliyle eşitlenir. Kapalıyken gizlenir.',
       'composer.branchHint': 'Dal değiştir',
       'composer.detached': 'HEAD (ayrık)',
-      'composer.changesHint': 'Commitlenmemiş değişiklikler',
-      'composer.fileHint': '{a} eklendi · {d} silindi',
-      'composer.linesHint': '+{ins} −{del} satır',
       'modelRoute.pick': 'Model seç',
       'modelRoute.trigger': 'Yapay zekâ commit mesajı modeli',
       'modelRoute.modelRow': 'Model',
       'modelRoute.effortRow': 'Akıl yürütme',
       'modelRoute.effortDefault': 'Varsayılanı izle',
       'modelRoute.empty': 'Kullanılabilir model yok',
-      'composer.behindHint': 'Yeni upstream commitleri (çekilebilir)',
-      'composer.aheadHint': 'Push bekleyen yerel commitler',
       'composer.inWorktree': 'Başka bir worktree’da checkout yapılmış',
       'composer.busy': 'Git işlemi sürüyor…',
         'settings.placement.tabHint': 'Kapatıldığında panel sağ kenar çubuğundan ve alt panelden açılabilir.',
@@ -5774,22 +5678,16 @@ window.__ModuleLoader__.load({
         'settings.card.desc': 'Penempatan panel, tombol bilah aksi dan pesan commit AI',
         'settings.placement.title': 'Penempatan panel',
         'settings.placement.tab': 'Tampilkan tab Git di area percakapan',
-      'settings.composer.title': 'Status Git di bilah masukan',
-      'settings.composer.hint': 'Menampilkan repositori dan cabang di samping bilah masukan — klik untuk beralih, tersinkron dengan panel Git. Matikan untuk menyembunyikannya.',
-      'composer.repoHint': 'Ganti repositori',
+      'settings.composer.title': 'Branch di bawah input',
+      'settings.composer.hint': 'Menampilkan cabang saat ini di bawah kolom input, di kiri statistik sesi — klik untuk beralih, tersinkron dengan panel Git. Matikan untuk menyembunyikannya.',
       'composer.branchHint': 'Ganti cabang',
       'composer.detached': 'HEAD (lepas)',
-      'composer.changesHint': 'Perubahan yang belum di-commit',
-      'composer.fileHint': '{a} ditambahkan · {d} dihapus',
-      'composer.linesHint': '+{ins} −{del} baris',
       'modelRoute.pick': 'Pilih model',
       'modelRoute.trigger': 'Model pesan commit AI',
       'modelRoute.modelRow': 'Model',
       'modelRoute.effortRow': 'Penalaran',
       'modelRoute.effortDefault': 'Ikuti bawaan',
       'modelRoute.empty': 'Tidak ada model yang tersedia',
-      'composer.behindHint': 'Commit upstream baru (bisa ditarik)',
-      'composer.aheadHint': 'Commit lokal menunggu push',
       'composer.inWorktree': 'Sudah di-checkout di worktree lain',
       'composer.busy': 'Operasi Git sedang berjalan…',
         'settings.placement.tabHint': 'Dimatikan, panel tetap bisa dibuka dari bilah sisi kanan dan panel bawah.',
@@ -6116,22 +6014,16 @@ window.__ModuleLoader__.load({
         'settings.card.desc': 'Vị trí bảng, nút thanh tác vụ và thông điệp commit do AI viết',
         'settings.placement.title': 'Vị trí bảng',
         'settings.placement.tab': 'Hiện thẻ Git trong vùng hội thoại',
-      'settings.composer.title': 'Trạng thái Git trên thanh nhập',
-      'settings.composer.hint': 'Hiện kho và nhánh bên cạnh thanh nhập — bấm để chuyển đổi, đồng bộ với bảng Git. Tắt để ẩn đi.',
-      'composer.repoHint': 'Chuyển kho',
+      'settings.composer.title': 'Nhánh dưới ô nhập',
+      'settings.composer.hint': 'Hiện nhánh hiện tại dưới ô nhập, bên trái thống kê phiên — bấm để chuyển đổi, đồng bộ với bảng Git. Tắt để ẩn.',
       'composer.branchHint': 'Chuyển nhánh',
       'composer.detached': 'HEAD (tách rời)',
-      'composer.changesHint': 'Thay đổi chưa commit',
-      'composer.fileHint': 'thêm {a} · xóa {d} tệp',
-      'composer.linesHint': '+{ins} −{del} dòng',
       'modelRoute.pick': 'Chọn mô hình',
       'modelRoute.trigger': 'Mô hình tin nhắn commit AI',
       'modelRoute.modelRow': 'Mô hình',
       'modelRoute.effortRow': 'Suy luận',
       'modelRoute.effortDefault': 'Theo mặc định',
       'modelRoute.empty': 'Không có mô hình nào',
-      'composer.behindHint': 'Commit mới từ xa (có thể kéo về)',
-      'composer.aheadHint': 'Commit cục bộ chờ đẩy lên',
       'composer.inWorktree': 'Đã được checkout ở worktree khác',
       'composer.busy': 'Đang chạy tác vụ Git…',
         'settings.placement.tabHint': 'Tắt rồi, bảng vẫn mở được từ thanh bên phải và bảng dưới.',
@@ -6458,22 +6350,16 @@ window.__ModuleLoader__.load({
         'settings.card.desc': 'موضع اللوحة، أزرار شريط الإجراءات ورسالة إيداع بالذكاء الاصطناعي',
         'settings.placement.title': 'موضع اللوحة',
         'settings.placement.tab': 'إظهار تبويب Git في منطقة المحادثة',
-      'settings.composer.title': 'حالة Git في شريط الإدخال',
-      'settings.composer.hint': 'يعرض المستودع والفرز بجانب شريط الإدخال — انقر للتبديل، ومتزامن مع لوحة Git. عند الإيقاف يبقى الشريط نظيفًا.',
-      'composer.repoHint': 'تبديل المستودع',
+      'settings.composer.title': 'الفرع أسفل حقل الإدخال',
+      'settings.composer.hint': 'يعرض الفرع الحالي أسفل حقل الإدخال، يسار إحصاءات الجلسة — انقر للتبديل، ومتزامن مع لوحة Git. عند الإيقاف يختفي.',
       'composer.branchHint': 'تبديل الفرع',
       'composer.detached': 'HEAD (منفصل)',
-      'composer.changesHint': 'تغييرات غير ملتزَم بها',
-      'composer.fileHint': 'مضاف {a} · محذوف {d}',
-      'composer.linesHint': '+{ins} −{del} أسطر',
       'modelRoute.pick': 'اختر نموذجًا',
       'modelRoute.trigger': 'نموذج رسائل الالتزام بالذكاء الاصطناعي',
       'modelRoute.modelRow': 'النموذج',
       'modelRoute.effortRow': 'الاستدلال',
       'modelRoute.effortDefault': 'اتبع الافتراضي',
       'modelRoute.empty': 'لا توجد نماذج متاحة',
-      'composer.behindHint': 'التزامات جديدة في المستودع البعيد (قابلة للسحب)',
-      'composer.aheadHint': 'التزامات محلية بانتظار الدفع',
       'composer.inWorktree': 'مسحوب في شجرة عمل أخرى',
       'composer.busy': 'عملية Git جارية…',
         'settings.placement.tabHint': 'عند الإيقاف تبقى اللوحة متاحة من الشريط الجانبي الأيمن واللوحة السفلية.',
@@ -6800,22 +6686,16 @@ window.__ModuleLoader__.load({
         'settings.card.desc': 'पैनल प्लेसमेंट, एक्शन रेल बटन और AI कमिट संदेश',
         'settings.placement.title': 'पैनल प्लेसमेंट',
         'settings.placement.tab': 'संवाद क्षेत्र में Git टैब दिखाएँ',
-      'settings.composer.title': 'इनपुट बार में Git स्थिति',
-      'settings.composer.hint': 'इनपुट बार के बगल में रिपॉज़िटरी और शाखा दिखाता है — बदलने के लिए क्लिक करें, Git पैनल के साथ सिंक। बंद करने पर इनपुट बार साफ़ रहती है।',
-      'composer.repoHint': 'रिपॉज़िटरी बदलें',
+      'settings.composer.title': 'इनपुट के नीचे ब्रांच',
+      'settings.composer.hint': 'इनपुट के नीचे, सत्र आँकड़ों के बाएँ मौजूदा ब्रांच दिखाता है — बदलने के लिए क्लिक करें, Git पैनल के साथ सिंक। बंद करने पर छिप जाती है।',
       'composer.branchHint': 'शाखा बदलें',
       'composer.detached': 'HEAD (पृथक)',
-      'composer.changesHint': 'बिना कमिट बदलाव',
-      'composer.fileHint': '{a} जोड़ी गईं · {d} हटाई गईं',
-      'composer.linesHint': '+{ins} −{del} पंक्तियाँ',
       'modelRoute.pick': 'मॉडल चुनें',
       'modelRoute.trigger': 'AI कमिट संदेश मॉडल',
       'modelRoute.modelRow': 'मॉडल',
       'modelRoute.effortRow': 'तर्क',
       'modelRoute.effortDefault': 'डिफ़ॉल्ट का पालन करें',
       'modelRoute.empty': 'कोई मॉडल उपलब्ध नहीं',
-      'composer.behindHint': 'अपस्ट्रीम के नए कमिट (खींचने योग्य)',
-      'composer.aheadHint': 'पुश के लिए प्रतीक्षारत स्थानीय कमिट',
       'composer.inWorktree': 'दूसरे वर्कट्री में चेकआउट',
       'composer.busy': 'Git कार्य चल रहा है…',
         'settings.placement.tabHint': 'बंद करने पर भी पैनल दाएँ साइडबार और निचले पैनल से खुलता है।',
@@ -7142,22 +7022,16 @@ window.__ModuleLoader__.load({
         'settings.card.desc': 'ตำแหน่งแผง, ปุ่มแถบการทำงานและข้อความคอมมิตโดย AI',
         'settings.placement.title': 'ตำแหน่งแผง',
         'settings.placement.tab': 'แสดงแท็บ Git ในพื้นที่บทสนทนา',
-      'settings.composer.title': 'สถานะ Git ในแถบป้อนข้อความ',
-      'settings.composer.hint': 'แสดงที่เก็บและแบรนช์ข้างแถบป้อนข้อความ — คลิกเพื่อสลับ และซิงก์กับแผง Git ปิดแล้วแถบจะสะอาด',
-      'composer.repoHint': 'สลับที่เก็บ',
+      'settings.composer.title': 'สาขาใต้ช่องป้อนข้อความ',
+      'settings.composer.hint': 'แสดงสาขาปัจจุบันใต้ช่องป้อนข้อความ ทางซ้ายของสถิติเซสชัน — คลิกเพื่อสลับ และซิงก์กับแผง Git ปิดแล้วจะซ่อน',
       'composer.branchHint': 'สลับแบรนช์',
       'composer.detached': 'HEAD (แยกขาด)',
-      'composer.changesHint': 'การเปลี่ยนแปลงที่ยังไม่คอมมิต',
-      'composer.fileHint': 'เพิ่ม {a} · ลบ {d} ไฟล์',
-      'composer.linesHint': '+{ins} −{del} บรรทัด',
       'modelRoute.pick': 'เลือกโมเดล',
       'modelRoute.trigger': 'โมเดลข้อความคอมมิต AI',
       'modelRoute.modelRow': 'โมเดล',
       'modelRoute.effortRow': 'การใช้เหตุผล',
       'modelRoute.effortDefault': 'ตามค่าเริ่มต้น',
       'modelRoute.empty': 'ไม่มีโมเดลที่ใช้ได้',
-      'composer.behindHint': 'คอมมิตใหม่จากรีโมต (ดึงได้)',
-      'composer.aheadHint': 'คอมมิตในเครื่องรอพุช',
       'composer.inWorktree': 'ถูกเช็คเอาต์ในเวิร์กทรีอื่น',
       'composer.busy': 'กำลังดำเนินการ Git…',
         'settings.placement.tabHint': 'ปิดแล้วยังเปิดแผงจากแถบข้างขวาหรือแผงล่างได้',
@@ -7631,58 +7505,6 @@ window.__ModuleLoader__.load({
       if (data.isRepo === true) return data.cwd
       if (paths.length > 0) return paths[0]
       return null
-    }
-
-    /* How many changed FILES are additions vs deletions, from the status
-       letters the summary already carries (index/worktree per entry) — no
-       extra git call. Untracked entries ARE additions in git's own model
-       (?? = to-be-added); a rename (R/C) or a conflict counts as neither. */
-    function composerFileSplitOf(summary) {
-      const changes = summary !== null && summary !== undefined && summary.changes !== null && typeof summary.changes === 'object' ? summary.changes : null
-      if (changes === null) return { added: 0, deleted: 0 }
-      let added = 0
-      let deleted = 0
-      const count = (list) => {
-        for (const entry of list === undefined || list === null ? [] : list) {
-          if (entry.index === 'A' || entry.worktree === 'A') added += 1
-          else if (entry.index === 'D' || entry.worktree === 'D') deleted += 1
-        }
-      }
-      count(changes.staged)
-      count(changes.unstaged)
-      added += changes.untracked === undefined || changes.untracked === null ? 0 : changes.untracked.length
-      return { added: added, deleted: deleted }
-    }
-
-    /* Total uncommitted line churn: the packed [path, additions, deletions,
-       binary] rows the host's stats method returns, summed over both the
-       worktree and the index passes. Untracked files have no line counts
-       (git cannot diff what it does not track) — they only ever move the
-       file counters above. */
-    function composerStatsLinesOf(pack) {
-      let additions = 0
-      let deletions = 0
-      if (pack !== null && pack !== undefined && typeof pack === 'object') {
-        for (const row of pack.unstaged === undefined || pack.unstaged === null ? [] : pack.unstaged) { additions += row[1]; deletions += row[2] }
-        for (const row of pack.staged === undefined || pack.staged === null ? [] : pack.staged) { additions += row[1]; deletions += row[2] }
-      }
-      return { additions: additions, deletions: deletions }
-    }
-
-    /* Whether the line counts need a refetch: any path/status move or a new
-       HEAD commit/checkout invalidates them; lines rewritten inside
-       already-dirty files do NOT move this — the slow COMPOSER_STATS_MS
-       floor covers those. */
-    function composerFingerprintOf(summary) {
-      if (summary === null || summary === undefined || summary.changes === null || typeof summary.changes !== 'object') return ''
-      const rows = []
-      const collect = (list) => { for (const entry of list === undefined || list === null ? [] : list) rows.push(entry.path + ':' + entry.index + entry.worktree) }
-      collect(summary.changes.staged)
-      collect(summary.changes.unstaged)
-      collect(summary.changes.untracked)
-      collect(summary.changes.conflicted)
-      rows.sort()
-      return rows.join('|') + '#' + String(summary.head === undefined || summary.head === null ? '' : summary.head)
     }
 
     async function prewarmWorkspace(sessionId, cwd) {
@@ -10339,10 +10161,10 @@ window.__ModuleLoader__.load({
             E('div', { className: 'git4idea-settings-subnote' }, t('settings.placement.immersiveHint')))
         })(),
         (() => {
-          /* Composer status pill (issue: status in the input bar). Same
-             optimistic-write contract as the two rows above; the pill reads
-             composerStatus through composerStatusEnabled() and appears or
-             disappears live. Default ON. */
+          /* Composer dock pill (the current branch, left of the session
+             statistics). Same optimistic-write contract as the two rows above;
+             the pill reads composerStatus through composerStatusEnabled() and
+             appears or disappears live. Default ON. */
           const field = 'composerStatus'
           const inputId = 'git4idea-placement-' + field
           const shown = placementShown(field)
@@ -15301,28 +15123,18 @@ window.__ModuleLoader__.load({
          tool row). Colors follow the host's own state language: warn for
          uncommitted changes, business(blue) for pulls, success(green) for
          pushes — the same three tones the panel and DSH toasts use. ---- */
-      '.git4idea-cs-root{position:relative;display:inline-flex;align-items:center;gap:2px;min-width:0;flex:none}',
-      '.git4idea-cs-pill{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 8px;border:none;border-radius:var(--dsw-radius-sm,8px);background:transparent;color:var(--dsw-alias-label-secondary);font-family:inherit;font-size:var(--dsh-content-font-size-secondary,13px);line-height:20px;white-space:nowrap;cursor:pointer}',
-      '.git4idea-cs-pill:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
-      '.git4idea-cs-pill:disabled{cursor:default}',
-      '.git4idea-cs-name{overflow:hidden;text-overflow:ellipsis;max-width:260px;white-space:nowrap;display:inline-block;vertical-align:bottom}',
+      '.git4idea-cs-root{position:relative;display:inline-flex;align-items:center;gap:2px;min-width:0;flex:none;font-size:calc(var(--dsh-content-font-size-secondary,13px) - 1px);line-height:calc(20px + var(--dsh-content-font-delta-secondary,0px))}',
+      '.git4idea-cs-pill{display:inline-flex;align-items:center;gap:6px;padding:1px 8px;border:none;border-radius:var(--dsw-radius-sm,8px);background:transparent;color:var(--dsw-alias-label-tertiary);font-family:inherit;font-size:inherit;line-height:inherit;white-space:nowrap;cursor:pointer}',
+      '.git4idea-cs-pill:hover:not(:disabled),.git4idea-cs-pill[aria-expanded=true]{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary)}',
+      '.git4idea-cs-name{overflow:hidden;text-overflow:ellipsis;max-width:220px;white-space:nowrap;display:inline-block;vertical-align:bottom}',
       '.git4idea-cs-mrun{display:inline-flex;text-overflow:clip;-webkit-mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 14px),transparent);mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 14px),transparent)}',
       '.git4idea-cs-mrun .git4idea-cs-run{display:inline-flex;flex:none;will-change:transform}',
       '.git4idea-cs-mrun .git4idea-cs-chunk{flex:none;white-space:nowrap;padding-right:28px}',
       '.git4idea-cs-mrun:hover .git4idea-cs-run{animation:git4idea-cs-marquee var(--git4idea-cs-marquee-dur,10s) linear infinite}',
       '@keyframes git4idea-cs-marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}',
       '.git4idea-cs-pill svg{flex:none}',
-      '.git4idea-cs-badge{display:inline-flex;align-items:center;font-size:12px;line-height:20px;font-variant-numeric:tabular-nums;white-space:nowrap;padding:0 3px;font-weight:500}',
-      '.git4idea-cs-changes{color:var(--dsw-alias-state-warn-primary)}',
-      '.git4idea-cs-behind{color:var(--dsw-alias-state-business-primary)}',
       '.git4idea-cs-ahead{color:var(--dsw-alias-state-success-primary)}',
-      /* v0.19.12: file-level add/del split rides INSIDE the ± chip at one
-         step down (11px) so the two +/− groups read as two levels — small
-         green/red = FILES, full-size green/red = LINES. */
-      '.git4idea-cs-split{font-size:11px;line-height:20px;font-variant-numeric:tabular-nums;margin-left:2px}',
-      '.git4idea-cs-add{color:var(--dsw-alias-state-success-primary)}',
-      '.git4idea-cs-del{color:var(--dsw-alias-state-error-primary)}',
-      '.git4idea-cs-lines{display:inline-flex;align-items:center;gap:2px;margin-left:5px}',
+      '.git4idea-cs-behind{color:var(--dsw-alias-state-business-primary)}',
       '.git4idea-cs-error{display:inline-flex;align-items:center;color:var(--dsw-alias-state-error-primary);font-size:12px;padding:0 3px;cursor:help}',
       // .git4idea-cs-menu opens upward (the composer sits at the bottom of the UI). The surface
       // carries no backdrop-filter of its own: the data-cordis-panel attribute opts the popover
@@ -15463,9 +15275,9 @@ window.__ModuleLoader__.load({
 
     /* ============================== composer git status ============================== */
 
-    /* The input-bar Git pill (status beside the composer's tool row):
-       repository + branch with change/pull/push counters, living in the host's
-       'conversation.input.left' slot — the gap right of the permission chip.
+    /* The composer-dock Git pill: the current BRANCH only, living in the host's
+       'conversation.composer.dock' list to the LEFT of the session statistics
+       (activity / usage pills, order 0 and 1 — this entry registers at -10).
        The pill and the panel are SEPARATE React trees, so cross-seat selection
        travels through this tiny module store; rememberRepo() keeps the choice
        across reloads and is the first thing the panel reads on mount, which is
@@ -15506,16 +15318,6 @@ window.__ModuleLoader__.load({
        when the change set or HEAD moves — plus this slow floor for edits
        that rewrite lines in already-dirty files (nothing else in the
        fingerprint moves then). */
-    const COMPOSER_STATS_MS = 90000
-
-    /* Windows paths ride backslashes, so both pill labels cut the leaf with
-       this slash-aware split instead of a bare forward-slash split — a drive
-       path must read as the leaf name, not the whole path. */
-    function baseNameOf(path) {
-      if (typeof path !== 'string' || path === '') return ''
-      const segments = path.split(/[\\/]/).filter((segment) => segment !== '')
-      return segments.length > 0 ? segments[segments.length - 1] : path
-    }
 
     /* The pill feeds the SAME keep-warm cache the panel and the prewarmer
        use (paintRepos / paintPage): a workspace the user has visited — by
@@ -15795,13 +15597,6 @@ window.__ModuleLoader__.load({
       const [checkingOut, setCheckingOut] = useState('')
       const [error, setError] = useState('')
       const [tick, setTick] = useState(0)
-      /* Uncommitted line churn (+n −m), fetched lazily: only when the change
-         set or HEAD moves — never on the ambient 30s tick by itself (the
-         root tag keeps a previous repository's numbers from leaking into
-         this one's pill). */
-      const [lineStats, setLineStats] = useState(null)
-      const statsStampRef = useRef('')
-      const statsAtRef = useRef(0)
       const rootRef = useRef(null)
 
       /* The switch flips live through the same rail-config notify walk the
@@ -15856,11 +15651,11 @@ window.__ModuleLoader__.load({
         return () => { cancelled = true }
       }, [cwd, sessionId, enabled])
 
-      /* Summary on a slow poll: branch, ahead/behind and the change counters.
-         The panel keeps its own 12s poll for its bigger surface; 30s here is
-         only the ambient state, never a correctness dependency. */
+      /* Summary on a slow poll: the branch name only. The panel keeps its own
+         12s poll for its bigger surface; 30s here is only the ambient state,
+         never a correctness dependency. */
       useEffect(() => {
-        if (repoRoot === null || enabled !== true) { setSummary(null); setLineStats(null); return undefined }
+        if (repoRoot === null || enabled !== true) { setSummary(null); return undefined }
         let cancelled = false
         const load = async () => {
           try {
@@ -15872,27 +15667,6 @@ window.__ModuleLoader__.load({
                mount with zero round trips. Merge only our field — a panel
                page keeps its commits. */
             mergePaintPage(repoRoot, { summary: data })
-            /* Line counts ride the same tick only when something actually
-               moved (any status/path change or a new HEAD), or when the slow
-               floor elapsed for in-place edits of dirty files. A clean tree
-               skips the numstat passes entirely and just zeroes the badges. */
-            const fingerprint = composerFingerprintOf(data)
-            const stamp = repoRoot + '::' + fingerprint
-            const now = Date.now()
-            const count = data.changes === null || typeof data.changes !== 'object' ? 0 : data.changes.staged.length + data.changes.unstaged.length + data.changes.untracked.length
-            if (count === 0) {
-              statsStampRef.current = stamp
-              statsAtRef.current = now
-              setLineStats({ root: repoRoot, additions: 0, deletions: 0 })
-            } else if (stamp !== statsStampRef.current || now - statsAtRef.current >= COMPOSER_STATS_MS) {
-              try {
-                const pack = await request('stats', { cwd: cwd, repoRoot: repoRoot })
-                if (cancelled === true) return
-                statsStampRef.current = stamp
-                statsAtRef.current = now
-                setLineStats(Object.assign({ root: repoRoot }, composerStatsLinesOf(pack)))
-              } catch (statsError) { void statsError }
-            }
           } catch (error) { void error }
         }
         const seed = readPaintPage(repoRoot)
@@ -15948,33 +15722,8 @@ window.__ModuleLoader__.load({
       if (enabled !== true) return null
       const data = repoState
       if (data === null || (data.isRepo !== true && (data.repos === undefined || data.repos.length === 0))) return null
-      const repoPaths = data.repos.map((repo) => repo.path)
-      const singleRepo = repoPaths.length <= 1
-      /* The pill shows the repository's OWN name — the origin URL's leaf
-         (summary.origin) — so a clone renamed on disk still reads as the
-         repo it came from; the folder basename is only the fallback for
-         repos without any remote. */
-      const originName = summary !== null && typeof summary.origin === 'string' && summary.origin !== '' ? summary.origin : ''
-      const repoName = originName !== '' ? originName : baseNameOf(repoRoot)
       const branchName = summary !== null && typeof summary.branch === 'string' && summary.branch !== '' ? summary.branch : null
       const detached = summary !== null && summary.detached === true
-      const ahead = summary !== null && typeof summary.ahead === 'number' ? summary.ahead : 0
-      const behind = summary !== null && typeof summary.behind === 'number' ? summary.behind : 0
-      const changesCount = summary !== null && summary.changes !== null && typeof summary.changes === 'object'
-        ? summary.changes.staged.length + summary.changes.unstaged.length + summary.changes.untracked.length
-        : null
-      /* File-level add/del split (status letters, free) + the lazily fetched
-         line churn, assembled into one tooltip that reads as a sentence. */
-      const fileSplit = composerFileSplitOf(summary)
-      const linesLive = lineStats !== null && lineStats.root === repoRoot ? lineStats : null
-      const changesTitle = (() => {
-        let title = t('composer.changesHint')
-        if (changesCount !== null && changesCount > 0) {
-          title += ' · ' + fill(t('composer.fileHint'), { a: fileSplit.added, d: fileSplit.deleted })
-          if (linesLive !== null) title += ' · ' + fill(t('composer.linesHint'), { ins: linesLive.additions, del: linesLive.deletions })
-        }
-        return title
-      })()
 
       const openBranchMenu = async () => {
         setMenu('branch')
@@ -16011,71 +15760,18 @@ window.__ModuleLoader__.load({
         return seed !== undefined && seed.summary !== undefined && seed.summary !== null ? seed.summary : null
       }
 
-      const pickRepoRoot = (path) => {
-        setMenu(null)
-        setRepoRoot(path)
-        setSummary(seedSummaryOf(path))
-        setBranchList(null)
-        setTick((value) => value + 1)
-        rememberRepoShared(sessionId, path)
-      }
-
       return E('div', { ref: rootRef, className: 'git4idea-cs-root', 'data-dsh-git4idea-status': '' },
-        E('button', {
-          type: 'button',
-          className: 'git4idea-cs-pill',
-          title: singleRepo === true ? undefined : t('composer.repoHint'),
-          disabled: singleRepo === true,
-          onClick: singleRepo === true ? undefined : () => { setMenu(menu === 'repo' ? null : 'repo') },
-        },
-          E(Icon, { name: 'commit', size: 13 }),
-          E(ComposerMarqueeName, { text: repoName }),
-          singleRepo === true ? null : E(Icon, { name: 'chevron', size: 10 })),
         branchName !== null ? E('button', {
           type: 'button',
           className: 'git4idea-cs-pill',
           title: t('composer.branchHint'),
+          'aria-expanded': menu === 'branch' ? 'true' : 'false',
           onClick: () => { if (menu !== 'branch') void openBranchMenu(); else setMenu(null) },
         },
-          E(Icon, { name: 'branch', size: 13 }),
+          E(Icon, { name: 'branch', size: 14 }),
           E(ComposerMarqueeName, { text: detached === true ? t('composer.detached') : branchName }),
           E(Icon, { name: 'chevron', size: 10 })) : null,
-        changesCount !== null && changesCount > 0
-          ? E('span', { className: 'git4idea-cs-badge git4idea-cs-changes', title: changesTitle }, '±' + String(changesCount),
-              fileSplit.added > 0 ? E('span', { className: 'git4idea-cs-split git4idea-cs-add' }, '+' + String(fileSplit.added)) : null,
-              fileSplit.deleted > 0 ? E('span', { className: 'git4idea-cs-split git4idea-cs-del' }, '−' + String(fileSplit.deleted)) : null)
-          : null,
-        linesLive !== null && (linesLive.additions > 0 || linesLive.deletions > 0)
-          ? E('span', { className: 'git4idea-cs-lines' },
-              linesLive.additions > 0 ? E('span', { className: 'git4idea-cs-badge git4idea-cs-add', title: changesTitle }, '+' + String(linesLive.additions)) : null,
-              linesLive.deletions > 0 ? E('span', { className: 'git4idea-cs-badge git4idea-cs-del', title: changesTitle }, '−' + String(linesLive.deletions)) : null)
-          : null,
-        behind > 0 ? E('span', { className: 'git4idea-cs-badge git4idea-cs-behind', title: t('composer.behindHint') }, '↓' + String(behind)) : null,
-        ahead > 0 ? E('span', { className: 'git4idea-cs-badge git4idea-cs-ahead', title: t('composer.aheadHint') }, '↑' + String(ahead)) : null,
         error !== '' ? E('span', { className: 'git4idea-cs-error', title: error }, '×') : null,
-        menu === 'repo' ? E('div', { className: 'git4idea-cs-menu', 'data-cordis-panel': '' },
-          /* v0.19.2: one row per checkout — the repository's own name first
-             (origin URL basename, falling back to the directory name), and the
-             single-level directory name as a small sub line only when the two
-             differ (two clones of one repository stay tellable apart). The
-             full path lives in the tooltip, not in the row. */
-          data.repos.map((row) => {
-            const dirName = baseNameOf(row.path)
-            const displayName = row.origin !== undefined && row.origin !== '' ? row.origin : dirName
-            return E('button', {
-              key: row.path,
-              type: 'button',
-              className: 'git4idea-cs-item',
-              'data-current': row.path === repoRoot ? 'true' : 'false',
-              title: row.path,
-              onClick: () => pickRepoRoot(row.path),
-            },
-              E(Icon, { name: 'commit', size: 11 }),
-              E('span', { className: 'git4idea-cs-item-main' },
-                E('span', { className: 'git4idea-cs-item-name' }, displayName),
-                dirName !== displayName ? E('span', { className: 'git4idea-cs-item-sub' }, dirName) : null))
-          }))
-          : null,
         menu === 'branch' ? (branchLoading === true || branchList === null
           ? E('div', { className: 'git4idea-cs-menu', 'data-cordis-panel': '' }, E('div', { className: 'git4idea-cs-item git4idea-cs-static' }, '…'))
           : E('div', { className: 'git4idea-cs-menu', 'data-cordis-panel': '' },
@@ -16597,25 +16293,26 @@ window.__ModuleLoader__.load({
         }, 'dsh-git4idea: conversation view tab')
       })
 
-      /* ---- door 4: the composer status pill (issue: status in the input bar) ---- */
-      /* A tiny repo/branch/change readout inside the host composer's tool row,
-         in the 'conversation.input.left' gap right of the permission chip. It
-         shares the first-paint cache's read paths (read-only routes only) and
-         syncs repository/branch selection with the panel through the module
-         store above. The slot is a plain list; a host without ui-conversation
-         never mounts it and nothing throws. */
+      /* ---- door 4: the composer dock pill (branch, left of the session stats) ---- */
+      /* A branch readout in the host composer's dock list — the row that holds
+         the session statistics (ui-chat registers 'activity' at order 0 and
+         'usage' at order 1), so this entry registers at -10 and renders first.
+         It shares the first-paint cache's read paths (read-only routes only) and
+         syncs the repository with the panel through the module store above. The
+         slot is a plain list; a host without ui-conversation never mounts it and
+         nothing throws. */
       ctx.inject(['slots'], (pillCtx) => {
         const pillSlots = pillCtx.get('slots')
         if (pillSlots === undefined || pillSlots === null || typeof pillSlots.inject !== 'function') return
         pillCtx.effect(() => {
-          const offPill = pillSlots.inject('conversation.input.left', () => pillSlots.register(
-            { name: 'conversation.input.left', id: 'dsh-git4idea:status', order: 20, locale: LOCALE_NS },
+          const offPill = pillSlots.inject('conversation.composer.dock', () => pillSlots.register(
+            { name: 'conversation.composer.dock', id: 'dsh-git4idea:status', order: -10, locale: LOCALE_NS },
             (pillProps) => E(ComposerGitStatus, Object.assign({}, pillProps, { t: t, ctx: ctx })),
           ))
           return () => {
             try { offPill() } catch (error) { void error }
           }
-        }, 'dsh-git4idea: composer status pill')
+        }, 'dsh-git4idea: composer dock pill')
       })
 
       /* ---- session-switch prewarm ---- */

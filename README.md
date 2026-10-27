@@ -29,7 +29,7 @@ dsh plugin --profile desktop add dsh-git4idea
 | --- | --- |
 | `conversationTab` | 是否在会话标签行注册 Git 页（默认开） |
 | `immersive` | 会话内 Git 页是否用沉浸式布局（默认开） |
-| `composerStatus` | 输入框上是否显示仓库/分支胶囊（默认开） |
+| `composerStatus` | 输入框下方是否显示当前分支（默认开） |
 | `rail*` | 动作条每个按钮的显隐（16 个布尔字段） |
 | `commitModel` / `commitReasoning` / `commitPrompt` | 「AI 写提交信息」用哪个模型、哪档思考、附加提示 |
 

@@ -1820,77 +1820,36 @@ test('the changes tree condenses single-dir chains at every level with relative 
   assert.deepEqual(forest.ids, ids, 'collect() enumerates the same compressed tree the renderer shows')
 })
 
-test('the composer badge splits files added/deleted and lazily sums uncommitted lines (v0.19.12)', () => {
-  // Three module-level pure helpers carry the badge. FileSplit reads the
-  // status letters the summary ALREADY has (no extra git call): A anywhere
-  // (index or worktree) is an addition, D is a deletion, untracked entries
-  // ARE additions (git's ?? = to-be-added), renames/conflicts count as
-  // neither. Lines sum the packed numstat rows over BOTH passes.
-  const sliceOf = (name) => {
-    const start = client.indexOf('function ' + name + '(')
-    assert.ok(start >= 0, name + ' must exist at module level')
-    const end = client.indexOf('\n    function ', start + 10)
-    assert.ok(end > start, name + ' must be followed by a sibling function')
-    return new Function(client.slice(start, end) + '; return ' + name)()
-  }
-  const split = sliceOf('composerFileSplitOf')
-  const entry = (index, worktree) => ({ path: 'f', index: index, worktree: worktree })
-  const changes = { staged: [entry('A', ' '), entry('M', 'M'), entry('D', ' ')], unstaged: [entry(' ', 'D'), entry(' ', 'M')], untracked: ['q1', 'q2', 'q3'], conflicted: [entry('U', 'U')] }
-  assert.deepEqual(split({ changes: changes }), { added: 4, deleted: 2 }, 'A/untracked count as additions, D as deletions, M/R-conflict as neither')
-  assert.deepEqual(split({ changes: { staged: [], unstaged: [], untracked: [], conflicted: [] } }), { added: 0, deleted: 0 }, 'a clean tree splits to zeros')
-  assert.deepEqual(split(null), { added: 0, deleted: 0 })
-  // An "added to index, then deleted in the worktree" pair is ONE path —
-  // first match wins so the file is never counted twice.
-  assert.deepEqual(split({ changes: { staged: [entry('A', 'D')], unstaged: [], untracked: [], conflicted: [] } }), { added: 1, deleted: 0 })
-
-  const linesOf = sliceOf('composerStatsLinesOf')
-  const pack = { unstaged: [['a', 1, 2, false], ['b', 0, 3, true]], staged: [['c', 10, 0, false]] }
-  assert.deepEqual(linesOf(pack), { additions: 11, deletions: 5 }, 'both passes sum; binary rows carry zeros and add nothing')
-  assert.deepEqual(linesOf(null), { additions: 0, deletions: 0 })
-
-  const fingerprint = sliceOf('composerFingerprintOf')
-  const head = { head: 'abc123' }
-  const fp = (c) => fingerprint(Object.assign({ changes: c }, head))
-  const clean = { staged: [entry('M', ' ')], unstaged: [], untracked: [], conflicted: [] }
-  assert.ok(fp(clean) !== '', 'a dirty tree has a fingerprint')
-  assert.equal(fp(clean), fp({ staged: [entry('M', ' ')], unstaged: [], untracked: [], conflicted: [] }), 'order does not matter (rows sort)')
-  assert.ok(fp(clean) !== fp({ staged: [entry('M', ' ')], unstaged: [entry(' ', 'M')], untracked: [], conflicted: [] }), 'a new dirty file invalidates line counts')
-  assert.ok(fp(clean) !== fp(Object.assign({ changes: clean }, { head: 'def456' })), 'a new HEAD invalidates line counts (checkout/pull)')
-  assert.equal(fingerprint(null), '')
-
-  // Wiring: the ± chip embeds the small +n −n file split; the line badges
-  // render only for the CURRENT repository (stale numbers from a repo the
-  // pill just left must not leak in) and the tooltip reads as one sentence.
-  assert.match(client, /composerFileSplitOf\(summary\)/, 'the render computes the file split from the live summary')
-  assert.match(client, /className: 'git4idea-cs-split git4idea-cs-add'/, 'added FILES ride inside the ± chip in green')
-  assert.match(client, /className: 'git4idea-cs-split git4idea-cs-del'/, 'deleted FILES ride inside the ± chip in red')
-  assert.match(client, /lineStats !== null && lineStats\.root === repoRoot \? lineStats : null/, 'line stats carry the repository root and only live for it')
-  assert.match(client, /fill\(t\(\'composer\.fileHint'\)\, \{ a: fileSplit\.added, d: fileSplit\.deleted \}\)/, 'the tooltip names added/deleted file counts')
-  assert.match(client, /fill\(t\(\'composer\.linesHint'\)\, \{ ins: linesLive\.additions, del: linesLive\.deletions \}\)/, 'the tooltip sums the line churn')
-  // Lazy fetch: never on the ambient tick — only when the fingerprint moves
-  // or the slow floor elapses; a clean tree skips numstat entirely.
-  assert.match(client, /const COMPOSER_STATS_MS = 90000/, 'the slow floor for in-place line edits exists')
-  assert.match(client, /stamp !== statsStampRef\.current \|\| now - statsAtRef\.current >= COMPOSER_STATS_MS/, 'lines refetch on fingerprint move or slow floor only')
-  assert.match(client, /if \(count === 0\) \{[\s\S]*?setLineStats\(\{ root: repoRoot, additions: 0, deletions: 0 \}\)/, 'a clean tree zeroes the line badges without a git call')
-  assert.match(client, /await request\('stats', \{ cwd: cwd, repoRoot: repoRoot \}\)/, 'the fetch reuses the host read-only stats method')
-  assert.match(client, /setLineStats\(Object\.assign\(\{ root: repoRoot \}, composerStatsLinesOf\(pack\)\)\)/, 'the result is tagged with its root before it reaches state')
-  // CSS: two visual levels — 11px file split inside the chip, full-size line
-  // badges in their own group with the wider group gap.
-  assert.match(cssRule('.git4idea-cs-split'), /font-size:11px/, 'the file split is one step down from the badge digits')
-  assert.match(cssRule('.git4idea-cs-add'), /var\(--dsw-alias-state-success-primary\)/, 'additions are green in both groups')
-  assert.match(cssRule('.git4idea-cs-del'), /var\(--dsw-alias-state-error-primary\)/, 'deletions are red in both groups')
-  assert.match(cssRule('.git4idea-cs-lines'), /margin-left:5px/, 'the line-badge group keeps its own gap from the file chip')
-  // 21 gates carry both new keys (the key-set equality test pins the rest).
-  assert.equal((client.match(/'composer\.fileHint':/g) || []).length, 21)
-  assert.equal((client.match(/'composer\.linesHint':/g) || []).length, 21)
+test('the composer dock pill keeps only the branch, left of the session statistics', () => {
+  // The pill registers into the host composer's dock list — the row that also
+  // holds the session statistics (ui-chat registers 'activity' at order 0 and
+  // 'usage' at order 1) — so a negative order paints it first.
+  assert.match(client, /pillSlots\.inject\('conversation\.composer\.dock'/, 'the pill rides the composer dock')
+  assert.match(client, /name: 'conversation\.composer\.dock', id: 'dsh-git4idea:status', order: -10/, 'the entry sorts ahead of both stats pills')
+  assert.doesNotMatch(client, /conversation\.input\.left/, 'the old input-row seat is gone')
+  // One pill, one label: the branch (or the detached marker) and nothing else.
+  assert.equal((client.match(/className: 'git4idea-cs-pill'/g) || []).length, 1, 'a single pill remains')
+  assert.match(client, /E\(Icon, \{ name: 'branch', size: 14 \}\)/, 'the branch icon leads the pill')
+  assert.match(client, /E\(ComposerMarqueeName, \{ text: detached === true \? t\('composer\.detached'\) : branchName \}\)/, 'the pill label is the branch, or the detached marker')
+  assert.doesNotMatch(client, /git4idea-cs-badge/, 'the change/pull/push counters are gone')
+  assert.doesNotMatch(client, /composerFileSplitOf|composerStatsLinesOf|composerFingerprintOf/, 'the counter helpers went with the badges')
+  assert.doesNotMatch(client, /statsStampRef|statsAtRef|COMPOSER_STATS_MS/, 'the lazy line-churn machinery is gone')
+  assert.doesNotMatch(client, /'composer\.(repoHint|changesHint|fileHint|linesHint|aheadHint|behindHint)'/, 'no locale key outlives its label')
+  // The ambient poll is branch-only: no numstat pass from the composer.
+  assert.match(client, /request\('summary', \{ cwd: cwd, repoRoot: repoRoot, stats: false \}\)/, 'the poll asks for the branch summary only')
+  // The pill borrows the dock pills' box and tone so the row reads as one set.
+  assert.match(cssRule('.git4idea-cs-root'), /--dsh-content-font-size-secondary/, 'the pill follows the dock font step')
+  assert.match(cssRule('.git4idea-cs-pill'), /padding:1px 8px/, 'the pill uses the dock pill padding')
+  assert.match(cssRule('.git4idea-cs-pill'), /var\(--dsw-alias-label-tertiary\)/, 'the pill sits at the stats tone')
+  assert.match(client, /\.git4idea-cs-pill\[aria-expanded=true\]/, 'the open menu keeps the pill lit')
 })
 
-test('long pill names widen to 260px and scroll only on hover, seamlessly (v0.19.13)', () => {
-  // The cap widens 150→260; past it the label switches to a duplicated-chunk
-  // structure measured after paint, and ONLY :hover starts the marquee —
-  // short names keep the plain ellipsis and never animate.
-  assert.match(client, /max-width:260px/, 'the label cap is widened to 260px')
-  assert.equal((client.match(/ComposerMarqueeName, \{ text:/g) || []).length, 2, 'both pill labels (repo + branch) use the marquee name')
+test('long branch names cap at 220px and scroll only on hover, seamlessly (v0.19.13)', () => {
+  // Past the cap the label switches to a duplicated-chunk structure measured
+  // after paint, and ONLY :hover starts the marquee — short names keep the
+  // plain ellipsis and never animate.
+  assert.match(client, /max-width:220px/, 'the label cap matches the dock row')
+  assert.equal((client.match(/ComposerMarqueeName, \{ text:/g) || []).length, 1, 'the branch label uses the marquee name')
   assert.match(client, /function ComposerMarqueeName\(/, 'the marquee name component exists')
   // Overflow detection happens on the real DOM after paint (scrollWidth vs
   // clientWidth); a replaced/unmounted node never re-measures.
