@@ -868,16 +868,21 @@ test('the tree toggle is reachable again after it was folded', () => {
   assert.match(bar, /'data-action': 'tree'/, 'the compact header keeps a tree control')
   assert.match(bar, /onClick: \(\) => foldTree\(!treeOpen\)/, 'and it toggles BOTH ways')
   assert.match(bar, /'aria-pressed': treeOpen \? 'true' : 'false'/)
-  assert.match(bar, /E\(Icon, \{ name: treeOpen \? 'eye' : 'eyeOff' \}\)/, 'the icon distinguishes the two states')
+  // The toggle is a chevron pair (m01216 #3): ">" while folded, "<" while open,
+  // never a branch glyph.
+  assert.match(bar, /E\(Icon, \{ name: treeOpen \? 'chevronLeft' : 'chevronRight' \}\)/, 'the icon distinguishes the two states')
   assert.doesNotMatch(client, /treeOpen \? E\('button'/, 'no chrome may render its tree control only while the tree is open')
 
   const specs = client.slice(client.indexOf('const RAIL_SPECS = ['), client.indexOf('const RAIL_IDS ='))
-  for (const id of ['tree', 'float', 'split', 'fullscreen']) {
-    assert.match(specs, new RegExp("\\{ id: '" + id + "'"), 'RAIL_SPECS must carry the ' + id + ' action')
-  }
-  assert.match(client, /const RAIL_VIEW_IDS = \['tree', 'float', 'split', 'fullscreen'\]/,
-    'view actions must stay clickable while a git command runs')
-  assert.match(client, /action\.available !== false/, 'an action this mount cannot perform is not rendered at all')
+  // m01216 #5: exactly these seven, in this order — branch-tree work only.
+  const ids = [...specs.matchAll(/\{ id: '([^']+)'/g)].map((match) => match[1])
+  assert.deepEqual(ids, ['tree', 'newBranch', 'pull', 'delete', 'compare', 'fetch', 'favorite'],
+    'the rail carries the seven branch-tree actions, in order')
+  assert.match(client, /const RAIL_VIEW_IDS = \['tree'\]/, 'only the tree toggle stays clickable while git runs')
+  assert.match(client, /const RAIL_VIEW_IDS = \['tree'\]/, 'only the tree toggle stays clickable while git runs')
+  assert.match(client, /'aria-disabled': action\.disabled === true \? 'true' : 'false'/,
+    'a disabled action stays hoverable so its tooltip explains why (m01216 #7)')
+  assert.match(client, /className: 'git4idea-rail-sep'/, 'the hairline sits under the tree toggle')
 })
 
 test('the dock actions are wired on the native seat only', () => {
@@ -1532,7 +1537,9 @@ test('the rail settings live in the row Config, with localStorage only as the le
   const hostIds = host.slice(host.indexOf('const RAIL_CONFIG_IDS = ['), host.indexOf(']', host.indexOf('const RAIL_CONFIG_IDS = [')))
   const schemaIds = [...hostIds.matchAll(/'([a-zA-Z]+)'/g)].map((match) => match[1])
   const specIds = [...client.slice(client.indexOf('const RAIL_SPECS = ['), client.indexOf('const RAIL_IDS =')).matchAll(/\{ id: '([^']+)'/g)].map((match) => match[1])
-  assert.ok(specIds.length >= 12, 'RAIL_SPECS should still be the action authority')
+  // m01216 #5 trimmed the rail to the seven branch-tree actions; the host row
+  // Config must still mirror them one-for-one and in order.
+  assert.ok(specIds.length >= 7, 'RAIL_SPECS should still be the action authority')
   assert.deepEqual(schemaIds, specIds, 'the host row Config must mirror RAIL_SPECS exactly (and in order)')
   assert.match(host, /shape\['rail' \+ id\.charAt\(0\)\.toUpperCase\(\) \+ id\.slice\(1\)\] = live\(schema\.boolean\(\)\.default\(true\)\)/,
     'every action is a volatile boolean defaulting to shown')

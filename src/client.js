@@ -240,6 +240,7 @@ window.__ModuleLoader__.load({
       'history.loadMore': '加载更多',
       'history.filter': '文本或哈希',
       'detail.files': '变更文件',
+      'detail.pick': '选择一个提交',
       'detail.back': '返回历史',
       'detail.noFiles': '没有文件变更',
       'diff.empty': '没有可显示的文本差异',
@@ -576,6 +577,7 @@ window.__ModuleLoader__.load({
       'history.loadMore': 'Load more',
       'history.filter': 'Text or hash',
       'detail.files': 'Changed files',
+      'detail.pick': 'Select a commit',
       'detail.back': 'Back to history',
       'detail.noFiles': 'No file changes',
       'diff.empty': 'No textual diff to show',
@@ -920,6 +922,7 @@ window.__ModuleLoader__.load({
         'history.loadMore': '載入更多',
         'history.filter': '文字或雜湊',
         'detail.files': '變更嘅檔案',
+        'detail.pick': '揀一個提交',
         'detail.back': '返回歷史',
         'detail.noFiles': '冇檔案變更',
         'diff.empty': '冇文字差異可以顯示',
@@ -1256,6 +1259,7 @@ window.__ModuleLoader__.load({
         'history.loadMore': '載入更多',
         'history.filter': '文字或雜湊',
         'detail.files': '變更的檔案',
+        'detail.pick': '選擇一個提交',
         'detail.back': '返回歷史',
         'detail.noFiles': '沒有檔案變更',
         'diff.empty': '沒有文字差異可顯示',
@@ -1592,6 +1596,7 @@ window.__ModuleLoader__.load({
         'history.loadMore': '載入更多',
         'history.filter': '文字或雜湊',
         'detail.files': '變更嘅檔案',
+        'detail.pick': '揀一個提交',
         'detail.back': '返回歷史',
         'detail.noFiles': '冇檔案變更',
         'diff.empty': '冇文字差異可以顯示',
@@ -1928,6 +1933,7 @@ window.__ModuleLoader__.load({
         'history.loadMore': 'さらに読み込む',
         'history.filter': 'テキストまたはハッシュ',
         'detail.files': '変更されたファイル',
+        'detail.pick': 'コミットを選択',
         'detail.back': '履歴に戻る',
         'detail.noFiles': 'ファイルの変更はありません',
         'diff.empty': '表示できるテキスト差分がありません',
@@ -2264,6 +2270,7 @@ window.__ModuleLoader__.load({
         'history.loadMore': '더 불러오기',
         'history.filter': '텍스트 또는 해시',
         'detail.files': '변경된 파일',
+        'detail.pick': '커밋을 선택하세요',
         'detail.back': '기록으로 돌아가기',
         'detail.noFiles': '파일 변경 없음',
         'diff.empty': '표시할 텍스트 차이가 없습니다',
@@ -2600,6 +2607,7 @@ window.__ModuleLoader__.load({
         'history.loadMore': 'Mehr laden',
         'history.filter': 'Text oder Hash',
         'detail.files': 'Geänderte Dateien',
+        'detail.pick': 'Commit auswählen',
         'detail.back': 'Zurück zum Verlauf',
         'detail.noFiles': 'Keine Dateiänderungen',
         'diff.empty': 'Kein textueller Diff vorhanden',
@@ -2936,6 +2944,7 @@ window.__ModuleLoader__.load({
         'history.loadMore': 'Charger plus',
         'history.filter': 'Texte ou empreinte',
         'detail.files': 'Fichiers modifiés',
+        'detail.pick': 'Sélectionnez un commit',
         'detail.back': 'Retour à l\'historique',
         'detail.noFiles': 'Aucune modification de fichier',
         'diff.empty': 'Aucun diff textuel à afficher',
@@ -3272,6 +3281,7 @@ window.__ModuleLoader__.load({
         'history.loadMore': 'Загрузить ещё',
         'history.filter': 'Текст или хеш',
         'detail.files': 'Изменённые файлы',
+        'detail.pick': 'Выберите коммит',
         'detail.back': 'Назад к истории',
         'detail.noFiles': 'Файлы не изменялись',
         'diff.empty': 'Нет текстовых различий для показа',
@@ -3608,6 +3618,7 @@ window.__ModuleLoader__.load({
         'history.loadMore': 'Carregar mais',
         'history.filter': 'Texto ou hash',
         'detail.files': 'Arquivos alterados',
+        'detail.pick': 'Selecione um commit',
         'detail.back': 'Voltar ao histórico',
         'detail.noFiles': 'Nenhuma alteração de arquivo',
         'diff.empty': 'Nenhum diff textual para mostrar',
@@ -3944,6 +3955,7 @@ window.__ModuleLoader__.load({
         'history.loadMore': 'Carica altro',
         'history.filter': 'Testo o hash',
         'detail.files': 'File modificati',
+        'detail.pick': 'Seleziona un commit',
         'detail.back': 'Torna alla cronologia',
         'detail.noFiles': 'Nessuna modifica ai file',
         'diff.empty': 'Nessun diff testuale da mostrare',
@@ -4280,6 +4292,7 @@ window.__ModuleLoader__.load({
         'history.loadMore': 'Meer laden',
         'history.filter': 'Tekst of hash',
         'detail.files': 'Gewijzigde bestanden',
+        'detail.pick': 'Selecteer een commit',
         'detail.back': 'Terug naar geschiedenis',
         'detail.noFiles': 'Geen bestandswijzigingen',
         'diff.empty': 'Geen tekstuele diff om te tonen',
@@ -4616,6 +4629,7 @@ window.__ModuleLoader__.load({
         'history.loadMore': 'Wczytaj więcej',
         'history.filter': 'Tekst lub hash',
         'detail.files': 'Zmienione pliki',
+        'detail.pick': 'Wybierz commit',
         'detail.back': 'Powrót do historii',
         'detail.noFiles': 'Brak zmian w plikach',
         'diff.empty': 'Brak różnic tekstowych do pokazania',
@@ -4952,6 +4966,7 @@ window.__ModuleLoader__.load({
         'history.loadMore': 'Ladda mer',
         'history.filter': 'Text eller hash',
         'detail.files': 'Ändrade filer',
+        'detail.pick': 'Välj en commit',
         'detail.back': 'Tillbaka till historiken',
         'detail.noFiles': 'Inga filändringar',
         'diff.empty': 'Ingen textdiff att visa',
@@ -5288,6 +5303,7 @@ window.__ModuleLoader__.load({
         'history.loadMore': 'Daha fazla yükle',
         'history.filter': 'Metin veya hash',
         'detail.files': 'Değişen dosyalar',
+        'detail.pick': 'Bir commit seçin',
         'detail.back': 'Geçmişe dön',
         'detail.noFiles': 'Dosya değişikliği yok',
         'diff.empty': 'Gösterilecek metin farkı yok',
@@ -5624,6 +5640,7 @@ window.__ModuleLoader__.load({
         'history.loadMore': 'Muat lebih banyak',
         'history.filter': 'Teks atau hash',
         'detail.files': 'Berkas yang berubah',
+        'detail.pick': 'Pilih commit',
         'detail.back': 'Kembali ke riwayat',
         'detail.noFiles': 'Tidak ada perubahan berkas',
         'diff.empty': 'Tidak ada diff teks untuk ditampilkan',
@@ -5960,6 +5977,7 @@ window.__ModuleLoader__.load({
         'history.loadMore': 'Tải thêm',
         'history.filter': 'Văn bản hoặc hash',
         'detail.files': 'Tệp đã thay đổi',
+        'detail.pick': 'Chọn một commit',
         'detail.back': 'Quay lại lịch sử',
         'detail.noFiles': 'Không có thay đổi tệp',
         'diff.empty': 'Không có diff văn bản để hiển thị',
@@ -6296,6 +6314,7 @@ window.__ModuleLoader__.load({
         'history.loadMore': 'تحميل المزيد',
         'history.filter': 'نص أو تجزئة',
         'detail.files': 'الملفات المتغيّرة',
+        'detail.pick': 'اختر التزامًا',
         'detail.back': 'رجوع إلى السجل',
         'detail.noFiles': 'لا توجد تغييرات في الملفات',
         'diff.empty': 'لا توجد فروق نصية لعرضها',
@@ -6632,6 +6651,7 @@ window.__ModuleLoader__.load({
         'history.loadMore': 'और लोड करें',
         'history.filter': 'टेक्स्ट या हैश',
         'detail.files': 'बदली हुई फ़ाइलें',
+        'detail.pick': 'एक कमिट चुनें',
         'detail.back': 'इतिहास पर वापस',
         'detail.noFiles': 'कोई फ़ाइल परिवर्तन नहीं',
         'diff.empty': 'दिखाने के लिए कोई टेक्स्ट अंतर नहीं',
@@ -6968,6 +6988,7 @@ window.__ModuleLoader__.load({
         'history.loadMore': 'โหลดเพิ่ม',
         'history.filter': 'ข้อความหรือแฮช',
         'detail.files': 'ไฟล์ที่เปลี่ยน',
+        'detail.pick': 'เลือกคอมมิต',
         'detail.back': 'กลับไปที่ประวัติ',
         'detail.noFiles': 'ไม่มีการเปลี่ยนแปลงไฟล์',
         'diff.empty': 'ไม่มีความต่างเชิงข้อความให้แสดง',
@@ -7759,42 +7780,24 @@ window.__ModuleLoader__.load({
        default order; a stored config only holds a permutation plus the ids the
        user hid, and normalizeRail() drops unknown ids and appends missing ones —
        so a version that adds an action never breaks a stored config. */
+    /* The rail is the IDEA *Git* strip, top to bottom: the branch-pane
+       collapse chevron (drawn by renderRail itself, above a divider), new
+       branch, update-from-remote, delete branch, compare, fetch, favorite.
+       Everything else left the rail — push and pull now sit right of the
+       branch name in the top bar, and the rest was noise for this plugin. */
     const RAIL_SPECS = [
-      { id: 'refresh', icon: 'refresh', key: 'toolbar.refresh', tone: 'accent' },
-      /* View actions. The tree toggle lives here as well as in the compact header
-         because a persisted treeOpen=false would otherwise have no way back:
-         compact is the only chrome with a header button, and it used to render
-         that button only while the tree was OPEN. */
-      { id: 'tree', icon: 'branch', key: 'toolbar.tree', tone: 'secondary' },
-      /* The official right-sidebar dock (float / re-dock / split / full screen).
-         They only render where that service exists — see dockFaceOf(). */
-      { id: 'float', icon: 'float', key: 'action.float', tone: 'accent' },
-      { id: 'split', icon: 'split', key: 'action.split', tone: 'secondary' },
-      { id: 'fullscreen', icon: 'fullscreen', key: 'action.fullscreen', tone: 'secondary' },
-      { id: 'newBranch', icon: 'branchCreate', key: 'toolbar.newBranch', tone: 'success' },
-      { id: 'checkout', icon: 'checkout', key: 'action.checkout', tone: 'accent' },
-      { id: 'delete', icon: 'trash', key: 'action.delete', tone: 'danger' },
-      { id: 'compare', icon: 'compare', key: 'action.compare', tone: 'violet' },
-      { id: 'diff', icon: 'diff', key: 'action.showDiff', tone: 'secondary' },
-      { id: 'stash', icon: 'stash', key: 'action.stash', tone: 'cyan' },
-      { id: 'tag', icon: 'tag', key: 'action.newTagHere', tone: 'warn' },
+      { id: 'tree', icon: 'chevronLeft', key: 'toolbar.tree', tone: 'secondary' },
+      { id: 'newBranch', icon: 'plus', key: 'toolbar.newBranch', tone: 'secondary' },
+      { id: 'pull', icon: 'pull', key: 'toolbar.pull', tone: 'secondary' },
+      { id: 'delete', icon: 'trash', key: 'action.delete', tone: 'secondary' },
+      { id: 'compare', icon: 'compare', key: 'action.compare', tone: 'secondary' },
+      { id: 'fetch', icon: 'fetch', key: 'toolbar.fetch', tone: 'secondary' },
       { id: 'favorite', icon: 'star', key: 'action.favorite', tone: 'warn' },
-      /* fetch keeps its own button (user walked back the removal, 2026-10-10);
-         the refresh button ALSO fetches when clicked manually — refresh means
-         "see whether the remote has anything new", and the dedicated fetch is
-         still there for the explicit gesture. */
-      { id: 'fetch', icon: 'fetch', key: 'toolbar.fetch', tone: 'cyan' },
-      { id: 'pull', icon: 'pull', key: 'toolbar.pull', tone: 'accent' },
-      { id: 'push', icon: 'push', key: 'toolbar.push', tone: 'success' },
-      /* The ⋯ menu moved to the changes-section header (user correction,
-         2026-10-10: the SCM ▸ menu lives where the changes live, not on the
-         rail). Nothing else about the menu changed. */
     ]
     const RAIL_IDS = RAIL_SPECS.map((spec) => spec.id)
     /* Actions that arrange the view rather than touch the repository, so a running
        git command never greys them out. */
-    const RAIL_VIEW_IDS = ['tree', 'float', 'split', 'fullscreen']
-    const RAIL_DOCK_IDS = ['float', 'split', 'fullscreen']
+    const RAIL_VIEW_IDS = ['tree']
 
     function normalizeRail(raw) {
       const source = raw !== null && typeof raw === 'object' ? raw : {}
@@ -12263,7 +12266,41 @@ window.__ModuleLoader__.load({
     function CommitDetail(props) {
       const t = props.t
       const detail = props.detail
-      if (detail === null || detail === undefined) return E('div', { className: 'git4idea-empty' }, t('status.loading'))
+      /* The right column (m01216): changed files on top (2/3 of the height), the
+         commit message below (1/3). The parent folder rides in its own column so
+         two files called index.js are told apart without a tooltip. */
+      const fileRows = detail === null || detail === undefined
+        ? null
+        : detail.files.length === 0
+          ? E('div', { className: 'git4idea-empty' }, t('detail.noFiles'))
+          : detail.files.map((file) => E('div', {
+              key: file.path,
+              className: 'git4idea-row git4idea-row-file' + (props.selectedPath === file.path ? ' git4idea-row-selected' : ''),
+              title: file.path,
+              /* Same click model as everywhere else (v0.18.3): plain click only
+                 selects, DOUBLE-click opens the diff. */
+              onClick: () => props.onSelectFile(file),
+              onDoubleClick: () => props.onOpenFile(file),
+              onContextMenu: props.onFileMenu === undefined ? undefined : (event) => { event.preventDefault(); props.onFileMenu(event, file) },
+            },
+              FileTypeGlyph({ path: file.path }),
+              E('span', { className: 'git4idea-row-label' }, baseName(file.path)),
+              E('span', { className: 'git4idea-row-sub git4idea-row-dir' }, dirName(file.path)),
+              file.additions > 0 ? E('span', { className: 'git4idea-stat-add' }, '+' + file.additions) : null,
+              file.deletions > 0 ? E('span', { className: 'git4idea-stat-del' }, '-' + file.deletions) : null))
+      if (detail === null || detail === undefined) return E('div', { className: 'git4idea-empty git4idea-detail-empty' }, t('detail.pick'))
+      if (props.pane === true) {
+        return E('div', { className: 'git4idea-detail git4idea-detail-pane' },
+          E('div', { className: 'git4idea-detail-files-head' }, t('detail.files') + ' · ' + String(detail.files.length)),
+          E('div', { className: 'git4idea-detail-files' }, fileRows),
+          E('div', { className: 'git4idea-detail-msg' },
+            E('div', { className: 'git4idea-detail-head' },
+              E('span', { className: 'git4idea-mono' }, detail.shortHash),
+              E('span', { className: 'git4idea-detail-author' }, detail.author),
+              E('span', { className: 'git4idea-detail-date' }, shortDate(detail.date))),
+            E('div', { className: 'git4idea-detail-subject' }, detail.subject),
+            detail.body === undefined || detail.body.trim() === '' ? null : E('pre', { className: 'git4idea-detail-body' }, detail.body.trim())))
+      }
       return E('div', { className: 'git4idea-detail' },
         E('div', { className: 'git4idea-detail-head' },
           E('button', { type: 'button', className: 'git4idea-btn git4idea-btn-small', onClick: props.onBack }, '← ' + t('detail.back')),
@@ -12273,23 +12310,7 @@ window.__ModuleLoader__.load({
         E('div', { className: 'git4idea-detail-subject' }, detail.subject),
         detail.body === undefined || detail.body.trim() === '' ? null : E('pre', { className: 'git4idea-detail-body' }, detail.body.trim()),
         E('div', { className: 'git4idea-detail-files-head' }, t('detail.files') + ' · ' + String(detail.files.length)),
-        E('div', { className: 'git4idea-detail-files' },
-          detail.files.length === 0 ? E('div', { className: 'git4idea-empty' }, t('detail.noFiles')) : null,
-          detail.files.map((file) => E('div', {
-            key: file.path,
-            className: 'git4idea-row git4idea-row-file' + (props.selectedPath === file.path ? ' git4idea-row-selected' : ''),
-            title: file.path,
-            /* Same click model as everywhere else (v0.18.3): plain click only
-               selects, DOUBLE-click opens the diff. */
-            onClick: () => props.onSelectFile(file),
-            onDoubleClick: () => props.onOpenFile(file),
-            onContextMenu: props.onFileMenu === undefined ? undefined : (event) => { event.preventDefault(); props.onFileMenu(event, file) },
-          },
-            FileTypeGlyph({ path: file.path }),
-            E('span', { className: 'git4idea-row-label' }, baseName(file.path)),
-            E('span', { className: 'git4idea-row-sub git4idea-row-dir' }, dirName(file.path)),
-            file.additions > 0 ? E('span', { className: 'git4idea-stat-add' }, '+' + file.additions) : null,
-            file.deletions > 0 ? E('span', { className: 'git4idea-stat-del' }, '-' + file.deletions) : null))))
+        E('div', { className: 'git4idea-detail-files' }, fileRows))
     }
 
     /* ============================== panel ============================== */
@@ -13047,14 +13068,17 @@ window.__ModuleLoader__.load({
         setSelectedPath(null)
         setPatch('')
         setDiffContext(null)
-        setView('detail')
+        /* Wide seats keep the log in the middle and open the commit in the
+           right-hand column (m01216); a single-row seat has no third column, so
+           there the detail takes the main one. */
+        if (compact === true) setView('detail')
         setDetail(null)
         try {
           setDetail(await request('commitDetail', Object.assign({}, base, { hash: commit.hash })))
         } catch (caught) {
           setError(caught instanceof Error ? caught.message : String(caught))
         }
-      }, [base])
+      }, [base, compact])
 
       const checkout = useCallback(async (entry) => {
         if (entry.tag === true) { void run('checkout', { branch: entry.name }); return }
@@ -13742,6 +13766,10 @@ window.__ModuleLoader__.load({
         })))
       }, [openMenuAt, branches, checkout])
 
+      /* The commit layer (m01216): the changes column is gone, so pending
+         changes, the message and the buttons live in one overlay over the log. */
+      const [commitOpen, setCommitOpen] = useState(false)
+
       const topBar = E('div', { className: 'git4idea-topbar' },
         E(RepoSelect, {
           t: t, repos: repoOptions, value: repoRoot,
@@ -13757,17 +13785,42 @@ window.__ModuleLoader__.load({
           },
             E('span', { className: 'git4idea-repo-name' }, branches.branch),
             E(Icon, { name: 'chevron', size: 12 }))),
+        /* Push and pull sit right of the branch name (m01216): the rail is left
+           for branch-tree actions only, and the undo menu is gone. */
+        E('button', {
+          type: 'button', className: 'git4idea-icon-btn git4idea-icon-btn-small',
+          title: t('toolbar.push'),
+          'aria-disabled': remoteReady !== true || blocked === true ? 'true' : 'false',
+          onClick: () => {
+            if (remoteReady !== true || blocked === true) return
+            setDialog({ kind: 'push' })
+          },
+        }, E(Icon, { name: 'push', size: 14 })),
+        E('button', {
+          type: 'button', className: 'git4idea-icon-btn git4idea-icon-btn-small',
+          title: t('toolbar.pull'),
+          'aria-disabled': remoteReady !== true || summary === null || summary.upstream === null || blocked === true ? 'true' : 'false',
+          onClick: () => {
+            if (remoteReady !== true || summary === null || summary.upstream === null || blocked === true) return
+            void run('pull', { mode: 'ff-only' })
+          },
+        }, E(Icon, { name: 'pull', size: 14 })),
         summary === null || summary.upstream === null ? null : E('span', { className: 'git4idea-track' },
           summary.ahead > 0 ? E('span', { className: 'git4idea-track-ahead' }, '↑' + summary.ahead) : null,
           summary.behind > 0 ? E('span', { className: 'git4idea-track-behind' }, (summary.ahead > 0 ? ' ' : '') + '↓' + summary.behind) : null),
         operation === null ? null : E('span', { className: 'git4idea-opchip', title: t('operation.hint') }, t('operation.' + operation)),
-        E('button', {
-          type: 'button', className: 'git4idea-icon-btn git4idea-icon-btn-small',
-          title: t('undo.menu'),
-          onClick: (event) => { void openUndoMenu(event) },
-        }, E(Icon, { name: 'undo', size: 13 })),
         E('span', { className: 'git4idea-topbar-spacer' }),
-        busy ? E('span', { className: 'git4idea-busy' }, t('status.busy')) : null)
+        busy ? E('span', { className: 'git4idea-busy' }, t('status.busy')) : null,
+        /* The commit button opens the commit layer (m01216); the old always-on
+           changes column is gone, so this is the only way in. */
+        E('button', {
+          type: 'button', className: 'git4idea-topbar-commit',
+          title: t('changes.commit'),
+          onClick: () => setCommitOpen(true),
+        },
+          E(Icon, { name: 'commit', size: 13 }),
+          E('span', null, t('changes.commit')),
+          dirty > 0 ? E('span', { className: 'git4idea-topbar-commit-count' }, String(dirty)) : null))
 
       const banner = error === null ? null : E('div', { className: 'git4idea-banner' },
         E('span', { className: 'git4idea-banner-text' }, error),
@@ -13778,39 +13831,41 @@ window.__ModuleLoader__.load({
         E('button', { type: 'button', className: 'git4idea-link', onClick: () => setNote(null) }, t('error.dismiss')))
 
 
-      const historyPane = view === 'detail'
-        ? E(CommitDetail, {
-            t: t, detail: detail, selectedPath: selectedPath,
-            onBack: () => { setView('history'); setSelectedPath(null); setPatch(''); setDiffContext(null) },
-            /* Plain click only highlights the file; the DOUBLE-click opens its
-               diff (v0.18.3, one click model across every list). */
-            onSelectFile: (file) => { setSelectedPath(file.path) },
-            onOpenFile: (file) => {
-              setSelectedPath(file.path)
-              showDiff({
-                hash: detail === null || detail === undefined ? undefined : detail.hash,
-                subject: detail === null || detail === undefined ? '' : detail.subject,
-                path: file.path,
-              })
-            },
-            onFileMenu: detailFileMenu,
+      /* The log never leaves the middle column any more: the picked commit
+         renders beside it (m01216), so the list stays put while the detail loads. */
+      const historyPane = E(HistoryList, {
+        t: t, commits: commits, hasMore: hasMore, busy: busy, selectedHash: selectedHash,
+        hideSearch: compact, pathFilter: pathFilter, openMenuAt: openMenuAt,
+        onPathFilter: (value) => setPathFilter(value),
+        onSelect: (commit) => { void selectCommit(commit) },
+        onMenu: commitMenu,
+        onLoadMore: () => { void guard(() => loadCommits(commits.length)) },
+        /* ---- multi-select (issue #13) ---- */
+        pickedHashes: pickedCommits,
+        onPicksChange: onCommitPicks,
+        onSelectAll: (hashes) => onCommitPicks(new Set(hashes)),
+        onKeyDown: onHistoryKeyDown,
+        mergeAnchor: mergeAnchor,
+        base: base,
+        request: request,
+      })
+
+      const detailPane = E(CommitDetail, {
+        t: t, detail: detail, selectedPath: selectedPath, pane: true,
+        onBack: () => { setSelectedPath(null); setPatch(''); setDiffContext(null) },
+        /* Plain click only highlights the file; the DOUBLE-click opens its
+           diff (v0.18.3, one click model across every list). */
+        onSelectFile: (file) => { setSelectedPath(file.path) },
+        onOpenFile: (file) => {
+          setSelectedPath(file.path)
+          showDiff({
+            hash: detail === null || detail === undefined ? undefined : detail.hash,
+            subject: detail === null || detail === undefined ? '' : detail.subject,
+            path: file.path,
           })
-        : E(HistoryList, {
-            t: t, commits: commits, hasMore: hasMore, busy: busy, selectedHash: selectedHash,
-            hideSearch: compact, pathFilter: pathFilter, openMenuAt: openMenuAt,
-            onPathFilter: (value) => setPathFilter(value),
-            onSelect: (commit) => { void selectCommit(commit) },
-            onMenu: commitMenu,
-            onLoadMore: () => { void guard(() => loadCommits(commits.length)) },
-            /* ---- multi-select (issue #13) ---- */
-            pickedHashes: pickedCommits,
-            onPicksChange: onCommitPicks,
-            onSelectAll: (hashes) => onCommitPicks(new Set(hashes)),
-            onKeyDown: onHistoryKeyDown,
-            mergeAnchor: mergeAnchor,
-            base: base,
-            request: request,
-          })
+        },
+        onFileMenu: detailFileMenu,
+      })
 
       const diffPane = patch === '' && patchLoading === false ? null : E('div', { className: 'git4idea-diff-pane', 'data-pane': 'diff', style: paneStyle('diff'), onContextMenu: onDiffPaneContextMenu },
         E('div', { className: 'git4idea-diff-head' },
@@ -14066,7 +14121,10 @@ window.__ModuleLoader__.load({
         ])
       }
       const commitSettings = readCommitSettings()
-      const changesPane = E(ChangesPanel, {
+      /* One panel spec, two hosts: the compact chrome renders it inline, the
+         commit layer renders it as the left half of the overlay (m01216). The
+         only difference between the two is where a file click sends its diff. */
+      const renderChanges = (onDiff) => E(ChangesPanel, {
         t: t, summary: summary, busy: busy, compact: compact, hideHeader: compact,
         groupBy: groupBy, sortKey: sortKey, onGroupBy: setGroupBy,
         foldedDirs: foldedDirs, onFoldedDirs: setFoldedDirs,
@@ -14078,14 +14136,19 @@ window.__ModuleLoader__.load({
         // says exactly what it will publish, so the host guard is satisfied by
         // the click itself rather than by a second dialog.
         onCommit: (message, amend, push) => {
-          void run('commit', { message: message, amend: amend, push: push === true, confirm: push === true })
+          void (async () => {
+            const result = await run('commit', { message: message, amend: amend, push: push === true, confirm: push === true })
+            /* Only a landed commit closes the layer; a rejected one keeps the
+               message on screen with the error banner right above it. */
+            if (result !== undefined) setCommitOpen(false)
+          })()
         },
         onStage: (item) => { void run('stage', { paths: [item.path] }) },
         onUnstage: (item) => { void run('unstage', { paths: [item.path] }) },
         onStageAll: (entries) => { void run('stage', { paths: entries.map((entry) => entry.path) }) },
         onUnstageAll: () => { void run('unstage', { paths: (summary === null ? [] : summary.changes.staged).map((entry) => entry.path) }) },
         onDiscard: (item, group) => setDialog({ kind: 'discard', item: item, group: group }),
-        onDiff: (item, group) => { showDiff({ path: item.path, staged: group === 'staged', untracked: group === 'untracked' }) },
+        onDiff: onDiff,
         onChangeMenu: changeMenu,
         /* ---- multi-select (issue #13) ---- */
         selection: changeSelection,
@@ -14097,6 +14160,32 @@ window.__ModuleLoader__.load({
         onCopySelection: copyChangeSelection,
         onKeyDown: onChangesKeyDown,
       })
+
+      const changesPane = renderChanges((item, group) => {
+        showDiff({ path: item.path, staged: group === 'staged', untracked: group === 'untracked' })
+      })
+
+      /* The commit layer (m01216): pending changes over the message on the
+         left, the picked file's diff on the right — the same panel the narrow
+         chrome uses, so staging and the AI message keep working inside it. */
+      const commitLayer = commitOpen === false ? null : E('div', { className: 'git4idea-commit-layer', 'data-git4idea-commit-layer': '' },
+        E('div', { className: 'git4idea-commit-layer-head' },
+          E(Icon, { name: 'commit', size: 13 }),
+          E('span', { className: 'git4idea-commit-layer-title' }, t('changes.title')),
+          E('span', { className: 'git4idea-topbar-spacer' }),
+          E('button', {
+            type: 'button', className: 'git4idea-icon-btn', title: t('confirm.cancel'),
+            onClick: () => setCommitOpen(false),
+          }, E(Icon, { name: 'close', size: 12 }))),
+        E('div', { className: 'git4idea-commit-layer-body' },
+          E('div', { className: 'git4idea-commit-layer-left' }, renderChanges((item, group) => {
+            setDiffContext({ kind: 'worktree', staged: group === 'staged' })
+            void openDiff({ path: item.path, staged: group === 'staged' })
+          })),
+          E('div', { className: 'git4idea-commit-layer-right' },
+            patch === '' && patchLoading === false
+              ? E('div', { className: 'git4idea-empty' }, t('pane.diff'))
+              : E(DiffBody, { patch: patch, loading: patchLoading, t: t }))))
 
       /* --- Rail acts on the branch-tree selection (v0.18.5) -------------------
          The tree reports its picks up; the rail resolves them back to live
@@ -14152,22 +14241,27 @@ window.__ModuleLoader__.load({
          The rail renders a user-chosen subset in a user-chosen order. */
       const railActions = RAIL_SPECS.map((spec) => {
         const entry = { id: spec.id, icon: spec.icon, tone: spec.tone, label: t(spec.key), disabled: false, active: false, run: () => {} }
-        if (spec.id === 'refresh') { entry.disabled = refreshSpinning === true; entry.spinning = refreshSpinning === true; entry.run = () => { void refresh({ fetchRemote: true }) } }
-        else if (spec.id === 'newBranch') entry.run = () => setDialog({ kind: 'newBranch' })
-        else if (spec.id === 'checkout') {
-          // Exactly one picked ref → check THAT out directly (same call the
-          // double-click uses); otherwise keep the picker menu.
-          if (railPicked.length === 1) { entry.label = t('toolbar.checkoutPicked'); entry.disabled = blocked; entry.run = () => checkout(railPicked[0].entry) }
-          else { entry.disabled = otherBranches.length === 0 || blocked; entry.run = (event) => pickBranchMenu(event, 'checkout') }
+        if (spec.id === 'tree') {
+          // The chevron points at what the click does: right opens a closed
+          // branch pane, left closes an open one (m01216 #3).
+          entry.active = treeOpen
+          entry.icon = treeOpen === true ? 'chevronLeft' : 'chevronRight'
+          entry.run = () => foldTree(!treeOpen)
         }
+        else if (spec.id === 'newBranch') entry.run = () => setDialog({ kind: 'newBranch' })
         else if (spec.id === 'delete') {
           if (railPicked.length > 0) { entry.label = fill(t('toolbar.deletePicked'), { n: railPicked.length }); entry.disabled = blocked; entry.run = () => deleteBranchEntries(railPicked) }
           else { entry.disabled = otherBranches.length === 0; entry.run = (event) => pickBranchMenu(event, 'delete') }
         }
         else if (spec.id === 'compare') { entry.disabled = otherBranches.length === 0; entry.run = (event) => pickBranchMenu(event, 'compare') }
-        else if (spec.id === 'diff') { entry.disabled = dirty === 0; entry.run = () => showWorkingDiff() }
-        else if (spec.id === 'stash') { entry.disabled = dirty === 0 && stashCount === 0; entry.run = (event) => stashMenu(event) }
-        else if (spec.id === 'tag') { entry.disabled = commits.length === 0; entry.run = () => setDialog({ kind: 'newTag' }) }
+        else if (spec.id === 'fetch') {
+          if (railPicked.length > 0) { entry.label = fill(t('toolbar.fetchPicked'), { n: railPicked.length }); entry.disabled = blocked; entry.run = () => { void fetchPickedRefs(railPicked) } }
+          else { entry.disabled = remoteReady !== true; entry.run = () => { void run('fetch', { prune: true }) } }
+        }
+        else if (spec.id === 'pull') {
+          if (railPickedLocals.length > 0) { entry.label = fill(t('toolbar.pullPicked'), { n: railPickedLocals.length }); entry.disabled = blocked; entry.run = () => { void pullPickedBranches(railPickedLocals) } }
+          else { entry.disabled = remoteReady !== true || tracked !== true || blocked; entry.run = () => { void run('pull', { mode: 'ff-only' }) } }
+        }
         else if (spec.id === 'favorite') {
           // One picked LOCAL branch stars/unstars THAT branch; with no selection
           // it keeps starring the current one. Multi-select stays disabled —
@@ -14177,48 +14271,8 @@ window.__ModuleLoader__.load({
           entry.active = favorites.indexOf(target) >= 0
           entry.run = () => toggleFavoriteBranch(target)
         }
-        else if (spec.id === 'fetch') {
-          if (railPicked.length > 0) { entry.label = fill(t('toolbar.fetchPicked'), { n: railPicked.length }); entry.disabled = blocked; entry.run = () => { void fetchPickedRefs(railPicked) } }
-          else { entry.disabled = remoteReady !== true; entry.run = () => { void run('fetch', { prune: true }) } }
-        }
-        else if (spec.id === 'pull') {
-          if (railPickedLocals.length > 0) { entry.label = fill(t('toolbar.pullPicked'), { n: railPickedLocals.length }); entry.disabled = blocked; entry.run = () => { void pullPickedBranches(railPickedLocals) } }
-          else { entry.disabled = remoteReady !== true || tracked !== true || blocked; entry.run = () => { void run('pull', { mode: 'ff-only' }) } }
-        }
-        else if (spec.id === 'push') {
-          if (railPickedLocals.length > 0) { entry.label = fill(t('toolbar.pushPicked'), { n: railPickedLocals.length }); entry.disabled = blocked; entry.run = () => setDialog({ kind: 'pushMany', items: railPickedLocals.map((item) => ({ name: item.name, upstream: item.entry.upstream })) }) }
-          else { entry.disabled = remoteReady !== true || blocked; entry.run = () => setDialog({ kind: 'push' }) }
-        }
-        else if (spec.id === 'tree') { entry.active = treeOpen; entry.run = () => foldTree(!treeOpen) }
-        else if (spec.id === 'float') {
-          // Label AND icon follow where the panel actually is: floating panels get
-          // the way back, docked ones get the way out.
-          entry.available = dockState.float
-          entry.active = dockState.floating
-          entry.icon = dockState.floating === true ? 'dock' : 'float'
-          entry.label = dockState.floating === true ? t('action.dock') : t('action.float')
-          entry.run = () => {
-            if (dockState.floating === true) { dock.service.dock(floatPaneId); return }
-            dock.service.float(dock.tabId)
-          }
-        }
-        else if (spec.id === 'split') {
-          entry.available = dockState.split
-          entry.run = () => { dock.service.split(dock.paneId) }
-        }
-        else if (spec.id === 'fullscreen') {
-          entry.available = dockState.fullscreen
-          entry.active = dock !== null && dock.fullscreen === true
-          entry.icon = entry.active === true ? 'collapse' : 'expand'
-          entry.label = entry.active === true ? t('action.exitFullscreen') : t('action.fullscreen')
-          entry.run = () => {
-            const service = dock.service
-            const target = typeof service.commandTarget === 'function' ? service.commandTarget(document.activeElement) : undefined
-            if (target !== undefined && target !== null) service.toggleFullscreen(target)
-          }
-        }
         // A running git command greys out the repository actions, never the view.
-        if (busy === true && spec.id !== 'refresh' && RAIL_VIEW_IDS.indexOf(spec.id) < 0) entry.disabled = true
+        if (busy === true && RAIL_VIEW_IDS.indexOf(spec.id) < 0) entry.disabled = true
         return entry
       })
 
@@ -14282,16 +14336,28 @@ window.__ModuleLoader__.load({
         const slots = overflow
           ? Math.max(1, capacity - 2)
           : Math.min(railVisible.length, Math.max(0, capacity - 1))
-        const children = railVisible.slice(0, slots).map((action) => E('button', {
-          key: action.id,
-          type: 'button',
-          className: 'git4idea-rail-btn git4idea-tone-' + action.tone + (action.active === true ? ' git4idea-rail-btn-active' : '') + (action.spinning === true ? ' git4idea-spin' : ''),
-          'data-action': action.id,
-          'aria-pressed': action.active === true ? 'true' : 'false',
-          title: action.disabled === true ? action.label + ' · ' + reason : action.label,
-          disabled: action.disabled === true,
-          onClick: action.run,
-        }, E(Icon, { name: action.icon, size: 18 })))
+        // Disabled buttons keep their tooltip: a real `disabled` attribute
+        // swallows hover events in the browser, which is exactly why the
+        // explanation went missing on a busy repository. aria-disabled only
+        // changes the look, the click is guarded below.
+        const children = railVisible.slice(0, slots).flatMap((action, index) => [
+          // The pane-collapse chevron sits in this same column, above a hairline
+          // (IDEA draws it that way); it is never a column of its own.
+          index === 1 && vertical === true ? E('span', { key: 'rail-sep', className: 'git4idea-rail-sep' }) : null,
+          E('button', {
+            key: action.id,
+            type: 'button',
+            className: 'git4idea-rail-btn'
+              + (action.id === 'favorite' ? ' git4idea-rail-star' : '')
+              + (action.active === true ? ' git4idea-rail-btn-active' : '')
+              + (action.spinning === true ? ' git4idea-spin' : ''),
+            'data-action': action.id,
+            'aria-pressed': action.active === true ? 'true' : 'false',
+            'aria-disabled': action.disabled === true ? 'true' : 'false',
+            title: action.disabled === true ? action.label + ' · ' + reason : action.label,
+            onClick: (event) => { if (action.disabled === true) return; action.run(event) },
+          }, E(Icon, { name: action.icon, size: 18 })),
+        ].filter((node) => node !== null))
         if (overflow === true) {
           children.push(E('button', {
             key: 'more',
@@ -14369,28 +14435,28 @@ window.__ModuleLoader__.load({
               'aria-pressed': treeOpen ? 'true' : 'false',
               title: t('toolbar.tree'),
               onClick: () => foldTree(!treeOpen),
-            }, E(Icon, { name: treeOpen ? 'eye' : 'eyeOff' }))),
+            }, E(Icon, { name: treeOpen ? 'chevronLeft' : 'chevronRight' }))),
           treeOpen ? E('div', { className: 'git4idea-compact-tree', 'data-pane': 'tree', style: paneStyle('tree') }, E(BranchTree, { t: t, branches: branches, favorites: favorites, onCheckout: checkout, onBrowse: browseBranch, onBranchMenu: branchMenu, onDeleteEntries: deleteBranchEntries, onCopyValues: copyValues, onPicksChange: onBranchPicks, clearSignal: pickEpochs.tree, onCollapse: () => foldTree(false) })) : null,
           treeOpen ? gutter('tree', 'prev') : null,
-          view === 'changes' ? changesPane : E('div', { className: 'git4idea-pane git4idea-pane-main' }, historyPane, diffGutter, diffPane))
+          view === 'changes' ? changesPane : view === 'detail'
+            ? E('div', { className: 'git4idea-pane git4idea-pane-main git4idea-pane-detail' }, detailPane)
+            : E('div', { className: 'git4idea-pane git4idea-pane-main' }, historyPane, diffGutter, diffPane))
       } else if (columns) {
+        // The collapse chevron lives in the action rail, in the same column as the
+        // other buttons (m01216 #3), so a folded tree needs no strip of its own.
         body = E('div', { className: 'git4idea-body git4idea-body-columns', ref: bodyRef },
-          treeOpen === false ? E('div', { className: 'git4idea-tree-strip' },
-            E('button', {
-              type: 'button', className: 'git4idea-icon-btn', 'data-action': 'tree-expand',
-              title: t('toolbar.tree'), 'aria-label': t('toolbar.tree'),
-              onClick: () => foldTree(true),
-            }, E(Icon, { name: 'chevronRight', size: 14 }))) : null,
           treeOpen ? E('div', { className: 'git4idea-pane git4idea-pane-tree', 'data-pane': 'tree', style: paneStyle('tree') }, E(BranchTree, { t: t, branches: branches, favorites: favorites, onCheckout: checkout, onBrowse: browseBranch, onBranchMenu: branchMenu, onDeleteEntries: deleteBranchEntries, onCopyValues: copyValues, onPicksChange: onBranchPicks, clearSignal: pickEpochs.tree, onCollapse: () => foldTree(false) })) : null,
           treeOpen ? gutter('tree', 'prev') : null,
           E('div', { className: 'git4idea-pane git4idea-pane-main' }, historyPane, diffGutter, diffPane),
           gutter('changes', 'next'),
-          E('div', { className: 'git4idea-pane git4idea-pane-changes', 'data-pane': 'changes', style: paneStyle('changes') }, changesPane))
+          /* Third column = the picked commit (m01216): changed files over the
+             message. It keeps the 'changes' pane key so stored widths survive. */
+          E('div', { className: 'git4idea-pane git4idea-pane-changes git4idea-pane-detail', 'data-pane': 'changes', style: paneStyle('changes') }, detailPane))
       } else {
         body = E('div', { className: 'git4idea-body git4idea-body-stack', ref: bodyRef },
           treeOpen ? E('div', { className: 'git4idea-pane git4idea-pane-tree-stack', 'data-pane': 'tree', style: paneStyle('tree') }, E(BranchTree, { t: t, branches: branches, favorites: favorites, onCheckout: checkout, onBrowse: browseBranch, onBranchMenu: branchMenu, onDeleteEntries: deleteBranchEntries, onCopyValues: copyValues, onPicksChange: onBranchPicks, clearSignal: pickEpochs.tree, onCollapse: () => foldTree(false) })) : null,
           treeOpen ? gutter('tree', 'prev') : null,
-          E('div', { className: 'git4idea-pane git4idea-pane-changes-stack', 'data-pane': 'changes', style: paneStyle('changes') }, changesPane),
+          E('div', { className: 'git4idea-pane git4idea-pane-changes-stack git4idea-pane-detail', 'data-pane': 'changes', style: paneStyle('changes') }, detailPane),
           gutter('changes', 'prev'),
           E('div', { className: 'git4idea-pane git4idea-pane-main' }, historyPane, diffGutter, diffPane))
       }
@@ -14710,6 +14776,7 @@ window.__ModuleLoader__.load({
         E('div', { className: 'git4idea-shell' },
           columns === true && repoRoot !== null ? renderRail(true) : null,
           body),
+        commitLayer,
         gitOutput === null ? null : E(GitOutputDrawer, {
           t: t, entries: gitOutput,
           onRefresh: () => { void openGitOutput() },
@@ -14773,8 +14840,8 @@ window.__ModuleLoader__.load({
       '.git4idea-repo-static{display:inline-flex;align-items:center;gap:5px;min-width:0;color:var(--dsw-alias-label-secondary)}',
       '.git4idea-repo-name{color:var(--dsw-alias-label-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:none}',
       '.git4idea-icon-btn{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border:none;border-radius:var(--dsw-radius-sm,8px);background:transparent;color:var(--dsw-alias-label-secondary);cursor:pointer;padding:0;flex:none}',
-      '.git4idea-icon-btn:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
-      '.git4idea-icon-btn:disabled{opacity:.4;cursor:default}',
+      '.git4idea-icon-btn:hover:not(:disabled):not([aria-disabled="true"]){background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
+      '.git4idea-icon-btn:disabled,.git4idea-icon-btn[aria-disabled="true"]{opacity:.4;cursor:default}',
       '.git4idea-icon-btn-active{background:var(--dsw-alias-interactive-bg-active,var(--dsw-alias-interactive-bg-hover));color:var(--dsw-alias-label-primary)}',
       '.git4idea-banner{display:flex;align-items:center;gap:8px;padding:4px 8px;flex:none;color:var(--dsw-alias-state-error-primary)}',
       '.git4idea-note{display:flex;align-items:center;gap:8px;padding:4px 8px;flex:none;color:var(--dsw-alias-label-secondary)}',
@@ -14785,8 +14852,12 @@ window.__ModuleLoader__.load({
       '.git4idea-rail-gap-x{flex:1;min-width:2px}',
       '.git4idea-rail-row{display:flex;align-items:center;gap:2px;padding:3px 6px;flex:none;overflow:hidden;border-bottom:1px solid var(--dsw-alias-border-l2)}',
       '.git4idea-rail-btn{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border:none;border-radius:var(--dsw-radius-sm,8px);background:transparent;color:var(--dsw-alias-label-secondary);cursor:pointer;padding:0;flex:none}',
-      '.git4idea-rail-btn:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
-      '.git4idea-rail-btn:disabled{opacity:.28;cursor:default}',
+      '.git4idea-rail-btn:hover:not(:disabled):not([aria-disabled="true"]){background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
+      '.git4idea-rail-btn:disabled,.git4idea-rail-btn[aria-disabled="true"]{opacity:.28;cursor:default}',
+      '.git4idea-rail-star{color:var(--dsw-alias-state-warn-primary,#e0b341)}',
+      '.git4idea-rail-star:hover:not([aria-disabled="true"]){color:var(--dsw-alias-state-warn-primary,#e0b341)}',
+      '.git4idea-rail-sep{width:18px;height:1px;margin:3px 0;flex:none;background:var(--dsw-alias-border-l2)}',
+      '.git4idea-rail-row .git4idea-rail-sep{display:none}',
       '.git4idea-rail-btn-active{background:color-mix(in srgb, var(--dsw-alias-brand-primary) 20%, transparent)}',
       '.git4idea-rail-more,.git4idea-rail-settings{color:var(--dsw-alias-label-tertiary)}',
       '.git4idea-rail-more:hover,.git4idea-rail-settings:hover{color:var(--dsw-alias-label-primary)}',
@@ -14799,6 +14870,12 @@ window.__ModuleLoader__.load({
       '.git4idea-tone-violet{color:#b083f0}',
       '.git4idea-tone-cyan{color:#59b0d6}',
       '.git4idea-icon-btn-small{width:20px;height:20px;border-radius:var(--dsw-radius-xs,4px)}',
+      /* The one way into the commit layer: a labelled button, so the action is
+         readable at any panel width, with the dirty count as a badge. */
+      '.git4idea-topbar-commit{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;flex:none;border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-sm,8px);background:transparent;color:var(--dsw-alias-label-primary);font:inherit;font-weight:600;cursor:pointer}',
+      '.git4idea-topbar-commit:hover{background:var(--dsw-alias-interactive-bg-hover)}',
+      '.git4idea-topbar-commit-count{min-width:16px;height:16px;padding:0 4px;border-radius:999px;corner-shape:round;background:color-mix(in srgb, var(--dsw-alias-brand-primary) 22%, transparent);color:var(--dsw-alias-brand-primary);font-size:11px;font-weight:600;line-height:16px;text-align:center}',
+      '.git4idea-root-narrow .git4idea-topbar-commit span:not(.git4idea-topbar-commit-count){display:none}',
       // A panel dragged narrower than COMPACT_MAX_WIDTH (the compact chrome) is the
       // case where 'nowrap + ellipsis' stops being readable: the overlays clamp
       // their own width, and their text wraps inside that box instead of clipping.
@@ -14879,6 +14956,27 @@ window.__ModuleLoader__.load({
       '.git4idea-pane-main{flex:1;min-width:0}',
       '.git4idea-pane-changes{width:290px;flex:none;border-left:1px solid var(--dsw-alias-border-l2)}',
       '.git4idea-pane-changes-stack{max-height:46%;flex:none;border-bottom:1px solid var(--dsw-alias-border-l2)}',
+      /* Commit detail (m01216 #8): the third column IS the detail now, so the
+         file list owns the top two thirds and the message the bottom third; each
+         side scrolls on its own, and a 300-file commit never pushes the message
+         out of the pane. */
+      '.git4idea-pane-detail{overflow:hidden}',
+      '.git4idea-detail-pane{flex:1;gap:4px;overflow:hidden;padding:6px 8px}',
+      '.git4idea-detail-pane .git4idea-detail-files-head{flex:none;margin-top:0}',
+      '.git4idea-detail-pane .git4idea-detail-files{flex:2 1 0;min-height:0;overflow:auto}',
+      '.git4idea-detail-pane .git4idea-detail-msg{flex:1 1 0;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:4px;border-top:1px solid var(--dsw-alias-border-l2);padding-top:6px}',
+      /* Commit layer (m01216 #9): pending changes + message on the left, the
+         host-style diff on the right. Roomy enough for a real diff, and it only
+         covers the panel — the conversation stays visible around it. */
+      '.git4idea-commit-layer{position:absolute;inset:0;z-index:55;display:flex;flex-direction:column;background:var(--dsw-alias-bg-layer-1,var(--dsw-alias-bg-layer-2));box-shadow:var(--dsw-elevation-prominent,0 8px 22px rgba(0,0,0,.32))}',
+      '.git4idea-commit-layer-head{display:flex;align-items:center;gap:8px;padding:5px 8px;flex:none;border-bottom:1px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-secondary)}',
+      '.git4idea-commit-layer-title{font-weight:600;color:var(--dsw-alias-label-primary)}',
+      '.git4idea-commit-layer-body{flex:1;min-height:0;display:flex;overflow:hidden}',
+      '.git4idea-commit-layer-left{flex:2 1 0;min-width:0;display:flex;flex-direction:column;border-right:1px solid var(--dsw-alias-border-l2)}',
+      '.git4idea-commit-layer-right{flex:3 1 0;min-width:0;display:flex;flex-direction:column;overflow:hidden}',
+      '.git4idea-root-narrow .git4idea-commit-layer-body{flex-direction:column}',
+      '.git4idea-root-narrow .git4idea-commit-layer-left{flex:1 1 0;border-right:0;border-bottom:1px solid var(--dsw-alias-border-l2)}',
+      '.git4idea-root-narrow .git4idea-commit-layer-right{flex:1 1 0}',
       '.git4idea-compact-bar{display:flex;align-items:center;gap:6px;padding:4px 6px;flex:none}',
       '.git4idea-compact-tree{max-height:42%;flex:none;border-bottom:1px solid var(--dsw-alias-border-l2)}',
       // A divider: an 8px hit area (a fingertip needs it) painted as a 1px hairline
@@ -14901,7 +14999,6 @@ window.__ModuleLoader__.load({
       '.git4idea-seg-item[data-active="true"]{background:var(--dsw-alias-bg-layer-2,var(--dsw-alias-bg-layer-1));color:var(--dsw-alias-label-primary)}',
       '.git4idea-search{padding:4px 6px;flex:none;display:flex;align-items:center;gap:6px}',
       '.git4idea-search .git4idea-input{flex:1;min-width:0}',
-      '.git4idea-tree-strip{width:29px;flex:none;display:flex;justify-content:center;padding-top:4px;border-right:1px solid var(--dsw-alias-border-l2)}',
       '.git4idea-input{width:100%;box-sizing:border-box;padding:4px 6px;border-radius:var(--dsw-radius-sm,8px);border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);font:inherit;outline:none}',
       '.git4idea-input::placeholder{color:var(--dsw-alias-label-tertiary)}',
       '.git4idea-input:focus{border-color:var(--dsw-alias-state-business-primary,var(--dsw-alias-brand-primary))}',
@@ -15281,6 +15378,26 @@ window.__ModuleLoader__.load({
       '.git4idea-cs-item-note{color:var(--dsw-alias-label-tertiary);font-size:11px;flex:none}',
       '.git4idea-cs-item-counts{display:inline-flex;gap:5px;margin-left:auto;flex:none;font-variant-numeric:tabular-nums;font-size:11px}',
       '.git4idea-cs-static{color:var(--dsw-alias-label-tertiary);cursor:default}',
+      /* Branch popover (m01216 #10): the tree's search box, the fetched sections
+         and the three actions, in one card above the composer. It is taller than
+         the old flat menu, so the sections scroll while the search box and the
+         action row stay put. */
+      '.git4idea-cs-branches{display:flex;flex-direction:column;min-width:300px;max-width:min(420px,80vw);max-height:min(420px,60vh);padding:0;overflow:hidden}',
+      '.git4idea-cs-search{display:flex;align-items:center;gap:4px;padding:6px 6px 4px;flex:none}',
+      '.git4idea-cs-input{flex:1;min-width:0;height:22px;box-sizing:border-box;padding:0 6px;border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-sm,8px);background:transparent;color:var(--dsw-alias-label-primary);font:inherit;font-size:12px}',
+      '.git4idea-cs-input:focus-visible{outline:1px solid var(--dsw-alias-state-business-primary);outline-offset:-1px}',
+      '.git4idea-cs-tool{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;flex:none;border:none;border-radius:var(--dsw-radius-sm,8px);background:transparent;color:var(--dsw-alias-label-secondary);cursor:pointer;padding:0}',
+      '.git4idea-cs-tool:hover:not([aria-disabled="true"]){background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
+      '.git4idea-cs-tool[aria-disabled="true"]{opacity:.4;cursor:default}',
+      '.git4idea-cs-sections{flex:1;min-height:0;overflow:auto;padding:0 4px 4px}',
+      '.git4idea-cs-head{padding:5px 8px 2px;color:var(--dsw-alias-label-tertiary);font-size:11px;font-weight:600;text-transform:none}',
+      '.git4idea-cs-newline{display:flex;align-items:center;gap:4px;padding:4px 6px;flex:none}',
+      '.git4idea-cs-ok{height:22px;padding:0 10px;flex:none;border:none;border-radius:var(--dsw-radius-sm,8px);background:var(--dsw-alias-brand-primary);color:var(--dsw-alias-brand-on-primary,#fff);font:inherit;font-size:12px;font-weight:600;cursor:pointer}',
+      '.git4idea-cs-ok:disabled{opacity:.45;cursor:default}',
+      '.git4idea-cs-actions{display:flex;align-items:center;gap:2px;padding:4px 6px;flex:none;border-top:1px solid var(--dsw-alias-border-l2)}',
+      '.git4idea-cs-action{display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px;flex:none;border:none;border-radius:var(--dsw-radius-sm,8px);background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;font-size:12px;font-weight:600;cursor:pointer}',
+      '.git4idea-cs-action:hover:not([aria-disabled="true"]){background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
+      '.git4idea-cs-action[aria-disabled="true"]{opacity:.4;cursor:default}',
       /* ---- ModelRoutePicker (issue #19) ---- */
       '.git4idea-mrp-root{position:relative;display:inline-flex;flex:none;min-width:0}',
       '.git4idea-mrp-trigger{display:inline-flex;align-items:center;gap:4px;min-width:0;max-width:220px;font-size:11px;line-height:16px}',
@@ -15720,6 +15837,14 @@ window.__ModuleLoader__.load({
       const [checkingOut, setCheckingOut] = useState('')
       const [error, setError] = useState('')
       const [tick, setTick] = useState(0)
+      /* Branch popover (m01216 #10): a searchable local/remote/tag tree, the
+         fetch button beside the search box, and commit/push/new-branch at the
+         bottom. Everything here runs on this pill's own API calls — it lives in
+         the host composer and cannot reach the panel. */
+      const [branchFilter, setBranchFilter] = useState('')
+      const [newBranchOpen, setNewBranchOpen] = useState(false)
+      const [newBranchName, setNewBranchName] = useState('')
+      const [csBusy, setCsBusy] = useState('')
       const rootRef = useRef(null)
 
       /* The switch flips live through the same rail-config notify walk the
@@ -15892,6 +16017,87 @@ window.__ModuleLoader__.load({
           setError(caught instanceof Error ? caught.message : String(caught))
         } finally { setCheckingOut('') }
       }
+      /* Popover actions (m01216 #10). Nothing here may depend on panel state:
+         the pill lives in the host composer, outside the panel's React tree. */
+      const csCall = async (action, payload) => {
+        if (repoRoot === null || csBusy !== '') return
+        setCsBusy(action)
+        try {
+          await request(action, Object.assign({ cwd: cwd, repoRoot: repoRoot }, payload))
+          setMenu(null)
+          setTick((value) => value + 1)
+          notifyBranchSwitched(sessionId, repoRoot)
+        } catch (caught) {
+          setMenu(null)
+          setError(caught instanceof Error ? caught.message : String(caught))
+        } finally { setCsBusy('') }
+      }
+      /* A commit needs a message, so the popover hands over to the panel's
+         commit layer instead of growing a second message box. */
+      const openPanelSeat = () => {
+        try {
+          const sidebarRight = ctx.get('sidebarRight')
+          if (sidebarRight !== undefined && sidebarRight !== null && typeof sidebarRight.openTab === 'function') {
+            sidebarRight.openTab(NATIVE_KIND)
+            setMenu(null)
+          }
+        } catch (caught) { void caught }
+      }
+      const createBranch = async () => {
+        const name = newBranchName.trim()
+        if (name === '') return
+        await csCall('branchCreate', { name: name })
+        setNewBranchName('')
+        setNewBranchOpen(false)
+      }
+      /* A remote row that has no local twin is checked out as a tracking branch
+         in one step (the panel's row menu does the same). */
+      const csPick = (entry, kind) => {
+        if (kind !== 'remote') { void checkoutBranch(entry.name); return }
+        const slash = entry.name.indexOf('/')
+        const local = slash >= 0 ? entry.name.slice(slash + 1) : entry.name
+        const exists = branchList !== null && branchList.local.some((item) => item.name === local)
+        if (exists === true) { void checkoutBranch(local); return }
+        void (async () => {
+          if (repoRoot === null || checkingOut !== '') return
+          setCheckingOut(entry.name)
+          try {
+            await request('checkout', {
+              cwd: cwd, repoRoot: repoRoot, branch: local, create: true,
+              startPoint: entry.name, track: true, confirm: true,
+            })
+            setMenu(null)
+            setTick((value) => value + 1)
+            notifyBranchSwitched(sessionId, repoRoot)
+          } catch (caught) {
+            setMenu(null)
+            setError(caught instanceof Error ? caught.message : String(caught))
+          } finally { setCheckingOut('') }
+        })()
+      }
+      const csNeedle = branchFilter.trim().toLowerCase()
+      const csEntries = (list) => (Array.isArray(list) ? list : []).filter((entry) => csNeedle === ''
+        || String(entry.name).toLowerCase().indexOf(csNeedle) >= 0)
+      const csSection = (key, label, entries, kind) => entries.length === 0 ? null : [E('div', {
+        key: key + '-head', className: 'git4idea-cs-head',
+      }, label)].concat(entries.map((entry) => E('button', {
+        key: key + ':' + entry.name,
+        type: 'button',
+        className: 'git4idea-cs-item',
+        'data-current': entry.head === true ? 'true' : 'false',
+        disabled: entry.worktree !== null || checkingOut !== '',
+        title: entry.worktree !== null ? t('composer.inWorktree') : (checkingOut !== '' ? t('composer.busy') : entry.name),
+        onClick: () => { csPick(entry, kind) },
+      },
+        E(Icon, { name: kind === 'tags' ? 'tag' : (kind === 'remote' ? 'folder' : 'branch'), size: 11 }),
+        E('span', { className: 'git4idea-cs-item-name' }, entry.name),
+        entry.worktree !== null ? E('span', { className: 'git4idea-cs-item-note' }, t('composer.inWorktree')) : null,
+        checkingOut === entry.name ? E('span', { className: 'git4idea-cs-item-note' }, '…') : null,
+        entry.ahead > 0 || entry.behind > 0
+          ? E('span', { className: 'git4idea-cs-item-counts' },
+            entry.ahead > 0 ? E('span', { className: 'git4idea-cs-ahead' }, '↑' + String(entry.ahead)) : null,
+            entry.behind > 0 ? E('span', { className: 'git4idea-cs-behind' }, '↓' + String(entry.behind)) : null)
+          : null)))
       /* Swap to a warm summary synchronously when one exists — the null gap
          between pick and effect would paint one empty frame. */
       const seedSummaryOf = (root) => {
@@ -15914,25 +16120,52 @@ window.__ModuleLoader__.load({
         error !== '' ? E('span', { className: 'git4idea-cs-error', title: error }, '×') : null,
         menu === 'branch' ? (branchLoading === true || branchList === null
           ? E('div', { className: 'git4idea-cs-menu', 'data-cordis-panel': '' }, E('div', { className: 'git4idea-cs-item git4idea-cs-static' }, '…'))
-          : E('div', { className: 'git4idea-cs-menu', 'data-cordis-panel': '' },
-            branchList.local.map((entry) => E('button', {
-              key: entry.name,
-              type: 'button',
-              className: 'git4idea-cs-item',
-              'data-current': entry.head === true ? 'true' : 'false',
-              disabled: entry.worktree !== null || checkingOut !== '',
-              title: entry.worktree !== null ? t('composer.inWorktree') : (checkingOut !== '' ? t('composer.busy') : entry.name),
-              onClick: () => { void checkoutBranch(entry.name) },
-            },
-              E(Icon, { name: 'branch', size: 11 }),
-              E('span', { className: 'git4idea-cs-item-name' }, entry.name),
-              entry.worktree !== null ? E('span', { className: 'git4idea-cs-item-note' }, t('composer.inWorktree')) : null,
-              checkingOut === entry.name ? E('span', { className: 'git4idea-cs-item-note' }, '…') : null,
-              entry.ahead > 0 || entry.behind > 0
-                ? E('span', { className: 'git4idea-cs-item-counts' },
-                  entry.ahead > 0 ? E('span', { className: 'git4idea-cs-ahead' }, '↑' + String(entry.ahead)) : null,
-                  entry.behind > 0 ? E('span', { className: 'git4idea-cs-behind' }, '↓' + String(entry.behind)) : null)
-                : null))))
+          : (() => {
+            const sections = [
+              csSection('local', t('branches.local'), csEntries(branchList.local), 'local'),
+              csSection('remote', t('branches.remote'), csEntries(branchList.remote), 'remote'),
+              csSection('tags', t('branches.tags'), csEntries(branchList.tags), 'tags'),
+            ].filter((part) => part !== null)
+            return E('div', { className: 'git4idea-cs-menu git4idea-cs-branches', 'data-cordis-panel': '' },
+              E('div', { className: 'git4idea-cs-search' },
+                E('input', {
+                  className: 'git4idea-cs-input', value: branchFilter, spellCheck: false,
+                  placeholder: t('branches.filter'),
+                  onChange: (event) => setBranchFilter(event.target.value),
+                }),
+                E('button', {
+                  type: 'button', className: 'git4idea-cs-tool',
+                  title: t('toolbar.fetch'),
+                  'aria-disabled': repoRoot === null || csBusy !== '' ? 'true' : 'false',
+                  onClick: () => { void csCall('fetch', { prune: true }) },
+                }, E(Icon, { name: 'fetch', size: 13 }))),
+              E('div', { className: 'git4idea-cs-sections' },
+                sections.length === 0 ? E('div', { className: 'git4idea-cs-item git4idea-cs-static' }, t('filter.none')) : sections),
+              newBranchOpen === true ? E('div', { className: 'git4idea-cs-newline' },
+                E('input', {
+                  className: 'git4idea-cs-input', value: newBranchName, spellCheck: false, autoFocus: true,
+                  placeholder: t('prompt.newBranch'),
+                  onChange: (event) => setNewBranchName(event.target.value),
+                  onKeyDown: (event) => { if (event.key === 'Enter') void createBranch() },
+                }),
+                E('button', {
+                  type: 'button', className: 'git4idea-cs-ok',
+                  disabled: newBranchName.trim() === '' || csBusy !== '',
+                  onClick: () => { void createBranch() },
+                }, t('confirm.ok'))) : null,
+              E('div', { className: 'git4idea-cs-actions' },
+                E('button', { type: 'button', className: 'git4idea-cs-action', title: t('changes.commit'), onClick: openPanelSeat },
+                  E(Icon, { name: 'commit', size: 12 }), E('span', null, t('changes.commit'))),
+                E('button', {
+                  type: 'button', className: 'git4idea-cs-action', title: t('toolbar.push'),
+                  'aria-disabled': repoRoot === null || csBusy !== '' ? 'true' : 'false',
+                  onClick: () => { void csCall('push', { confirm: true }) },
+                }, E(Icon, { name: 'push', size: 12 }), E('span', null, t('toolbar.push'))),
+                E('button', {
+                  type: 'button', className: 'git4idea-cs-action', title: t('toolbar.newBranch'),
+                  onClick: () => { setNewBranchOpen((open) => open !== true) },
+                }, E(Icon, { name: 'plus', size: 12 }), E('span', null, t('toolbar.newBranch')))))
+          })())
           : null,
       )
     }

@@ -45,8 +45,7 @@ try {
 
 /** Rail action ids, in rail order. MUST mirror RAIL_SPECS in src/client.js. */
 const RAIL_CONFIG_IDS = [
-  'refresh', 'tree', 'float', 'split', 'fullscreen', 'newBranch', 'checkout', 'delete',
-  'compare', 'diff', 'stash', 'tag', 'favorite', 'fetch', 'pull', 'push',
+  'tree', 'newBranch', 'pull', 'delete', 'compare', 'fetch', 'favorite',
 ]
 
 /** Volatile refs (dsh >= 0.1.7 settings contract) or plain values on older hosts. */
