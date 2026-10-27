@@ -879,7 +879,6 @@ test('the tree toggle is reachable again after it was folded', () => {
   assert.deepEqual(ids, ['tree', 'newBranch', 'pull', 'delete', 'compare', 'fetch', 'favorite'],
     'the rail carries the seven branch-tree actions, in order')
   assert.match(client, /const RAIL_VIEW_IDS = \['tree'\]/, 'only the tree toggle stays clickable while git runs')
-  assert.match(client, /const RAIL_VIEW_IDS = \['tree'\]/, 'only the tree toggle stays clickable while git runs')
   assert.match(client, /'aria-disabled': action\.disabled === true \? 'true' : 'false'/,
     'a disabled action stays hoverable so its tooltip explains why (m01216 #7)')
   assert.match(client, /className: 'git4idea-rail-sep'/, 'the hairline sits under the tree toggle')

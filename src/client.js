@@ -14973,7 +14973,7 @@ window.__ModuleLoader__.load({
       '.git4idea-commit-layer-title{font-weight:600;color:var(--dsw-alias-label-primary)}',
       '.git4idea-commit-layer-body{flex:1;min-height:0;display:flex;overflow:hidden}',
       '.git4idea-commit-layer-left{flex:2 1 0;min-width:0;display:flex;flex-direction:column;border-right:1px solid var(--dsw-alias-border-l2)}',
-      '.git4idea-commit-layer-right{flex:3 1 0;min-width:0;display:flex;flex-direction:column;overflow:hidden}',
+      '.git4idea-commit-layer-right{flex:1 1 0;min-width:0;display:flex;flex-direction:column;overflow:hidden}',
       '.git4idea-root-narrow .git4idea-commit-layer-body{flex-direction:column}',
       '.git4idea-root-narrow .git4idea-commit-layer-left{flex:1 1 0;border-right:0;border-bottom:1px solid var(--dsw-alias-border-l2)}',
       '.git4idea-root-narrow .git4idea-commit-layer-right{flex:1 1 0}',
