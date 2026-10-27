@@ -1,8 +1,8 @@
-# dsh-ide-git bundle patch.
+# dsh-git4idea bundle patch.
 #
 # Installed through the official CLI —
 #
-#   dsh plugin --profile <name> add dsh-ide-git
+#   dsh plugin --profile <name> add dsh-git4idea
 #
 # — the command reconciles dsh.profile.bundles against installed packages and,
 # seeing this declaration, merges THIS patch exactly like the manual mount line
@@ -11,12 +11,13 @@
 # Manual mount equivalent (profile cordis.patch.yml):
 #
 #   - insert:
-#       - id: ide-git
-#         name: 'dsh-ide-git'
+#       - id: git4idea
+#         name: 'dsh-git4idea'
 #
-# Only the Node half loads through this row (the /dsh-ide-git/api git routes).
+# Only the Node half loads through this row (the /dsh-git4idea/api git routes).
 # The web client half is served through exports["./client"] and mounted by the
-# browser boot graph; there it registers one dsh-better-sidebar tab.
+# browser boot graph; there it registers the panel in whichever seat the host
+# offers (better-sidebar tab, native right-sidebar seat, or the conversation tab).
 - insert:
-    - id: ide-git
-      name: 'dsh-ide-git'
+    - id: git4idea
+      name: 'dsh-git4idea'

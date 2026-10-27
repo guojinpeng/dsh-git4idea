@@ -1,5 +1,5 @@
 /**
- * dsh-ide-git — API integration test.
+ * dsh-git4idea — API integration test.
  *
  * Drives the real host-half route against a throwaway git repository created in
  * the OS temp dir: parses (porcelain -z / numstat -z / log record format),
@@ -24,7 +24,7 @@ function call(method, payload, headers) {
   return new Promise((resolve, reject) => {
     const req = new EventEmitter()
     req.method = 'POST'
-    req.url = '/dsh-ide-git/api/' + method
+    req.url = '/dsh-git4idea/api/' + method
     req.headers = Object.assign({ host: '127.0.0.1:3080', 'content-type': 'application/json' }, headers)
     req.destroy = () => {}
     const res = {
@@ -47,9 +47,9 @@ before(() => {
   }
   apply(ctx)
   assert.equal(route.kind, 'prefix')
-  assert.equal(route.path, '/dsh-ide-git/api')
+  assert.equal(route.path, '/dsh-git4idea/api')
 
-  repo = mkdtempSync(join(tmpdir(), 'dsh-ide-git-api-'))
+  repo = mkdtempSync(join(tmpdir(), 'dsh-git4idea-api-'))
   git('init', '-q', '-b', 'main')
   // Fixture isolation: Windows Git for Windows ships a system-level
   // core.autocrlf=true that rewrites LF to CRLF on every checkout/restore,
@@ -140,7 +140,7 @@ test('gitLogs records runs and clone validates its inputs (v0.15 more-menu)', as
   assert.equal(typeof last.at, 'string')
 
   // A local path is a valid clone source — fast, offline, and proves the happy path.
-  const target = join(tmpdir(), 'dig-clone-' + String(process.pid))
+  const target = join(tmpdir(), 'git4idea-clone-' + String(process.pid))
   const cloned = await call('clone', { url: repo, dir: target })
   assert.equal(cloned.status, 200)
   assert.equal(cloned.body.ok, true)
@@ -369,7 +369,7 @@ test('fetch accepts a refspec and fast-forwards a NON-checked-out branch (v0.18.
   // A bare throwaway origin makes "pull a branch that is not HEAD" testable:
   // git pull would merge into HEAD, so the rail's batch pull uses
   // `fetch origin dev:dev` to fast-forward the local branch in place.
-  const originRoot = mkdtempSync(join(tmpdir(), 'dsh-ide-git-origin-'))
+  const originRoot = mkdtempSync(join(tmpdir(), 'dsh-git4idea-origin-'))
   const originPath = join(originRoot, 'origin.git')
   execFileSync('git', ['init', '-q', '--bare', '-b', 'main', originPath])
   execFileSync('git', ['remote', 'add', 'origin', originPath], { cwd: repo })
@@ -541,7 +541,7 @@ test('ignored files show up only when the panel asks for them', async () => {
 test('only ANOTHER working tree marks a branch as occupied', async () => {
   // `git worktree list` includes the checkout the repository lives in, so a naive
   // read flags the CURRENT branch as occupied by its own working tree.
-  const linked = join(tmpdir(), 'dsh-ide-git-wt-' + Date.now())
+  const linked = join(tmpdir(), 'dsh-git4idea-wt-' + Date.now())
   git('worktree', 'add', '-q', '-b', 'wt-branch', linked)
   try {
     const data = await call('branches', { cwd: repo })
@@ -549,7 +549,7 @@ test('only ANOTHER working tree marks a branch as occupied', async () => {
     const other = data.body.data.local.find((entry) => entry.name === 'wt-branch')
     assert.ok(current !== undefined && other !== undefined, 'both branches are listed')
     assert.equal(current.worktree, null, 'the checkout the panel is looking at is not occupied')
-    assert.ok(other.worktree !== null && other.worktree.indexOf('dsh-ide-git-wt-') >= 0,
+    assert.ok(other.worktree !== null && other.worktree.indexOf('dsh-git4idea-wt-') >= 0,
       'the linked checkout marks its own branch: ' + JSON.stringify(other.worktree))
   } finally {
     git('worktree', 'remove', '--force', linked)
@@ -581,7 +581,7 @@ async function withServices(llm, sessions, run) {
   const call = (method, payload) => new Promise((resolve, reject) => {
     const req = new EventEmitter()
     req.method = 'POST'
-    req.url = '/dsh-ide-git/api/' + method
+    req.url = '/dsh-git4idea/api/' + method
     req.headers = { host: '127.0.0.1:3080', 'content-type': 'application/json' }
     req.destroy = () => {}
     const res = {
@@ -662,8 +662,8 @@ test('commit-message: the user prompt is appended as data and capped', async () 
    not-a-repo, which made the AI message the one action that could not work in a
    multi-repo workspace while the rest of the panel did. */
 test('commit-message: the picked repository travels as repoRoot in a multi-repo workspace', async () => {
-  const workspace = mkdtempSync(join(tmpdir(), 'dsh-ide-git-ws-'))
-  const picked = mkdtempSync(join(tmpdir(), 'dsh-ide-git-picked-'))
+  const workspace = mkdtempSync(join(tmpdir(), 'dsh-git4idea-ws-'))
+  const picked = mkdtempSync(join(tmpdir(), 'dsh-git4idea-picked-'))
   try {
     execFileSync('git', ['init', '-q', '-b', 'main'], { cwd: picked })
     execFileSync('git', ['config', 'core.autocrlf', 'false'], { cwd: picked })
@@ -848,7 +848,7 @@ test('commit-message: a host without llm/sessions answers no-host-service instea
   const response = await new Promise((resolve, reject) => {
     const req = new EventEmitter()
     req.method = 'POST'
-    req.url = '/dsh-ide-git/api/commit-message'
+    req.url = '/dsh-git4idea/api/commit-message'
     req.headers = { host: '127.0.0.1:3080', 'content-type': 'application/json' }
     req.destroy = () => {}
     const res = { statusCode: 0, writeHead(status) { this.statusCode = status }, end(text) { try { resolve({ status: this.statusCode, body: JSON.parse(text) }) } catch (error) { reject(error) } } }
@@ -923,7 +923,7 @@ test('commit-message: four simultaneous clicks spend the model exactly once', as
 })
 
 test('commit-message: a lock file is not a describable change, and says so', async () => {
-  const lockRepo = mkdtempSync(join(tmpdir(), 'dsh-ide-git-lock-'))
+  const lockRepo = mkdtempSync(join(tmpdir(), 'dsh-git4idea-lock-'))
   const lockGit = (...args) => execFileSync('git', args, { cwd: lockRepo, encoding: 'utf8' })
   lockGit('init', '-q', '-b', 'main')
   lockGit('config', 'user.email', 't@example.com')

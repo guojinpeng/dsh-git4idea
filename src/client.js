@@ -1,5 +1,5 @@
 /**
- * dsh-ide-git — client half (plain JavaScript, no build step).
+ * dsh-git4idea — client half (plain JavaScript, no build step).
  *
  * Registers ONE dsh-better-sidebar tab: an IDE-style Git tool window.
  *
@@ -17,7 +17,7 @@
  * exactly like better-sidebar's own panels do.
  */
 window.__ModuleLoader__.load({
-  id: 'dsh-ide-git',
+  id: 'dsh-git4idea',
   factory: (require) => {
     const React = require('react')
     const E = React.createElement
@@ -51,18 +51,18 @@ window.__ModuleLoader__.load({
        shell with <base href="./">, so document.baseURI is the mount the page
        was loaded from — the origin root, or a prefix-stripping proxy's sub-path
        (issue #4). fetch() resolves this relative path against the document
-       base, so the panel's calls land on /dsh-ide-git/api at the origin root
-       and on <mount>/dsh-ide-git/api under a sub-path, both matching the route
+       base, so the panel's calls land on /dsh-git4idea/api at the origin root
+       and on <mount>/dsh-git4idea/api under a sub-path, both matching the route
        the host half registered at its upstream path. An origin-absolute base
        would escape the mount and 404 behind any strict proxy. */
-    const API_BASE = 'dsh-ide-git/api'
-    const TAB_ID = 'dsh-ide-git:panel'
+    const API_BASE = 'dsh-git4idea/api'
+    const TAB_ID = 'dsh-git4idea:panel'
     /* The bundle's package name: the key the Plugins page uses for a bundle's own
        page and its `plugins.bundle.config` slot. */
-    const SETTINGS_BUNDLE = 'dsh-ide-git'
+    const SETTINGS_BUNDLE = 'dsh-git4idea'
     /* The namespace this plugin's dictionaries are published under in the DSH
        locale registry. */
-    const LOCALE_NS = 'dsh-ide-git'
+    const LOCALE_NS = 'dsh-git4idea'
     const LANE_WIDTH = 14
     /* Hard cap on the drawn lane columns. Lanes beyond the cap collapse into
        the last column: without the cap a branchy repository pushed the graph
@@ -70,7 +70,7 @@ window.__ModuleLoader__.load({
     const GRAPH_MAX_LANES = 7
     const LANE_COLORS = ['#4d6bfe', '#e2a03f', '#3fb950', '#d2679b', '#59b0d6', '#b083f0', '#d2694a', '#8a9aa8']
     const AUTO_REFRESH_MS = 12000
-    const REPO_KEY = 'dsh-ide-git.repo.v1'
+    const REPO_KEY = 'dsh-git4idea.repo.v1'
     const COMPACT_MAX_WIDTH = 400
     /* Branch rows sit one step right of their SECTION header, and each namespace
        folder adds another step. Without the base step the rows started at 8px —
@@ -7506,7 +7506,7 @@ window.__ModuleLoader__.load({
        mode, quota errors and corrupted payloads degrade to "no seed", never to
        an error — and never to a rollback of live state (seeding still only
        fills cold state, see the panel side below). */
-    const PAINT_KEY = 'dsh-ide-git.paint.v1'
+    const PAINT_KEY = 'dsh-git4idea.paint.v1'
     let paintHydrated = false
 
     function hydratePaint() {
@@ -7771,7 +7771,7 @@ window.__ModuleLoader__.load({
        snapped back to defaults and folders re-folded. One localStorage home,
        GLOBAL by design: which sections you keep folded is a habit, not a
        property of the repository. ---- */
-    const TREE_KEY = 'dsh-ide-git.tree.v1'
+    const TREE_KEY = 'dsh-git4idea.tree.v1'
 
     function readTreeState() {
       try {
@@ -7862,7 +7862,7 @@ window.__ModuleLoader__.load({
       } catch (error) { void error }
     }
 
-    const FAV_KEY = 'dsh-ide-git.favorites.v1'
+    const FAV_KEY = 'dsh-git4idea.favorites.v1'
 
     function readFavorites(repoPath) {
       try {
@@ -7889,7 +7889,7 @@ window.__ModuleLoader__.load({
       return next
     }
 
-    const RAIL_KEY = 'dsh-ide-git.rail.v1'
+    const RAIL_KEY = 'dsh-git4idea.rail.v1'
 
     /* The action rail is user-composed. RAIL_SPECS is the canonical set AND the
        default order; a stored config only holds a permutation plus the ids the
@@ -7957,11 +7957,11 @@ window.__ModuleLoader__.load({
        localStorage home and its in-panel editor, which is the only editor those
        hosts have. `railForm` is that switch; null means legacy.
        --------------------------------------------------------------------- */
-    const RAIL_NS = 'ide-git'
+    const RAIL_NS = 'git4idea'
     /* One write window for the settings card: a burst of switches becomes one
        atomic mutation instead of a stream the Host can lose. */
     const FLUSH_MS = 250
-    const RAIL_MIGRATED_KEY = 'dsh-ide-git.rail.v1.migrated'
+    const RAIL_MIGRATED_KEY = 'dsh-git4idea.rail.v1.migrated'
     let railForm = null
     let railMigrating = false
     const railWatchers = new Set()
@@ -8065,8 +8065,8 @@ window.__ModuleLoader__.load({
           const written = active.set(field, visible)
           if (written !== undefined && written !== null && typeof written.then === 'function') {
             void written.then((accepted) => {
-              if (accepted === false) console.warn('[dsh-ide-git] rail setting "' + field + '" was refused by the host')
-            }, (error) => { console.warn('[dsh-ide-git] rail setting write failed: ' + String(error && error.message ? error.message : error)) })
+              if (accepted === false) console.warn('[dsh-git4idea] rail setting "' + field + '" was refused by the host')
+            }, (error) => { console.warn('[dsh-git4idea] rail setting write failed: ' + String(error && error.message ? error.message : error)) })
           }
         }
         return
@@ -8098,7 +8098,7 @@ window.__ModuleLoader__.load({
         const settled = Promise.resolve(active.mutate(ops)).then(
           (accepted) => accepted !== false,
           (error) => {
-            console.warn('[dsh-ide-git] rail setting write failed: ' + String(error && error.message ? error.message : error))
+            console.warn('[dsh-git4idea] rail setting write failed: ' + String(error && error.message ? error.message : error))
             return false
           },
         )
@@ -8163,14 +8163,14 @@ window.__ModuleLoader__.load({
         const outcome = writeRailFields(ops, form)
         if (outcome.sent !== true) {
           railMigrating = false
-          console.warn('[dsh-ide-git] legacy rail migration was refused (' + String(outcome.reason) + '); it stays unmarked and is retried')
+          console.warn('[dsh-git4idea] legacy rail migration was refused (' + String(outcome.reason) + '); it stays unmarked and is retried')
           return
         }
         if (outcome.settled === undefined) { done(); return }
         void outcome.settled.then((acceptedWrite) => {
           if (acceptedWrite === true) { done(); return }
           railMigrating = false
-          console.warn('[dsh-ide-git] legacy rail migration was not accepted; it stays unmarked and is retried')
+          console.warn('[dsh-git4idea] legacy rail migration was not accepted; it stays unmarked and is retried')
         })
       } catch (error) { void error }
     }
@@ -8198,7 +8198,7 @@ window.__ModuleLoader__.load({
        panel in the other. The bucket is therefore `chrome:wide|tall`, and what
        is stored is a RATIO of the measured container: resizing the dock or the
        window rescales the panes instead of breaking the layout. */
-    const PANES_KEY = 'dsh-ide-git.panes.v1'
+    const PANES_KEY = 'dsh-git4idea.panes.v1'
     /* Every chrome can now move all three panes (the detail diff window used to
        be a fixed max-height:55% in the columns chrome — user report: it could
        not be resized). The DIFF pane is special: it is carved out of the middle
@@ -8703,7 +8703,7 @@ window.__ModuleLoader__.load({
       children.push(isHead
         ? E('circle', { key: 'dot', 'data-lane': String(row.lane), cx: x(row.lane), cy: middle, r: 3.8, fill: 'none', stroke: color(row.lane), strokeWidth: 2 })
         : E('circle', { key: 'dot', 'data-lane': String(row.lane), cx: x(row.lane), cy: middle, r: 3.6, fill: color(row.lane) }))
-      return E('svg', { className: 'dig-graph', width: width, height: height, viewBox: '0 0 ' + width + ' ' + height }, children)
+      return E('svg', { className: 'git4idea-graph', width: width, height: height, viewBox: '0 0 ' + width + ' ' + height }, children)
     }, (prev, next) => prev.row === next.row && prev.height === next.height)
 
     /* ============================== composer send ============================== */
@@ -9036,7 +9036,7 @@ window.__ModuleLoader__.load({
     /* ---------- DOM side of the diff-pane context menu (browser only) ----------
        SSR never calls these: they run inside the pane's onContextMenu, after
        the selection has been captured. The row element under a selection
-       endpoint is either a hand-drawn `.dig-diff-line`, or a DiffBlock row —
+       endpoint is either a hand-drawn `.git4idea-diff-line`, or a DiffBlock row —
        a div child of the body whose OWN parent carries the `data-diff`
        marker. `data-diff` is a component attribute (DiffBlock.tsx:199), not a
        hashed CSS-module class, so the lookup does not bet on build-time class
@@ -9059,7 +9059,7 @@ window.__ModuleLoader__.load({
         : node.nodeType === 1 ? node
         : null
       for (let hop = 0; element !== null && element !== undefined && hop < 8; hop += 1) {
-        if (element.classList !== undefined && element.classList.contains('dig-diff-line') === true) {
+        if (element.classList !== undefined && element.classList.contains('git4idea-diff-line') === true) {
           return { kind: 'drawn', row: element, body: element.parentElement }
         }
         const parent = element.parentElement
@@ -9105,7 +9105,7 @@ window.__ModuleLoader__.load({
       let span = null
       if (from.kind === 'drawn') {
         const rows = diffLines(patch)
-        const all = from.body === null || from.body === undefined ? [] : Array.prototype.slice.call(from.body.querySelectorAll('.dig-diff-line'))
+        const all = from.body === null || from.body === undefined ? [] : Array.prototype.slice.call(from.body.querySelectorAll('.git4idea-diff-line'))
         const fromIndex = all.indexOf(from.row)
         const toIndex = all.indexOf(to.row)
         if (fromIndex >= 0 && toIndex >= 0) span = rowSpanOfRows(rows, Math.min(fromIndex, toIndex), Math.max(fromIndex, toIndex))
@@ -9127,7 +9127,7 @@ window.__ModuleLoader__.load({
 
     /* DiffBlock's own 16-line cap would REPLACE scrolling with a fold button;
        this panel keeps the old contract (render everything, scroll inside the
-       .dig-diff-pane max-height), so the cap is pushed out of reach and the
+       .git4idea-diff-pane max-height), so the cap is pushed out of reach and the
        fold labels below are placeholders that never render at this size. */
     const DIFF_BLOCK_MAX_LINES = 1000000
 
@@ -9147,9 +9147,9 @@ window.__ModuleLoader__.load({
 
     function DiffBody(props) {
       const rows = useMemo(() => diffLines(props.patch), [props.patch])
-      if (props.loading === true) return E('div', { className: 'dig-empty' }, props.t('diff.loading'))
-      if (props.binary === true) return E('div', { className: 'dig-empty' }, props.t('diff.binary'))
-      if (rows.length === 0) return E('div', { className: 'dig-empty' }, props.t('diff.empty'))
+      if (props.loading === true) return E('div', { className: 'git4idea-empty' }, props.t('diff.loading'))
+      if (props.binary === true) return E('div', { className: 'git4idea-empty' }, props.t('diff.binary'))
+      if (rows.length === 0) return E('div', { className: 'git4idea-empty' }, props.t('diff.empty'))
       /* Host-rendered first (v0.14): the ui-primitives diff card brings the
          shared toolbar (copy / wrap / language) and the product's diff colors.
          A patch we cannot replay into a hunk (binary, mode-only) or a host
@@ -9160,19 +9160,19 @@ window.__ModuleLoader__.load({
       if (UIPrimitives !== null && typeof UIPrimitives.DiffBlock === 'function') {
         const hunk = patchToHunk(props.patch)
         if (hunk !== null) {
-          return E('div', { className: 'dig-diff-host' },
+          return E('div', { className: 'git4idea-diff-host' },
             E(UIPrimitives.DiffBlock, {
               diffs: [hunk],
               labels: diffLabelsOf(props.t),
               maxLines: DIFF_BLOCK_MAX_LINES,
-              className: 'dig-diff-card',
+              className: 'git4idea-diff-card',
             }))
         }
       }
-      return E('div', { className: 'dig-diff' }, rows.map((row, index) => E('div', { key: index, className: 'dig-diff-line dig-diff-' + row.kind },
-        E('span', { className: 'dig-diff-gutter' }, row.oldLine === null ? '' : String(row.oldLine)),
-        E('span', { className: 'dig-diff-gutter' }, row.newLine === null ? '' : String(row.newLine)),
-        E('span', { className: 'dig-diff-text' }, row.text === '' ? ' ' : row.text),
+      return E('div', { className: 'git4idea-diff' }, rows.map((row, index) => E('div', { key: index, className: 'git4idea-diff-line git4idea-diff-' + row.kind },
+        E('span', { className: 'git4idea-diff-gutter' }, row.oldLine === null ? '' : String(row.oldLine)),
+        E('span', { className: 'git4idea-diff-gutter' }, row.newLine === null ? '' : String(row.newLine)),
+        E('span', { className: 'git4idea-diff-text' }, row.text === '' ? ' ' : row.text),
       )))
     }
 
@@ -9358,7 +9358,7 @@ window.__ModuleLoader__.load({
 
     /* split/wrap preferences are habits, not tab state — one localStorage
        home, the same policy as the tree folds. */
-    const LINEDIFF_KEY = 'dsh-ide-git.linediff.v1'
+    const LINEDIFF_KEY = 'dsh-git4idea.linediff.v1'
     function readLineDiffPrefs() {
       try {
         const raw = window.localStorage.getItem(LINEDIFF_KEY)
@@ -9383,7 +9383,7 @@ window.__ModuleLoader__.load({
     const SeedIcons = UIPrimitives !== null ? UIPrimitives : {}
 
     function DiffText(props) {
-      return E('span', { className: 'dig-lf-text', 'data-diff-code': props.spans === undefined ? undefined : '' },
+      return E('span', { className: 'git4idea-lf-text', 'data-diff-code': props.spans === undefined ? undefined : '' },
         props.spans === undefined || props.spans === null || props.spans.length === 0
           ? (props.text === '' ? ' ' : props.text)
           : props.spans.map((span, at) => E('span', { key: at, style: span.style }, span.text)))
@@ -9393,10 +9393,10 @@ window.__ModuleLoader__.load({
     function UnifiedLine(props) {
       const row = props.row
       const spans = props.spans
-      return E('div', { className: 'dig-lf-line dig-lf-' + row.kind, 'data-diff-line': row.kind },
-        E('span', { className: 'dig-lf-number' }, row.old === undefined ? '' : String(row.old)),
-        E('span', { className: 'dig-lf-number' }, row.new === undefined ? '' : String(row.new)),
-        E('span', { className: 'dig-lf-sign' }, row.kind === 'add' ? '+' : row.kind === 'del' ? '\u2212' : ' '),
+      return E('div', { className: 'git4idea-lf-line git4idea-lf-' + row.kind, 'data-diff-line': row.kind },
+        E('span', { className: 'git4idea-lf-number' }, row.old === undefined ? '' : String(row.old)),
+        E('span', { className: 'git4idea-lf-number' }, row.new === undefined ? '' : String(row.new)),
+        E('span', { className: 'git4idea-lf-sign' }, row.kind === 'add' ? '+' : row.kind === 'del' ? '\u2212' : ' '),
         /* The guards are load-bearing (FileDiff.tsx uses `highlighted?.new?.get`):
            highlightLines returns undefined for unknown or not-yet-loaded
            grammars, so the first frame (and every plain-text file) renders
@@ -9413,12 +9413,12 @@ window.__ModuleLoader__.load({
       const row = props.row
       const spans = props.spans
       const kind = row.left !== undefined && row.left.kind === 'del' ? 'del' : row.right !== undefined && row.right.kind === 'add' ? 'add' : 'context'
-      return E('div', { className: 'dig-lf-splitLine', 'data-diff-line': kind },
-        E('span', { className: 'dig-lf-cell ' + (row.left === undefined ? 'dig-lf-empty' : 'dig-lf-' + row.left.kind) },
-          E('span', { className: 'dig-lf-number' }, row.left === undefined ? '' : String(row.left.no)),
+      return E('div', { className: 'git4idea-lf-splitLine', 'data-diff-line': kind },
+        E('span', { className: 'git4idea-lf-cell ' + (row.left === undefined ? 'git4idea-lf-empty' : 'git4idea-lf-' + row.left.kind) },
+          E('span', { className: 'git4idea-lf-number' }, row.left === undefined ? '' : String(row.left.no)),
           E(DiffText, { text: row.left === undefined ? '' : row.left.text, spans: row.left === undefined || spans.old === undefined ? undefined : spans.old.get(row.left.no) })),
-        E('span', { className: 'dig-lf-cell ' + (row.right === undefined ? 'dig-lf-empty' : 'dig-lf-' + row.right.kind) },
-          E('span', { className: 'dig-lf-number' }, row.right === undefined ? '' : String(row.right.no)),
+        E('span', { className: 'git4idea-lf-cell ' + (row.right === undefined ? 'git4idea-lf-empty' : 'git4idea-lf-' + row.right.kind) },
+          E('span', { className: 'git4idea-lf-number' }, row.right === undefined ? '' : String(row.right.no)),
           E(DiffText, { text: row.right === undefined ? '' : row.right.text, spans: row.right === undefined || spans.new === undefined ? undefined : spans.new.get(row.right.no) })))
     }
 
@@ -9444,23 +9444,23 @@ window.__ModuleLoader__.load({
           offsets.current[side === 'left' ? 'right' : 'left'][key] = other[axis]
         }
       }
-      return E('div', { className: 'dig-lf-columns' },
+      return E('div', { className: 'git4idea-lf-columns' },
         ['left', 'right'].map((side) => E('div', {
           key: side,
-          className: 'dig-lf-column',
+          className: 'git4idea-lf-column',
           'data-diff-side': side,
           ref: side === 'left' ? leftRef : rightRef,
           onScroll: follow(side),
-        }, paired.map((hunk, position) => E('section', { key: position, className: 'dig-lf-hunk' },
-          E('div', { className: 'dig-lf-hunkHeader', 'data-diff-hunk-header': '' }, hunk.header),
+        }, paired.map((hunk, position) => E('section', { key: position, className: 'git4idea-lf-hunk' },
+          E('div', { className: 'git4idea-lf-hunkHeader', 'data-diff-hunk-header': '' }, hunk.header),
           hunk.rows.map((row, at) => {
             const cell = row[side]
             const spans = cell === undefined ? undefined : highlights[position][side === 'left' ? 'old' : 'new']
             return E('div', {
               key: at,
-              className: 'dig-lf-sideLine ' + (cell === undefined ? 'dig-lf-empty' : 'dig-lf-' + cell.kind),
+              className: 'git4idea-lf-sideLine ' + (cell === undefined ? 'git4idea-lf-empty' : 'git4idea-lf-' + cell.kind),
             },
-              E('span', { className: 'dig-lf-number' }, cell === undefined ? '' : String(cell.no)),
+              E('span', { className: 'git4idea-lf-number' }, cell === undefined ? '' : String(cell.no)),
               E(DiffText, { text: cell === undefined ? '' : cell.text, spans: cell === undefined || spans === undefined ? undefined : spans.get(cell.no) }))
           }))))))
     }
@@ -9470,7 +9470,7 @@ window.__ModuleLoader__.load({
     function LineDiffTool(props) {
       const inner = E('button', {
         type: 'button',
-        className: 'dig-lf-tool',
+        className: 'git4idea-lf-tool',
         'aria-pressed': props.pressed,
         'aria-label': props.label,
         'data-review-tool': props.tool,
@@ -9498,10 +9498,10 @@ window.__ModuleLoader__.load({
         return { failed: true }
       }
       componentDidCatch(error) {
-        try { console.error('[dsh-ide-git] preview render failed:', error) } catch (_) { /* diagnostics must never rethrow */ }
+        try { console.error('[dsh-git4idea] preview render failed:', error) } catch (_) { /* diagnostics must never rethrow */ }
       }
       render() {
-        if (this.state.failed === true) return E('div', { className: 'dig-preview-boundary' }, this.props.message)
+        if (this.state.failed === true) return E('div', { className: 'git4idea-preview-boundary' }, this.props.message)
         return this.props.children
       }
     }
@@ -9531,17 +9531,17 @@ window.__ModuleLoader__.load({
       const oneSided = hasAdditions !== hasDeletions
       const split = prefs.split === true && oneSided !== true
       const wrap = prefs.wrap === true
-      if (props.loading === true) return E('div', { className: 'dig-lf-root' }, E('p', { className: 'dig-lf-status', role: 'status' }, t('diff.loading')))
-      if (file === undefined) return E('div', { className: 'dig-lf-root' }, E('p', { className: 'dig-lf-status' }, t('diff.empty')))
+      if (props.loading === true) return E('div', { className: 'git4idea-lf-root' }, E('p', { className: 'git4idea-lf-status', role: 'status' }, t('diff.loading')))
+      if (file === undefined) return E('div', { className: 'git4idea-lf-root' }, E('p', { className: 'git4idea-lf-status' }, t('diff.empty')))
       /* header: selector + counts + tools (ReviewTab anatomy) */
       const counts = file.binary === true
-        ? E('span', { className: 'dig-lf-label' }, t('diff.binary'))
-        : E('span', { className: 'dig-lf-counts' },
-            E('span', { className: 'dig-lf-added' }, fill(t('lf.added'), { count: String(file.adds) })),
-            E('span', { className: 'dig-lf-deleted' }, fill(t('lf.deleted'), { count: String(file.dels) })))
+        ? E('span', { className: 'git4idea-lf-label' }, t('diff.binary'))
+        : E('span', { className: 'git4idea-lf-counts' },
+            E('span', { className: 'git4idea-lf-added' }, fill(t('lf.added'), { count: String(file.adds) })),
+            E('span', { className: 'git4idea-lf-deleted' }, fill(t('lf.deleted'), { count: String(file.dels) })))
       const selectorButton = E('button', {
         type: 'button',
-        className: 'dig-lf-selectorButton',
+        className: 'git4idea-lf-selectorButton',
         'aria-haspopup': 'menu',
         'aria-expanded': menuOpen,
         'aria-label': t('lf.selectFile'),
@@ -9554,13 +9554,13 @@ window.__ModuleLoader__.load({
       const selector = files.length > 1
         ? (SeedMenu === null
             ? E('select', {
-                className: 'dig-lf-selectorFallback',
+                className: 'git4idea-lf-selectorFallback',
                 value: String(index),
                 'aria-label': t('lf.selectFile'),
                 onChange: (event) => { setActive(Number(event.target.value)) },
               }, files.map((entry, at) => E('option', { key: at, value: String(at) }, entry.path + '  +' + String(entry.adds) + ' -' + String(entry.dels))))
             : E(SeedMenu, {
-                className: 'dig-lf-selector',
+                className: 'git4idea-lf-selector',
                 open: menuOpen,
                 autoFocus: true,
                 portal: true,
@@ -9570,26 +9570,26 @@ window.__ModuleLoader__.load({
                 anchor: selectorButton,
                 items: files.map((entry, at) => ({
                   id: String(at),
-                  label: E('span', { className: 'dig-lf-item' },
-                    E('span', { className: 'dig-lf-itemPath' }, entry.path),
-                    E('span', { className: 'dig-lf-itemCounts' },
-                      E('span', { className: 'dig-lf-added' }, fill(t('lf.added'), { count: String(entry.adds) })),
-                      E('span', { className: 'dig-lf-deleted' }, fill(t('lf.deleted'), { count: String(entry.dels) })))),
+                  label: E('span', { className: 'git4idea-lf-item' },
+                    E('span', { className: 'git4idea-lf-itemPath' }, entry.path),
+                    E('span', { className: 'git4idea-lf-itemCounts' },
+                      E('span', { className: 'git4idea-lf-added' }, fill(t('lf.added'), { count: String(entry.adds) })),
+                      E('span', { className: 'git4idea-lf-deleted' }, fill(t('lf.deleted'), { count: String(entry.dels) })))),
                 })),
                 selectedId: String(index),
                 onSelect: (id) => { setActive(Number(id)); setMenuOpen(false) },
               }))
-        : E('span', { className: 'dig-lf-selectorStatic', title: file.path },
+        : E('span', { className: 'git4idea-lf-selectorStatic', title: file.path },
             SeedPathLabel === null ? file.path : E(SeedPathLabel, { path: file.path }))
-      return E('div', { className: 'dig-lf-root' },
-        E('div', { className: 'dig-lf-header' },
+      return E('div', { className: 'git4idea-lf-root' },
+        E('div', { className: 'git4idea-lf-header' },
           selector,
           counts,
-          E('span', { className: 'dig-lf-tools' },
+          E('span', { className: 'git4idea-lf-tools' },
             E(LineDiffTool, {
               tool: 'split', pressed: split, label: t(split === true ? 'lf.unified' : 'lf.split'),
               onClick: () => { setPrefs((now) => Object.assign({}, now, { split: now.split !== true })) },
-            }, SeedIcons.IconCompareSplitOutlineRegular === undefined ? E(Icon, { name: 'split', size: 13 }) : E(SeedIcons.IconCompareSplitOutlineRegular, { className: 'dig-lf-compareIcon' })),
+            }, SeedIcons.IconCompareSplitOutlineRegular === undefined ? E(Icon, { name: 'split', size: 13 }) : E(SeedIcons.IconCompareSplitOutlineRegular, { className: 'git4idea-lf-compareIcon' })),
             E(LineDiffTool, {
               tool: 'wrap', pressed: wrap, label: t(wrap === true ? 'lf.nowrap' : 'lf.wrap'),
               onClick: () => { setPrefs((now) => Object.assign({}, now, { wrap: now.wrap !== true })) },
@@ -9602,11 +9602,11 @@ window.__ModuleLoader__.load({
             }, SeedIcons.IconInspectOutlineRegular === undefined ? E(Icon, { name: 'file', size: 13 }) : E(SeedIcons.IconInspectOutlineRegular)),
           )),
         file.binary === true
-          ? E('p', { className: 'dig-lf-status' }, t('diff.binary'))
-          : E('div', { className: 'dig-lf-body', 'data-review-view': split === true ? 'split' : 'unified', 'data-review-wrap': wrap === true ? '' : undefined },
-              file.created === true ? E('p', { className: 'dig-lf-note' }, t('lf.created')) : null,
-              file.removed === true ? E('p', { className: 'dig-lf-note' }, t('lf.removedFile')) : null,
-              cut.truncated === true ? E('p', { className: 'dig-lf-note' }, fill(t('lf.truncated'), { count: String(LINEDIFF_MAX_LINES) })) : null,
+          ? E('p', { className: 'git4idea-lf-status' }, t('diff.binary'))
+          : E('div', { className: 'git4idea-lf-body', 'data-review-view': split === true ? 'split' : 'unified', 'data-review-wrap': wrap === true ? '' : undefined },
+              file.created === true ? E('p', { className: 'git4idea-lf-note' }, t('lf.created')) : null,
+              file.removed === true ? E('p', { className: 'git4idea-lf-note' }, t('lf.removedFile')) : null,
+              cut.truncated === true ? E('p', { className: 'git4idea-lf-note' }, fill(t('lf.truncated'), { count: String(LINEDIFF_MAX_LINES) })) : null,
               split === true && wrap !== true
                 ? E(SplitColumns, { hunks: cut.hunks, highlights: cut.maps })
                 : cut.hunks.map((hunk, position) => {
@@ -9619,8 +9619,8 @@ window.__ModuleLoader__.load({
                     // the whole panel down (no boundary above it). Each paired
                     // entry is already { left, right } — exactly SplitLine's shape.
                     const rows = split === true ? paired : hunkRows(hunk)
-                    return E('section', { key: position, className: 'dig-lf-hunk' },
-                      E('div', { className: 'dig-lf-hunkHeader', 'data-diff-hunk-header': '' }, hunkHeader(hunk)),
+                    return E('section', { key: position, className: 'git4idea-lf-hunk' },
+                      E('div', { className: 'git4idea-lf-hunkHeader', 'data-diff-hunk-header': '' }, hunkHeader(hunk)),
                       rows.map((row, at) => split === true
                         ? E(SplitLine, { key: at, row: row, spans: cut.maps[position] })
                         : E(UnifiedLine, { key: at, row: row, spans: cut.maps[position] })))
@@ -9633,52 +9633,66 @@ window.__ModuleLoader__.load({
        folder kind explicitly, since their basename is empty. A host without
        the seed module returns null and the row keeps its status letter as the
        only leading mark. Sizing follows the status letter's box (14px, the
-       .dig-row line height). */
+       .git4idea-row line height). */
     function FileTypeGlyph(props) {
       if (UIPrimitives === null || typeof UIPrimitives.FileTypeIcon !== 'function') return null
       const path = typeof props.path === 'string' ? props.path : ''
       if (path === '') return null
       return E(UIPrimitives.FileTypeIcon, path.slice(-1) === '/'
-        ? { kind: 'folder', size: 14, className: 'dig-file-icon' }
-        : { path: path, size: 14, className: 'dig-file-icon' })
+        ? { kind: 'folder', size: 14, className: 'git4idea-file-icon' }
+        : { path: path, size: 14, className: 'git4idea-file-icon' })
     }
 
     /* ============================== ui kit ============================== */
 
+    /* Icon set (v2): redrawn on an IDE grid instead of the thin codicon set.
+       Every glyph lives in a 16x16 box with content inside 2..14, stems at 1.6,
+       nodes and arrow heads solid (the way IDE toolbars draw them) and corners
+       kept orthogonal where the metaphor allows. The geometry was rebuilt on
+       this grid; no glyph is copied from a third-party icon package. */
     const ICONS = {
-      branch: ['M4 3.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Z', 'M12 3.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Z', 'M4 6.5v3a3 3 0 0 0 3 3h2', 'M12 6.5v1a3 3 0 0 1-3 3'],
-      commit: ['M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Z', 'M8 1.5v4', 'M8 10.5v4'],
-      refresh: ['M13 8a5 5 0 1 1-1.6-3.7', 'M13 3v3h-3'],
-      /* Sync icons redrawn after the VS Code SCM trio (user request, 2026-10-10:
-         the colour-coding alone was too abstract). All three share the SAME
-         ground rail at the bottom (the local side) and differ only in the
-         arrow, so the shape alone tells the actions apart:
-           fetch — a BROKEN stem: the references come down, nothing is merged;
-           pull  — a solid stem pointing down: the remote lands here;
-           push  — a solid stem pointing up: the local goes out. */
-      fetch: [{ d: 'M8 1.5v8.3', dash: '2.4 2.6' }, { d: 'M4.6 6.4 8 9.8l3.4-3.4' }, { d: 'M3 13h10', w: 2 }],
-      pull: ['M8 2v7.8', 'M4.6 6.4 8 9.8l3.4-3.4', 'M3 13h10'],
-      push: ['M8 9.8V2.2', 'M4.6 5.6 8 2.2l3.4 3.4', 'M3 13h10'],
-      plus: ['M8 3v10', 'M3 8h10'],
-      minus: ['M3 8h10'],
-      undo: ['M5 6H2V3', 'M2.5 6.5a5.5 5.5 0 1 1 1.8 5'],
-      chevron: ['M5 6.5 8 9.5l3-3'],
-      close: ['M4 4l8 8', 'M12 4l-8 8'],
+      branch: [
+        'M4.6 5.1V10.9', 'M4.6 9.2H9.4',
+        { d: 'M4.6 1.6a1.7 1.7 0 1 0 0 3.4 1.7 1.7 0 0 0 0-3.4Z', fill: true },
+        { d: 'M4.6 10.9a1.7 1.7 0 1 0 0 3.4 1.7 1.7 0 0 0 0-3.4Z', fill: true },
+        { d: 'M11.1 7.5a1.7 1.7 0 1 0 0 3.4 1.7 1.7 0 0 0 0-3.4Z', fill: true },
+      ],
+      commit: [
+        'M8 1.7V5.5', 'M8 10.5V14.3',
+        { d: 'M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Z', fill: true },
+      ],
+      refresh: ['M12.9 8a4.9 4.9 0 1 1-1.55-3.6', 'M12.9 2.8v3.2h-3.2'],
+      /* Sync icons: one ground rail (the local side) plus an arrow that differs
+         per action — fetch's stem is broken (references come down, nothing is
+         merged), pull's lands here, push's goes out. Heads are solid triangles
+         so the direction survives at 13px. */
+      fetch: [{ d: 'M8 1.9v4.6', dash: '2 2' }, { d: 'M4.9 6.6 8 10.4 11.1 6.6Z', fill: true }, { d: 'M2.8 13.2h10.4', w: 2 }],
+      pull: ['M8 1.9v4.6', { d: 'M4.9 6.6 8 10.4 11.1 6.6Z', fill: true }, { d: 'M2.8 13.2h10.4', w: 2 }],
+      push: ['M8 10.6V5.9', { d: 'M4.9 5.9 8 2.1 11.1 5.9Z', fill: true }, { d: 'M2.8 13.2h10.4', w: 2 }],
+      plus: ['M8 3.2v9.6', 'M3.2 8h9.6'],
+      minus: ['M3.2 8h9.6'],
+      undo: ['M5.2 5.8H2.2V2.8', 'M2.7 6.3a5.4 5.4 0 1 1 1.75 4.9'],
+      chevron: ['M5.2 6.6 8 9.4l2.8-2.8'],
+      close: ['M4.4 4.4l7.2 7.2', 'M11.6 4.4l-7.2 7.2'],
       star: ['M8 2.2l1.8 3.8 4 .5-2.9 2.7.8 4-3.7-2.1-3.7 2.1.8-4L2.2 6.5l4-.5z'],
-      folder: ['M2 4.5h4l1.2 1.5H14v6.5H2z'],
-      file: ['M4 2h5l3 3v9H4z', 'M9 2v3h3'],
-      /* diff follows the codicon-diff anatomy: a document whose right half
-         carries a + above a −, so it reads as "what changed" and not just
-         "a file". newBranch is the branch glyph with a small + at the new
-         growth tip (codicon git-branch-create's idea at 16px). */
+      folder: ['M2 4.4h3.9L7.3 6H14v6.6H2z'],
+      file: ['M4.2 1.9h4.9l3.1 3.1v9.1H4.2z', 'M9.1 1.9v3.1h3.1'],
+      /* diff: a document whose right half carries + above −, so it reads as
+         "what changed" rather than just "a file". branchCreate is the branch
+         glyph with its new tip replaced by a +. */
       diff: ['M3.5 2h6l3.5 3.5V14h-9.5z', 'M9.5 2v3.5H13', 'M8 6.2v3', 'M6.5 7.7h3', 'M6.5 11h3'],
-      branchCreate: ['M4 3.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Z', 'M11.5 3.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Z', 'M4 6.5v3a3 3 0 0 0 3 3h2.2', 'M11.5 6.5v1.5', 'M13.2 10.6v3.8', 'M11.3 12.5h3.8'],
+      branchCreate: [
+        'M4.6 5.1V10.9', 'M4.6 9.2H8.6',
+        { d: 'M4.6 1.6a1.7 1.7 0 1 0 0 3.4 1.7 1.7 0 0 0 0-3.4Z', fill: true },
+        { d: 'M4.6 10.9a1.7 1.7 0 1 0 0 3.4 1.7 1.7 0 0 0 0-3.4Z', fill: true },
+        'M12.1 7.4v3.6', 'M10.3 9.2h3.6',
+      ],
       trash: ['M3 5h10', 'M6.5 5V3.5h3V5', 'M4.5 5l.6 8.5h5.8L11.5 5', 'M6.8 7v4', 'M9.2 7v4'],
-      checkout: ['M3 8h7', 'M7.5 5.5 10 8l-2.5 2.5', 'M13 3.5v9'],
+      checkout: ['M3.2 8H9', { d: 'M9 5.6 12.8 8 9 10.4Z', fill: true }, 'M13.6 3.4v9.2'],
       compare: ['M4 4h7', 'M4 12h7', 'M6.5 1.5 4 4l2.5 2.5', 'M9.5 9.5 12 12l-2.5 2.5'],
       stash: ['M2.5 3.5h11V6h-11z', 'M3.5 6v6.5h9V6', 'M6.5 8.5h3'],
       tag: ['M2.5 7.5 7.5 2.5h6v6l-5 5z', 'M10.5 5.5h.01'],
-      // A real gear: the toothed contour plus the centre hole, borrowed from the
+      // A real gear: the toothed contour plus the centre hole, taken from the
       // official product icon set (ui-primitives IconSettingsOutlineMedium, same
       // 16x16 grid and currentColor stroke) because the previous entry was a
       // centre dot with eight rays — a sunburst, not a settings control.
@@ -9686,11 +9700,11 @@ window.__ModuleLoader__.load({
       more: ['M3.6 8h0.01', 'M8 8h0.01', 'M12.4 8h0.01'],
       eye: ['M1.5 8S4.1 3.8 8 3.8 14.5 8 14.5 8 11.9 12.2 8 12.2 1.5 8 1.5 8Z', 'M8 6.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Z'],
       eyeOff: ['M1.6 8S4.2 4 8 4c1 0 1.9.2 2.7.6', 'M13 5.6c.9 1.1 1.5 2.4 1.5 2.4S11.9 12 8 12c-.9 0-1.7-.2-2.4-.5', 'M2.6 2.6l10.8 10.8'],
-      up: ['M8 12.6V3.6', 'M4.6 7 8 3.6 11.4 7'],
-      down: ['M8 3.4v9', 'M4.6 9 8 12.4 11.4 9'],
+      up: ['M8 13V6.6', { d: 'M4.9 6.6 8 2.8 11.1 6.6Z', fill: true }],
+      down: ['M8 3v6.4', { d: 'M4.9 9.4 8 13.2 11.1 9.4Z', fill: true }],
       grip: ['M5.6 4.6h4.8', 'M5.6 8h4.8', 'M5.6 11.4h4.8'],
       filter: ['M2 3.6h12l-4.6 5.2v4.2l-2.8-1.4V8.8z'],
-      check: ['M3.2 8.4 6.4 11.6 12.8 4.6'],
+      check: ['M3.4 8.5 6.6 11.7 12.8 5.2'],
       copy: ['M5.5 5.5h8v8h-8z', 'M10.5 5.5v-3h-8v8h3'],
       // dock actions (official right sidebar): lift a panel out, drop it back into
       // the dock, split the pane, and the full-screen pair reuses expand/collapse.
@@ -9707,19 +9721,23 @@ window.__ModuleLoader__.load({
     function Icon(props) {
       const size = props.size === undefined ? 14 : props.size
       const shape = ICONS[props.name] === undefined ? ICONS.commit : ICONS[props.name]
-      const weight = props.name === 'more' ? 2.6 : props.name === 'grip' ? 1.6 : 1.4
-      /* A shape entry is either a plain `d` string or { d, w, dash } for
-         per-path overrides — fetch's broken stem needs a real stroke-dasharray
-         (hand-drawn gaps were being re-filled by the round line caps at 15px),
-         and its ground rail carries a heavier stroke like the VS Code original. */
+      const weight = props.name === 'more' ? 2.5 : props.name === 'grip' ? 1.8 : 1.6
+      /* A shape entry is either a plain d string or { d, w, dash, fill }:
+         - w: per-path stroke width (the sync trio's ground rail is heavier);
+         - dash: a real stroke-dasharray (fetch's broken stem, whose hand-drawn
+           gaps get re-filled by the round line caps at 13px);
+         - fill: draw the path solid rather than stroked (nodes, arrow heads) —
+           the weight that makes the set read as IDE chrome. */
       return E('svg', {
-        className: 'dig-icon', width: size, height: size, viewBox: '0 0 16 16',
+        className: 'git4idea-icon', width: size, height: size, viewBox: '0 0 16 16',
         fill: 'none', stroke: 'currentColor', strokeWidth: weight,
         strokeLinecap: 'round', strokeLinejoin: 'round',
       }, shape.map((entry, index) => {
         const path = typeof entry === 'string' ? { d: entry } : entry
         return E('path', {
           key: index, d: path.d,
+          fill: path.fill === true ? 'currentColor' : 'none',
+          stroke: path.fill === true ? 'none' : 'currentColor',
           strokeWidth: path.w === undefined ? undefined : path.w,
           strokeDasharray: path.dash === undefined ? undefined : path.dash,
         })
@@ -9794,16 +9812,16 @@ window.__ModuleLoader__.load({
         setSub({ items: item.items, flip: flip, top: Math.max(0, itemRect.top - cardRect.top - 4) })
       }
       const renderItem = (item, index, inSub) => {
-        if (item === null) return E('div', { key: 'sep-' + index, className: 'dig-menu-sep' })
+        if (item === null) return E('div', { key: 'sep-' + index, className: 'git4idea-menu-sep' })
         const hasSub = inSub !== true && Array.isArray(item.items) === true && item.items.length > 0
         return E('button', {
           key: item.id + '-' + index + (inSub === true ? '-sub' : ''),
           type: 'button',
           title: item.disabled === true && item.reason !== undefined ? item.reason : '',
-          className: 'dig-menu-item'
-            + (item.danger === true ? ' dig-menu-danger' : '')
-            + (item.disabled === true ? ' dig-menu-disabled' : '')
-            + (item.active === true ? ' dig-menu-item-active' : ''),
+          className: 'git4idea-menu-item'
+            + (item.danger === true ? ' git4idea-menu-danger' : '')
+            + (item.disabled === true ? ' git4idea-menu-disabled' : '')
+            + (item.active === true ? ' git4idea-menu-item-active' : ''),
           // The row keeps its id on the DOM so a `⋯ 更多` entry is addressable
           // (the rail's own buttons do the same; probes click through either).
           'data-action': item.id === undefined ? undefined : item.id,
@@ -9814,9 +9832,9 @@ window.__ModuleLoader__.load({
             closeRef.current(); item.run(event)
           },
         },
-          item.icon === undefined ? null : E('span', { className: 'dig-menu-icon dig-tone-' + (item.tone === undefined ? 'secondary' : item.tone) }, E(Icon, { name: item.icon, size: 13 })),
-          E('span', { className: 'dig-menu-label' }, item.label),
-          hasSub === true ? E('span', { className: 'dig-menu-chevron' }, E(Icon, { name: 'chevron', size: 10 })) : null)
+          item.icon === undefined ? null : E('span', { className: 'git4idea-menu-icon git4idea-tone-' + (item.tone === undefined ? 'secondary' : item.tone) }, E(Icon, { name: item.icon, size: 13 })),
+          E('span', { className: 'git4idea-menu-label' }, item.label),
+          hasSub === true ? E('span', { className: 'git4idea-menu-chevron' }, E(Icon, { name: 'chevron', size: 10 })) : null)
       }
       /* Two boxes on purpose (dsh 0.1.7-rc.2 menu-material contract): the outer
          card owns the material (a `::before` painted on its own layer, so the
@@ -9824,16 +9842,16 @@ window.__ModuleLoader__.load({
          the rows) and the inner box owns the scroll. `data-menu-material` is the
          theme's hook for the dark-menu stroke rebind — the same hook the shipped
          MenuSurface sets. Everything stays a plain `position: absolute` box
-         inside `.dig-root`: panel-internal positioning is an invariant (13), and
+         inside `.git4idea-root`: panel-internal positioning is an invariant (13), and
          a portal to `document.body` would land outside the panel. The submenu is
          a second card inside the same wrapper, so outside-click and Escape cover
          both without extra wiring. */
-      return E('div', { className: 'dig-menu-wrap', ref: ref, style: { left: position.left + 'px', top: position.top + 'px' } },
-        E('div', { className: 'dig-menu', ref: cardRef, 'data-menu-material': 'translucent' },
-          E('div', { className: 'dig-menu-scroll' },
+      return E('div', { className: 'git4idea-menu-wrap', ref: ref, style: { left: position.left + 'px', top: position.top + 'px' } },
+        E('div', { className: 'git4idea-menu', ref: cardRef, 'data-menu-material': 'translucent' },
+          E('div', { className: 'git4idea-menu-scroll' },
             props.items.map((item, index) => renderItem(item, index, false)))),
-        sub === null ? null : E('div', { className: 'dig-menu dig-menu-sub', 'data-menu-material': 'translucent', style: sub.flip === true ? { right: '100%', top: sub.top + 'px' } : { left: '100%', top: sub.top + 'px' } },
-          E('div', { className: 'dig-menu-scroll' },
+        sub === null ? null : E('div', { className: 'git4idea-menu git4idea-menu-sub', 'data-menu-material': 'translucent', style: sub.flip === true ? { right: '100%', top: sub.top + 'px' } : { left: '100%', top: sub.top + 'px' } },
+          E('div', { className: 'git4idea-menu-scroll' },
             sub.items.map((item, index) => renderItem(item, index, true)))))
     }
 
@@ -9963,34 +9981,34 @@ window.__ModuleLoader__.load({
       const textRow = (field, labelKey, hintKey, max, multiline) => {
         const accepted = values[field] === undefined || values[field] === null ? '' : String(values[field])
         const shown = Object.prototype.hasOwnProperty.call(textDraft, field) ? textDraft[field] : accepted
-        const id = 'dig-' + field
+        const id = 'git4idea-' + field
         const common = {
-          id: id, className: 'dig-input dig-settings-input', value: shown, spellCheck: false,
+          id: id, className: 'git4idea-input git4idea-settings-input', value: shown, spellCheck: false,
           disabled: readOnly === true, placeholder: t(hintKey), 'aria-labelledby': id + '-label',
           onChange: (event) => setTextDraft((now) => Object.assign({}, now, { [field]: event.target.value })),
           onBlur: () => commitTextField(field, max),
         }
         if (multiline === true) common.onKeyDown = (event) => { if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) commitTextField(field, max) }
         else common.onKeyDown = (event) => { if (event.key === 'Enter') commitTextField(field, max) }
-        return E('div', { className: 'dig-settings-text', key: field },
-          E('label', { id: id + '-label', className: 'dig-settings-text-label', htmlFor: id }, t(labelKey)),
+        return E('div', { className: 'git4idea-settings-text', key: field },
+          E('label', { id: id + '-label', className: 'git4idea-settings-text-label', htmlFor: id }, t(labelKey)),
           multiline === true ? E('textarea', Object.assign({ rows: 3 }, common)) : E('input', Object.assign({ type: 'text' }, common)),
-          shown.length >= max ? E('div', { className: 'dig-settings-error' }, fill(t('settings.commit.tooLong'), { n: String(max) })) : null)
+          shown.length >= max ? E('div', { className: 'git4idea-settings-error' }, fill(t('settings.commit.tooLong'), { n: String(max) })) : null)
       }
       /* A picker row: same shell as a text row, but a <select>. `children` are
          the options (built by the caller); a stored value the list does not
          carry is injected as its own option, because a controlled select whose
          value matches no option renders blank and the setting would LOOK lost. */
       const selectRow = (field, labelKey, value, children, disabled, hint) => {
-        const id = 'dig-' + field
-        return E('div', { className: 'dig-settings-text', key: field },
-          E('label', { id: id + '-label', className: 'dig-settings-text-label', htmlFor: id }, t(labelKey)),
+        const id = 'git4idea-' + field
+        return E('div', { className: 'git4idea-settings-text', key: field },
+          E('label', { id: id + '-label', className: 'git4idea-settings-text-label', htmlFor: id }, t(labelKey)),
           E('select', {
-            id: id, className: 'dig-input dig-settings-input', value: value, disabled: disabled === true,
+            id: id, className: 'git4idea-input git4idea-settings-input', value: value, disabled: disabled === true,
             'aria-labelledby': id + '-label',
             onChange: (event) => commitSelectField(field, event.target.value),
           }, children),
-          hint === null ? null : E('div', { className: 'dig-settings-subnote' }, hint))
+          hint === null ? null : E('div', { className: 'git4idea-settings-subnote' }, hint))
       }
       /* Collapsible sections, HAND-DRAWN. The official disclosure row was ruled
          out the same way the sibling dsh-gitbash-shell ruled it out (v0.38.0 -
@@ -10006,16 +10024,16 @@ window.__ModuleLoader__.load({
       }
       const fold = (titleKey, ...body) => {
         const open = folds[titleKey] === true
-        return E('div', { className: 'dig-fold' },
+        return E('div', { className: 'git4idea-fold' },
           E('button', {
             type: 'button',
-            className: 'dig-foldHead',
+            className: 'git4idea-foldHead',
             'aria-expanded': open ? 'true' : 'false',
             onClick: () => toggleFold(titleKey),
           },
-            E('span', { className: 'dig-foldChevron' + (open ? ' dig-foldChevronOpen' : ''), 'aria-hidden': 'true' }, '▸'),
-            E('span', { className: 'dig-foldTitle' }, t(titleKey))),
-          open ? E('div', { className: 'dig-stack' }, body) : null)
+            E('span', { className: 'git4idea-foldChevron' + (open ? ' git4idea-foldChevronOpen' : ''), 'aria-hidden': 'true' }, '▸'),
+            E('span', { className: 'git4idea-foldTitle' }, t(titleKey))),
+          open ? E('div', { className: 'git4idea-stack' }, body) : null)
       }
       const flush = () => {
         pendingFlush.current = null
@@ -10078,20 +10096,20 @@ window.__ModuleLoader__.load({
          seat, a flat page card on the plugin-page seat. Title + description
          come from the settings.card.* dictionary keys (every locale). */
       const pageView = props.view === 'page'
-      const cardHead = E('span', { className: 'dig-card-head-text' },
-        E('span', { className: 'dig-card-name' }, t('settings.card.title')),
-        E('span', { className: 'dig-card-desc' }, t('settings.card.desc')))
+      const cardHead = E('span', { className: 'git4idea-card-head-text' },
+        E('span', { className: 'git4idea-card-name' }, t('settings.card.title')),
+        E('span', { className: 'git4idea-card-desc' }, t('settings.card.desc')))
       const wrapCard = (body) => {
-        if (pageView) return E('div', { className: 'dig-card dig-card-page' },
-          E('div', { className: 'dig-card-header dig-card-header-flat' }, cardHead), body)
-        return E('li', { className: 'dig-card' + (openCard ? ' dig-card-open' : '') },
+        if (pageView) return E('div', { className: 'git4idea-card git4idea-card-page' },
+          E('div', { className: 'git4idea-card-header git4idea-card-header-flat' }, cardHead), body)
+        return E('li', { className: 'git4idea-card' + (openCard ? ' git4idea-card-open' : '') },
           E('button', {
             type: 'button',
-            className: 'dig-card-header',
+            className: 'git4idea-card-header',
             'aria-expanded': openCard,
             onClick: () => setOpenCard(!openCard),
           }, cardHead,
-            E('span', { className: 'dig-card-chevron' + (openCard ? ' dig-card-chevron-open' : '') },
+            E('span', { className: 'git4idea-card-chevron' + (openCard ? ' git4idea-card-chevron-open' : '') },
               E(Icon, { name: 'chevron', size: 12 }))),
           openCard ? body : null)
       }
@@ -10155,8 +10173,8 @@ window.__ModuleLoader__.load({
       // Switches exist only where they can actually write: a host that does not
       // serve this entry's settings gets a sentence instead of dead controls.
       if (status !== 'ready' || values === null) {
-        return wrapCard(E('div', { className: 'dig-settings dig-card-body', 'data-settings-status': status },
-          E('div', { className: 'dig-settings-note' }, t('settings.rail.unavailable'))))
+        return wrapCard(E('div', { className: 'git4idea-settings git4idea-card-body', 'data-settings-status': status },
+          E('div', { className: 'git4idea-settings-note' }, t('settings.rail.unavailable'))))
       }
       const config = railConfigOfValues(values)
       /* A toggle is a host round trip, so the switch would snap back to the old
@@ -10188,17 +10206,17 @@ window.__ModuleLoader__.load({
         const current = placementShown(field)
         return current !== true
       }
-      return wrapCard(E('div', { className: 'dig-settings dig-card-body', 'data-settings-status': status, 'data-settings-readonly': readOnly === true ? 'true' : 'false' },
-        E('div', { className: readOnly === true ? 'dig-settings-note' : 'dig-settings-note dig-settings-note-hidden', 'data-settings-readonly-note': '' }, t('settings.rail.readonly')),
-        note === '' ? null : E('div', { className: 'dig-settings-error', 'data-settings-error': '' }, note),
+      return wrapCard(E('div', { className: 'git4idea-settings git4idea-card-body', 'data-settings-status': status, 'data-settings-readonly': readOnly === true ? 'true' : 'false' },
+        E('div', { className: readOnly === true ? 'git4idea-settings-note' : 'git4idea-settings-note git4idea-settings-note-hidden', 'data-settings-readonly-note': '' }, t('settings.rail.readonly')),
+        note === '' ? null : E('div', { className: 'git4idea-settings-error', 'data-settings-error': '' }, note),
         /* Three collapsible sections, one per functional domain — the header
            rows are what a collapsed card shows. The readonly/error notes stay
            OUTSIDE them: they are status, not settings, and must stay visible.
            Section 1 carries its own hint (it describes exactly this list). */
         fold('settings.rail.title',
-        E('div', { className: 'dig-settings-hint' }, t('settings.rail.hint')),
-        E('div', { className: 'dig-settings-list' }, RAIL_SPECS.map((spec) => {
-          const inputId = 'dig-rail-' + spec.id
+        E('div', { className: 'git4idea-settings-hint' }, t('settings.rail.hint')),
+        E('div', { className: 'git4idea-settings-list' }, RAIL_SPECS.map((spec) => {
+          const inputId = 'git4idea-rail-' + spec.id
           const visible = shown(spec)
           /* A row, not a <label>: a label that both carries htmlFor and wraps its
              own input toggles twice per click (once for the input, once for the
@@ -10232,18 +10250,18 @@ window.__ModuleLoader__.load({
             bump()
             scheduleFlush()
           }
-          return E('div', { key: spec.id, className: 'dig-settings-row', 'data-rail-action': spec.id },
+          return E('div', { key: spec.id, className: 'git4idea-settings-row', 'data-rail-action': spec.id },
             E('input', {
               id: inputId,
               type: 'checkbox',
-              className: 'dig-settings-check',
+              className: 'git4idea-settings-check',
               'aria-labelledby': inputId + '-label',
               checked: visible,
               disabled: readOnly === true,
               onChange: toggle,
             }),
-            E('span', { className: 'dig-settings-glyph' }, E(Icon, { name: spec.icon, size: 13 })),
-            E('span', { id: inputId + '-label', className: 'dig-settings-label', onClick: toggle }, t(spec.key)))
+            E('span', { className: 'git4idea-settings-glyph' }, E(Icon, { name: spec.icon, size: 13 })),
+            E('span', { id: inputId + '-label', className: 'git4idea-settings-label', onClick: toggle }, t(spec.key)))
         }))),
         /* Section 2 — placement (issue #8): one switch, the same optimistic-write
            contract the rail rows keep. The conversation tab registers/unregisters
@@ -10251,7 +10269,7 @@ window.__ModuleLoader__.load({
         fold('settings.placement.title',
         (() => {
           const field = 'conversationTab'
-          const inputId = 'dig-placement-' + field
+          const inputId = 'git4idea-placement-' + field
           const shown = placementShown(field)
           const toggle = (event) => {
             if (readOnly === true) { setNote(t('settings.rail.readonly')); return }
@@ -10268,19 +10286,19 @@ window.__ModuleLoader__.load({
             scheduleFlush()
           }
           return E('div', { key: field },
-            E('div', { className: 'dig-settings-row', 'data-placement-row': field },
+            E('div', { className: 'git4idea-settings-row', 'data-placement-row': field },
               E('input', {
                 id: inputId,
                 type: 'checkbox',
-                className: 'dig-settings-check',
+                className: 'git4idea-settings-check',
                 'aria-labelledby': inputId + '-label',
                 checked: shown,
                 disabled: readOnly === true,
                 onChange: toggle,
               }),
-              E('span', { className: 'dig-settings-glyph' }, E(Icon, { name: 'commit', size: 13 })),
-              E('span', { id: inputId + '-label', className: 'dig-settings-label', onClick: toggle }, t('settings.placement.tab'))),
-            E('div', { className: 'dig-settings-subnote' }, t('settings.placement.tabHint')))
+              E('span', { className: 'git4idea-settings-glyph' }, E(Icon, { name: 'commit', size: 13 })),
+              E('span', { id: inputId + '-label', className: 'git4idea-settings-label', onClick: toggle }, t('settings.placement.tab'))),
+            E('div', { className: 'git4idea-settings-subnote' }, t('settings.placement.tabHint')))
         })(),
         (() => {
           /* Immersive mode (issue #8 round 3): the conversation seat's
@@ -10289,7 +10307,7 @@ window.__ModuleLoader__.load({
              re-renders the seat live (the ConversationPanel subscribes to the
              same config). */
           const field = 'immersive'
-          const inputId = 'dig-placement-' + field
+          const inputId = 'git4idea-placement-' + field
           const shown = placementShown(field)
           const toggle = (event) => {
             if (readOnly === true) { setNote(t('settings.rail.readonly')); return }
@@ -10306,19 +10324,19 @@ window.__ModuleLoader__.load({
             scheduleFlush()
           }
           return E('div', { key: field },
-            E('div', { className: 'dig-settings-row', 'data-placement-row': field },
+            E('div', { className: 'git4idea-settings-row', 'data-placement-row': field },
               E('input', {
                 id: inputId,
                 type: 'checkbox',
-                className: 'dig-settings-check',
+                className: 'git4idea-settings-check',
                 'aria-labelledby': inputId + '-label',
                 checked: shown,
                 disabled: readOnly === true,
                 onChange: toggle,
               }),
-              E('span', { className: 'dig-settings-glyph' }, E(Icon, { name: 'commit', size: 13 })),
-              E('span', { id: inputId + '-label', className: 'dig-settings-label', onClick: toggle }, t('settings.placement.immersive'))),
-            E('div', { className: 'dig-settings-subnote' }, t('settings.placement.immersiveHint')))
+              E('span', { className: 'git4idea-settings-glyph' }, E(Icon, { name: 'commit', size: 13 })),
+              E('span', { id: inputId + '-label', className: 'git4idea-settings-label', onClick: toggle }, t('settings.placement.immersive'))),
+            E('div', { className: 'git4idea-settings-subnote' }, t('settings.placement.immersiveHint')))
         })(),
         (() => {
           /* Composer status pill (issue: status in the input bar). Same
@@ -10326,7 +10344,7 @@ window.__ModuleLoader__.load({
              composerStatus through composerStatusEnabled() and appears or
              disappears live. Default ON. */
           const field = 'composerStatus'
-          const inputId = 'dig-placement-' + field
+          const inputId = 'git4idea-placement-' + field
           const shown = placementShown(field)
           const toggle = (event) => {
             if (readOnly === true) { setNote(t('settings.rail.readonly')); return }
@@ -10343,19 +10361,19 @@ window.__ModuleLoader__.load({
             scheduleFlush()
           }
           return E('div', { key: field },
-            E('div', { className: 'dig-settings-row', 'data-placement-row': field },
+            E('div', { className: 'git4idea-settings-row', 'data-placement-row': field },
               E('input', {
                 id: inputId,
                 type: 'checkbox',
-                className: 'dig-settings-check',
+                className: 'git4idea-settings-check',
                 'aria-labelledby': inputId + '-label',
                 checked: shown,
                 disabled: readOnly === true,
                 onChange: toggle,
               }),
-              E('span', { className: 'dig-settings-glyph' }, E(Icon, { name: 'branch', size: 13 })),
-              E('span', { id: inputId + '-label', className: 'dig-settings-label', onClick: toggle }, t('settings.composer.title'))),
-            E('div', { className: 'dig-settings-subnote' }, t('settings.composer.hint')))
+              E('span', { className: 'git4idea-settings-glyph' }, E(Icon, { name: 'branch', size: 13 })),
+              E('span', { id: inputId + '-label', className: 'git4idea-settings-label', onClick: toggle }, t('settings.composer.title'))),
+            E('div', { className: 'git4idea-settings-subnote' }, t('settings.composer.hint')))
         })()),
         /* Section 3 — the AI commit message (issue #6): model, reasoning and the
            prompt template. */
@@ -10412,18 +10430,18 @@ window.__ModuleLoader__.load({
       const t = props.t
       const [dragId, setDragId] = useState(null)
       return E('div', {
-        className: 'dig-overlay',
+        className: 'git4idea-overlay',
         onMouseDown: (event) => { if (event.target === event.currentTarget) props.onClose() },
       },
-        E('div', { className: 'dig-dialog dig-dialog-wide' },
-          E('div', { className: 'dig-dialog-title' }, t('rail.settings')),
-          E('div', { className: 'dig-dialog-text' }, t('rail.settingsHint')),
-          E('div', { className: 'dig-rail-list' },
+        E('div', { className: 'git4idea-dialog git4idea-dialog-wide' },
+          E('div', { className: 'git4idea-dialog-title' }, t('rail.settings')),
+          E('div', { className: 'git4idea-dialog-text' }, t('rail.settingsHint')),
+          E('div', { className: 'git4idea-rail-list' },
             props.items.map((item, index) => E('div', {
               key: item.id,
-              className: 'dig-rail-item'
-                + (item.hidden === true ? ' dig-rail-item-off' : '')
-                + (dragId === item.id ? ' dig-rail-item-drag' : ''),
+              className: 'git4idea-rail-item'
+                + (item.hidden === true ? ' git4idea-rail-item-off' : '')
+                + (dragId === item.id ? ' git4idea-rail-item-drag' : ''),
               draggable: true,
               onDragStart: (event) => {
                 setDragId(item.id)
@@ -10436,26 +10454,26 @@ window.__ModuleLoader__.load({
               onDragOver: (event) => { event.preventDefault() },
               onDrop: (event) => { event.preventDefault(); props.onDrop(dragId, item.id); setDragId(null) },
             },
-              E('span', { className: 'dig-rail-grip' }, E(Icon, { name: 'grip', size: 12 })),
-              E('span', { className: 'dig-rail-item-icon dig-tone-' + item.tone }, E(Icon, { name: item.icon, size: 13 })),
-              E('span', { className: 'dig-rail-item-label' }, item.label),
+              E('span', { className: 'git4idea-rail-grip' }, E(Icon, { name: 'grip', size: 12 })),
+              E('span', { className: 'git4idea-rail-item-icon git4idea-tone-' + item.tone }, E(Icon, { name: item.icon, size: 13 })),
+              E('span', { className: 'git4idea-rail-item-label' }, item.label),
               E('button', {
-                type: 'button', className: 'dig-icon-btn dig-icon-btn-small', title: t('rail.up'),
+                type: 'button', className: 'git4idea-icon-btn git4idea-icon-btn-small', title: t('rail.up'),
                 disabled: index === 0, onClick: () => props.onMove(item.id, -1),
               }, E(Icon, { name: 'up', size: 12 })),
               E('button', {
-                type: 'button', className: 'dig-icon-btn dig-icon-btn-small', title: t('rail.down'),
+                type: 'button', className: 'git4idea-icon-btn git4idea-icon-btn-small', title: t('rail.down'),
                 disabled: index === props.items.length - 1, onClick: () => props.onMove(item.id, 1),
               }, E(Icon, { name: 'down', size: 12 })),
               E('button', {
                 type: 'button',
-                className: 'dig-icon-btn dig-icon-btn-small' + (item.hidden === true ? '' : ' dig-icon-btn-active'),
+                className: 'git4idea-icon-btn git4idea-icon-btn-small' + (item.hidden === true ? '' : ' git4idea-icon-btn-active'),
                 title: item.hidden === true ? t('rail.show') : t('rail.hide'),
                 onClick: () => props.onToggle(item.id),
               }, E(Icon, { name: item.hidden === true ? 'eyeOff' : 'eye', size: 13 }))))),
-          E('div', { className: 'dig-dialog-actions' },
-            E('button', { type: 'button', className: 'dig-btn', onClick: props.onReset }, t('rail.reset')),
-            E('button', { type: 'button', className: 'dig-btn dig-btn-primary', onClick: props.onClose }, t('confirm.ok')))))
+          E('div', { className: 'git4idea-dialog-actions' },
+            E('button', { type: 'button', className: 'git4idea-btn', onClick: props.onReset }, t('rail.reset')),
+            E('button', { type: 'button', className: 'git4idea-btn git4idea-btn-primary', onClick: props.onClose }, t('confirm.ok')))))
     }
 
     /* Transient result chips, anchored inside the panel (see ContextMenu for why
@@ -10463,17 +10481,17 @@ window.__ModuleLoader__.load({
        'undo', which is how a real delete is still reversible. */
     function ToastStack(props) {
       if (props.toasts.length === 0) return null
-      return E('div', { className: 'dig-toasts' }, props.toasts.map((item) => E('div', {
+      return E('div', { className: 'git4idea-toasts' }, props.toasts.map((item) => E('div', {
         key: item.id,
-        className: 'dig-toast' + (item.tone === undefined ? '' : ' dig-toast-' + item.tone),
+        className: 'git4idea-toast' + (item.tone === undefined ? '' : ' git4idea-toast-' + item.tone),
       },
-        E('span', { className: 'dig-toast-icon' }, E(Icon, { name: item.icon === undefined ? 'check' : item.icon, size: 13 })),
-        E('span', { className: 'dig-toast-text', title: item.text }, item.text),
+        E('span', { className: 'git4idea-toast-icon' }, E(Icon, { name: item.icon === undefined ? 'check' : item.icon, size: 13 })),
+        E('span', { className: 'git4idea-toast-text', title: item.text }, item.text),
         item.actionLabel === undefined ? null : E('button', {
-          type: 'button', className: 'dig-toast-action', onClick: () => item.onAction(),
+          type: 'button', className: 'git4idea-toast-action', onClick: () => item.onAction(),
         }, item.actionLabel),
         E('button', {
-          type: 'button', className: 'dig-icon-btn dig-icon-btn-small',
+          type: 'button', className: 'git4idea-icon-btn git4idea-icon-btn-small',
           title: props.t('toast.close'), onClick: () => item.onClose(),
         }, E(Icon, { name: 'close', size: 11 })))))
     }
@@ -10483,11 +10501,11 @@ window.__ModuleLoader__.load({
       const ref = useRef(null)
       useEffect(() => { if (ref.current !== null) ref.current.focus() }, [])
       const submit = () => { if (value.trim() !== '') props.onSubmit(value.trim()) }
-      return E('div', { className: 'dig-overlay' },
-        E('div', { className: 'dig-dialog' },
-          E('div', { className: 'dig-dialog-title' }, props.title),
+      return E('div', { className: 'git4idea-overlay' },
+        E('div', { className: 'git4idea-dialog' },
+          E('div', { className: 'git4idea-dialog-title' }, props.title),
           E('input', {
-            ref: ref, className: 'dig-input', value: value, spellCheck: false,
+            ref: ref, className: 'git4idea-input', value: value, spellCheck: false,
             placeholder: props.placeholder === undefined ? '' : props.placeholder,
             onChange: (event) => setValue(event.target.value),
             onKeyDown: (event) => {
@@ -10495,9 +10513,9 @@ window.__ModuleLoader__.load({
               if (event.key === 'Escape') { event.preventDefault(); props.onCancel() }
             },
           }),
-          E('div', { className: 'dig-dialog-actions' },
-            E('button', { type: 'button', className: 'dig-btn', onClick: props.onCancel }, props.cancelLabel),
-            E('button', { type: 'button', className: 'dig-btn dig-btn-primary', onClick: submit }, props.okLabel))))
+          E('div', { className: 'git4idea-dialog-actions' },
+            E('button', { type: 'button', className: 'git4idea-btn', onClick: props.onCancel }, props.cancelLabel),
+            E('button', { type: 'button', className: 'git4idea-btn git4idea-btn-primary', onClick: submit }, props.okLabel))))
     }
 
     /* VS Code's "Clone...": a URL plus an absolute target path. Two inputs in
@@ -10514,22 +10532,22 @@ window.__ModuleLoader__.load({
         if (event.key === 'Enter') { event.preventDefault(); submit() }
         if (event.key === 'Escape') { event.preventDefault(); props.onCancel() }
       }
-      return E('div', { className: 'dig-overlay' },
-        E('div', { className: 'dig-dialog' },
-          E('div', { className: 'dig-dialog-title' }, props.title),
+      return E('div', { className: 'git4idea-overlay' },
+        E('div', { className: 'git4idea-dialog' },
+          E('div', { className: 'git4idea-dialog-title' }, props.title),
           E('input', {
-            ref: ref, className: 'dig-input', value: url, spellCheck: false,
+            ref: ref, className: 'git4idea-input', value: url, spellCheck: false,
             placeholder: props.urlPlaceholder === undefined ? '' : props.urlPlaceholder,
             onChange: (event) => setUrl(event.target.value), onKeyDown: onKey,
           }),
           E('input', {
-            className: 'dig-input', value: dir, spellCheck: false,
+            className: 'git4idea-input', value: dir, spellCheck: false,
             placeholder: props.dirPlaceholder === undefined ? '' : props.dirPlaceholder,
             onChange: (event) => setDir(event.target.value), onKeyDown: onKey,
           }),
-          E('div', { className: 'dig-dialog-actions' },
-            E('button', { type: 'button', className: 'dig-btn', onClick: props.onCancel }, props.cancelLabel),
-            E('button', { type: 'button', className: 'dig-btn dig-btn-primary', disabled: ready === false, onClick: submit }, props.okLabel))))
+          E('div', { className: 'git4idea-dialog-actions' },
+            E('button', { type: 'button', className: 'git4idea-btn', onClick: props.onCancel }, props.cancelLabel),
+            E('button', { type: 'button', className: 'git4idea-btn git4idea-btn-primary', disabled: ready === false, onClick: submit }, props.okLabel))))
     }
 
     /* VS Code's "Git output" view (showOutput): the tail of the host's git-run
@@ -10540,26 +10558,26 @@ window.__ModuleLoader__.load({
       const t = props.t
       const ref = useRef(null)
       useEffect(() => { if (ref.current !== null) ref.current.scrollTop = ref.current.scrollHeight }, [props.entries])
-      return E('div', { className: 'dig-gitlog' },
-        E('div', { className: 'dig-gitlog-head' },
-          E('span', { className: 'dig-gitlog-title' }, t('gitLog.title')),
-          E('span', { className: 'dig-topbar-spacer' }),
-          E('button', { type: 'button', className: 'dig-icon-btn dig-icon-btn-small', title: t('toolbar.refresh'), onClick: props.onRefresh }, E(Icon, { name: 'refresh', size: 13 })),
-          E('button', { type: 'button', className: 'dig-icon-btn dig-icon-btn-small', title: t('confirm.cancel'), onClick: props.onClose }, E(Icon, { name: 'collapse', size: 13 }))),
+      return E('div', { className: 'git4idea-gitlog' },
+        E('div', { className: 'git4idea-gitlog-head' },
+          E('span', { className: 'git4idea-gitlog-title' }, t('gitLog.title')),
+          E('span', { className: 'git4idea-topbar-spacer' }),
+          E('button', { type: 'button', className: 'git4idea-icon-btn git4idea-icon-btn-small', title: t('toolbar.refresh'), onClick: props.onRefresh }, E(Icon, { name: 'refresh', size: 13 })),
+          E('button', { type: 'button', className: 'git4idea-icon-btn git4idea-icon-btn-small', title: t('confirm.cancel'), onClick: props.onClose }, E(Icon, { name: 'collapse', size: 13 }))),
         props.entries.length === 0
-          ? E('div', { className: 'dig-gitlog-empty' }, t('gitLog.empty'))
-          : E('div', { className: 'dig-gitlog-body', ref: ref },
+          ? E('div', { className: 'git4idea-gitlog-empty' }, t('gitLog.empty'))
+          : E('div', { className: 'git4idea-gitlog-body', ref: ref },
             props.entries.map((entry, index) => E('div', {
               key: index,
-              className: 'dig-gitlog-row' + (String(entry.code) === '0' ? '' : ' dig-gitlog-row-bad'),
+              className: 'git4idea-gitlog-row' + (String(entry.code) === '0' ? '' : ' git4idea-gitlog-row-bad'),
             },
-              E('div', { className: 'dig-gitlog-meta' },
-                E('span', { className: 'dig-gitlog-code' }, String(entry.code)),
-                E('span', { className: 'dig-gitlog-ms' }, String(entry.ms) + 'ms'),
-                E('span', { className: 'dig-gitlog-at' }, String(entry.at)),
-                E('span', { className: 'dig-gitlog-argv' }, String(entry.argv))),
+              E('div', { className: 'git4idea-gitlog-meta' },
+                E('span', { className: 'git4idea-gitlog-code' }, String(entry.code)),
+                E('span', { className: 'git4idea-gitlog-ms' }, String(entry.ms) + 'ms'),
+                E('span', { className: 'git4idea-gitlog-at' }, String(entry.at)),
+                E('span', { className: 'git4idea-gitlog-argv' }, String(entry.argv))),
               entry.out === '' && entry.err === '' ? null
-                : E('pre', { className: 'dig-gitlog-pre' }, String(entry.err) === '' ? String(entry.out) : String(entry.out) + '\n' + String(entry.err))))))
+                : E('pre', { className: 'git4idea-gitlog-pre' }, String(entry.err) === '' ? String(entry.out) : String(entry.out) + '\n' + String(entry.err))))))
     }
 
     /* A destructive confirm: focus starts on Cancel (never on the red button), Enter
@@ -10572,27 +10590,27 @@ window.__ModuleLoader__.load({
       const needText = typeof props.requireText === 'string' && props.requireText !== ''
       const matches = needText === false || typed.trim() === props.requireText
       useEffect(() => { if (cancelRef.current !== null) cancelRef.current.focus() }, [])
-      return E('div', { className: 'dig-overlay' },
-        E('div', { className: 'dig-dialog' },
-          E('div', { className: 'dig-dialog-title' }, props.title),
-          E('div', { className: 'dig-dialog-text' }, props.text),
+      return E('div', { className: 'git4idea-overlay' },
+        E('div', { className: 'git4idea-dialog' },
+          E('div', { className: 'git4idea-dialog-title' }, props.title),
+          E('div', { className: 'git4idea-dialog-text' }, props.text),
           needText === false ? null : E('input', {
-            className: 'dig-input', value: typed, spellCheck: false,
+            className: 'git4idea-input', value: typed, spellCheck: false,
             placeholder: fill(t('confirm.typeName'), { name: props.requireText }),
             onChange: (event) => setTyped(event.target.value),
             onKeyDown: (event) => { if (event.key === 'Enter' && matches === true) props.onConfirm() },
           }),
-          E('div', { className: 'dig-dialog-actions' },
-            E('button', { ref: cancelRef, type: 'button', className: 'dig-btn', onClick: props.onCancel }, props.cancelLabel),
-            E('button', { type: 'button', className: 'dig-btn dig-btn-danger', disabled: matches === false, onClick: props.onConfirm }, props.okLabel))))
+          E('div', { className: 'git4idea-dialog-actions' },
+            E('button', { ref: cancelRef, type: 'button', className: 'git4idea-btn', onClick: props.onCancel }, props.cancelLabel),
+            E('button', { type: 'button', className: 'git4idea-btn git4idea-btn-danger', disabled: matches === false, onClick: props.onConfirm }, props.okLabel))))
     }
 
     function Segmented(props) {
-      return E('div', { className: 'dig-seg' },
+      return E('div', { className: 'git4idea-seg' },
         props.items.map((item) => E('button', {
           key: item.id,
           type: 'button',
-          className: 'dig-seg-item',
+          className: 'git4idea-seg-item',
           'data-active': props.value === item.id ? 'true' : 'false',
           onClick: () => props.onChange(item.id),
         }, item.label)))
@@ -10667,8 +10685,8 @@ window.__ModuleLoader__.load({
       }
       const label = fill(props.t('pane.resize'), { name: props.t(props.nameKey) })
       return E('div', {
-        className: 'dig-gutter ' + (props.vertical === true ? 'dig-gutter-v' : 'dig-gutter-h')
-          + (props.active === true ? ' dig-gutter-active' : ''),
+        className: 'git4idea-gutter ' + (props.vertical === true ? 'git4idea-gutter-v' : 'git4idea-gutter-h')
+          + (props.active === true ? ' git4idea-gutter-active' : ''),
         role: 'separator',
         tabIndex: 0,
         'aria-orientation': props.vertical === true ? 'vertical' : 'horizontal',
@@ -10695,29 +10713,29 @@ window.__ModuleLoader__.load({
          to look like the final answer. Loading shows loading; "not found" only
          shows once the scan came back empty. */
       if (props.loading === true) {
-        return E('span', { className: 'dig-repo-static' },
+        return E('span', { className: 'git4idea-repo-static' },
           E(Icon, { name: 'folder', size: 12 }),
-          E('span', { className: 'dig-repo-name' }, t('status.loading')))
+          E('span', { className: 'git4idea-repo-name' }, t('status.loading')))
       }
       if (props.repos.length <= 1) {
         const only = props.repos.length === 1 ? props.repos[0] : null
-        return E('span', { className: 'dig-repo-static', title: only === null ? '' : only.path },
+        return E('span', { className: 'git4idea-repo-static', title: only === null ? '' : only.path },
           E(Icon, { name: 'folder', size: 12 }),
-          E('span', { className: 'dig-repo-name' }, only === null ? t('repo.empty') : only.name))
+          E('span', { className: 'git4idea-repo-name' }, only === null ? t('repo.empty') : only.name))
       }
       /* The switcher is a button over a panel-internal menu, not a native
          <select>: the OS-drawn popup ignores the panel theme entirely (light
          system colours over a dark translucent panel) and was unreadable. */
       let current = null
       for (const repo of props.repos) { if (repo.path === props.value) { current = repo; break } }
-      return E('span', { className: 'dig-select-wrap', title: current === null ? t('repo.switch') : current.path },
+      return E('span', { className: 'git4idea-select-wrap', title: current === null ? t('repo.switch') : current.path },
         E(Icon, { name: 'folder', size: 12 }),
         E('button', {
           type: 'button',
-          className: 'dig-select dig-select-btn dig-select-repo',
+          className: 'git4idea-select git4idea-select-btn git4idea-select-repo',
           onClick: props.onOpenMenu,
         },
-          E('span', { className: 'dig-repo-name' },
+          E('span', { className: 'git4idea-repo-name' },
             current === null ? t('repo.pick') : current.name + (current.branch === null || current.branch === undefined ? '' : ' · ' + current.branch)),
           E(Icon, { name: 'chevron', size: 12 })))
     }
@@ -10733,31 +10751,31 @@ window.__ModuleLoader__.load({
       const label = props.label + ': ' + (current === undefined ? '' : current.label)
       return E('button', {
         type: 'button',
-        className: 'dig-filter-select' + (props.value === '' ? '' : ' dig-filter-on'),
+        className: 'git4idea-filter-select' + (props.value === '' ? '' : ' git4idea-filter-on'),
         title: props.hint === undefined ? label : props.hint,
         onClick: (event) => { if (props.onOpenMenu !== undefined) props.onOpenMenu(event, options) },
       },
-        E('span', { className: 'dig-filter-label' }, label),
+        E('span', { className: 'git4idea-filter-label' }, label),
         E(Icon, { name: 'chevron', size: 11 }))
     }
 
     function RepoPicker(props) {
       const t = props.t
       const repos = props.repos
-      return E('div', { className: 'dig-picker' },
-        E('div', { className: 'dig-picker-title' }, repos.length === 0 ? t('repo.empty') : t('repo.pick')),
-        E('div', { className: 'dig-picker-sub' }, props.cwd),
+      return E('div', { className: 'git4idea-picker' },
+        E('div', { className: 'git4idea-picker-title' }, repos.length === 0 ? t('repo.empty') : t('repo.pick')),
+        E('div', { className: 'git4idea-picker-sub' }, props.cwd),
         repos.map((repo) => E('button', {
           key: repo.path,
           type: 'button',
-          className: 'dig-picker-row',
+          className: 'git4idea-picker-row',
           onClick: () => props.onPick(repo.path),
         },
-          E('span', { className: 'dig-picker-icon' }, E(Icon, { name: 'folder', size: 13 })),
-          E('span', { className: 'dig-picker-name' }, repo.name),
-          repo.branch === null || repo.branch === undefined ? null : E('span', { className: 'dig-badge' }, repo.branch),
-          E('span', { className: 'dig-picker-kind' }, repo.kind === 'workspace' ? t('repo.workspace') : t('repo.nested')),
-          E('span', { className: 'dig-picker-path' }, repo.path))))
+          E('span', { className: 'git4idea-picker-icon' }, E(Icon, { name: 'folder', size: 13 })),
+          E('span', { className: 'git4idea-picker-name' }, repo.name),
+          repo.branch === null || repo.branch === undefined ? null : E('span', { className: 'git4idea-badge' }, repo.branch),
+          E('span', { className: 'git4idea-picker-kind' }, repo.kind === 'workspace' ? t('repo.workspace') : t('repo.nested')),
+          E('span', { className: 'git4idea-picker-path' }, repo.path))))
     }
 
     /* ============================== branch tree ============================== */
@@ -10781,7 +10799,7 @@ window.__ModuleLoader__.load({
       // double-click BROWSES that branch's commit history (checkout moved into
       // the right-click menu), right-click has the whole menu.
       return E('div', {
-        className: 'dig-row dig-row-' + kind + (props.selected === true ? ' dig-row-selected' : ''),
+        className: 'git4idea-row git4idea-row-' + kind + (props.selected === true ? ' git4idea-row-selected' : ''),
         style: { paddingLeft: (BRANCH_INDENT_BASE + (props.depth === undefined ? 0 : props.depth) * BRANCH_INDENT_STEP) + 'px' },
         /* Rubber-band anchor: the marquee intersects [data-mkey] rows to
            rebuild the picked set (selKey = local:/remote:/tag: prefixed). */
@@ -10791,21 +10809,21 @@ window.__ModuleLoader__.load({
         onDoubleClick: () => { if (props.onBrowse !== undefined) props.onBrowse(entry) },
         onContextMenu: (event) => { event.preventDefault(); props.onMenu(event, entry) },
       },
-        E('span', { className: 'dig-row-icon dig-tone-' + tone + (starred === true ? ' dig-star-filled' : '') }, E(Icon, { name: glyph, size: 12 })),
-        E('span', { className: 'dig-row-label' }, props.label === undefined ? entry.name : props.label),
+        E('span', { className: 'git4idea-row-icon git4idea-tone-' + tone + (starred === true ? ' git4idea-star-filled' : '') }, E(Icon, { name: glyph, size: 12 })),
+        E('span', { className: 'git4idea-row-label' }, props.label === undefined ? entry.name : props.label),
         // Inline tracking target (issue #18): the title already said "name →
         // upstream", but nobody hovers a tree to learn a binding. Local rows
         // show it as muted small text; remote rows ARE the upstream.
-        kind !== 'remote' && kind !== 'tag' && entry.upstream !== null && entry.upstream !== undefined ? E('span', { className: 'dig-row-upstream' }, '→ ' + entry.upstream) : null,
+        kind !== 'remote' && kind !== 'tag' && entry.upstream !== null && entry.upstream !== undefined ? E('span', { className: 'git4idea-row-upstream' }, '→ ' + entry.upstream) : null,
         // A bare 'W' told nobody anything (reported right after the section counts):
         // it means this branch is checked out in ANOTHER working tree, which is why
         // git refuses to check it out here. An icon plus a spelled-out tooltip says so.
         entry.worktree === null || entry.worktree === undefined ? null : E('span', {
-          className: 'dig-badge dig-badge-muted dig-badge-worktree',
+          className: 'git4idea-badge git4idea-badge-muted git4idea-badge-worktree',
           title: t('branches.worktree') + ': ' + entry.worktree,
         }, E(Icon, { name: 'folder', size: 10 })),
-        entry.ahead > 0 ? E('span', { className: 'dig-badge dig-badge-ahead' }, '↑' + entry.ahead) : null,
-        entry.behind > 0 ? E('span', { className: 'dig-badge dig-badge-behind' }, '↓' + entry.behind) : null)
+        entry.ahead > 0 ? E('span', { className: 'git4idea-badge git4idea-badge-ahead' }, '↑' + entry.ahead) : null,
+        entry.behind > 0 ? E('span', { className: 'git4idea-badge git4idea-badge-behind' }, '↓' + entry.behind) : null)
     }
 
     function BranchTree(props) {
@@ -10976,15 +10994,15 @@ window.__ModuleLoader__.load({
           const id = prefix === '' ? name : prefix + '/' + name
           const open = foldedFolders[id] !== true
           const child = node.folders.get(name)
-          out.push(E('div', { className: 'dig-branch-folder', key: 'dir:' + id },
+          out.push(E('div', { className: 'git4idea-branch-folder', key: 'dir:' + id },
             E('button', {
-              type: 'button', className: 'dig-folder-head',
+              type: 'button', className: 'git4idea-folder-head',
               style: { paddingLeft: (BRANCH_INDENT_BASE + depth * BRANCH_INDENT_STEP) + 'px' },
               onClick: () => setFoldedFolders((previous) => Object.assign({}, previous, { [id]: previous[id] !== true })),
             },
-              E('span', { className: 'dig-chevron' + (open ? ' dig-chevron-open' : '') }, E(Icon, { name: 'chevron', size: 10 })),
-              E('span', { className: 'dig-folder-name' }, name),
-              E('span', { className: 'dig-count' }, String(countLeaves(child)))),
+              E('span', { className: 'git4idea-chevron' + (open ? ' git4idea-chevron-open' : '') }, E(Icon, { name: 'chevron', size: 10 })),
+              E('span', { className: 'git4idea-folder-name' }, name),
+              E('span', { className: 'git4idea-count' }, String(countLeaves(child)))),
             open ? rowsOf(child, id, depth + 1) : null))
         }
         for (const leaf of node.leaves) out.push(branchRow(leaf.entry, leaf.label, depth))
@@ -10992,16 +11010,16 @@ window.__ModuleLoader__.load({
       }
       /* ns (v0.19.9) namespaces the fold ids of a grouped section ("remote/…")
          so its folders remember their state independently of the local ones. */
-      const section = (key, title, entries, decorate, grouped, ns, nameOf) => E('div', { className: 'dig-section', key: key },
+      const section = (key, title, entries, decorate, grouped, ns, nameOf) => E('div', { className: 'git4idea-section', key: key },
         E('button', {
-          type: 'button', className: 'dig-section-head',
+          type: 'button', className: 'git4idea-section-head',
           onClick: () => setCollapsed((previous) => Object.assign({}, previous, { [key]: !previous[key] })),
         },
-          E('span', { className: 'dig-chevron' + (collapsed[key] === true ? '' : ' dig-chevron-open') }, E(Icon, { name: 'chevron', size: 12 })),
+          E('span', { className: 'git4idea-chevron' + (collapsed[key] === true ? '' : ' git4idea-chevron-open') }, E(Icon, { name: 'chevron', size: 12 })),
           // No count here: a bare digit next to the section name read as another
           // column instead of a total (reported on v0.3.10).
           E('span', null, title)),
-        collapsed[key] === true ? null : E('div', { className: 'dig-section-body' },
+        collapsed[key] === true ? null : E('div', { className: 'git4idea-section-body' },
           grouped === true
             ? rowsOf(forestOf(entries.map((entry) => decorate(entry)), nameOf), ns || '', 0)
             : entries.map((entry) => branchRow(decorate(entry), undefined, 0))))
@@ -11089,7 +11107,7 @@ window.__ModuleLoader__.load({
         if (event.key === 'Escape') setPicks(new Set())
       }
       return E('div', {
-        className: 'dig-tree',
+        className: 'git4idea-tree',
         ref: treeHostRef,
         tabIndex: 0,
         onKeyDown: onTreeKeyDown,
@@ -11097,14 +11115,14 @@ window.__ModuleLoader__.load({
           if (isTypingTarget(event.target) === false) event.currentTarget.focus({ preventScroll: true })
         },
       },
-        E('div', { className: 'dig-search' },
+        E('div', { className: 'git4idea-search' },
           E('input', {
-            className: 'dig-input dig-input-compact', value: filter, spellCheck: false,
+            className: 'git4idea-input git4idea-input-compact', value: filter, spellCheck: false,
             placeholder: t('branches.filter'),
             onChange: (event) => setFilter(event.target.value),
           })),
         E('div', {
-          className: 'dig-tree-scroll',
+          className: 'git4idea-tree-scroll',
           ref: treeScrollRef,
           onPointerDown: treeMarquee.onPointerDown,
           onClickCapture: (event) => {
@@ -11120,8 +11138,8 @@ window.__ModuleLoader__.load({
             }
           },
         },
-          headEntry === null ? E('div', { className: 'dig-section-head dig-section-head-static' }, t('branches.head')) : E('div', {
-            className: 'dig-section-head dig-section-head-static dig-head-branch',
+          headEntry === null ? E('div', { className: 'git4idea-section-head git4idea-section-head-static' }, t('branches.head')) : E('div', {
+            className: 'git4idea-section-head git4idea-section-head-static git4idea-head-branch',
             title: headEntry.name + ' · ' + t('branches.headHint'),
             onClick: (event) => { event.stopPropagation(); handlePick(event, headEntry, branchSelKeyOf(headEntry)) },
             onDoubleClick: () => { if (props.onBrowse !== undefined) props.onBrowse(headEntry) },
@@ -11156,7 +11174,7 @@ window.__ModuleLoader__.load({
          folder head indents one 12px step past the base 26px. */
       const depth = typeof props.depth === 'number' ? props.depth : -1
       return E('div', {
-        className: 'dig-row dig-row-file' + (props.selected === true ? ' dig-row-selected' : '') + (depth >= 0 ? ' dig-row-nested' : ''),
+        className: 'git4idea-row git4idea-row-file' + (props.selected === true ? ' git4idea-row-selected' : '') + (depth >= 0 ? ' git4idea-row-nested' : ''),
         style: depth >= 0 ? { paddingLeft: (26 + depth * 12) + 'px' } : undefined,
         title: item.origPath === undefined ? item.path : item.origPath + ' → ' + item.path,
         /* The click is handled ONE level up (ChangesPanel): plain click only
@@ -11167,20 +11185,20 @@ window.__ModuleLoader__.load({
         onContextMenu: (event) => { event.preventDefault(); props.onMenu(event, item, props.group) },
       },
         FileTypeGlyph({ path: item.path }),
-        E('span', { className: 'dig-file-status dig-file-status-' + (status === '?' ? 'U' : status) }, status),
+        E('span', { className: 'git4idea-file-status git4idea-file-status-' + (status === '?' ? 'U' : status) }, status),
         // An ignored DIRECTORY comes back as "dist/" (ls-files --directory), whose
         // basename is empty — show the whole path instead of a blank label.
-        E('span', { className: 'dig-row-label' }, item.path.slice(-1) === '/' ? item.path : baseName(item.path)),
+        E('span', { className: 'git4idea-row-label' }, item.path.slice(-1) === '/' ? item.path : baseName(item.path)),
         // In dir-grouped mode the folder head already names the directory —
         // repeating the full path at the end of every nested row is what made
         // the tree read as a flat list (v0.18.5). Flat modes keep it.
-        depth >= 0 ? null : E('span', { className: 'dig-row-sub dig-row-dir' }, item.path.slice(-1) === '/' ? '' : dirName(item.path)),
-        item.additions > 0 ? E('span', { className: 'dig-stat-add' }, '+' + item.additions) : null,
-        item.deletions > 0 ? E('span', { className: 'dig-stat-del' }, '-' + item.deletions) : null,
+        depth >= 0 ? null : E('span', { className: 'git4idea-row-sub git4idea-row-dir' }, item.path.slice(-1) === '/' ? '' : dirName(item.path)),
+        item.additions > 0 ? E('span', { className: 'git4idea-stat-add' }, '+' + item.additions) : null,
+        item.deletions > 0 ? E('span', { className: 'git4idea-stat-del' }, '-' + item.deletions) : null,
         readOnly ? null : (props.group === 'staged'
-          ? E('button', { type: 'button', className: 'dig-mini', title: t('action.unstage'), onClick: (event) => { event.stopPropagation(); props.onUnstage(item) } }, E(Icon, { name: 'minus', size: 12 }))
-          : E('button', { type: 'button', className: 'dig-mini', title: t('action.stage'), onClick: (event) => { event.stopPropagation(); props.onStage(item) } }, E(Icon, { name: 'plus', size: 12 }))),
-        readOnly ? null : E('button', { type: 'button', className: 'dig-mini', title: t('action.discard'), onClick: (event) => { event.stopPropagation(); props.onDiscard(item, props.group) } }, E(Icon, { name: 'undo', size: 12 })))
+          ? E('button', { type: 'button', className: 'git4idea-mini', title: t('action.unstage'), onClick: (event) => { event.stopPropagation(); props.onUnstage(item) } }, E(Icon, { name: 'minus', size: 12 }))
+          : E('button', { type: 'button', className: 'git4idea-mini', title: t('action.stage'), onClick: (event) => { event.stopPropagation(); props.onStage(item) } }, E(Icon, { name: 'plus', size: 12 }))),
+        readOnly ? null : E('button', { type: 'button', className: 'git4idea-mini', title: t('action.discard'), onClick: (event) => { event.stopPropagation(); props.onDiscard(item, props.group) } }, E(Icon, { name: 'undo', size: 12 })))
     }, (prev, next) => prev.item === next.item && prev.group === next.group && prev.t === next.t && prev.selected === next.selected && prev.depth === next.depth)
 
     function ChangesPanel(props) {
@@ -11376,10 +11394,10 @@ window.__ModuleLoader__.load({
       })
       const changeItems = useMemo(() => {
         const out = []
-        const groupHead = (key, title, entries) => E('div', { className: 'dig-group-head' },
+        const groupHead = (key, title, entries) => E('div', { className: 'git4idea-group-head' },
           E('span', null, title),
-          key === 'staged' ? E('button', { type: 'button', className: 'dig-link', onClick: () => props.onUnstageAll() }, t('changes.unstageAll')) : null,
-          key === 'unstaged' || key === 'untracked' ? E('button', { type: 'button', className: 'dig-link', onClick: () => props.onStageAll(entries) }, t('changes.stageAll')) : null)
+          key === 'staged' ? E('button', { type: 'button', className: 'git4idea-link', onClick: () => props.onUnstageAll() }, t('changes.unstageAll')) : null,
+          key === 'unstaged' || key === 'untracked' ? E('button', { type: 'button', className: 'git4idea-link', onClick: () => props.onStageAll(entries) }, t('changes.stageAll')) : null)
         const emitRows = (key, entries) => {
           const sorted = sortedOf(entries)
           if (groupBy !== 'dir') {
@@ -11397,14 +11415,14 @@ window.__ModuleLoader__.load({
             out.push({
               kind: 'folder', key: 'folder:' + id, h: ITEM_HEIGHTS.folder,
               node: E('button', {
-                type: 'button', className: 'dig-folder-head',
+                type: 'button', className: 'git4idea-folder-head',
                 style: { paddingLeft: (4 + depth * 12) + 'px' },
                 onClick: () => setFoldedDirs((previous) => Object.assign({}, previous, { [id]: previous[id] !== true })),
               },
-                E('span', { className: 'dig-chevron' + (open ? ' dig-chevron-open' : '') }, E(Icon, { name: 'chevron', size: 10 })),
-                E('span', { className: 'dig-row-icon dig-tone-accent' }, E(Icon, { name: 'folder', size: 10 })),
-                E('span', { className: 'dig-folder-name' }, node.path.slice(typeof parentLen === 'number' ? parentLen : 0).join('/')),
-                E('span', { className: 'dig-count' }, String(forest.countOf(node)))),
+                E('span', { className: 'git4idea-chevron' + (open ? ' git4idea-chevron-open' : '') }, E(Icon, { name: 'chevron', size: 10 })),
+                E('span', { className: 'git4idea-row-icon git4idea-tone-accent' }, E(Icon, { name: 'folder', size: 10 })),
+                E('span', { className: 'git4idea-folder-name' }, node.path.slice(typeof parentLen === 'number' ? parentLen : 0).join('/')),
+                E('span', { className: 'git4idea-count' }, String(forest.countOf(node)))),
             })
             if (open === true) {
               /* VS Code order inside a folder: subfolders first (recursively,
@@ -11421,13 +11439,13 @@ window.__ModuleLoader__.load({
             out.push({
               kind: 'folder', key: 'folder:' + rootId, h: ITEM_HEIGHTS.folder,
               node: E('button', {
-                type: 'button', className: 'dig-folder-head',
+                type: 'button', className: 'git4idea-folder-head',
                 onClick: () => setFoldedDirs((previous) => Object.assign({}, previous, { [rootId]: previous[rootId] !== true })),
               },
-                E('span', { className: 'dig-chevron' + (rootOpen ? ' dig-chevron-open' : '') }, E(Icon, { name: 'chevron', size: 10 })),
-                E('span', { className: 'dig-row-icon dig-tone-accent' }, E(Icon, { name: 'folder', size: 10 })),
-                E('span', { className: 'dig-folder-name' }, t('changes.rootDir')),
-                E('span', { className: 'dig-count' }, String(forest.rootFiles.length))),
+                E('span', { className: 'git4idea-chevron' + (rootOpen ? ' git4idea-chevron-open' : '') }, E(Icon, { name: 'chevron', size: 10 })),
+                E('span', { className: 'git4idea-row-icon git4idea-tone-accent' }, E(Icon, { name: 'folder', size: 10 })),
+                E('span', { className: 'git4idea-folder-name' }, t('changes.rootDir')),
+                E('span', { className: 'git4idea-count' }, String(forest.rootFiles.length))),
             })
             if (rootOpen === true) for (const item of sortedOf(forest.rootFiles)) out.push({ kind: 'row', key: key + ':' + item.path, h: ITEM_HEIGHTS.row, node: entryRow(key, item, 0) })
           }
@@ -11472,9 +11490,9 @@ window.__ModuleLoader__.load({
         onCancel: () => setAiAsk(false),
       })
       const composer = props.compact === true
-        ? E('div', { className: 'dig-commit-box dig-commit-box-compact' },
+        ? E('div', { className: 'git4idea-commit-box git4idea-commit-box-compact' },
             E('input', {
-              className: 'dig-input dig-input-compact', value: message, spellCheck: false,
+              className: 'git4idea-input git4idea-input-compact', value: message, spellCheck: false,
               placeholder: t('changes.commitPlaceholder'),
               onChange: (event) => setMessage(event.target.value),
               onKeyDown: (event) => {
@@ -11482,66 +11500,66 @@ window.__ModuleLoader__.load({
               },
             }),
             E('button', {
-              type: 'button', className: 'dig-btn dig-btn-small dig-btn-ai',
+              type: 'button', className: 'git4idea-btn git4idea-btn-small git4idea-btn-ai',
               disabled: aiBusy === true || props.busy === true,
               title: t('changes.aiQuota'),
               onClick: () => { if (message.trim() === '') void aiRun(); else setAiAsk(true) },
             }, aiBusy === true ? t('changes.aiBusy') : t('changes.aiWrite')),
             E(ModelRoutePicker, { sessionId: props.sessionId, t: t }),
             E('button', {
-              type: 'button', className: 'dig-btn dig-btn-primary dig-btn-small',
+              type: 'button', className: 'git4idea-btn git4idea-btn-primary git4idea-btn-small',
               disabled: message.trim() === '' || props.busy === true,
               onClick: () => { submit(false) },
             }, t('changes.commit')),
-            E('span', { className: 'dig-commit-ai-hint dig-commit-ai-hint-block' }, t('changes.aiQuota')))
-        : E('div', { className: 'dig-commit-box' },
+            E('span', { className: 'git4idea-commit-ai-hint git4idea-commit-ai-hint-block' }, t('changes.aiQuota')))
+        : E('div', { className: 'git4idea-commit-box' },
             E('textarea', {
-              className: 'dig-textarea', value: message, spellCheck: false,
+              className: 'git4idea-textarea', value: message, spellCheck: false,
               placeholder: t('changes.commitPlaceholder'),
               onChange: (event) => setMessage(event.target.value),
               onKeyDown: (event) => {
                 if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) { event.preventDefault(); submit() }
               },
             }),
-            E('div', { className: 'dig-commit-ai' },
+            E('div', { className: 'git4idea-commit-ai' },
               E('button', {
-                type: 'button', className: 'dig-btn dig-btn-small dig-btn-ai',
+                type: 'button', className: 'git4idea-btn git4idea-btn-small git4idea-btn-ai',
                 disabled: aiBusy === true || props.busy === true,
                 onClick: () => { if (message.trim() === '') void aiRun(); else setAiAsk(true) },
               }, aiBusy === true ? t('changes.aiBusy') : t('changes.aiWrite')),
               E(ModelRoutePicker, { sessionId: props.sessionId, t: t }),
-              E('span', { className: 'dig-commit-ai-hint' }, t('changes.aiQuota')),
+              E('span', { className: 'git4idea-commit-ai-hint' }, t('changes.aiQuota')),
               aiUndo === null ? null : E('button', {
-                type: 'button', className: 'dig-link',
+                type: 'button', className: 'git4idea-link',
                 onClick: () => { setMessage(aiUndo); setAiUndo(null); setAiNote(null) },
               }, t('changes.aiUndo'))),
-            aiNote === null ? null : E('div', { className: 'dig-commit-ai-note', 'data-ai-note': '' }, aiNote),
-            E('div', { className: 'dig-commit-actions' },
-              E('label', { className: 'dig-check' },
+            aiNote === null ? null : E('div', { className: 'git4idea-commit-ai-note', 'data-ai-note': '' }, aiNote),
+            E('div', { className: 'git4idea-commit-actions' },
+              E('label', { className: 'git4idea-check' },
                 E('input', { type: 'checkbox', checked: amend, onChange: (event) => setAmend(event.target.checked) }),
                 E('span', null, t('changes.amend'))),
               E('button', {
-                type: 'button', className: 'dig-btn dig-btn-primary',
+                type: 'button', className: 'git4idea-btn git4idea-btn-primary',
                 disabled: message.trim() === '' || props.busy === true,
                 onClick: () => { submit(false) },
               }, t('changes.commit')),
               E('button', {
-                type: 'button', className: 'dig-btn',
+                type: 'button', className: 'git4idea-btn',
                 disabled: message.trim() === '' || props.busy === true,
                 onClick: () => { submit(true) },
               }, t('changes.commitAndPush'))))
       // Folding hides the FILE LIST only. The commit box is the panel's primary
       // action and used to vanish together with the list, leaving an empty pane
       // with no way to commit anything (reported on v0.3.5).
-      const head = props.hideHeader === true ? null : E('div', { className: 'dig-section-head dig-changes-head' },
+      const head = props.hideHeader === true ? null : E('div', { className: 'git4idea-section-head git4idea-changes-head' },
         E('button', {
-          type: 'button', className: 'dig-section-toggle',
+          type: 'button', className: 'git4idea-section-toggle',
           onClick: () => setCollapsed((value) => !value),
         },
-          E('span', { className: 'dig-chevron' + (collapsed ? '' : ' dig-chevron-open') }, E(Icon, { name: 'chevron', size: 12 })),
+          E('span', { className: 'git4idea-chevron' + (collapsed ? '' : ' git4idea-chevron-open') }, E(Icon, { name: 'chevron', size: 12 })),
           E('span', null, t('changes.title')),
-          E('span', { className: 'dig-count' }, String(total))),
-        E('span', { className: 'dig-topbar-spacer' }),
+          E('span', { className: 'git4idea-count' }, String(total))),
+        E('span', { className: 'git4idea-topbar-spacer' }),
         /* The four header toggles (group-by / expand / fold / ignored) moved
            INTO the ⋯ menu (v0.16.1, user request): one consistent entry point
            instead of five small buttons, same actions, same state. */
@@ -11549,26 +11567,26 @@ window.__ModuleLoader__.load({
           type: 'button',
           /* Same 24px footprint and 15px glyph as the rail buttons above — the
              user asked for one consistent size across both rows. */
-          className: 'dig-icon-btn',
+          className: 'git4idea-icon-btn',
           title: t('toolbar.more'),
           'data-action': 'more',
           onClick: (event) => props.onMoreMenu(event),
         }, E(Icon, { name: 'more', size: 18 })))
       /* The selection action bar: visible only while a multi-select exists, so
          the mouse-only path (no right-click, no keyboard) keeps full power. */
-      const selectionBar = selection.size === 0 ? null : E('div', { className: 'dig-selection-bar', 'data-cordis-panel': '' },
-        E('span', { className: 'dig-selection-count' }, fill(t('selection.count'), { n: selection.size })),
-        props.onBulkStage === undefined ? null : E('button', { type: 'button', className: 'dig-link', onClick: () => props.onBulkStage() }, t('action.stage')),
-        props.onBulkUnstage === undefined ? null : E('button', { type: 'button', className: 'dig-link', onClick: () => props.onBulkUnstage() }, t('action.unstage')),
-        props.onBulkDiscard === undefined ? null : E('button', { type: 'button', className: 'dig-link dig-link-danger', onClick: () => props.onBulkDiscard() }, t('action.discard')),
-        props.onCopySelection === undefined ? null : E('button', { type: 'button', className: 'dig-link', onClick: () => props.onCopySelection() }, t('selection.copyPaths')),
-        E('button', { type: 'button', className: 'dig-link', onClick: () => setSelection(new Set()) }, t('selection.clear')))
-      return E('div', { className: 'dig-changes', ref: changesHostRef },
+      const selectionBar = selection.size === 0 ? null : E('div', { className: 'git4idea-selection-bar', 'data-cordis-panel': '' },
+        E('span', { className: 'git4idea-selection-count' }, fill(t('selection.count'), { n: selection.size })),
+        props.onBulkStage === undefined ? null : E('button', { type: 'button', className: 'git4idea-link', onClick: () => props.onBulkStage() }, t('action.stage')),
+        props.onBulkUnstage === undefined ? null : E('button', { type: 'button', className: 'git4idea-link', onClick: () => props.onBulkUnstage() }, t('action.unstage')),
+        props.onBulkDiscard === undefined ? null : E('button', { type: 'button', className: 'git4idea-link git4idea-link-danger', onClick: () => props.onBulkDiscard() }, t('action.discard')),
+        props.onCopySelection === undefined ? null : E('button', { type: 'button', className: 'git4idea-link', onClick: () => props.onCopySelection() }, t('selection.copyPaths')),
+        E('button', { type: 'button', className: 'git4idea-link', onClick: () => setSelection(new Set()) }, t('selection.clear')))
+      return E('div', { className: 'git4idea-changes', ref: changesHostRef },
         aiConfirmDialog,
         head,
-        E('div', { className: 'dig-changes-body' },
+        E('div', { className: 'git4idea-changes-body' },
           E('div', {
-            className: 'dig-changes-list', ref: changesScrollRef,
+            className: 'git4idea-changes-list', ref: changesScrollRef,
             /* Focusable list: the keyboard shortcuts (Ctrl+C / Del / Ctrl+A /
                Esc) land on whichever list currently holds focus. */
             tabIndex: 0,
@@ -11582,11 +11600,11 @@ window.__ModuleLoader__.load({
               /* v0.19.4: blank click clears — the wrapped setter also bumps the
                  other lists' epochs, so this is a clear-everywhere gesture. */
               const target = event.target
-              if (target instanceof Element && target.closest('.dig-row,.dig-group-head,button,input,textarea,select,a') === null) setSelection(new Set())
+              if (target instanceof Element && target.closest('.git4idea-row,.git4idea-group-head,button,input,textarea,select,a') === null) setSelection(new Set())
             },
           },
             collapsed ? null : [
-              total === 0 && ignored.length === 0 ? E('div', { className: 'dig-empty', key: 'empty' }, t('changes.empty')) : null,
+              total === 0 && ignored.length === 0 ? E('div', { className: 'git4idea-empty', key: 'empty' }, t('changes.empty')) : null,
               /* Windowed slice: spacers above/below stand in for the unmounted
                  rows (fixed heights, see ITEM_HEIGHTS). */
               winFirst > 0 ? E('div', { key: 'pad-top', style: { height: String(changeOffsets[winFirst]) + 'px' } }) : null,
@@ -11635,7 +11653,7 @@ window.__ModuleLoader__.load({
        Row heights are FIXED constants — the CSS pins each row kind to an exact
        height, so a prefix-sum index plus binary search locates the first
        visible item without measuring. */
-    const HISTORY_ROW_H = 28 /* .dig-commit: height 26 + 2×1px padding */
+    const HISTORY_ROW_H = 28 /* .git4idea-commit: height 26 + 2×1px padding */
     const ITEM_HEIGHTS = { group: 21, folder: 16, row: 24 }
     const WINDOW_OVERSCAN = 6
 
@@ -11776,7 +11794,7 @@ window.__ModuleLoader__.load({
     function MarqueeBox(props) {
       if (props.box === null) return null
       return E('div', {
-        className: 'dig-marquee',
+        className: 'git4idea-marquee',
         style: { left: props.box.x + 'px', top: props.box.y + 'px', width: props.box.w + 'px', height: props.box.h + 'px' },
       })
     }
@@ -11838,7 +11856,7 @@ window.__ModuleLoader__.load({
            hovered row's lane into data-hover-lane, and generated CSS dims every
            graph stroke whose data-lane differs — zero React re-renders. */
         'data-lane': String(props.row.lane),
-        className: 'dig-commit' + (props.selected === true ? ' dig-commit-selected' : ''),
+        className: 'git4idea-commit' + (props.selected === true ? ' git4idea-commit-selected' : ''),
         /* Modifier handling lives in HistoryList (it owns the rendered row
            order the Shift-range walks); a plain click only selects and the
            DOUBLE-click opens the detail (v0.18.3, same model as the tree). */
@@ -11846,16 +11864,16 @@ window.__ModuleLoader__.load({
         onDoubleClick: () => props.onOpenDetail(commit),
         onContextMenu: (event) => { event.preventDefault(); props.onMenu(event, commit) },
       },
-        E('span', { className: 'dig-commit-date', title: shortDate(commit.date) }, relativeTime(commit.date)),
-        E('span', { className: 'dig-commit-author', title: commit.author }, commit.author),
+        E('span', { className: 'git4idea-commit-date', title: shortDate(commit.date) }, relativeTime(commit.date)),
+        E('span', { className: 'git4idea-commit-author', title: commit.author }, commit.author),
         E(GraphCell, { row: props.row, height: 26 }),
         shown.map((decoration, index) => E('span', {
           key: decoration.kind + ':' + decoration.name + ':' + index,
-          className: 'dig-ref dig-ref-' + decoration.kind,
+          className: 'git4idea-ref git4idea-ref-' + decoration.kind,
           title: badgeTitle(decoration),
         }, refLabel(decoration))),
         hidden > 0 || folded.length > 0 ? E('span', {
-          className: 'dig-ref dig-ref-more',
+          className: 'git4idea-ref git4idea-ref-more',
           title: kept.slice(3).map(refLabel).concat(folded.map((name) => '⇅ ' + name)).join('\n'),
           onClick: (event) => {
             event.stopPropagation()
@@ -11875,8 +11893,8 @@ window.__ModuleLoader__.load({
             props.openMenuAt(event, entries)
           },
         }, '+' + String(hidden + folded.length)) : null,
-        E('span', { className: 'dig-commit-subject', title: commit.subject }, commit.subject),
-        E('span', { className: 'dig-commit-fill' }))
+        E('span', { className: 'git4idea-commit-subject', title: commit.subject }, commit.subject),
+        E('span', { className: 'git4idea-commit-fill' }))
     }, (prev, next) => prev.commit === next.commit && prev.row === next.row && prev.selected === next.selected && prev.t === next.t)
 
     function sinceThreshold(key) {
@@ -12154,9 +12172,9 @@ window.__ModuleLoader__.load({
           })))
         }
         const allOption = { value: '', label: t('filter.all') }
-        const filterBar = props.hideSearch === true ? null : E('div', { className: 'dig-filters' },
+        const filterBar = props.hideSearch === true ? null : E('div', { className: 'git4idea-filters' },
         E('input', {
-          className: 'dig-input dig-input-compact dig-filter-text', value: text, spellCheck: false,
+          className: 'git4idea-input git4idea-input-compact git4idea-filter-text', value: text, spellCheck: false,
           placeholder: t('history.filter'),
           onChange: (event) => setText(event.target.value),
         }),
@@ -12185,20 +12203,20 @@ window.__ModuleLoader__.load({
           onOpenMenu: (event, options) => openFilterMenu(event, options, since, setSince),
         }),
         E('form', {
-          className: 'dig-filter-path',
+          className: 'git4idea-filter-path',
           onSubmit: (event) => { event.preventDefault(); applyPath(pathDraft.trim()) },
         }, E('input', {
-          className: 'dig-input dig-input-compact', value: pathDraft, spellCheck: false,
+          className: 'git4idea-input git4idea-input-compact', value: pathDraft, spellCheck: false,
           placeholder: t('filter.pathPlaceholder'),
           onChange: (event) => setPathDraft(event.target.value),
         })),
         E('button', {
-          type: 'button', className: 'dig-icon-btn dig-icon-btn-small',
+          type: 'button', className: 'git4idea-icon-btn git4idea-icon-btn-small',
           title: order === 'desc' ? t('filter.sortDesc') : t('filter.sortAsc'),
           onClick: () => setOrder(order === 'desc' ? 'asc' : 'desc'),
         }, E(Icon, { name: order === 'desc' ? 'down' : 'up', size: 12 })),
         dirtyFilter ? E('button', {
-          type: 'button', className: 'dig-icon-btn dig-icon-btn-small', title: t('filter.clear'),
+          type: 'button', className: 'git4idea-icon-btn git4idea-icon-btn-small', title: t('filter.clear'),
           onClick: clearAll,
         }, E(Icon, { name: 'close', size: 12 })) : null)
 
@@ -12212,12 +12230,12 @@ window.__ModuleLoader__.load({
       /* Ascending renders oldest-first, so load-more (older commits) lives
          at the TOP; descending keeps it at the bottom where it always was. */
       const loadMoreButton = props.hasMore === true
-        ? E('button', { ref: loadMoreRef, type: 'button', className: 'dig-load-more', disabled: props.busy === true, onClick: requestMore }, t('history.loadMore'))
+        ? E('button', { ref: loadMoreRef, type: 'button', className: 'git4idea-load-more', disabled: props.busy === true, onClick: requestMore }, t('history.loadMore'))
         : null
 
-      return E('div', { className: 'dig-history', ref: historyHostRef }, filterBar,
+      return E('div', { className: 'git4idea-history', ref: historyHostRef }, filterBar,
         E('div', {
-          className: 'dig-history-scroll',
+          className: 'git4idea-history-scroll',
           ref: historyScrollRef,
           tabIndex: 0,
           onKeyDown: onListKeyDown,
@@ -12226,7 +12244,7 @@ window.__ModuleLoader__.load({
             if (historyMarquee.swallowRef.current === true) { event.preventDefault(); event.stopPropagation(); return }
             /* v0.19.4: blank click clears — see the changes/tree twins. */
             const target = event.target
-            if (target instanceof Element && target.closest('.dig-commit,button,input,textarea,select,a') === null) {
+            if (target instanceof Element && target.closest('.git4idea-commit,button,input,textarea,select,a') === null) {
               if (props.onPicksChange !== undefined) props.onPicksChange(new Set())
             }
           },
@@ -12239,7 +12257,7 @@ window.__ModuleLoader__.load({
              alternative is re-rendering every row on each hover change. */
           onMouseOver: (event) => {
             const host = event.currentTarget
-            const row = event.target instanceof Element ? event.target.closest('.dig-commit') : null
+            const row = event.target instanceof Element ? event.target.closest('.git4idea-commit') : null
             const lane = row === null ? null : row.getAttribute('data-lane')
             if (lane === host.getAttribute('data-hover-lane')) return
             if (lane === null) host.removeAttribute('data-hover-lane')
@@ -12247,7 +12265,7 @@ window.__ModuleLoader__.load({
           },
           onMouseLeave: (event) => event.currentTarget.removeAttribute('data-hover-lane'),
         },
-          rows.length === 0 ? E('div', { className: 'dig-empty' }, dirtyFilter ? t('filter.none') : t('history.empty')) : null,
+          rows.length === 0 ? E('div', { className: 'git4idea-empty' }, dirtyFilter ? t('filter.none') : t('history.empty')) : null,
           order === 'asc' ? loadMoreButton : null,
           winStart > 0 ? E('div', { key: 'pad-top', style: { height: String(winStart * HISTORY_ROW_H) + 'px' } }) : null,
           visibleRows.map((row) => E(CommitRow, {
@@ -12265,21 +12283,21 @@ window.__ModuleLoader__.load({
     function CommitDetail(props) {
       const t = props.t
       const detail = props.detail
-      if (detail === null || detail === undefined) return E('div', { className: 'dig-empty' }, t('status.loading'))
-      return E('div', { className: 'dig-detail' },
-        E('div', { className: 'dig-detail-head' },
-          E('button', { type: 'button', className: 'dig-btn dig-btn-small', onClick: props.onBack }, '← ' + t('detail.back')),
-          E('span', { className: 'dig-mono' }, detail.shortHash),
-          E('span', { className: 'dig-detail-author' }, detail.author),
-          E('span', { className: 'dig-detail-date' }, shortDate(detail.date))),
-        E('div', { className: 'dig-detail-subject' }, detail.subject),
-        detail.body === undefined || detail.body.trim() === '' ? null : E('pre', { className: 'dig-detail-body' }, detail.body.trim()),
-        E('div', { className: 'dig-detail-files-head' }, t('detail.files') + ' · ' + String(detail.files.length)),
-        E('div', { className: 'dig-detail-files' },
-          detail.files.length === 0 ? E('div', { className: 'dig-empty' }, t('detail.noFiles')) : null,
+      if (detail === null || detail === undefined) return E('div', { className: 'git4idea-empty' }, t('status.loading'))
+      return E('div', { className: 'git4idea-detail' },
+        E('div', { className: 'git4idea-detail-head' },
+          E('button', { type: 'button', className: 'git4idea-btn git4idea-btn-small', onClick: props.onBack }, '← ' + t('detail.back')),
+          E('span', { className: 'git4idea-mono' }, detail.shortHash),
+          E('span', { className: 'git4idea-detail-author' }, detail.author),
+          E('span', { className: 'git4idea-detail-date' }, shortDate(detail.date))),
+        E('div', { className: 'git4idea-detail-subject' }, detail.subject),
+        detail.body === undefined || detail.body.trim() === '' ? null : E('pre', { className: 'git4idea-detail-body' }, detail.body.trim()),
+        E('div', { className: 'git4idea-detail-files-head' }, t('detail.files') + ' · ' + String(detail.files.length)),
+        E('div', { className: 'git4idea-detail-files' },
+          detail.files.length === 0 ? E('div', { className: 'git4idea-empty' }, t('detail.noFiles')) : null,
           detail.files.map((file) => E('div', {
             key: file.path,
-            className: 'dig-row dig-row-file' + (props.selectedPath === file.path ? ' dig-row-selected' : ''),
+            className: 'git4idea-row git4idea-row-file' + (props.selectedPath === file.path ? ' git4idea-row-selected' : ''),
             title: file.path,
             /* Same click model as everywhere else (v0.18.3): plain click only
                selects, DOUBLE-click opens the diff. */
@@ -12288,10 +12306,10 @@ window.__ModuleLoader__.load({
             onContextMenu: props.onFileMenu === undefined ? undefined : (event) => { event.preventDefault(); props.onFileMenu(event, file) },
           },
             FileTypeGlyph({ path: file.path }),
-            E('span', { className: 'dig-row-label' }, baseName(file.path)),
-            E('span', { className: 'dig-row-sub dig-row-dir' }, dirName(file.path)),
-            file.additions > 0 ? E('span', { className: 'dig-stat-add' }, '+' + file.additions) : null,
-            file.deletions > 0 ? E('span', { className: 'dig-stat-del' }, '-' + file.deletions) : null))))
+            E('span', { className: 'git4idea-row-label' }, baseName(file.path)),
+            E('span', { className: 'git4idea-row-sub git4idea-row-dir' }, dirName(file.path)),
+            file.additions > 0 ? E('span', { className: 'git4idea-stat-add' }, '+' + file.additions) : null,
+            file.deletions > 0 ? E('span', { className: 'git4idea-stat-del' }, '-' + file.deletions) : null))))
     }
 
     /* ============================== panel ============================== */
@@ -12439,7 +12457,7 @@ window.__ModuleLoader__.load({
       const [immersiveSeat, setImmersiveSeat] = useState(false)
       useMeasureLayoutEffect(() => {
         const node = hostRef.current
-        const holder = node === null || typeof node.closest !== 'function' ? null : node.closest('.dig-conversation-seat[data-immersive="1"]')
+        const holder = node === null || typeof node.closest !== 'function' ? null : node.closest('.git4idea-conversation-seat[data-immersive="1"]')
         if (gateNestedLoop() === false) return
         setImmersiveSeat(holder !== null)
       })
@@ -13790,40 +13808,40 @@ window.__ModuleLoader__.load({
         })))
       }, [openMenuAt, branches, checkout])
 
-      const topBar = E('div', { className: 'dig-topbar' },
+      const topBar = E('div', { className: 'git4idea-topbar' },
         E(RepoSelect, {
           t: t, repos: repoOptions, value: repoRoot,
           loading: repoState === null,
           onOpenMenu: openRepoMenu,
         }),
-        branches === null || branches.local.length === 0 ? null : E('span', { className: 'dig-select-wrap', title: branches.branch },
+        branches === null || branches.local.length === 0 ? null : E('span', { className: 'git4idea-select-wrap', title: branches.branch },
           E(Icon, { name: 'branch', size: 12 }),
           E('button', {
             type: 'button',
-            className: 'dig-select dig-select-btn dig-select-branch',
+            className: 'git4idea-select git4idea-select-btn git4idea-select-branch',
             onClick: openBranchSwitchMenu,
           },
-            E('span', { className: 'dig-repo-name' }, branches.branch),
+            E('span', { className: 'git4idea-repo-name' }, branches.branch),
             E(Icon, { name: 'chevron', size: 12 }))),
-        summary === null || summary.upstream === null ? null : E('span', { className: 'dig-track' },
-          summary.ahead > 0 ? E('span', { className: 'dig-track-ahead' }, '↑' + summary.ahead) : null,
-          summary.behind > 0 ? E('span', { className: 'dig-track-behind' }, (summary.ahead > 0 ? ' ' : '') + '↓' + summary.behind) : null),
-        operation === null ? null : E('span', { className: 'dig-opchip', title: t('operation.hint') }, t('operation.' + operation)),
+        summary === null || summary.upstream === null ? null : E('span', { className: 'git4idea-track' },
+          summary.ahead > 0 ? E('span', { className: 'git4idea-track-ahead' }, '↑' + summary.ahead) : null,
+          summary.behind > 0 ? E('span', { className: 'git4idea-track-behind' }, (summary.ahead > 0 ? ' ' : '') + '↓' + summary.behind) : null),
+        operation === null ? null : E('span', { className: 'git4idea-opchip', title: t('operation.hint') }, t('operation.' + operation)),
         E('button', {
-          type: 'button', className: 'dig-icon-btn dig-icon-btn-small',
+          type: 'button', className: 'git4idea-icon-btn git4idea-icon-btn-small',
           title: t('undo.menu'),
           onClick: (event) => { void openUndoMenu(event) },
         }, E(Icon, { name: 'undo', size: 13 })),
-        E('span', { className: 'dig-topbar-spacer' }),
-        busy ? E('span', { className: 'dig-busy' }, t('status.busy')) : null)
+        E('span', { className: 'git4idea-topbar-spacer' }),
+        busy ? E('span', { className: 'git4idea-busy' }, t('status.busy')) : null)
 
-      const banner = error === null ? null : E('div', { className: 'dig-banner' },
-        E('span', { className: 'dig-banner-text' }, error),
-        E('button', { type: 'button', className: 'dig-link', onClick: () => setError(null) }, t('error.dismiss')))
+      const banner = error === null ? null : E('div', { className: 'git4idea-banner' },
+        E('span', { className: 'git4idea-banner-text' }, error),
+        E('button', { type: 'button', className: 'git4idea-link', onClick: () => setError(null) }, t('error.dismiss')))
 
-      const noteBanner = note === null ? null : E('div', { className: 'dig-note' },
-        E('span', { className: 'dig-banner-text' }, note),
-        E('button', { type: 'button', className: 'dig-link', onClick: () => setNote(null) }, t('error.dismiss')))
+      const noteBanner = note === null ? null : E('div', { className: 'git4idea-note' },
+        E('span', { className: 'git4idea-banner-text' }, note),
+        E('button', { type: 'button', className: 'git4idea-link', onClick: () => setNote(null) }, t('error.dismiss')))
 
 
       const historyPane = view === 'detail'
@@ -13860,10 +13878,10 @@ window.__ModuleLoader__.load({
             request: request,
           })
 
-      const diffPane = patch === '' && patchLoading === false ? null : E('div', { className: 'dig-diff-pane', 'data-pane': 'diff', style: paneStyle('diff'), onContextMenu: onDiffPaneContextMenu },
-        E('div', { className: 'dig-diff-head' },
-          E('span', { className: 'dig-mono dig-diff-path' }, selectedPath === null ? '' : selectedPath),
-          E('button', { type: 'button', className: 'dig-icon-btn', onClick: () => { setPatch(''); setSelectedPath(null); setDiffContext(null) } }, E(Icon, { name: 'close', size: 12 }))),
+      const diffPane = patch === '' && patchLoading === false ? null : E('div', { className: 'git4idea-diff-pane', 'data-pane': 'diff', style: paneStyle('diff'), onContextMenu: onDiffPaneContextMenu },
+        E('div', { className: 'git4idea-diff-head' },
+          E('span', { className: 'git4idea-mono git4idea-diff-path' }, selectedPath === null ? '' : selectedPath),
+          E('button', { type: 'button', className: 'git4idea-icon-btn', onClick: () => { setPatch(''); setSelectedPath(null); setDiffContext(null) } }, E(Icon, { name: 'close', size: 12 }))),
         E(DiffBody, { patch: patch, loading: patchLoading, t: t }))
 
       /* ---------- rail (IDE-style left action strip) ---------- */
@@ -14333,7 +14351,7 @@ window.__ModuleLoader__.load({
         const children = railVisible.slice(0, slots).map((action) => E('button', {
           key: action.id,
           type: 'button',
-          className: 'dig-rail-btn dig-tone-' + action.tone + (action.active === true ? ' dig-rail-btn-active' : '') + (action.spinning === true ? ' dig-spin' : ''),
+          className: 'git4idea-rail-btn git4idea-tone-' + action.tone + (action.active === true ? ' git4idea-rail-btn-active' : '') + (action.spinning === true ? ' git4idea-spin' : ''),
           'data-action': action.id,
           'aria-pressed': action.active === true ? 'true' : 'false',
           title: action.disabled === true ? action.label + ' · ' + reason : action.label,
@@ -14344,7 +14362,7 @@ window.__ModuleLoader__.load({
           children.push(E('button', {
             key: 'more',
             type: 'button',
-            className: 'dig-rail-btn dig-rail-more',
+            className: 'git4idea-rail-btn git4idea-rail-more',
             title: t('rail.more'),
             onClick: (event) => openMenuAt(event, railActions.map((action) => ({
               id: 'rail:' + action.id,
@@ -14358,11 +14376,11 @@ window.__ModuleLoader__.load({
             }))),
           }, E(Icon, { name: 'more', size: 18 })))
         }
-        children.push(E('span', { key: 'gap', className: vertical ? 'dig-rail-gap' : 'dig-rail-gap-x' }))
+        children.push(E('span', { key: 'gap', className: vertical ? 'git4idea-rail-gap' : 'git4idea-rail-gap-x' }))
         children.push(E('button', {
           key: 'settings',
           type: 'button',
-          className: 'dig-rail-btn dig-rail-settings',
+          className: 'git4idea-rail-btn git4idea-rail-settings',
           'data-action': 'settings',
           // On a host that serves the row Config this button opens the plugin's own
           // settings page (where the card below the description edits the rail);
@@ -14374,7 +14392,7 @@ window.__ModuleLoader__.load({
             setRailSettings(true)
           },
         }, E(Icon, { name: 'settings', size: 18 })))
-        return E('div', { className: vertical ? 'dig-rail' : 'dig-rail-row', ref: railHostRef }, children)
+        return E('div', { className: vertical ? 'git4idea-rail' : 'git4idea-rail-row', ref: railHostRef }, children)
       }
 
       /* ---------- body per chrome ---------- */
@@ -14390,14 +14408,14 @@ window.__ModuleLoader__.load({
         /* The scan is still running: a neutral loading state, never the
            "no repository found" verdict (that text is reserved for a scan
            that actually came back empty). */
-        body = E('div', { className: 'dig-body', ref: bodyRef }, E('div', { className: 'dig-empty' }, t('status.loading')))
+        body = E('div', { className: 'git4idea-body', ref: bodyRef }, E('div', { className: 'git4idea-empty' }, t('status.loading')))
       } else if (repoRoot === null) {
-        body = E('div', { className: 'dig-body', ref: bodyRef }, E(RepoPicker, {
+        body = E('div', { className: 'git4idea-body', ref: bodyRef }, E(RepoPicker, {
           t: t, cwd: cwd === undefined ? '' : cwd, repos: repoOptions, onPick: pickRepo,
         }))
       } else if (compact) {
-        body = E('div', { className: 'dig-body dig-body-compact', ref: bodyRef },
-          E('div', { className: 'dig-compact-bar' },
+        body = E('div', { className: 'git4idea-body git4idea-body-compact', ref: bodyRef },
+          E('div', { className: 'git4idea-compact-bar' },
             E(Segmented, {
               value: view === 'detail' ? 'history' : view,
               onChange: (next) => { setView(next); setPatch(''); setDiffContext(null) },
@@ -14406,35 +14424,35 @@ window.__ModuleLoader__.load({
                 { id: 'history', label: t('seg.history') },
               ],
             }),
-            E('span', { className: 'dig-topbar-spacer' }),
+            E('span', { className: 'git4idea-topbar-spacer' }),
             // Two-way on purpose: treeOpen is persisted, so a header button that
             // only rendered while the tree was OPEN left a folded tree with no way
             // back on this chrome (the rail now carries one too, for the others).
             E('button', {
               type: 'button',
-              className: 'dig-icon-btn' + (treeOpen ? ' dig-icon-btn-active' : ''),
+              className: 'git4idea-icon-btn' + (treeOpen ? ' git4idea-icon-btn-active' : ''),
               'data-action': 'tree',
               'aria-pressed': treeOpen ? 'true' : 'false',
               title: t('toolbar.tree'),
               onClick: () => foldTree(!treeOpen),
             }, E(Icon, { name: treeOpen ? 'eye' : 'eyeOff' }))),
-          treeOpen ? E('div', { className: 'dig-compact-tree', 'data-pane': 'tree', style: paneStyle('tree') }, E(BranchTree, { t: t, branches: branches, favorites: favorites, onCheckout: checkout, onBrowse: browseBranch, onBranchMenu: branchMenu, onDeleteEntries: deleteBranchEntries, onCopyValues: copyValues, onPicksChange: onBranchPicks, clearSignal: pickEpochs.tree })) : null,
+          treeOpen ? E('div', { className: 'git4idea-compact-tree', 'data-pane': 'tree', style: paneStyle('tree') }, E(BranchTree, { t: t, branches: branches, favorites: favorites, onCheckout: checkout, onBrowse: browseBranch, onBranchMenu: branchMenu, onDeleteEntries: deleteBranchEntries, onCopyValues: copyValues, onPicksChange: onBranchPicks, clearSignal: pickEpochs.tree })) : null,
           treeOpen ? gutter('tree', 'prev') : null,
-          view === 'changes' ? changesPane : E('div', { className: 'dig-pane dig-pane-main' }, historyPane, diffGutter, diffPane))
+          view === 'changes' ? changesPane : E('div', { className: 'git4idea-pane git4idea-pane-main' }, historyPane, diffGutter, diffPane))
       } else if (columns) {
-        body = E('div', { className: 'dig-body dig-body-columns', ref: bodyRef },
-          treeOpen ? E('div', { className: 'dig-pane dig-pane-tree', 'data-pane': 'tree', style: paneStyle('tree') }, E(BranchTree, { t: t, branches: branches, favorites: favorites, onCheckout: checkout, onBrowse: browseBranch, onBranchMenu: branchMenu, onDeleteEntries: deleteBranchEntries, onCopyValues: copyValues, onPicksChange: onBranchPicks, clearSignal: pickEpochs.tree })) : null,
+        body = E('div', { className: 'git4idea-body git4idea-body-columns', ref: bodyRef },
+          treeOpen ? E('div', { className: 'git4idea-pane git4idea-pane-tree', 'data-pane': 'tree', style: paneStyle('tree') }, E(BranchTree, { t: t, branches: branches, favorites: favorites, onCheckout: checkout, onBrowse: browseBranch, onBranchMenu: branchMenu, onDeleteEntries: deleteBranchEntries, onCopyValues: copyValues, onPicksChange: onBranchPicks, clearSignal: pickEpochs.tree })) : null,
           treeOpen ? gutter('tree', 'prev') : null,
-          E('div', { className: 'dig-pane dig-pane-main' }, historyPane, diffGutter, diffPane),
+          E('div', { className: 'git4idea-pane git4idea-pane-main' }, historyPane, diffGutter, diffPane),
           gutter('changes', 'next'),
-          E('div', { className: 'dig-pane dig-pane-changes', 'data-pane': 'changes', style: paneStyle('changes') }, changesPane))
+          E('div', { className: 'git4idea-pane git4idea-pane-changes', 'data-pane': 'changes', style: paneStyle('changes') }, changesPane))
       } else {
-        body = E('div', { className: 'dig-body dig-body-stack', ref: bodyRef },
-          treeOpen ? E('div', { className: 'dig-pane dig-pane-tree-stack', 'data-pane': 'tree', style: paneStyle('tree') }, E(BranchTree, { t: t, branches: branches, favorites: favorites, onCheckout: checkout, onBrowse: browseBranch, onBranchMenu: branchMenu, onDeleteEntries: deleteBranchEntries, onCopyValues: copyValues, onPicksChange: onBranchPicks, clearSignal: pickEpochs.tree })) : null,
+        body = E('div', { className: 'git4idea-body git4idea-body-stack', ref: bodyRef },
+          treeOpen ? E('div', { className: 'git4idea-pane git4idea-pane-tree-stack', 'data-pane': 'tree', style: paneStyle('tree') }, E(BranchTree, { t: t, branches: branches, favorites: favorites, onCheckout: checkout, onBrowse: browseBranch, onBranchMenu: branchMenu, onDeleteEntries: deleteBranchEntries, onCopyValues: copyValues, onPicksChange: onBranchPicks, clearSignal: pickEpochs.tree })) : null,
           treeOpen ? gutter('tree', 'prev') : null,
-          E('div', { className: 'dig-pane dig-pane-changes-stack', 'data-pane': 'changes', style: paneStyle('changes') }, changesPane),
+          E('div', { className: 'git4idea-pane git4idea-pane-changes-stack', 'data-pane': 'changes', style: paneStyle('changes') }, changesPane),
           gutter('changes', 'prev'),
-          E('div', { className: 'dig-pane dig-pane-main' }, historyPane, diffGutter, diffPane))
+          E('div', { className: 'git4idea-pane git4idea-pane-main' }, historyPane, diffGutter, diffPane))
       }
 
       /* ---------- overlays ---------- */
@@ -14742,14 +14760,14 @@ window.__ModuleLoader__.load({
       // While a divider is being dragged the whole panel stops selecting text and
       // keeps the resize cursor, even though the pointer has left the 8px gutter.
       return E('div', {
-        className: 'dig-root'
-          + (compact ? ' dig-root-narrow' : '')
-          + (paneDragging === null ? '' : ' dig-pane-dragging' + (paneByWidth ? '-v' : '-h')),
+        className: 'git4idea-root'
+          + (compact ? ' git4idea-root-narrow' : '')
+          + (paneDragging === null ? '' : ' git4idea-pane-dragging' + (paneByWidth ? '-v' : '-h')),
         ref: hostRef,
       }, topBar,
         columns === true || repoRoot === null ? null : renderRail(false),
         banner, noteBanner,
-        E('div', { className: 'dig-shell' },
+        E('div', { className: 'git4idea-shell' },
           columns === true && repoRoot !== null ? renderRail(true) : null,
           body),
         gitOutput === null ? null : E(GitOutputDrawer, {
@@ -14779,68 +14797,68 @@ window.__ModuleLoader__.load({
     const LANE_TRACE_RULES = []
     for (let lane = 0; lane < GRAPH_MAX_LANES; lane += 1) {
       LANE_TRACE_RULES.push(
-        '.dig-history-scroll[data-hover-lane="' + lane + '"] .dig-graph line:not([data-lane="' + lane + '"])'
-        + ',.dig-history-scroll[data-hover-lane="' + lane + '"] .dig-graph path:not([data-lane="' + lane + '"])'
-        + ',.dig-history-scroll[data-hover-lane="' + lane + '"] .dig-graph circle:not([data-lane="' + lane + '"])'
+        '.git4idea-history-scroll[data-hover-lane="' + lane + '"] .git4idea-graph line:not([data-lane="' + lane + '"])'
+        + ',.git4idea-history-scroll[data-hover-lane="' + lane + '"] .git4idea-graph path:not([data-lane="' + lane + '"])'
+        + ',.git4idea-history-scroll[data-hover-lane="' + lane + '"] .git4idea-graph circle:not([data-lane="' + lane + '"])'
         + '{stroke-opacity:.18;fill-opacity:.18}',
       )
     }
-    LANE_TRACE_RULES.push('.dig-graph line,.dig-graph path,.dig-graph circle{transition:stroke-opacity .15s,fill-opacity .15s}')
+    LANE_TRACE_RULES.push('.git4idea-graph line,.git4idea-graph path,.git4idea-graph circle{transition:stroke-opacity .15s,fill-opacity .15s}')
     /* The rail refresh button spins while its fetch+refresh round-trip runs. */
-    LANE_TRACE_RULES.push('.dig-spin svg{animation:dig-spin-rotate .9s linear infinite}')
-    LANE_TRACE_RULES.push('@keyframes dig-spin-rotate{to{transform:rotate(360deg)}}')
+    LANE_TRACE_RULES.push('.git4idea-spin svg{animation:git4idea-spin-rotate .9s linear infinite}')
+    LANE_TRACE_RULES.push('@keyframes git4idea-spin-rotate{to{transform:rotate(360deg)}}')
 
     const CSS = [
-      '.dig-root{position:relative;display:flex;flex-direction:column;height:100%;min-height:0;background:transparent;color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family,system-ui,sans-serif);font-size:13px;line-height:1.5;font-weight:600;overflow:hidden}',
-      '.dig-topbar{display:flex;align-items:center;gap:6px;padding:4px 6px;flex:none;min-width:0;border-bottom:1px solid var(--dsw-alias-border-l2);overflow:hidden}',
-      '.dig-topbar-spacer{flex:1;min-width:4px}',
-      '.dig-busy{color:var(--dsw-alias-label-tertiary);flex:none;white-space:nowrap}',
-      '.dig-track{color:var(--dsw-alias-label-secondary);flex:none;font-variant-numeric:tabular-nums;white-space:nowrap}',
-      '.dig-select-wrap{display:inline-flex;align-items:center;gap:4px;min-width:0;flex:0 1 auto;max-width:90%;color:var(--dsw-alias-label-secondary)}',
-      '.dig-select{appearance:none;-webkit-appearance:none;background:transparent;border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-sm,8px);color:var(--dsw-alias-label-primary);font:inherit;font-weight:500;padding:1px 6px;height:22px;max-width:min(280px,42%);min-width:0;cursor:pointer;text-overflow:ellipsis}',
-      '.dig-select:hover{background:var(--dsw-alias-interactive-bg-hover)}',
-      '.dig-select:focus-visible{outline:1px solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:-1px}',
-      '.dig-select-btn{display:inline-flex;align-items:center;gap:4px;text-align:left;white-space:nowrap;overflow:hidden}',
-      '.dig-select-btn .dig-repo-name{flex:1;min-width:0;max-width:none}',
-      '.dig-select-repo{max-width:none}',
-      '.dig-select option,.dig-filter-select option{background:var(--dsw-alias-bg-layer-1,#22262e);color:var(--dsw-alias-label-primary,#e6e8ee)}',
+      '.git4idea-root{position:relative;display:flex;flex-direction:column;height:100%;min-height:0;background:transparent;color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family,system-ui,sans-serif);font-size:13px;line-height:1.5;font-weight:600;overflow:hidden}',
+      '.git4idea-topbar{display:flex;align-items:center;gap:6px;padding:4px 6px;flex:none;min-width:0;border-bottom:1px solid var(--dsw-alias-border-l2);overflow:hidden}',
+      '.git4idea-topbar-spacer{flex:1;min-width:4px}',
+      '.git4idea-busy{color:var(--dsw-alias-label-tertiary);flex:none;white-space:nowrap}',
+      '.git4idea-track{color:var(--dsw-alias-label-secondary);flex:none;font-variant-numeric:tabular-nums;white-space:nowrap}',
+      '.git4idea-select-wrap{display:inline-flex;align-items:center;gap:4px;min-width:0;flex:0 1 auto;max-width:90%;color:var(--dsw-alias-label-secondary)}',
+      '.git4idea-select{appearance:none;-webkit-appearance:none;background:transparent;border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-sm,8px);color:var(--dsw-alias-label-primary);font:inherit;font-weight:500;padding:1px 6px;height:22px;max-width:min(280px,42%);min-width:0;cursor:pointer;text-overflow:ellipsis}',
+      '.git4idea-select:hover{background:var(--dsw-alias-interactive-bg-hover)}',
+      '.git4idea-select:focus-visible{outline:1px solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:-1px}',
+      '.git4idea-select-btn{display:inline-flex;align-items:center;gap:4px;text-align:left;white-space:nowrap;overflow:hidden}',
+      '.git4idea-select-btn .git4idea-repo-name{flex:1;min-width:0;max-width:none}',
+      '.git4idea-select-repo{max-width:none}',
+      '.git4idea-select option,.git4idea-filter-select option{background:var(--dsw-alias-bg-layer-1,#22262e);color:var(--dsw-alias-label-primary,#e6e8ee)}',
       /* Long branch names (the topbar picker): the cap lives on the WRAP (a
          direct topbar child, so the percentage resolves against the bar). The
          button grows a SECOND LINE instead of ellipsising — a sidebar is
          ~400px wide, and a 600px branch name simply cannot fit on one line,
          but two lines hold it (the user-facing rule: show the WHOLE name).
          The full name also rides on the wrapper's title. */
-      '.dig-select-branch{max-width:none;height:auto;min-height:22px;align-items:center}',
-      '.dig-select-branch .dig-repo-name{white-space:normal;overflow-wrap:anywhere;word-break:break-word;line-height:1.3}',
-      '.dig-repo-static{display:inline-flex;align-items:center;gap:5px;min-width:0;color:var(--dsw-alias-label-secondary)}',
-      '.dig-repo-name{color:var(--dsw-alias-label-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:none}',
-      '.dig-icon-btn{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border:none;border-radius:var(--dsw-radius-sm,8px);background:transparent;color:var(--dsw-alias-label-secondary);cursor:pointer;padding:0;flex:none}',
-      '.dig-icon-btn:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
-      '.dig-icon-btn:disabled{opacity:.4;cursor:default}',
-      '.dig-icon-btn-active{background:var(--dsw-alias-interactive-bg-active,var(--dsw-alias-interactive-bg-hover));color:var(--dsw-alias-label-primary)}',
-      '.dig-banner{display:flex;align-items:center;gap:8px;padding:4px 8px;flex:none;color:var(--dsw-alias-state-error-primary)}',
-      '.dig-note{display:flex;align-items:center;gap:8px;padding:4px 8px;flex:none;color:var(--dsw-alias-label-secondary)}',
-      '.dig-banner-text{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}',
-      '.dig-shell{flex:1;min-height:0;display:flex;overflow:hidden}',
-      '.dig-rail{width:32px;flex:none;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 0;overflow:hidden;border-right:1px solid var(--dsw-alias-border-l2)}',
-      '.dig-rail-gap{flex:1;min-height:2px}',
-      '.dig-rail-gap-x{flex:1;min-width:2px}',
-      '.dig-rail-row{display:flex;align-items:center;gap:2px;padding:3px 6px;flex:none;overflow:hidden;border-bottom:1px solid var(--dsw-alias-border-l2)}',
-      '.dig-rail-btn{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border:none;border-radius:var(--dsw-radius-sm,8px);background:transparent;color:var(--dsw-alias-label-secondary);cursor:pointer;padding:0;flex:none}',
-      '.dig-rail-btn:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
-      '.dig-rail-btn:disabled{opacity:.28;cursor:default}',
-      '.dig-rail-btn-active{background:color-mix(in srgb, var(--dsw-alias-brand-primary) 20%, transparent)}',
-      '.dig-rail-more,.dig-rail-settings{color:var(--dsw-alias-label-tertiary)}',
-      '.dig-rail-more:hover,.dig-rail-settings:hover{color:var(--dsw-alias-label-primary)}',
-      '.dig-tone-primary{color:var(--dsw-alias-label-primary)}',
-      '.dig-tone-secondary{color:var(--dsw-alias-label-secondary)}',
-      '.dig-tone-accent{color:var(--dsw-alias-brand-primary)}',
-      '.dig-tone-success{color:var(--dsw-alias-state-success-primary)}',
-      '.dig-tone-warn{color:var(--dsw-alias-state-warn-primary,var(--dsw-alias-brand-primary))}',
-      '.dig-tone-danger{color:var(--dsw-alias-state-error-primary)}',
-      '.dig-tone-violet{color:#b083f0}',
-      '.dig-tone-cyan{color:#59b0d6}',
-      '.dig-icon-btn-small{width:20px;height:20px;border-radius:var(--dsw-radius-xs,4px)}',
+      '.git4idea-select-branch{max-width:none;height:auto;min-height:22px;align-items:center}',
+      '.git4idea-select-branch .git4idea-repo-name{white-space:normal;overflow-wrap:anywhere;word-break:break-word;line-height:1.3}',
+      '.git4idea-repo-static{display:inline-flex;align-items:center;gap:5px;min-width:0;color:var(--dsw-alias-label-secondary)}',
+      '.git4idea-repo-name{color:var(--dsw-alias-label-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:none}',
+      '.git4idea-icon-btn{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border:none;border-radius:var(--dsw-radius-sm,8px);background:transparent;color:var(--dsw-alias-label-secondary);cursor:pointer;padding:0;flex:none}',
+      '.git4idea-icon-btn:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
+      '.git4idea-icon-btn:disabled{opacity:.4;cursor:default}',
+      '.git4idea-icon-btn-active{background:var(--dsw-alias-interactive-bg-active,var(--dsw-alias-interactive-bg-hover));color:var(--dsw-alias-label-primary)}',
+      '.git4idea-banner{display:flex;align-items:center;gap:8px;padding:4px 8px;flex:none;color:var(--dsw-alias-state-error-primary)}',
+      '.git4idea-note{display:flex;align-items:center;gap:8px;padding:4px 8px;flex:none;color:var(--dsw-alias-label-secondary)}',
+      '.git4idea-banner-text{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}',
+      '.git4idea-shell{flex:1;min-height:0;display:flex;overflow:hidden}',
+      '.git4idea-rail{width:32px;flex:none;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 0;overflow:hidden;border-right:1px solid var(--dsw-alias-border-l2)}',
+      '.git4idea-rail-gap{flex:1;min-height:2px}',
+      '.git4idea-rail-gap-x{flex:1;min-width:2px}',
+      '.git4idea-rail-row{display:flex;align-items:center;gap:2px;padding:3px 6px;flex:none;overflow:hidden;border-bottom:1px solid var(--dsw-alias-border-l2)}',
+      '.git4idea-rail-btn{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border:none;border-radius:var(--dsw-radius-sm,8px);background:transparent;color:var(--dsw-alias-label-secondary);cursor:pointer;padding:0;flex:none}',
+      '.git4idea-rail-btn:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
+      '.git4idea-rail-btn:disabled{opacity:.28;cursor:default}',
+      '.git4idea-rail-btn-active{background:color-mix(in srgb, var(--dsw-alias-brand-primary) 20%, transparent)}',
+      '.git4idea-rail-more,.git4idea-rail-settings{color:var(--dsw-alias-label-tertiary)}',
+      '.git4idea-rail-more:hover,.git4idea-rail-settings:hover{color:var(--dsw-alias-label-primary)}',
+      '.git4idea-tone-primary{color:var(--dsw-alias-label-primary)}',
+      '.git4idea-tone-secondary{color:var(--dsw-alias-label-secondary)}',
+      '.git4idea-tone-accent{color:var(--dsw-alias-brand-primary)}',
+      '.git4idea-tone-success{color:var(--dsw-alias-state-success-primary)}',
+      '.git4idea-tone-warn{color:var(--dsw-alias-state-warn-primary,var(--dsw-alias-brand-primary))}',
+      '.git4idea-tone-danger{color:var(--dsw-alias-state-error-primary)}',
+      '.git4idea-tone-violet{color:#b083f0}',
+      '.git4idea-tone-cyan{color:#59b0d6}',
+      '.git4idea-icon-btn-small{width:20px;height:20px;border-radius:var(--dsw-radius-xs,4px)}',
       // A panel dragged narrower than COMPACT_MAX_WIDTH (the compact chrome) is the
       // case where 'nowrap + ellipsis' stops being readable: the overlays clamp
       // their own width, and their text wraps inside that box instead of clipping.
@@ -14848,144 +14866,144 @@ window.__ModuleLoader__.load({
       // section): one row per rail action, themed entirely by tokens.
       // The card shell below is the visual twin of the pc-card / dl-card /
       // gb-card pattern the sibling plugins draw.
-      '.dig-card{list-style:none;border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-md,12px);background:var(--dsw-alias-bg-layer-3);transition:border-color .16s,background .16s}',
-      '.dig-card:hover{border-color:var(--dsw-alias-label-dimmed)}',
-      '.dig-card.dig-card-open{background:var(--dsw-alias-bg-layer-2);border-color:var(--dsw-alias-label-dimmed)}',
-      '.dig-card-header{width:100%;appearance:none;border:0;background:none;font:inherit;color:inherit;text-align:left;cursor:pointer;display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:var(--dsw-radius-md,12px)}',
-      '.dig-card-header:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:-2px}',
-      '.dig-card-header-flat{cursor:default}',
-      '.dig-card-head-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}',
-      '.dig-card-name{font-size:15px;font-weight:600;line-height:1.4;color:var(--dsw-alias-label-primary)}',
-      '.dig-card-desc{font-size:13px;line-height:1.5;color:var(--dsw-alias-label-tertiary)}',
-      '.dig-card-chevron{flex:none;display:inline-flex;color:var(--dsw-alias-label-tertiary);transition:transform .16s}',
-      '.dig-card-chevron.dig-card-chevron-open{transform:rotate(180deg)}',
-      '.dig-card-body{padding:8px 16px 16px}',
-      '.dig-card-page{max-width:640px}',
-      '.dig-settings{display:flex;flex-direction:column;gap:8px;min-width:0}',
-      '.dig-settings-head{display:flex;flex-direction:column;gap:2px}',
-      '.dig-settings-title{font-weight:600;color:var(--dsw-alias-label-primary)}',
-      '.dig-settings-hint{color:var(--dsw-alias-label-tertiary);font-weight:400}',
-      '.dig-settings-note{color:var(--dsw-alias-state-warn-primary,var(--dsw-alias-brand-primary));font-weight:400}',
-      '.dig-settings-note-hidden{display:none}',
-      '.dig-settings-error{color:var(--dsw-alias-state-error-primary);font-weight:400}',
-      '.dig-settings-subnote{color:var(--dsw-alias-label-tertiary);font-weight:400;font-size:12px}',
-      '.dig-settings-sub{margin-top:6px;font-weight:600;color:var(--dsw-alias-label-primary)}',
-      '.dig-settings-text{display:flex;flex-direction:column;gap:3px;min-width:0}',
-      '.dig-settings-text-label{color:var(--dsw-alias-label-secondary);font-weight:400}',
-      '.dig-settings-input{width:100%;box-sizing:border-box;font:inherit}',
-      '.dig-commit-ai{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px}',
-      '.dig-commit-ai-hint{color:var(--dsw-alias-label-tertiary);font-size:11px}',
-      '.dig-commit-ai-hint-block{flex:1 0 100%;font-size:11px}',
-      '.dig-commit-ai-note{color:var(--dsw-alias-state-warn-primary,var(--dsw-alias-brand-primary));font-size:11px;margin-bottom:4px;word-break:break-word}',
-      '.dig-settings-list{display:flex;flex-direction:column;gap:2px;max-height:min(46vh,360px);overflow:auto;padding:2px;border:1px solid var(--dsw-alias-hairline,var(--dsw-alias-border-l1));border-radius:var(--dsw-radius-sm,8px)}',
-      '.dig-settings-row{display:flex;align-items:center;gap:8px;padding:3px 6px;border-radius:calc(var(--dsw-radius-sm,8px) - 2px);cursor:pointer;min-width:0}',
-      '.dig-settings-row:hover{background:var(--dsw-alias-interactive-bg-hover)}',
-      '.dig-settings-check{flex:none;accent-color:var(--dsw-alias-brand-primary)}',
-      '.dig-settings-glyph{display:inline-flex;flex:none;color:var(--dsw-alias-label-secondary)}',
-      '.dig-settings-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}',
-      '.dig-root-narrow .dig-settings-label{white-space:normal}',
+      '.git4idea-card{list-style:none;border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-md,12px);background:var(--dsw-alias-bg-layer-3);transition:border-color .16s,background .16s}',
+      '.git4idea-card:hover{border-color:var(--dsw-alias-label-dimmed)}',
+      '.git4idea-card.git4idea-card-open{background:var(--dsw-alias-bg-layer-2);border-color:var(--dsw-alias-label-dimmed)}',
+      '.git4idea-card-header{width:100%;appearance:none;border:0;background:none;font:inherit;color:inherit;text-align:left;cursor:pointer;display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:var(--dsw-radius-md,12px)}',
+      '.git4idea-card-header:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:-2px}',
+      '.git4idea-card-header-flat{cursor:default}',
+      '.git4idea-card-head-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}',
+      '.git4idea-card-name{font-size:15px;font-weight:600;line-height:1.4;color:var(--dsw-alias-label-primary)}',
+      '.git4idea-card-desc{font-size:13px;line-height:1.5;color:var(--dsw-alias-label-tertiary)}',
+      '.git4idea-card-chevron{flex:none;display:inline-flex;color:var(--dsw-alias-label-tertiary);transition:transform .16s}',
+      '.git4idea-card-chevron.git4idea-card-chevron-open{transform:rotate(180deg)}',
+      '.git4idea-card-body{padding:8px 16px 16px}',
+      '.git4idea-card-page{max-width:640px}',
+      '.git4idea-settings{display:flex;flex-direction:column;gap:8px;min-width:0}',
+      '.git4idea-settings-head{display:flex;flex-direction:column;gap:2px}',
+      '.git4idea-settings-title{font-weight:600;color:var(--dsw-alias-label-primary)}',
+      '.git4idea-settings-hint{color:var(--dsw-alias-label-tertiary);font-weight:400}',
+      '.git4idea-settings-note{color:var(--dsw-alias-state-warn-primary,var(--dsw-alias-brand-primary));font-weight:400}',
+      '.git4idea-settings-note-hidden{display:none}',
+      '.git4idea-settings-error{color:var(--dsw-alias-state-error-primary);font-weight:400}',
+      '.git4idea-settings-subnote{color:var(--dsw-alias-label-tertiary);font-weight:400;font-size:12px}',
+      '.git4idea-settings-sub{margin-top:6px;font-weight:600;color:var(--dsw-alias-label-primary)}',
+      '.git4idea-settings-text{display:flex;flex-direction:column;gap:3px;min-width:0}',
+      '.git4idea-settings-text-label{color:var(--dsw-alias-label-secondary);font-weight:400}',
+      '.git4idea-settings-input{width:100%;box-sizing:border-box;font:inherit}',
+      '.git4idea-commit-ai{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px}',
+      '.git4idea-commit-ai-hint{color:var(--dsw-alias-label-tertiary);font-size:11px}',
+      '.git4idea-commit-ai-hint-block{flex:1 0 100%;font-size:11px}',
+      '.git4idea-commit-ai-note{color:var(--dsw-alias-state-warn-primary,var(--dsw-alias-brand-primary));font-size:11px;margin-bottom:4px;word-break:break-word}',
+      '.git4idea-settings-list{display:flex;flex-direction:column;gap:2px;max-height:min(46vh,360px);overflow:auto;padding:2px;border:1px solid var(--dsw-alias-hairline,var(--dsw-alias-border-l1));border-radius:var(--dsw-radius-sm,8px)}',
+      '.git4idea-settings-row{display:flex;align-items:center;gap:8px;padding:3px 6px;border-radius:calc(var(--dsw-radius-sm,8px) - 2px);cursor:pointer;min-width:0}',
+      '.git4idea-settings-row:hover{background:var(--dsw-alias-interactive-bg-hover)}',
+      '.git4idea-settings-check{flex:none;accent-color:var(--dsw-alias-brand-primary)}',
+      '.git4idea-settings-glyph{display:inline-flex;flex:none;color:var(--dsw-alias-label-secondary)}',
+      '.git4idea-settings-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}',
+      '.git4idea-root-narrow .git4idea-settings-label{white-space:normal}',
       /* Collapsible setting sections (hand-drawn, same pattern as dsh-gitbash-shell v0.38.4). */
-      '.dig-fold{border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-sm,8px);padding:4px 12px 12px;background:var(--dsw-alias-bg-layer-1,transparent)}',
-      '.dig-fold .dig-stack{padding-top:10px}',
-      '.dig-foldHead{display:flex;align-items:center;gap:8px;width:100%;appearance:none;background:none;border:0;padding:6px 0;font:inherit;font-size:13px;font-weight:600;letter-spacing:.02em;color:var(--dsw-alias-label-secondary);cursor:pointer;text-align:left}',
-      '.dig-foldHead:hover{color:var(--dsw-alias-label-primary)}',
-      '.dig-foldChevron{flex:none;display:inline-block;color:var(--dsw-alias-label-tertiary);transition:transform .16s}',
-      '.dig-foldChevron.dig-foldChevronOpen{transform:rotate(90deg)}',
-      '.dig-foldTitle{min-width:0;overflow-wrap:anywhere}',
-      '.dig-root-narrow .dig-menu-item{white-space:normal}',
-      '.dig-root-narrow .dig-toast-text{white-space:normal}',
-      '.dig-toasts{position:absolute;right:8px;bottom:8px;display:flex;flex-direction:column;gap:6px;z-index:80;max-width:min(340px,92%)}',
-      '.dig-toast{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:var(--dsw-radius-sm,8px);background:var(--dsw-alias-bg-layer-2,var(--dsw-alias-bg-layer-1));border:0;box-shadow:var(--dsw-elevation-prominent,0 8px 22px rgba(0,0,0,.32))}',
-      '.dig-toast-icon{display:inline-flex;flex:none;color:var(--dsw-alias-label-secondary)}',
-      '.dig-toast-warn .dig-toast-icon{color:var(--dsw-alias-state-warn-primary,var(--dsw-alias-brand-primary))}',
-      '.dig-toast-ok .dig-toast-icon{color:var(--dsw-alias-state-success-primary)}',
-      '.dig-toast-text{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}',
-      '.dig-toast-action{border:none;background:transparent;color:var(--dsw-alias-brand-primary);font:inherit;font-weight:600;cursor:pointer;padding:0 2px;flex:none}',
-      '.dig-toast-action:hover{text-decoration:underline}',
-      '.dig-opchip{flex:none;padding:0 6px;border-radius:999px;corner-shape:round;background:color-mix(in srgb, var(--dsw-alias-state-warn-primary,var(--dsw-alias-brand-primary)) 20%, transparent);color:var(--dsw-alias-state-warn-primary,var(--dsw-alias-brand-primary));font-weight:500;white-space:nowrap}',
-      '.dig-rail-list{display:flex;flex-direction:column;gap:2px;max-height:min(50vh,300px);overflow:auto;padding:2px;border:1px solid var(--dsw-alias-hairline,var(--dsw-alias-border-l1));border-radius:var(--dsw-radius-sm,8px)}',
-      '.dig-rail-item{display:flex;align-items:center;gap:6px;padding:2px 4px;border-radius:calc(var(--dsw-radius-sm,8px) - 2px)}',
-      '.dig-rail-item:hover{background:var(--dsw-alias-interactive-bg-hover)}',
-      '.dig-rail-item-off{opacity:.5}',
-      '.dig-rail-item-drag{outline:1px solid var(--dsw-alias-brand-primary)}',
-      '.dig-rail-grip{display:inline-flex;color:var(--dsw-alias-label-dimmed,var(--dsw-alias-label-tertiary));cursor:grab;flex:none}',
-      '.dig-rail-item-icon{display:inline-flex;flex:none}',
-      '.dig-rail-item-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}',
-      '.dig-body{flex:1;min-height:0;display:flex;overflow:hidden}',
-      '.dig-body-columns{flex-direction:row}',
-      '.dig-body-stack{flex-direction:column}',
-      '.dig-body-compact{flex-direction:column}',
-      '.dig-pane{display:flex;flex-direction:column;min-height:0;min-width:0}',
-      '.dig-pane-tree{width:200px;flex:none;border-right:1px solid var(--dsw-alias-border-l2)}',
-      '.dig-pane-tree-stack{max-height:36%;flex:none;border-bottom:1px solid var(--dsw-alias-border-l2)}',
-      '.dig-pane-main{flex:1;min-width:0}',
-      '.dig-pane-changes{width:290px;flex:none;border-left:1px solid var(--dsw-alias-border-l2)}',
-      '.dig-pane-changes-stack{max-height:46%;flex:none;border-bottom:1px solid var(--dsw-alias-border-l2)}',
-      '.dig-compact-bar{display:flex;align-items:center;gap:6px;padding:4px 6px;flex:none}',
-      '.dig-compact-tree{max-height:42%;flex:none;border-bottom:1px solid var(--dsw-alias-border-l2)}',
+      '.git4idea-fold{border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-sm,8px);padding:4px 12px 12px;background:var(--dsw-alias-bg-layer-1,transparent)}',
+      '.git4idea-fold .git4idea-stack{padding-top:10px}',
+      '.git4idea-foldHead{display:flex;align-items:center;gap:8px;width:100%;appearance:none;background:none;border:0;padding:6px 0;font:inherit;font-size:13px;font-weight:600;letter-spacing:.02em;color:var(--dsw-alias-label-secondary);cursor:pointer;text-align:left}',
+      '.git4idea-foldHead:hover{color:var(--dsw-alias-label-primary)}',
+      '.git4idea-foldChevron{flex:none;display:inline-block;color:var(--dsw-alias-label-tertiary);transition:transform .16s}',
+      '.git4idea-foldChevron.git4idea-foldChevronOpen{transform:rotate(90deg)}',
+      '.git4idea-foldTitle{min-width:0;overflow-wrap:anywhere}',
+      '.git4idea-root-narrow .git4idea-menu-item{white-space:normal}',
+      '.git4idea-root-narrow .git4idea-toast-text{white-space:normal}',
+      '.git4idea-toasts{position:absolute;right:8px;bottom:8px;display:flex;flex-direction:column;gap:6px;z-index:80;max-width:min(340px,92%)}',
+      '.git4idea-toast{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:var(--dsw-radius-sm,8px);background:var(--dsw-alias-bg-layer-2,var(--dsw-alias-bg-layer-1));border:0;box-shadow:var(--dsw-elevation-prominent,0 8px 22px rgba(0,0,0,.32))}',
+      '.git4idea-toast-icon{display:inline-flex;flex:none;color:var(--dsw-alias-label-secondary)}',
+      '.git4idea-toast-warn .git4idea-toast-icon{color:var(--dsw-alias-state-warn-primary,var(--dsw-alias-brand-primary))}',
+      '.git4idea-toast-ok .git4idea-toast-icon{color:var(--dsw-alias-state-success-primary)}',
+      '.git4idea-toast-text{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}',
+      '.git4idea-toast-action{border:none;background:transparent;color:var(--dsw-alias-brand-primary);font:inherit;font-weight:600;cursor:pointer;padding:0 2px;flex:none}',
+      '.git4idea-toast-action:hover{text-decoration:underline}',
+      '.git4idea-opchip{flex:none;padding:0 6px;border-radius:999px;corner-shape:round;background:color-mix(in srgb, var(--dsw-alias-state-warn-primary,var(--dsw-alias-brand-primary)) 20%, transparent);color:var(--dsw-alias-state-warn-primary,var(--dsw-alias-brand-primary));font-weight:500;white-space:nowrap}',
+      '.git4idea-rail-list{display:flex;flex-direction:column;gap:2px;max-height:min(50vh,300px);overflow:auto;padding:2px;border:1px solid var(--dsw-alias-hairline,var(--dsw-alias-border-l1));border-radius:var(--dsw-radius-sm,8px)}',
+      '.git4idea-rail-item{display:flex;align-items:center;gap:6px;padding:2px 4px;border-radius:calc(var(--dsw-radius-sm,8px) - 2px)}',
+      '.git4idea-rail-item:hover{background:var(--dsw-alias-interactive-bg-hover)}',
+      '.git4idea-rail-item-off{opacity:.5}',
+      '.git4idea-rail-item-drag{outline:1px solid var(--dsw-alias-brand-primary)}',
+      '.git4idea-rail-grip{display:inline-flex;color:var(--dsw-alias-label-dimmed,var(--dsw-alias-label-tertiary));cursor:grab;flex:none}',
+      '.git4idea-rail-item-icon{display:inline-flex;flex:none}',
+      '.git4idea-rail-item-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}',
+      '.git4idea-body{flex:1;min-height:0;display:flex;overflow:hidden}',
+      '.git4idea-body-columns{flex-direction:row}',
+      '.git4idea-body-stack{flex-direction:column}',
+      '.git4idea-body-compact{flex-direction:column}',
+      '.git4idea-pane{display:flex;flex-direction:column;min-height:0;min-width:0}',
+      '.git4idea-pane-tree{width:200px;flex:none;border-right:1px solid var(--dsw-alias-border-l2)}',
+      '.git4idea-pane-tree-stack{max-height:36%;flex:none;border-bottom:1px solid var(--dsw-alias-border-l2)}',
+      '.git4idea-pane-main{flex:1;min-width:0}',
+      '.git4idea-pane-changes{width:290px;flex:none;border-left:1px solid var(--dsw-alias-border-l2)}',
+      '.git4idea-pane-changes-stack{max-height:46%;flex:none;border-bottom:1px solid var(--dsw-alias-border-l2)}',
+      '.git4idea-compact-bar{display:flex;align-items:center;gap:6px;padding:4px 6px;flex:none}',
+      '.git4idea-compact-tree{max-height:42%;flex:none;border-bottom:1px solid var(--dsw-alias-border-l2)}',
       // A divider: an 8px hit area (a fingertip needs it) painted as a 1px hairline
       // that lights up on hover, focus or while dragging. touch-action:none is what
       // makes a touch drag resize the pane instead of scrolling the panel.
-      '.dig-gutter{flex:none;align-self:stretch;position:relative;z-index:1;touch-action:none;background:transparent;border:0;padding:0;cursor:col-resize}',
-      '.dig-gutter-v{width:8px}',
-      '.dig-gutter-h{height:8px;cursor:row-resize}',
-      '.dig-gutter::after{content:"";position:absolute;background:var(--dsw-alias-hairline,var(--dsw-alias-border-l1));transition:background .12s ease}',
-      '.dig-gutter-v::after{top:0;bottom:0;left:50%;width:1px;margin-left:-.5px}',
-      '.dig-gutter-h::after{left:0;right:0;top:50%;height:1px;margin-top:-.5px}',
-      '.dig-gutter:hover::after,.dig-gutter:focus-visible::after,.dig-gutter-active::after{background:var(--dsw-alias-brand-primary)}',
-      '.dig-gutter:focus-visible{outline:1px solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:-1px}',
-      '.dig-pane-dragging,.dig-pane-dragging *{user-select:none}',
-      '.dig-pane-dragging-v{cursor:col-resize}',
-      '.dig-pane-dragging-h{cursor:row-resize}',
-      '.dig-seg{display:inline-flex;gap:2px;padding:2px;border-radius:var(--dsw-radius-sm,8px);background:var(--dsw-alias-interactive-bg-hover);flex:none}',
-      '.dig-seg-item{border:none;background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;font-weight:500;padding:2px 10px;border-radius:calc(var(--dsw-radius-sm,8px) - 2px);cursor:pointer;white-space:nowrap}',
-      '.dig-seg-item:hover{color:var(--dsw-alias-label-primary)}',
-      '.dig-seg-item[data-active="true"]{background:var(--dsw-alias-bg-layer-2,var(--dsw-alias-bg-layer-1));color:var(--dsw-alias-label-primary)}',
-      '.dig-search{padding:4px 6px;flex:none}',
-      '.dig-input{width:100%;box-sizing:border-box;padding:4px 6px;border-radius:var(--dsw-radius-sm,8px);border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);font:inherit;outline:none}',
-      '.dig-input::placeholder{color:var(--dsw-alias-label-tertiary)}',
-      '.dig-input:focus{border-color:var(--dsw-alias-state-business-primary,var(--dsw-alias-brand-primary))}',
-      '.dig-input-compact{padding:3px 6px}',
-      '.dig-picker{display:flex;flex-direction:column;gap:2px;padding:12px;overflow:auto;flex:1;min-height:0}',
-      '.dig-picker-title{color:var(--dsw-alias-label-primary);font-weight:600;margin-bottom:2px}',
-      '.dig-picker-sub{color:var(--dsw-alias-label-tertiary);margin-bottom:8px;word-break:break-all}',
-      '.dig-picker-row{display:flex;align-items:center;gap:8px;width:100%;text-align:left;border:1px solid var(--dsw-alias-border-l2);background:transparent;color:var(--dsw-alias-label-primary);font:inherit;padding:6px 8px;border-radius:var(--dsw-radius-sm,8px);cursor:pointer}',
-      '.dig-picker-row:hover{background:var(--dsw-alias-interactive-bg-hover);border-color:var(--dsw-alias-brand-primary)}',
-      '.dig-picker-icon{display:inline-flex;color:var(--dsw-alias-label-secondary);flex:none}',
-      '.dig-picker-name{flex:none;font-weight:600}',
-      '.dig-picker-kind{color:var(--dsw-alias-label-tertiary);flex:none}',
-      '.dig-picker-path{color:var(--dsw-alias-label-tertiary);margin-left:auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:50%}',
+      '.git4idea-gutter{flex:none;align-self:stretch;position:relative;z-index:1;touch-action:none;background:transparent;border:0;padding:0;cursor:col-resize}',
+      '.git4idea-gutter-v{width:8px}',
+      '.git4idea-gutter-h{height:8px;cursor:row-resize}',
+      '.git4idea-gutter::after{content:"";position:absolute;background:var(--dsw-alias-hairline,var(--dsw-alias-border-l1));transition:background .12s ease}',
+      '.git4idea-gutter-v::after{top:0;bottom:0;left:50%;width:1px;margin-left:-.5px}',
+      '.git4idea-gutter-h::after{left:0;right:0;top:50%;height:1px;margin-top:-.5px}',
+      '.git4idea-gutter:hover::after,.git4idea-gutter:focus-visible::after,.git4idea-gutter-active::after{background:var(--dsw-alias-brand-primary)}',
+      '.git4idea-gutter:focus-visible{outline:1px solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:-1px}',
+      '.git4idea-pane-dragging,.git4idea-pane-dragging *{user-select:none}',
+      '.git4idea-pane-dragging-v{cursor:col-resize}',
+      '.git4idea-pane-dragging-h{cursor:row-resize}',
+      '.git4idea-seg{display:inline-flex;gap:2px;padding:2px;border-radius:var(--dsw-radius-sm,8px);background:var(--dsw-alias-interactive-bg-hover);flex:none}',
+      '.git4idea-seg-item{border:none;background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;font-weight:500;padding:2px 10px;border-radius:calc(var(--dsw-radius-sm,8px) - 2px);cursor:pointer;white-space:nowrap}',
+      '.git4idea-seg-item:hover{color:var(--dsw-alias-label-primary)}',
+      '.git4idea-seg-item[data-active="true"]{background:var(--dsw-alias-bg-layer-2,var(--dsw-alias-bg-layer-1));color:var(--dsw-alias-label-primary)}',
+      '.git4idea-search{padding:4px 6px;flex:none}',
+      '.git4idea-input{width:100%;box-sizing:border-box;padding:4px 6px;border-radius:var(--dsw-radius-sm,8px);border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);font:inherit;outline:none}',
+      '.git4idea-input::placeholder{color:var(--dsw-alias-label-tertiary)}',
+      '.git4idea-input:focus{border-color:var(--dsw-alias-state-business-primary,var(--dsw-alias-brand-primary))}',
+      '.git4idea-input-compact{padding:3px 6px}',
+      '.git4idea-picker{display:flex;flex-direction:column;gap:2px;padding:12px;overflow:auto;flex:1;min-height:0}',
+      '.git4idea-picker-title{color:var(--dsw-alias-label-primary);font-weight:600;margin-bottom:2px}',
+      '.git4idea-picker-sub{color:var(--dsw-alias-label-tertiary);margin-bottom:8px;word-break:break-all}',
+      '.git4idea-picker-row{display:flex;align-items:center;gap:8px;width:100%;text-align:left;border:1px solid var(--dsw-alias-border-l2);background:transparent;color:var(--dsw-alias-label-primary);font:inherit;padding:6px 8px;border-radius:var(--dsw-radius-sm,8px);cursor:pointer}',
+      '.git4idea-picker-row:hover{background:var(--dsw-alias-interactive-bg-hover);border-color:var(--dsw-alias-brand-primary)}',
+      '.git4idea-picker-icon{display:inline-flex;color:var(--dsw-alias-label-secondary);flex:none}',
+      '.git4idea-picker-name{flex:none;font-weight:600}',
+      '.git4idea-picker-kind{color:var(--dsw-alias-label-tertiary);flex:none}',
+      '.git4idea-picker-path{color:var(--dsw-alias-label-tertiary);margin-left:auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:50%}',
       /* position:relative: the marquee box paints against this wrapper (the
          scroll container is offset by the search field — same rule as
-         .dig-history above). */
-      '.dig-tree{display:flex;flex-direction:column;min-height:0;flex:1;position:relative}',
-      '.dig-tree-scroll{flex:1;overflow:auto;padding-bottom:6px}',
-      '.dig-section{display:flex;flex-direction:column}',
-      '.dig-section-head{display:flex;align-items:center;gap:4px;width:100%;padding:3px 8px;border:none;background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;font-weight:600;cursor:pointer;text-align:left}',
-      '.dig-section-head-static{cursor:default;padding-left:20px}',
-      '.dig-section-head:hover{color:var(--dsw-alias-label-primary)}',
+         .git4idea-history above). */
+      '.git4idea-tree{display:flex;flex-direction:column;min-height:0;flex:1;position:relative}',
+      '.git4idea-tree-scroll{flex:1;overflow:auto;padding-bottom:6px}',
+      '.git4idea-section{display:flex;flex-direction:column}',
+      '.git4idea-section-head{display:flex;align-items:center;gap:4px;width:100%;padding:3px 8px;border:none;background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;font-weight:600;cursor:pointer;text-align:left}',
+      '.git4idea-section-head-static{cursor:default;padding-left:20px}',
+      '.git4idea-section-head:hover{color:var(--dsw-alias-label-primary)}',
       // The header became a DIV (it now holds buttons), and a div is content-box
       // while a button is border-box: without this, width:100% plus its own padding
       // overflowed the pane by 16px and clipped the last toolbar icon (reported on
       // v0.3.8).
-      '.dig-changes-head{cursor:default;gap:2px;box-sizing:border-box}',
-      '.dig-section-toggle{display:flex;align-items:center;gap:4px;flex:1;min-width:0;padding:0;border:none;background:transparent;color:inherit;font:inherit;font-weight:600;cursor:pointer;text-align:left}',
-      '.dig-folder{display:flex;flex-direction:column}',
-      '.dig-branch-folder{display:flex;flex-direction:column}',
-      '.dig-row-picked{background:var(--dsw-alias-interactive-bg-active,var(--dsw-alias-interactive-bg-hover));color:var(--dsw-alias-label-primary);box-shadow:inset 2px 0 0 var(--dsw-alias-brand-primary)}',
-      '.dig-folder-head{display:flex;align-items:center;gap:6px;width:100%;padding:1px 8px 1px 4px;height:14px;border:none;background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;font-size:11px;cursor:pointer;text-align:left}',
-      '.dig-folder-head:hover{color:var(--dsw-alias-label-primary)}',
-      '.dig-folder-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
-      '.dig-count{margin-left:auto;opacity:.6;font-weight:400}',
-      '.dig-chevron{display:inline-flex;transform:rotate(-90deg);transition:transform .12s ease}',
-      '.dig-chevron-open{transform:rotate(0deg)}',
-      '.dig-row{display:flex;align-items:center;gap:5px;padding:2px 8px;cursor:pointer;white-space:nowrap;overflow:hidden}',
-      '.dig-row:hover{background:var(--dsw-alias-interactive-bg-hover)}',
+      '.git4idea-changes-head{cursor:default;gap:2px;box-sizing:border-box}',
+      '.git4idea-section-toggle{display:flex;align-items:center;gap:4px;flex:1;min-width:0;padding:0;border:none;background:transparent;color:inherit;font:inherit;font-weight:600;cursor:pointer;text-align:left}',
+      '.git4idea-folder{display:flex;flex-direction:column}',
+      '.git4idea-branch-folder{display:flex;flex-direction:column}',
+      '.git4idea-row-picked{background:var(--dsw-alias-interactive-bg-active,var(--dsw-alias-interactive-bg-hover));color:var(--dsw-alias-label-primary);box-shadow:inset 2px 0 0 var(--dsw-alias-brand-primary)}',
+      '.git4idea-folder-head{display:flex;align-items:center;gap:6px;width:100%;padding:1px 8px 1px 4px;height:14px;border:none;background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;font-size:11px;cursor:pointer;text-align:left}',
+      '.git4idea-folder-head:hover{color:var(--dsw-alias-label-primary)}',
+      '.git4idea-folder-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+      '.git4idea-count{margin-left:auto;opacity:.6;font-weight:400}',
+      '.git4idea-chevron{display:inline-flex;transform:rotate(-90deg);transition:transform .12s ease}',
+      '.git4idea-chevron-open{transform:rotate(0deg)}',
+      '.git4idea-row{display:flex;align-items:center;gap:5px;padding:2px 8px;cursor:pointer;white-space:nowrap;overflow:hidden}',
+      '.git4idea-row:hover{background:var(--dsw-alias-interactive-bg-hover)}',
       /* v0.19.3: the HEAD section row behaves like a branch row (click
          selects, double-click browses, right-click menus) — same hover cue. */
-      '.dig-head-branch{cursor:pointer;transition:background .12s}',
-      '.dig-head-branch:hover{background:var(--dsw-alias-interactive-bg-hover)}',
-      '.dig-row-head{color:var(--dsw-alias-state-warn-primary,var(--dsw-alias-brand-primary))}',
+      '.git4idea-head-branch{cursor:pointer;transition:background .12s}',
+      '.git4idea-head-branch:hover{background:var(--dsw-alias-interactive-bg-hover)}',
+      '.git4idea-row-head{color:var(--dsw-alias-state-warn-primary,var(--dsw-alias-brand-primary))}',
       /* v0.19.5: the v0.19.4 mix folded the row's own TEXT color in, and on
          the dark theme that text is near-white — 42% of it whitewashed the
          fill over bright wallpapers (user report). Keep the mix SHAPE (58%
@@ -14996,74 +15014,74 @@ window.__ModuleLoader__.load({
          tone), dark theme mixes charcoal (bluish-800 — the dark hover-solid
          tone) via the host's body[data-ds-dark-theme] switch. Selection reads
          as gray on both themes, wallpaper/frost stays visible, never white. */
-      '.dig-row-selected{background:color-mix(in srgb,var(--dsw-alias-interactive-bg-active,var(--dsw-alias-interactive-bg-hover)) 58%,var(--dsw-static-neutral-bluish-75,var(--dsw-alias-bg-layer-3)) 42%);color:var(--dsw-alias-label-primary);box-shadow:inset 2px 0 0 var(--dsw-alias-brand-primary)}',
-      'body[data-ds-dark-theme] .dig-row-selected{background:color-mix(in srgb,var(--dsw-alias-interactive-bg-active,var(--dsw-alias-interactive-bg-hover)) 58%,var(--dsw-static-neutral-bluish-800,var(--dsw-alias-bg-layer-3)) 42%)}',
-      '.dig-row-remote .dig-row-label{color:var(--dsw-alias-label-secondary);font-weight:500}',
-      '.dig-row-tag .dig-row-label{color:var(--dsw-alias-state-warn-primary,var(--dsw-alias-brand-primary));font-weight:500}',
-      '.dig-row-head .dig-row-label{font-weight:600}',
-      '.dig-row-icon{display:inline-flex;flex:none;opacity:.9}',
-      '.dig-row-label{overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;font-weight:600}',
+      '.git4idea-row-selected{background:color-mix(in srgb,var(--dsw-alias-interactive-bg-active,var(--dsw-alias-interactive-bg-hover)) 58%,var(--dsw-static-neutral-bluish-75,var(--dsw-alias-bg-layer-3)) 42%);color:var(--dsw-alias-label-primary);box-shadow:inset 2px 0 0 var(--dsw-alias-brand-primary)}',
+      'body[data-ds-dark-theme] .git4idea-row-selected{background:color-mix(in srgb,var(--dsw-alias-interactive-bg-active,var(--dsw-alias-interactive-bg-hover)) 58%,var(--dsw-static-neutral-bluish-800,var(--dsw-alias-bg-layer-3)) 42%)}',
+      '.git4idea-row-remote .git4idea-row-label{color:var(--dsw-alias-label-secondary);font-weight:500}',
+      '.git4idea-row-tag .git4idea-row-label{color:var(--dsw-alias-state-warn-primary,var(--dsw-alias-brand-primary));font-weight:500}',
+      '.git4idea-row-head .git4idea-row-label{font-weight:600}',
+      '.git4idea-row-icon{display:inline-flex;flex:none;opacity:.9}',
+      '.git4idea-row-label{overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;font-weight:600}',
       // Inline tracking target (issue #18): flex:none so it never starves the
       // label, capped and ellipsised so a long origin/… cannot push the badges.
-      '.dig-row-upstream{flex:none;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;font-weight:400;color:var(--dsw-alias-label-tertiary,var(--dsw-alias-label-secondary))}',
-      '.dig-row-sub{color:var(--dsw-alias-label-tertiary);font-size:11px;flex:none;max-width:45%;overflow:hidden;text-overflow:ellipsis}',
-      '.dig-row-dir{margin-left:auto;opacity:.75}',
-      '.dig-badge{font-size:10px;padding:0 5px;border-radius:999px;corner-shape:round;background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary);flex:none}',
+      '.git4idea-row-upstream{flex:none;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;font-weight:400;color:var(--dsw-alias-label-tertiary,var(--dsw-alias-label-secondary))}',
+      '.git4idea-row-sub{color:var(--dsw-alias-label-tertiary);font-size:11px;flex:none;max-width:45%;overflow:hidden;text-overflow:ellipsis}',
+      '.git4idea-row-dir{margin-left:auto;opacity:.75}',
+      '.git4idea-badge{font-size:10px;padding:0 5px;border-radius:999px;corner-shape:round;background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary);flex:none}',
       /* Ahead/behind colours + size (user request): pending pushes read green,
          pending pulls read blue — the same semantics in the tree rows and the
          top bar. 12px/600 keeps the counts legible at a glance. */
-      '.dig-badge-ahead,.dig-track-ahead{color:var(--dsw-alias-state-success-primary);font-size:12px;font-weight:600}',
-      '.dig-badge-behind,.dig-track-behind{color:var(--dsw-alias-state-business-primary,var(--dsw-alias-brand-primary));font-size:12px;font-weight:600}',
-      '.dig-badge.dig-badge-ahead,.dig-badge.dig-badge-behind{padding:0 6px}',
-      '.dig-badge-muted{opacity:.8}',
-      '.dig-badge-worktree{padding:0 3px;display:inline-flex;align-items:center;height:14px}',
+      '.git4idea-badge-ahead,.git4idea-track-ahead{color:var(--dsw-alias-state-success-primary);font-size:12px;font-weight:600}',
+      '.git4idea-badge-behind,.git4idea-track-behind{color:var(--dsw-alias-state-business-primary,var(--dsw-alias-brand-primary));font-size:12px;font-weight:600}',
+      '.git4idea-badge.git4idea-badge-ahead,.git4idea-badge.git4idea-badge-behind{padding:0 6px}',
+      '.git4idea-badge-muted{opacity:.8}',
+      '.git4idea-badge-worktree{padding:0 3px;display:inline-flex;align-items:center;height:14px}',
       /* position:relative: the marquee box (rubber-band selection) paints
          against this wrapper — the scroll container below is offset by the
          filter bar, and painting from the wrong rect was the v0.19.2 drift. */
-      '.dig-history{display:flex;flex-direction:column;min-height:0;flex:1;position:relative}',
-      '.dig-history-scroll{flex:1;overflow:auto}',
-      '.dig-commit{display:flex;align-items:center;gap:6px;padding:1px 8px 1px 0;cursor:pointer;height:26px;overflow:hidden}',
-      '.dig-commit:hover{background:var(--dsw-alias-interactive-bg-hover)}',
-      /* Same theme-aware gray mix as .dig-row-selected (see it). */
-      '.dig-commit-selected{background:color-mix(in srgb,var(--dsw-alias-interactive-bg-active,var(--dsw-alias-interactive-bg-hover)) 58%,var(--dsw-static-neutral-bluish-75,var(--dsw-alias-bg-layer-3)) 42%);color:var(--dsw-alias-label-primary);box-shadow:inset 2px 0 0 var(--dsw-alias-brand-primary)}',
-      'body[data-ds-dark-theme] .dig-commit-selected{background:color-mix(in srgb,var(--dsw-alias-interactive-bg-active,var(--dsw-alias-interactive-bg-hover)) 58%,var(--dsw-static-neutral-bluish-800,var(--dsw-alias-bg-layer-3)) 42%)}',
+      '.git4idea-history{display:flex;flex-direction:column;min-height:0;flex:1;position:relative}',
+      '.git4idea-history-scroll{flex:1;overflow:auto}',
+      '.git4idea-commit{display:flex;align-items:center;gap:6px;padding:1px 8px 1px 0;cursor:pointer;height:26px;overflow:hidden}',
+      '.git4idea-commit:hover{background:var(--dsw-alias-interactive-bg-hover)}',
+      /* Same theme-aware gray mix as .git4idea-row-selected (see it). */
+      '.git4idea-commit-selected{background:color-mix(in srgb,var(--dsw-alias-interactive-bg-active,var(--dsw-alias-interactive-bg-hover)) 58%,var(--dsw-static-neutral-bluish-75,var(--dsw-alias-bg-layer-3)) 42%);color:var(--dsw-alias-label-primary);box-shadow:inset 2px 0 0 var(--dsw-alias-brand-primary)}',
+      'body[data-ds-dark-theme] .git4idea-commit-selected{background:color-mix(in srgb,var(--dsw-alias-interactive-bg-active,var(--dsw-alias-interactive-bg-hover)) 58%,var(--dsw-static-neutral-bluish-800,var(--dsw-alias-bg-layer-3)) 42%)}',
       // A favorited branch renders its star SOLID (BranchRow adds this class
       // and flips the tone to warn) — the hollow green HEAD star read as
       // "not favorited" (v0.18.5).
-      '.dig-star-filled svg path{fill:currentColor}',
+      '.git4idea-star-filled svg path{fill:currentColor}',
       // Rows nested under a dir-group folder head are indented and drop the
       // trailing directory repeat, so the grouping reads as a tree.
       /* Nested rows indent inline (26px base + 12px per tree depth) — the CSS
          class only marks them for tests/probes. */
-      '.dig-graph{flex:none}',
-      '.dig-commit-date{color:var(--dsw-alias-label-tertiary);flex:none;width:54px;font-variant-numeric:tabular-nums;font-weight:500}',
-      '.dig-commit-author{color:var(--dsw-alias-label-secondary);flex:none;width:96px;overflow:hidden;text-overflow:ellipsis;font-weight:500}',
-      '.dig-commit-subject{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}',
-      '.dig-commit-fill{flex:1 1 0;min-width:0}',
-      '.dig-ref{font-size:10px;padding:0 5px;border-radius:999px;corner-shape:round;background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary);flex:none;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}',
-      '.dig-ref-head{color:var(--dsw-alias-state-success-primary)}',
-      '.dig-ref-local{color:var(--dsw-alias-brand-primary)}',
-      '.dig-ref-remote{color:#b083f0}',
-      '.dig-ref-tag{color:var(--dsw-alias-state-warn-primary,var(--dsw-alias-brand-primary))}',
-      '.dig-ref-more{color:var(--dsw-alias-label-tertiary);cursor:pointer}',
-      '.dig-filters{display:flex;align-items:center;gap:4px;padding:4px 6px;flex:none;min-width:0;overflow-x:auto;overflow-y:hidden;border-bottom:1px solid var(--dsw-alias-border-l2)}',
-      '.dig-filter-text{flex:1 1 90px;min-width:80px;width:auto}',
-      '.dig-filter-select{flex:none;max-width:118px;appearance:none;-webkit-appearance:none;background:transparent;border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-sm,8px);color:var(--dsw-alias-label-secondary);font:inherit;font-weight:500;height:22px;padding:0 4px;cursor:pointer;text-overflow:ellipsis}',
-      '.dig-filter-select:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
-      '.dig-filter-select{display:inline-flex;align-items:center;gap:3px}',
-      '.dig-filter-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:96px}',
-      '.dig-filter-on{color:var(--dsw-alias-brand-primary);border-color:var(--dsw-alias-brand-primary)}',
-      '.dig-filter-path{flex:0 1 112px;min-width:70px;display:flex}',
-      '.dig-load-more{margin:6px auto;display:block;padding:3px 12px;border-radius:var(--dsw-radius-sm,8px);border:1px solid var(--dsw-alias-border-l2);background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;cursor:pointer}',
-      '.dig-load-more:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
-      '.dig-empty{padding:14px;text-align:center;color:var(--dsw-alias-label-tertiary);font-weight:500}',
-      '.dig-changes{display:flex;flex-direction:column;min-height:0;flex:1;position:relative}',
-      '.dig-changes-body{display:flex;flex-direction:column;min-height:0;flex:1}',
-      '.dig-changes-list{flex:1;overflow:auto;min-height:0}',
+      '.git4idea-graph{flex:none}',
+      '.git4idea-commit-date{color:var(--dsw-alias-label-tertiary);flex:none;width:54px;font-variant-numeric:tabular-nums;font-weight:500}',
+      '.git4idea-commit-author{color:var(--dsw-alias-label-secondary);flex:none;width:96px;overflow:hidden;text-overflow:ellipsis;font-weight:500}',
+      '.git4idea-commit-subject{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}',
+      '.git4idea-commit-fill{flex:1 1 0;min-width:0}',
+      '.git4idea-ref{font-size:10px;padding:0 5px;border-radius:999px;corner-shape:round;background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary);flex:none;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}',
+      '.git4idea-ref-head{color:var(--dsw-alias-state-success-primary)}',
+      '.git4idea-ref-local{color:var(--dsw-alias-brand-primary)}',
+      '.git4idea-ref-remote{color:#b083f0}',
+      '.git4idea-ref-tag{color:var(--dsw-alias-state-warn-primary,var(--dsw-alias-brand-primary))}',
+      '.git4idea-ref-more{color:var(--dsw-alias-label-tertiary);cursor:pointer}',
+      '.git4idea-filters{display:flex;align-items:center;gap:4px;padding:4px 6px;flex:none;min-width:0;overflow-x:auto;overflow-y:hidden;border-bottom:1px solid var(--dsw-alias-border-l2)}',
+      '.git4idea-filter-text{flex:1 1 90px;min-width:80px;width:auto}',
+      '.git4idea-filter-select{flex:none;max-width:118px;appearance:none;-webkit-appearance:none;background:transparent;border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-sm,8px);color:var(--dsw-alias-label-secondary);font:inherit;font-weight:500;height:22px;padding:0 4px;cursor:pointer;text-overflow:ellipsis}',
+      '.git4idea-filter-select:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
+      '.git4idea-filter-select{display:inline-flex;align-items:center;gap:3px}',
+      '.git4idea-filter-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:96px}',
+      '.git4idea-filter-on{color:var(--dsw-alias-brand-primary);border-color:var(--dsw-alias-brand-primary)}',
+      '.git4idea-filter-path{flex:0 1 112px;min-width:70px;display:flex}',
+      '.git4idea-load-more{margin:6px auto;display:block;padding:3px 12px;border-radius:var(--dsw-radius-sm,8px);border:1px solid var(--dsw-alias-border-l2);background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;cursor:pointer}',
+      '.git4idea-load-more:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
+      '.git4idea-empty{padding:14px;text-align:center;color:var(--dsw-alias-label-tertiary);font-weight:500}',
+      '.git4idea-changes{display:flex;flex-direction:column;min-height:0;flex:1;position:relative}',
+      '.git4idea-changes-body{display:flex;flex-direction:column;min-height:0;flex:1}',
+      '.git4idea-changes-list{flex:1;overflow:auto;min-height:0}',
       /* Multi-select chrome (issue #13). The marquee box is anchored to the
-         VIEWPORT-space .dig-changes (invariant 13: position:fixed would be
+         VIEWPORT-space .git4idea-changes (invariant 13: position:fixed would be
          captured by the workbench's contain:layout and flung off-panel). */
-      '.dig-marquee{position:absolute;border:1px solid var(--dsw-alias-brand-primary);background:color-mix(in srgb,var(--dsw-alias-brand-primary) 14%,transparent);pointer-events:none;z-index:6}',
+      '.git4idea-marquee{position:absolute;border:1px solid var(--dsw-alias-brand-primary);background:color-mix(in srgb,var(--dsw-alias-brand-primary) 14%,transparent);pointer-events:none;z-index:6}',
       /* The selection action bar (v0.19.1 redesign). It used to FLOAT over the
          top of the list (absolute, v0.18.3): that covered the group head and
          the first rows, and on transparency skins (dsh-any-background) its
@@ -15086,113 +15104,113 @@ window.__ModuleLoader__.load({
          same aliases to the dark theme's own sources (layer-1→bluish-875,
          layer-2→bluish-850). Without that override every dark theme renders
          white surfaces under light text here (issue #15, 1.13:1). */
-      '.dig-selection-bar{--dsw-alias-bg-layer-1:var(--dsw-static-neutral-bluish-00,#fff);--dsw-alias-bg-layer-2:var(--dsw-static-neutral-bluish-00,#fff);display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:5px 10px;margin:6px 0;font-size:11px;line-height:16px;border-radius:var(--dsw-radius-sm,8px);background:var(--dsh-any-op-menu-cordis,var(--dsw-alias-bg-layer-2));border:1px solid var(--dsw-alias-border-l2,var(--dsw-alias-border-subtle,transparent));box-shadow:var(--dsw-elevation-prominent,0 4px 14px rgba(0,0,0,.25))}',
-      'body[data-ds-dark-theme] .dig-selection-bar{--dsw-alias-bg-layer-1:var(--dsw-static-neutral-bluish-875,#232324);--dsw-alias-bg-layer-2:var(--dsw-static-neutral-bluish-850,#2c2c2e)}',
-      '.dig-selection-bar .dig-link{margin-left:0;padding:2px 0}',
-      '.dig-selection-bar .dig-link-danger{color:var(--dsw-alias-state-error-primary)}',
-      '.dig-selection-count{color:var(--dsw-alias-label-secondary);white-space:nowrap}',
+      '.git4idea-selection-bar{--dsw-alias-bg-layer-1:var(--dsw-static-neutral-bluish-00,#fff);--dsw-alias-bg-layer-2:var(--dsw-static-neutral-bluish-00,#fff);display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:5px 10px;margin:6px 0;font-size:11px;line-height:16px;border-radius:var(--dsw-radius-sm,8px);background:var(--dsh-any-op-menu-cordis,var(--dsw-alias-bg-layer-2));border:1px solid var(--dsw-alias-border-l2,var(--dsw-alias-border-subtle,transparent));box-shadow:var(--dsw-elevation-prominent,0 4px 14px rgba(0,0,0,.25))}',
+      'body[data-ds-dark-theme] .git4idea-selection-bar{--dsw-alias-bg-layer-1:var(--dsw-static-neutral-bluish-875,#232324);--dsw-alias-bg-layer-2:var(--dsw-static-neutral-bluish-850,#2c2c2e)}',
+      '.git4idea-selection-bar .git4idea-link{margin-left:0;padding:2px 0}',
+      '.git4idea-selection-bar .git4idea-link-danger{color:var(--dsw-alias-state-error-primary)}',
+      '.git4idea-selection-count{color:var(--dsw-alias-label-secondary);white-space:nowrap}',
       /* Focusable lists keep their own selection highlight as the focus
          indicator, so the container ring is suppressed. */
-      '.dig-changes-list:focus-visible,.dig-tree:focus-visible,.dig-history-scroll:focus-visible{outline:none}',
-      '.dig-group{display:flex;flex-direction:column}',
-      '.dig-group-head{display:flex;align-items:center;gap:8px;padding:2px 8px;height:17px;color:var(--dsw-alias-label-secondary);font-size:11px;font-weight:600}',
-      '.dig-link{margin-left:auto;border:none;background:transparent;color:var(--dsw-alias-brand-primary);font:inherit;cursor:pointer;padding:0;flex:none}',
-      '.dig-link:hover{text-decoration:underline}',
-      '.dig-row-file{gap:6px;height:20px}',
-      '.dig-file-status{flex:none;width:14px;text-align:center;font-weight:700;font-size:10px;color:var(--dsw-alias-state-warn-primary,var(--dsw-alias-label-secondary))}',
-      '.dig-file-status-A{color:var(--dsw-alias-state-success-primary)}',
-      '.dig-file-status-D{color:var(--dsw-alias-state-error-primary)}',
-      '.dig-file-status-R{color:var(--dsw-alias-brand-primary)}',
-      '.dig-file-status-U{color:var(--dsw-alias-label-tertiary)}',
-      '.dig-file-status-I{color:var(--dsw-alias-label-tertiary)}',
-      '.dig-stat-add{color:var(--dsw-alias-state-success-primary);flex:none;font-variant-numeric:tabular-nums}',
-      '.dig-stat-del{color:var(--dsw-alias-state-error-primary);flex:none;font-variant-numeric:tabular-nums}',
-      '.dig-mini{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border:none;border-radius:var(--dsw-radius-xs,4px);background:transparent;color:var(--dsw-alias-label-secondary);cursor:pointer;opacity:0;flex:none;padding:0}',
-      '.dig-row:hover .dig-mini{opacity:1}',
-      '.dig-mini:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
-      '.dig-commit-box{flex:none;padding:6px;display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--dsw-alias-border-l2)}',
-      '.dig-commit-box-compact{flex-direction:row;align-items:center;gap:6px;padding:4px 6px;flex-wrap:wrap}',
-      '.dig-textarea{width:100%;box-sizing:border-box;min-height:50px;resize:vertical;padding:5px 6px;border-radius:var(--dsw-radius-sm,8px);border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);font:inherit;outline:none}',
-      '.dig-textarea::placeholder{color:var(--dsw-alias-label-tertiary)}',
-      '.dig-textarea:focus{border-color:var(--dsw-alias-state-business-primary,var(--dsw-alias-brand-primary))}',
-      '.dig-commit-actions{display:flex;align-items:center;gap:8px}',
-      '.dig-check{display:inline-flex;align-items:center;gap:4px;color:var(--dsw-alias-label-secondary);cursor:pointer}',
-      '.dig-btn{padding:3px 10px;border-radius:var(--dsw-radius-sm,8px);border:1px solid var(--dsw-alias-border-l2);background:transparent;color:var(--dsw-alias-label-primary);font:inherit;font-weight:500;cursor:pointer;flex:none}',
-      '.dig-btn:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover)}',
-      '.dig-btn:disabled{opacity:.45;cursor:default}',
-      '.dig-btn-small{padding:2px 8px;font-size:11px}',
-      '.dig-btn-primary{margin-left:auto;background:var(--dsw-alias-button-primary-fill,var(--dsw-alias-brand-primary));border-color:transparent;color:var(--dsw-alias-label-primary-inverted,#fff)}',
-      '.dig-btn-primary:hover:not(:disabled){background:var(--dsw-alias-button-primary-hover,var(--dsw-alias-brand-primary))}',
-      '.dig-btn-danger{background:var(--dsw-alias-state-error-primary);border-color:transparent;color:var(--dsw-alias-label-primary-inverted,#fff)}',
-      '.dig-detail{display:flex;flex-direction:column;min-height:0;flex:1;overflow:auto;padding:6px 8px;gap:6px}',
-      '.dig-detail-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}',
-      '.dig-detail-author,.dig-detail-date{color:var(--dsw-alias-label-tertiary)}',
-      '.dig-detail-subject{font-weight:600;white-space:pre-wrap}',
-      '.dig-detail-body{margin:0;white-space:pre-wrap;color:var(--dsw-alias-label-secondary);font:inherit}',
-      '.dig-detail-files-head{font-weight:600;margin-top:4px}',
-      '.dig-detail-files{display:flex;flex-direction:column}',
-      '.dig-mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}',
-      '.dig-diff-pane{flex:none;max-height:55%;display:flex;flex-direction:column;min-height:0;border-top:1px solid var(--dsw-alias-border-l2)}',
-      '.dig-diff-head{display:flex;align-items:center;gap:8px;padding:3px 8px;color:var(--dsw-alias-label-tertiary);flex:none;min-width:0}',
-      '.dig-diff-path{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}',
-      '.dig-diff{flex:1;overflow:auto;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:calc(12px + var(--dsh-code-font-delta, 0px));line-height:1.5;font-weight:500;min-height:0}',
-      '.dig-diff-line{display:flex;gap:8px;padding:0 6px;white-space:pre}',
-      '.dig-diff-gutter{width:32px;flex:none;text-align:right;color:var(--dsw-alias-label-dimmed,var(--dsw-alias-label-tertiary));user-select:none}',
-      '.dig-diff-text{white-space:pre-wrap;word-break:break-word;flex:1;min-width:0}',
-      '.dig-diff-add{background:color-mix(in srgb, var(--dsw-alias-state-success-primary) 16%, transparent)}',
-      '.dig-diff-del{background:color-mix(in srgb, var(--dsw-alias-state-error-primary) 16%, transparent)}',
-      '.dig-diff-hunk{color:var(--dsw-alias-brand-primary);background:color-mix(in srgb, var(--dsw-alias-brand-primary) 12%, transparent)}',
-      '.dig-diff-meta{color:var(--dsw-alias-label-tertiary)}',
+      '.git4idea-changes-list:focus-visible,.git4idea-tree:focus-visible,.git4idea-history-scroll:focus-visible{outline:none}',
+      '.git4idea-group{display:flex;flex-direction:column}',
+      '.git4idea-group-head{display:flex;align-items:center;gap:8px;padding:2px 8px;height:17px;color:var(--dsw-alias-label-secondary);font-size:11px;font-weight:600}',
+      '.git4idea-link{margin-left:auto;border:none;background:transparent;color:var(--dsw-alias-brand-primary);font:inherit;cursor:pointer;padding:0;flex:none}',
+      '.git4idea-link:hover{text-decoration:underline}',
+      '.git4idea-row-file{gap:6px;height:20px}',
+      '.git4idea-file-status{flex:none;width:14px;text-align:center;font-weight:700;font-size:10px;color:var(--dsw-alias-state-warn-primary,var(--dsw-alias-label-secondary))}',
+      '.git4idea-file-status-A{color:var(--dsw-alias-state-success-primary)}',
+      '.git4idea-file-status-D{color:var(--dsw-alias-state-error-primary)}',
+      '.git4idea-file-status-R{color:var(--dsw-alias-brand-primary)}',
+      '.git4idea-file-status-U{color:var(--dsw-alias-label-tertiary)}',
+      '.git4idea-file-status-I{color:var(--dsw-alias-label-tertiary)}',
+      '.git4idea-stat-add{color:var(--dsw-alias-state-success-primary);flex:none;font-variant-numeric:tabular-nums}',
+      '.git4idea-stat-del{color:var(--dsw-alias-state-error-primary);flex:none;font-variant-numeric:tabular-nums}',
+      '.git4idea-mini{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border:none;border-radius:var(--dsw-radius-xs,4px);background:transparent;color:var(--dsw-alias-label-secondary);cursor:pointer;opacity:0;flex:none;padding:0}',
+      '.git4idea-row:hover .git4idea-mini{opacity:1}',
+      '.git4idea-mini:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
+      '.git4idea-commit-box{flex:none;padding:6px;display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--dsw-alias-border-l2)}',
+      '.git4idea-commit-box-compact{flex-direction:row;align-items:center;gap:6px;padding:4px 6px;flex-wrap:wrap}',
+      '.git4idea-textarea{width:100%;box-sizing:border-box;min-height:50px;resize:vertical;padding:5px 6px;border-radius:var(--dsw-radius-sm,8px);border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);font:inherit;outline:none}',
+      '.git4idea-textarea::placeholder{color:var(--dsw-alias-label-tertiary)}',
+      '.git4idea-textarea:focus{border-color:var(--dsw-alias-state-business-primary,var(--dsw-alias-brand-primary))}',
+      '.git4idea-commit-actions{display:flex;align-items:center;gap:8px}',
+      '.git4idea-check{display:inline-flex;align-items:center;gap:4px;color:var(--dsw-alias-label-secondary);cursor:pointer}',
+      '.git4idea-btn{padding:3px 10px;border-radius:var(--dsw-radius-sm,8px);border:1px solid var(--dsw-alias-border-l2);background:transparent;color:var(--dsw-alias-label-primary);font:inherit;font-weight:500;cursor:pointer;flex:none}',
+      '.git4idea-btn:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover)}',
+      '.git4idea-btn:disabled{opacity:.45;cursor:default}',
+      '.git4idea-btn-small{padding:2px 8px;font-size:11px}',
+      '.git4idea-btn-primary{margin-left:auto;background:var(--dsw-alias-button-primary-fill,var(--dsw-alias-brand-primary));border-color:transparent;color:var(--dsw-alias-label-primary-inverted,#fff)}',
+      '.git4idea-btn-primary:hover:not(:disabled){background:var(--dsw-alias-button-primary-hover,var(--dsw-alias-brand-primary))}',
+      '.git4idea-btn-danger{background:var(--dsw-alias-state-error-primary);border-color:transparent;color:var(--dsw-alias-label-primary-inverted,#fff)}',
+      '.git4idea-detail{display:flex;flex-direction:column;min-height:0;flex:1;overflow:auto;padding:6px 8px;gap:6px}',
+      '.git4idea-detail-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}',
+      '.git4idea-detail-author,.git4idea-detail-date{color:var(--dsw-alias-label-tertiary)}',
+      '.git4idea-detail-subject{font-weight:600;white-space:pre-wrap}',
+      '.git4idea-detail-body{margin:0;white-space:pre-wrap;color:var(--dsw-alias-label-secondary);font:inherit}',
+      '.git4idea-detail-files-head{font-weight:600;margin-top:4px}',
+      '.git4idea-detail-files{display:flex;flex-direction:column}',
+      '.git4idea-mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}',
+      '.git4idea-diff-pane{flex:none;max-height:55%;display:flex;flex-direction:column;min-height:0;border-top:1px solid var(--dsw-alias-border-l2)}',
+      '.git4idea-diff-head{display:flex;align-items:center;gap:8px;padding:3px 8px;color:var(--dsw-alias-label-tertiary);flex:none;min-width:0}',
+      '.git4idea-diff-path{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}',
+      '.git4idea-diff{flex:1;overflow:auto;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:calc(12px + var(--dsh-code-font-delta, 0px));line-height:1.5;font-weight:500;min-height:0}',
+      '.git4idea-diff-line{display:flex;gap:8px;padding:0 6px;white-space:pre}',
+      '.git4idea-diff-gutter{width:32px;flex:none;text-align:right;color:var(--dsw-alias-label-dimmed,var(--dsw-alias-label-tertiary));user-select:none}',
+      '.git4idea-diff-text{white-space:pre-wrap;word-break:break-word;flex:1;min-width:0}',
+      '.git4idea-diff-add{background:color-mix(in srgb, var(--dsw-alias-state-success-primary) 16%, transparent)}',
+      '.git4idea-diff-del{background:color-mix(in srgb, var(--dsw-alias-state-error-primary) 16%, transparent)}',
+      '.git4idea-diff-hunk{color:var(--dsw-alias-brand-primary);background:color-mix(in srgb, var(--dsw-alias-brand-primary) 12%, transparent)}',
+      '.git4idea-diff-meta{color:var(--dsw-alias-label-tertiary)}',
       /* Host-rendered diff (ui-primitives DiffBlock): the host box keeps the
          pane's scroll contract (everything renders, the pane scrolls), and the
          card's own 16px vertical margin is tightened to the panel rhythm. */
-      '.dig-diff-host{flex:1;overflow:auto;min-height:0}',
-      '.dig-diff-card{margin:4px 6px 8px;font-size:calc(12px + var(--dsh-code-font-delta, 0px))}',
+      '.git4idea-diff-host{flex:1;overflow:auto;min-height:0}',
+      '.git4idea-diff-card{margin:4px 6px 8px;font-size:calc(12px + var(--dsh-code-font-delta, 0px))}',
       /* File-type glyphs lead every change row (v0.14); a transparent-theme
          host still tints them through the component's own category colors. */
-      '.dig-file-icon{flex:none;opacity:.95}',
-      '.dig-overlay{position:absolute;inset:0;padding:8px;box-sizing:border-box;background:var(--dsw-alias-bg-mask-1,rgba(0,0,0,.42));-webkit-backdrop-filter:var(--dsw-mask-blur,none);backdrop-filter:var(--dsw-mask-blur,none);display:flex;align-items:center;justify-content:center;z-index:60}',
-      '.dig-dialog{box-sizing:border-box;min-width:min(240px,100%);max-width:min(420px,94%);max-height:100%;overflow:auto;background:var(--dsw-alias-bg-layer-2,var(--dsw-alias-bg-layer-1));border:0;border-radius:var(--dsw-radius-panel,28px);padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:var(--dsw-elevation-prominent,0 12px 32px rgba(0,0,0,.35))}',
+      '.git4idea-file-icon{flex:none;opacity:.95}',
+      '.git4idea-overlay{position:absolute;inset:0;padding:8px;box-sizing:border-box;background:var(--dsw-alias-bg-mask-1,rgba(0,0,0,.42));-webkit-backdrop-filter:var(--dsw-mask-blur,none);backdrop-filter:var(--dsw-mask-blur,none);display:flex;align-items:center;justify-content:center;z-index:60}',
+      '.git4idea-dialog{box-sizing:border-box;min-width:min(240px,100%);max-width:min(420px,94%);max-height:100%;overflow:auto;background:var(--dsw-alias-bg-layer-2,var(--dsw-alias-bg-layer-1));border:0;border-radius:var(--dsw-radius-panel,28px);padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:var(--dsw-elevation-prominent,0 12px 32px rgba(0,0,0,.35))}',
       /* Git-output drawer (VS Code showOutput): panel-internal absolute bottom
          sheet (invariant 13). */
-      '.dig-gitlog{position:absolute;left:0;right:0;bottom:0;z-index:55;height:46%;min-height:132px;display:flex;flex-direction:column;background:var(--dsw-alias-bg-layer-2,var(--dsw-alias-bg-layer-1));border-radius:var(--dsw-radius-panel,28px) var(--dsw-radius-panel,28px) 0 0;box-shadow:var(--dsw-elevation-prominent,0 -8px 28px rgba(0,0,0,.3))}',
-      '.dig-gitlog-head{display:flex;align-items:center;gap:4px;padding:8px 14px 6px;flex:none}',
-      '.dig-gitlog-title{font-weight:600}',
-      '.dig-gitlog-empty{padding:10px 14px;color:var(--dsw-alias-label-tertiary)}',
-      '.dig-gitlog-body{flex:1;min-height:0;overflow:auto;padding:0 14px 10px;font-weight:400}',
-      '.dig-gitlog-row{padding:6px 0;border-top:1px solid var(--dsw-alias-border-l1,transparent)}',
-      '.dig-gitlog-row-bad .dig-gitlog-code{color:var(--dsw-alias-state-danger,#e5484d);font-weight:700}',
-      '.dig-gitlog-meta{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}',
-      '.dig-gitlog-code{color:var(--dsw-alias-label-tertiary);font-variant-numeric:tabular-nums}',
-      '.dig-gitlog-ms{color:var(--dsw-alias-label-tertiary);font-variant-numeric:tabular-nums}',
-      '.dig-gitlog-at{color:var(--dsw-alias-label-tertiary);font-size:calc(11px + var(--dsh-content-font-delta-secondary, 0px))}',
-      '.dig-gitlog-argv{font-weight:600;word-break:break-all}',
-      '.dig-gitlog-pre{margin:4px 0 0;padding:6px 8px;border-radius:var(--dsw-radius-md,12px);background:var(--dsw-alias-bg-layer-3,var(--dsw-alias-bg-layer-2));overflow:auto;max-height:160px;white-space:pre-wrap;word-break:break-all;font-size:calc(11px + var(--dsh-code-font-delta, 0px))}',
-      '.dig-dialog-wide{min-width:min(360px,92%)}',
-      '.dig-dialog-title{font-weight:600}',
-      '.dig-dialog-text{color:var(--dsw-alias-label-secondary);white-space:pre-wrap}',
-      '.dig-dialog-actions{display:flex;justify-content:flex-end;gap:8px}',
-      '.dig-dialog-actions .dig-btn-primary{margin-left:0}',
+      '.git4idea-gitlog{position:absolute;left:0;right:0;bottom:0;z-index:55;height:46%;min-height:132px;display:flex;flex-direction:column;background:var(--dsw-alias-bg-layer-2,var(--dsw-alias-bg-layer-1));border-radius:var(--dsw-radius-panel,28px) var(--dsw-radius-panel,28px) 0 0;box-shadow:var(--dsw-elevation-prominent,0 -8px 28px rgba(0,0,0,.3))}',
+      '.git4idea-gitlog-head{display:flex;align-items:center;gap:4px;padding:8px 14px 6px;flex:none}',
+      '.git4idea-gitlog-title{font-weight:600}',
+      '.git4idea-gitlog-empty{padding:10px 14px;color:var(--dsw-alias-label-tertiary)}',
+      '.git4idea-gitlog-body{flex:1;min-height:0;overflow:auto;padding:0 14px 10px;font-weight:400}',
+      '.git4idea-gitlog-row{padding:6px 0;border-top:1px solid var(--dsw-alias-border-l1,transparent)}',
+      '.git4idea-gitlog-row-bad .git4idea-gitlog-code{color:var(--dsw-alias-state-danger,#e5484d);font-weight:700}',
+      '.git4idea-gitlog-meta{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}',
+      '.git4idea-gitlog-code{color:var(--dsw-alias-label-tertiary);font-variant-numeric:tabular-nums}',
+      '.git4idea-gitlog-ms{color:var(--dsw-alias-label-tertiary);font-variant-numeric:tabular-nums}',
+      '.git4idea-gitlog-at{color:var(--dsw-alias-label-tertiary);font-size:calc(11px + var(--dsh-content-font-delta-secondary, 0px))}',
+      '.git4idea-gitlog-argv{font-weight:600;word-break:break-all}',
+      '.git4idea-gitlog-pre{margin:4px 0 0;padding:6px 8px;border-radius:var(--dsw-radius-md,12px);background:var(--dsw-alias-bg-layer-3,var(--dsw-alias-bg-layer-2));overflow:auto;max-height:160px;white-space:pre-wrap;word-break:break-all;font-size:calc(11px + var(--dsh-code-font-delta, 0px))}',
+      '.git4idea-dialog-wide{min-width:min(360px,92%)}',
+      '.git4idea-dialog-title{font-weight:600}',
+      '.git4idea-dialog-text{color:var(--dsw-alias-label-secondary);white-space:pre-wrap}',
+      '.git4idea-dialog-actions{display:flex;justify-content:flex-end;gap:8px}',
+      '.git4idea-dialog-actions .git4idea-btn-primary{margin-left:0}',
       /* The wrapper carries the panel-relative anchor and the outside-click ref,
-         plus the ONLY percentage widths (its containing block is .dig-root, so
+         plus the ONLY percentage widths (its containing block is .git4idea-root, so
          `max-width` resolves against the panel — on the card it would resolve
          against the shrink-to-fit wrapper and collapse the menu, cutting labels).
          The submenu is a second card offset to the parent card's edge, flipping
          left when the panel runs out of room (see ContextMenu.openSub). */
-      '.dig-menu-wrap{position:absolute;z-index:70;width:max-content;max-width:calc(100% - 8px)}',
-      '.dig-menu{box-sizing:border-box;min-width:200px;max-height:calc(100% - 8px);padding:4px;border:0;border-radius:var(--dsw-radius-md,12px);background:transparent;box-shadow:var(--dsw-elevation-prominent,0 10px 28px rgba(0,0,0,.35));--dsw-elevation-stroke-color:var(--dsw-alias-border-l1);isolation:isolate;display:flex;flex-direction:column}',
-      '.dig-menu-sub{position:absolute;min-width:180px;max-width:300px;z-index:71}',
-      '.dig-menu::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;background:var(--dsw-specific-menu,var(--dsw-alias-bg-layer-2,var(--dsw-alias-bg-layer-1)));-webkit-backdrop-filter:var(--dsw-menu-backdrop-filter,blur(14px) saturate(1.2));backdrop-filter:var(--dsw-menu-backdrop-filter,blur(14px) saturate(1.2));pointer-events:none}',
-      '.dig-menu-scroll{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;display:flex;flex-direction:column}',
-      '.dig-menu-item{display:flex;align-items:center;gap:8px;padding:4px 8px;border:none;background:transparent;color:var(--dsw-alias-label-primary);font:inherit;font-weight:500;text-align:left;border-radius:var(--dsw-radius-sm,8px);cursor:pointer;white-space:nowrap;overflow:hidden}',
-      '.dig-menu-chevron{margin-left:auto;opacity:.6;flex:none;display:inline-flex}',
-      '.dig-menu-icon{display:inline-flex;flex:none}',
-      '.dig-menu-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}',
-      '.dig-menu-item:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover)}',
-      '.dig-menu-item-active{color:var(--dsw-alias-state-warn-primary,var(--dsw-alias-brand-primary))}',
-      '.dig-menu-danger,.dig-menu-danger .dig-menu-label{color:var(--dsw-alias-state-error-primary)}',
-      '.dig-menu-disabled{opacity:.38;cursor:default}',
-      '.dig-menu-sep{height:1px;margin:3px 6px;background:var(--dsw-alias-hairline,var(--dsw-alias-border-l1))}',
+      '.git4idea-menu-wrap{position:absolute;z-index:70;width:max-content;max-width:calc(100% - 8px)}',
+      '.git4idea-menu{box-sizing:border-box;min-width:200px;max-height:calc(100% - 8px);padding:4px;border:0;border-radius:var(--dsw-radius-md,12px);background:transparent;box-shadow:var(--dsw-elevation-prominent,0 10px 28px rgba(0,0,0,.35));--dsw-elevation-stroke-color:var(--dsw-alias-border-l1);isolation:isolate;display:flex;flex-direction:column}',
+      '.git4idea-menu-sub{position:absolute;min-width:180px;max-width:300px;z-index:71}',
+      '.git4idea-menu::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;background:var(--dsw-specific-menu,var(--dsw-alias-bg-layer-2,var(--dsw-alias-bg-layer-1)));-webkit-backdrop-filter:var(--dsw-menu-backdrop-filter,blur(14px) saturate(1.2));backdrop-filter:var(--dsw-menu-backdrop-filter,blur(14px) saturate(1.2));pointer-events:none}',
+      '.git4idea-menu-scroll{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;display:flex;flex-direction:column}',
+      '.git4idea-menu-item{display:flex;align-items:center;gap:8px;padding:4px 8px;border:none;background:transparent;color:var(--dsw-alias-label-primary);font:inherit;font-weight:500;text-align:left;border-radius:var(--dsw-radius-sm,8px);cursor:pointer;white-space:nowrap;overflow:hidden}',
+      '.git4idea-menu-chevron{margin-left:auto;opacity:.6;flex:none;display:inline-flex}',
+      '.git4idea-menu-icon{display:inline-flex;flex:none}',
+      '.git4idea-menu-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}',
+      '.git4idea-menu-item:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover)}',
+      '.git4idea-menu-item-active{color:var(--dsw-alias-state-warn-primary,var(--dsw-alias-brand-primary))}',
+      '.git4idea-menu-danger,.git4idea-menu-danger .git4idea-menu-label{color:var(--dsw-alias-state-error-primary)}',
+      '.git4idea-menu-disabled{opacity:.38;cursor:default}',
+      '.git4idea-menu-sep{height:1px;margin:3px 6px;background:var(--dsw-alias-hairline,var(--dsw-alias-border-l1))}',
       /* ---- immersive conversation seat (issue #8 round 3) ---- */
       /* The seat itself carries `data-conversation-composer-overlay` (the
          host's own opt-in, what TrajectoryView rides): the host CSS flips the
@@ -15207,146 +15225,146 @@ window.__ModuleLoader__.load({
          `data-plan-review-key`): a blocking interaction riding the seat must
          stay reachable even though the plain input card is hidden, or a user
          sitting in the Git view could never approve anything. */
-      '[data-conversation-scroll]:has(.dig-conversation-seat[data-immersive="1"]) > [data-composer-seat]:not(:has([data-approval-key],[data-question-key],[data-plan-review-key])){display:none}',
+      '[data-conversation-scroll]:has(.git4idea-conversation-seat[data-immersive="1"]) > [data-composer-seat]:not(:has([data-approval-key],[data-question-key],[data-plan-review-key])){display:none}',
       /* The transcript-width drag strips are FOLLOWING SIBLINGS of the shared
          scroller (children of the conversation body), full-height and
          z-index 8: over a full-bleed Git pane they glow and drag straight
          through it. Same sibling combinator lesson dsh-context recorded in
          its own issue #50 — a descendant combinator here matches nothing. */
-      '[data-conversation-scroll]:has(.dig-conversation-seat[data-immersive="1"]) ~ [data-width-handle]{display:none}',
+      '[data-conversation-scroll]:has(.git4idea-conversation-seat[data-immersive="1"]) ~ [data-width-handle]{display:none}',
       /* ---- native preview tab (external diff preview) ---- */
       /* The body mounts straight into the right-sidebar pane: full height,
          internal scrolling in the body region, a one-line header for the
          subject/path. Same tokens as the rest of the panel — no hard-coded
          surfaces. */
-      '.dig-preview-root{position:relative;height:100%;display:flex;flex-direction:column;min-height:0;background:var(--dsw-alias-bg-base)}',
-      '.dig-preview-head{flex:none;padding:8px 12px;border-bottom:1px solid var(--dsw-alias-border-l2,var(--dsw-alias-border-l1));font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
-      '.dig-preview-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
-      '.dig-preview-body{flex:1;min-height:0;overflow:auto;padding:8px 12px;display:flex;flex-direction:column}',
-      '.dig-preview-body .dig-diff-host,.dig-preview-body .dig-diff{flex:1;min-height:0}',
-      '.dig-preview-actions{display:flex;align-items:center;gap:4px;flex:none}',
-      '.dig-preview-btn{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;padding:0;border:none;border-radius:var(--dsw-radius-sm,8px);background:transparent;color:var(--dsw-alias-label-secondary);cursor:pointer}',
-      '.dig-preview-btn:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
+      '.git4idea-preview-root{position:relative;height:100%;display:flex;flex-direction:column;min-height:0;background:var(--dsw-alias-bg-base)}',
+      '.git4idea-preview-head{flex:none;padding:8px 12px;border-bottom:1px solid var(--dsw-alias-border-l2,var(--dsw-alias-border-l1));font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+      '.git4idea-preview-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+      '.git4idea-preview-body{flex:1;min-height:0;overflow:auto;padding:8px 12px;display:flex;flex-direction:column}',
+      '.git4idea-preview-body .git4idea-diff-host,.git4idea-preview-body .git4idea-diff{flex:1;min-height:0}',
+      '.git4idea-preview-actions{display:flex;align-items:center;gap:4px;flex:none}',
+      '.git4idea-preview-btn{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;padding:0;border:none;border-radius:var(--dsw-radius-sm,8px);background:transparent;color:var(--dsw-alias-label-secondary);cursor:pointer}',
+      '.git4idea-preview-btn:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
       /* LineDiff (v0.14.3): the review view's anatomy on its own tokens —
          every rule below mirrors FileDiff.module.css / ReviewTab.module.css
-         line for line (class dig-lf- stands in for their css modules), so the
+         line for line (class git4idea-lf- stands in for their css modules), so the
          official theme and reading habits carry over. */
-      '.dig-lf-root{--diff-empty-fill:color-mix(in srgb,var(--dsw-alias-interactive-bg-hover) 50%,transparent);display:flex;flex-direction:column;box-sizing:border-box;width:100%;min-height:0;color:var(--dsw-alias-label-primary)}',
-      '.dig-lf-header{display:flex;flex:0 0 auto;gap:6px;align-items:center;box-sizing:border-box;min-height:38px;padding:0 6px 0 8px;border-bottom:0.5px solid var(--dsw-alias-border-l3)}',
-      '.dig-lf-status{display:flex;gap:12px;align-items:center;margin:0;padding:16px;font-size:13px;color:var(--dsw-alias-label-secondary)}',
-      '.dig-preview-boundary{display:flex;align-items:center;justify-content:center;margin:0;padding:24px 16px;font-size:13px;color:var(--dsw-alias-label-secondary);text-align:center}',
-      '.dig-lf-body{display:flex;flex:1 1 auto;flex-direction:column;min-height:0;overflow:auto;padding:8px 0 16px;font:var(--dsw-font-markdown-code-block)}',
-      '.dig-lf-columns{display:grid;flex:1 1 auto;grid-template-columns:minmax(0,1fr) minmax(0,1fr);min-height:0}',
-      '.dig-lf-column,.dig-lf-body[data-review-view=unified]:not([data-review-wrap]){display:grid;grid-template-columns:minmax(max-content,100%);align-content:start}',
-      '.dig-lf-column{min-width:0;overflow-x:scroll;overscroll-behavior:none}',
-      '.dig-lf-column + .dig-lf-column{border-left:0.5px solid var(--dsw-alias-border-l3)}',
-      '.dig-lf-sideLine{display:grid;grid-template-columns:3.5em max-content;box-sizing:border-box;min-width:100%;width:max-content;min-height:22px;line-height:22px;white-space:pre}',
-      '.dig-lf-note{margin:0;padding:4px 16px 8px;font:var(--dsw-font-xs-13,var(--dsw-font-markdown-code-block));color:var(--dsw-alias-label-tertiary)}',
-      '.dig-lf-hunk{margin-bottom:8px}',
-      '.dig-lf-hunkHeader{padding:4px 16px;color:var(--dsw-alias-label-tertiary);white-space:pre}',
-      '.dig-lf-line{display:grid;grid-template-columns:3.5em 3.5em 1.2em minmax(0,1fr);box-sizing:border-box;min-height:22px;line-height:22px;white-space:pre}',
-      '.dig-lf-splitLine{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);min-height:22px;line-height:22px;white-space:pre}',
-      '.dig-lf-cell{display:grid;grid-template-columns:3.5em minmax(0,1fr);box-sizing:border-box;min-width:0}',
-      '.dig-lf-cell + .dig-lf-cell{border-left:0.5px solid var(--dsw-alias-border-l3)}',
-      '.dig-lf-number{padding-right:8px;color:var(--dsw-alias-label-tertiary);text-align:right;user-select:none}',
-      '.dig-lf-sign{text-align:center;user-select:none}',
-      '.dig-lf-text{padding-right:16px}',
-      '.dig-lf-body[data-review-wrap] .dig-lf-line,.dig-lf-body[data-review-wrap] .dig-lf-splitLine{white-space:pre-wrap}',
-      '.dig-lf-body[data-review-wrap] .dig-lf-text{overflow-wrap:anywhere}',
-      '.dig-lf-add{--diff-gutter-fill:var(--dsw-alias-file-diff-added-gutter);--diff-marker:var(--dsw-alias-file-diff-added-marker);background:var(--dsw-alias-file-diff-added-bg)}',
-      '.dig-lf-del{--diff-gutter-fill:var(--dsw-alias-file-diff-deleted-gutter);--diff-marker:var(--dsw-alias-file-diff-deleted-marker);background:var(--dsw-alias-file-diff-deleted-bg)}',
-      '.dig-lf-add .dig-lf-number,.dig-lf-del .dig-lf-number{background:var(--diff-gutter-fill);color:var(--diff-marker)}',
-      '.dig-lf-add .dig-lf-number:first-child,.dig-lf-del .dig-lf-number:first-child{box-shadow:inset 3px 0 0 var(--diff-marker)}',
-      '.dig-lf-add .dig-lf-sign,.dig-lf-del .dig-lf-sign{color:var(--diff-marker)}',
-      '.dig-lf-context .dig-lf-text{color:var(--dsw-alias-label-secondary)}',
-      '.dig-lf-empty{background:var(--diff-empty-fill)}',
+      '.git4idea-lf-root{--diff-empty-fill:color-mix(in srgb,var(--dsw-alias-interactive-bg-hover) 50%,transparent);display:flex;flex-direction:column;box-sizing:border-box;width:100%;min-height:0;color:var(--dsw-alias-label-primary)}',
+      '.git4idea-lf-header{display:flex;flex:0 0 auto;gap:6px;align-items:center;box-sizing:border-box;min-height:38px;padding:0 6px 0 8px;border-bottom:0.5px solid var(--dsw-alias-border-l3)}',
+      '.git4idea-lf-status{display:flex;gap:12px;align-items:center;margin:0;padding:16px;font-size:13px;color:var(--dsw-alias-label-secondary)}',
+      '.git4idea-preview-boundary{display:flex;align-items:center;justify-content:center;margin:0;padding:24px 16px;font-size:13px;color:var(--dsw-alias-label-secondary);text-align:center}',
+      '.git4idea-lf-body{display:flex;flex:1 1 auto;flex-direction:column;min-height:0;overflow:auto;padding:8px 0 16px;font:var(--dsw-font-markdown-code-block)}',
+      '.git4idea-lf-columns{display:grid;flex:1 1 auto;grid-template-columns:minmax(0,1fr) minmax(0,1fr);min-height:0}',
+      '.git4idea-lf-column,.git4idea-lf-body[data-review-view=unified]:not([data-review-wrap]){display:grid;grid-template-columns:minmax(max-content,100%);align-content:start}',
+      '.git4idea-lf-column{min-width:0;overflow-x:scroll;overscroll-behavior:none}',
+      '.git4idea-lf-column + .git4idea-lf-column{border-left:0.5px solid var(--dsw-alias-border-l3)}',
+      '.git4idea-lf-sideLine{display:grid;grid-template-columns:3.5em max-content;box-sizing:border-box;min-width:100%;width:max-content;min-height:22px;line-height:22px;white-space:pre}',
+      '.git4idea-lf-note{margin:0;padding:4px 16px 8px;font:var(--dsw-font-xs-13,var(--dsw-font-markdown-code-block));color:var(--dsw-alias-label-tertiary)}',
+      '.git4idea-lf-hunk{margin-bottom:8px}',
+      '.git4idea-lf-hunkHeader{padding:4px 16px;color:var(--dsw-alias-label-tertiary);white-space:pre}',
+      '.git4idea-lf-line{display:grid;grid-template-columns:3.5em 3.5em 1.2em minmax(0,1fr);box-sizing:border-box;min-height:22px;line-height:22px;white-space:pre}',
+      '.git4idea-lf-splitLine{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);min-height:22px;line-height:22px;white-space:pre}',
+      '.git4idea-lf-cell{display:grid;grid-template-columns:3.5em minmax(0,1fr);box-sizing:border-box;min-width:0}',
+      '.git4idea-lf-cell + .git4idea-lf-cell{border-left:0.5px solid var(--dsw-alias-border-l3)}',
+      '.git4idea-lf-number{padding-right:8px;color:var(--dsw-alias-label-tertiary);text-align:right;user-select:none}',
+      '.git4idea-lf-sign{text-align:center;user-select:none}',
+      '.git4idea-lf-text{padding-right:16px}',
+      '.git4idea-lf-body[data-review-wrap] .git4idea-lf-line,.git4idea-lf-body[data-review-wrap] .git4idea-lf-splitLine{white-space:pre-wrap}',
+      '.git4idea-lf-body[data-review-wrap] .git4idea-lf-text{overflow-wrap:anywhere}',
+      '.git4idea-lf-add{--diff-gutter-fill:var(--dsw-alias-file-diff-added-gutter);--diff-marker:var(--dsw-alias-file-diff-added-marker);background:var(--dsw-alias-file-diff-added-bg)}',
+      '.git4idea-lf-del{--diff-gutter-fill:var(--dsw-alias-file-diff-deleted-gutter);--diff-marker:var(--dsw-alias-file-diff-deleted-marker);background:var(--dsw-alias-file-diff-deleted-bg)}',
+      '.git4idea-lf-add .git4idea-lf-number,.git4idea-lf-del .git4idea-lf-number{background:var(--diff-gutter-fill);color:var(--diff-marker)}',
+      '.git4idea-lf-add .git4idea-lf-number:first-child,.git4idea-lf-del .git4idea-lf-number:first-child{box-shadow:inset 3px 0 0 var(--diff-marker)}',
+      '.git4idea-lf-add .git4idea-lf-sign,.git4idea-lf-del .git4idea-lf-sign{color:var(--diff-marker)}',
+      '.git4idea-lf-context .git4idea-lf-text{color:var(--dsw-alias-label-secondary)}',
+      '.git4idea-lf-empty{background:var(--diff-empty-fill)}',
       /* header pieces from ReviewTab.module.css */
-      '.dig-lf-selector{flex:0 1 auto;min-width:0}',
-      '.dig-lf-selectorStatic{flex:0 1 auto;min-width:0;overflow:hidden;font-size:12px;text-overflow:ellipsis;white-space:nowrap;font-weight:600}',
-      '.dig-lf-selectorFallback{max-width:60%;padding:2px 6px;border:none;border-radius:var(--dsw-radius-sm,8px);background:var(--dsw-alias-bg-layer-2,var(--dsw-alias-bg-layer-1));color:inherit;font:inherit;font-size:12px}',
-      '.dig-lf-selectorButton{display:inline-flex;gap:4px;align-items:center;box-sizing:border-box;max-width:100%;height:28px;padding:0 6px 0 8px;border:0;border-radius:var(--dsw-radius-sm,8px);background:transparent;color:var(--dsw-alias-label-primary);cursor:pointer;font:inherit;font-size:12px;line-height:20px}',
-      '.dig-lf-selectorButton:hover,.dig-lf-selectorButton[aria-expanded=true]{background:var(--dsw-alias-interactive-bg-hover)}',
-      '.dig-lf-selectorButton svg{display:block;flex:none}',
-      '.dig-lf-item{display:flex;gap:12px;align-items:center;justify-content:space-between;min-width:0}',
-      '.dig-lf-itemPath{min-width:0;overflow:hidden;line-height:20px;text-overflow:ellipsis;white-space:nowrap}',
-      '.dig-lf-itemCounts,.dig-lf-counts{display:inline-flex;flex:none;gap:6px;align-items:center;font-family:var(--ds-font-family-code);font-size:calc(12px + var(--dsh-code-font-delta, 0px));line-height:20px;color:var(--dsw-alias-label-tertiary)}',
-      '.dig-lf-counts{min-width:0;margin-right:auto}',
-      '.dig-lf-added{color:var(--dsw-alias-state-success-primary)}',
-      '.dig-lf-deleted{color:var(--dsw-alias-state-error-primary)}',
-      '.dig-lf-label{color:var(--dsw-alias-label-tertiary)}',
-      '.dig-lf-tools{display:inline-flex;flex:none;gap:2px;align-items:center;margin-left:auto}',
-      '.dig-lf-tool{display:inline-flex;flex:none;align-items:center;justify-content:center;width:28px;height:28px;padding:6px;border:0;border-radius:var(--dsw-radius-sm,8px);background:transparent;color:var(--dsw-alias-label-secondary);cursor:pointer}',
-      '.dig-lf-tool svg{width:15px;height:15px}',
-      '.dig-lf-tool:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover)}',
-      '.dig-lf-tool[aria-pressed=true] .dig-lf-compareIcon{transform:rotate(90deg)}',
+      '.git4idea-lf-selector{flex:0 1 auto;min-width:0}',
+      '.git4idea-lf-selectorStatic{flex:0 1 auto;min-width:0;overflow:hidden;font-size:12px;text-overflow:ellipsis;white-space:nowrap;font-weight:600}',
+      '.git4idea-lf-selectorFallback{max-width:60%;padding:2px 6px;border:none;border-radius:var(--dsw-radius-sm,8px);background:var(--dsw-alias-bg-layer-2,var(--dsw-alias-bg-layer-1));color:inherit;font:inherit;font-size:12px}',
+      '.git4idea-lf-selectorButton{display:inline-flex;gap:4px;align-items:center;box-sizing:border-box;max-width:100%;height:28px;padding:0 6px 0 8px;border:0;border-radius:var(--dsw-radius-sm,8px);background:transparent;color:var(--dsw-alias-label-primary);cursor:pointer;font:inherit;font-size:12px;line-height:20px}',
+      '.git4idea-lf-selectorButton:hover,.git4idea-lf-selectorButton[aria-expanded=true]{background:var(--dsw-alias-interactive-bg-hover)}',
+      '.git4idea-lf-selectorButton svg{display:block;flex:none}',
+      '.git4idea-lf-item{display:flex;gap:12px;align-items:center;justify-content:space-between;min-width:0}',
+      '.git4idea-lf-itemPath{min-width:0;overflow:hidden;line-height:20px;text-overflow:ellipsis;white-space:nowrap}',
+      '.git4idea-lf-itemCounts,.git4idea-lf-counts{display:inline-flex;flex:none;gap:6px;align-items:center;font-family:var(--ds-font-family-code);font-size:calc(12px + var(--dsh-code-font-delta, 0px));line-height:20px;color:var(--dsw-alias-label-tertiary)}',
+      '.git4idea-lf-counts{min-width:0;margin-right:auto}',
+      '.git4idea-lf-added{color:var(--dsw-alias-state-success-primary)}',
+      '.git4idea-lf-deleted{color:var(--dsw-alias-state-error-primary)}',
+      '.git4idea-lf-label{color:var(--dsw-alias-label-tertiary)}',
+      '.git4idea-lf-tools{display:inline-flex;flex:none;gap:2px;align-items:center;margin-left:auto}',
+      '.git4idea-lf-tool{display:inline-flex;flex:none;align-items:center;justify-content:center;width:28px;height:28px;padding:6px;border:0;border-radius:var(--dsw-radius-sm,8px);background:transparent;color:var(--dsw-alias-label-secondary);cursor:pointer}',
+      '.git4idea-lf-tool svg{width:15px;height:15px}',
+      '.git4idea-lf-tool:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover)}',
+      '.git4idea-lf-tool[aria-pressed=true] .git4idea-lf-compareIcon{transform:rotate(90deg)}',
       /* ---- composer git status pill (input-bar, issue: status beside the
          tool row). Colors follow the host's own state language: warn for
          uncommitted changes, business(blue) for pulls, success(green) for
          pushes — the same three tones the panel and DSH toasts use. ---- */
-      '.dig-cs-root{position:relative;display:inline-flex;align-items:center;gap:2px;min-width:0;flex:none}',
-      '.dig-cs-pill{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 8px;border:none;border-radius:var(--dsw-radius-sm,8px);background:transparent;color:var(--dsw-alias-label-secondary);font-family:inherit;font-size:var(--dsh-content-font-size-secondary,13px);line-height:20px;white-space:nowrap;cursor:pointer}',
-      '.dig-cs-pill:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
-      '.dig-cs-pill:disabled{cursor:default}',
-      '.dig-cs-name{overflow:hidden;text-overflow:ellipsis;max-width:260px;white-space:nowrap;display:inline-block;vertical-align:bottom}',
-      '.dig-cs-mrun{display:inline-flex;text-overflow:clip;-webkit-mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 14px),transparent);mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 14px),transparent)}',
-      '.dig-cs-mrun .dig-cs-run{display:inline-flex;flex:none;will-change:transform}',
-      '.dig-cs-mrun .dig-cs-chunk{flex:none;white-space:nowrap;padding-right:28px}',
-      '.dig-cs-mrun:hover .dig-cs-run{animation:dig-cs-marquee var(--dig-cs-marquee-dur,10s) linear infinite}',
-      '@keyframes dig-cs-marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}',
-      '.dig-cs-pill svg{flex:none}',
-      '.dig-cs-badge{display:inline-flex;align-items:center;font-size:12px;line-height:20px;font-variant-numeric:tabular-nums;white-space:nowrap;padding:0 3px;font-weight:500}',
-      '.dig-cs-changes{color:var(--dsw-alias-state-warn-primary)}',
-      '.dig-cs-behind{color:var(--dsw-alias-state-business-primary)}',
-      '.dig-cs-ahead{color:var(--dsw-alias-state-success-primary)}',
+      '.git4idea-cs-root{position:relative;display:inline-flex;align-items:center;gap:2px;min-width:0;flex:none}',
+      '.git4idea-cs-pill{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 8px;border:none;border-radius:var(--dsw-radius-sm,8px);background:transparent;color:var(--dsw-alias-label-secondary);font-family:inherit;font-size:var(--dsh-content-font-size-secondary,13px);line-height:20px;white-space:nowrap;cursor:pointer}',
+      '.git4idea-cs-pill:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
+      '.git4idea-cs-pill:disabled{cursor:default}',
+      '.git4idea-cs-name{overflow:hidden;text-overflow:ellipsis;max-width:260px;white-space:nowrap;display:inline-block;vertical-align:bottom}',
+      '.git4idea-cs-mrun{display:inline-flex;text-overflow:clip;-webkit-mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 14px),transparent);mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 14px),transparent)}',
+      '.git4idea-cs-mrun .git4idea-cs-run{display:inline-flex;flex:none;will-change:transform}',
+      '.git4idea-cs-mrun .git4idea-cs-chunk{flex:none;white-space:nowrap;padding-right:28px}',
+      '.git4idea-cs-mrun:hover .git4idea-cs-run{animation:git4idea-cs-marquee var(--git4idea-cs-marquee-dur,10s) linear infinite}',
+      '@keyframes git4idea-cs-marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}',
+      '.git4idea-cs-pill svg{flex:none}',
+      '.git4idea-cs-badge{display:inline-flex;align-items:center;font-size:12px;line-height:20px;font-variant-numeric:tabular-nums;white-space:nowrap;padding:0 3px;font-weight:500}',
+      '.git4idea-cs-changes{color:var(--dsw-alias-state-warn-primary)}',
+      '.git4idea-cs-behind{color:var(--dsw-alias-state-business-primary)}',
+      '.git4idea-cs-ahead{color:var(--dsw-alias-state-success-primary)}',
       /* v0.19.12: file-level add/del split rides INSIDE the ± chip at one
          step down (11px) so the two +/− groups read as two levels — small
          green/red = FILES, full-size green/red = LINES. */
-      '.dig-cs-split{font-size:11px;line-height:20px;font-variant-numeric:tabular-nums;margin-left:2px}',
-      '.dig-cs-add{color:var(--dsw-alias-state-success-primary)}',
-      '.dig-cs-del{color:var(--dsw-alias-state-error-primary)}',
-      '.dig-cs-lines{display:inline-flex;align-items:center;gap:2px;margin-left:5px}',
-      '.dig-cs-error{display:inline-flex;align-items:center;color:var(--dsw-alias-state-error-primary);font-size:12px;padding:0 3px;cursor:help}',
-      // .dig-cs-menu opens upward (the composer sits at the bottom of the UI). The surface
+      '.git4idea-cs-split{font-size:11px;line-height:20px;font-variant-numeric:tabular-nums;margin-left:2px}',
+      '.git4idea-cs-add{color:var(--dsw-alias-state-success-primary)}',
+      '.git4idea-cs-del{color:var(--dsw-alias-state-error-primary)}',
+      '.git4idea-cs-lines{display:inline-flex;align-items:center;gap:2px;margin-left:5px}',
+      '.git4idea-cs-error{display:inline-flex;align-items:center;color:var(--dsw-alias-state-error-primary);font-size:12px;padding:0 3px;cursor:help}',
+      // .git4idea-cs-menu opens upward (the composer sits at the bottom of the UI). The surface
       // carries no backdrop-filter of its own: the data-cordis-panel attribute opts the popover
       // into dsh-any-background's input-surface channel (--dsw-specific-menu remapped to
-      // var(--dsh-any-op-menu-cordis) on body — see the .dig-selection-bar note:
+      // var(--dsh-any-op-menu-cordis) on body — see the .git4idea-selection-bar note:
       // leading with the op var keeps the fill valid even when the plugin's
       // surface sampling misses and that remap would otherwise IVCT to transparent).
       // --dsh-any-op-menu-cordis at the input opacity tier, plus its input blur rule), so fill
       // opacity and frost follow the composer card exactly. Without that plugin the
       // theme-owned menu material applies. The light re-declaration on the rule below
-      // pins the LIGHT static surface (see the .dig-selection-bar note); dark themes
+      // pins the LIGHT static surface (see the .git4idea-selection-bar note); dark themes
       // need the matching override right after it, or the menu renders white under
       // light text (issue #15).
-      '.dig-cs-menu{--dsw-alias-bg-layer-1:var(--dsw-static-neutral-bluish-00,#fff);--dsw-alias-bg-layer-2:var(--dsw-static-neutral-bluish-00,#fff);position:absolute;bottom:calc(100% + 6px);left:0;z-index:60;min-width:220px;max-width:320px;max-height:320px;overflow:auto;padding:6px;border-radius:var(--dsw-radius-lg,12px);background:var(--dsh-any-op-menu-cordis,var(--dsw-alias-bg-layer-2));box-shadow:var(--dsw-elevation-prominent,var(--dsw-elevation-dimmed,0 8px 24px rgba(0,0,0,.2)));color:var(--dsw-alias-label-secondary);font-size:12px;line-height:20px}',
-      'body[data-ds-dark-theme] .dig-cs-menu{--dsw-alias-bg-layer-1:var(--dsw-static-neutral-bluish-875,#232324);--dsw-alias-bg-layer-2:var(--dsw-static-neutral-bluish-850,#2c2c2e)}',
-      '.dig-cs-item{display:flex;align-items:center;gap:8px;width:100%;padding:5px 10px;border:none;border-radius:var(--dsw-radius-sm,8px);background:transparent;color:var(--dsw-alias-label-primary);font-family:inherit;font-size:13px;line-height:20px;cursor:pointer;text-align:left}',
-      '.dig-cs-item:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover)}',
-      '.dig-cs-item:disabled{opacity:.5;cursor:default}',
-      '.dig-cs-item[data-current=true]{color:var(--dsw-alias-brand-primary)}',
-      '.dig-cs-item svg{flex:none}',
-      '.dig-cs-item-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
-      '.dig-cs-item-main{display:flex;flex-direction:column;min-width:0;flex:1}',
-      '.dig-cs-item-sub{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dsw-alias-label-tertiary);font-size:10px;line-height:12px}',
-      '.dig-cs-item-note{color:var(--dsw-alias-label-tertiary);font-size:11px;flex:none}',
-      '.dig-cs-item-counts{display:inline-flex;gap:5px;margin-left:auto;flex:none;font-variant-numeric:tabular-nums;font-size:11px}',
-      '.dig-cs-static{color:var(--dsw-alias-label-tertiary);cursor:default}',
+      '.git4idea-cs-menu{--dsw-alias-bg-layer-1:var(--dsw-static-neutral-bluish-00,#fff);--dsw-alias-bg-layer-2:var(--dsw-static-neutral-bluish-00,#fff);position:absolute;bottom:calc(100% + 6px);left:0;z-index:60;min-width:220px;max-width:320px;max-height:320px;overflow:auto;padding:6px;border-radius:var(--dsw-radius-lg,12px);background:var(--dsh-any-op-menu-cordis,var(--dsw-alias-bg-layer-2));box-shadow:var(--dsw-elevation-prominent,var(--dsw-elevation-dimmed,0 8px 24px rgba(0,0,0,.2)));color:var(--dsw-alias-label-secondary);font-size:12px;line-height:20px}',
+      'body[data-ds-dark-theme] .git4idea-cs-menu{--dsw-alias-bg-layer-1:var(--dsw-static-neutral-bluish-875,#232324);--dsw-alias-bg-layer-2:var(--dsw-static-neutral-bluish-850,#2c2c2e)}',
+      '.git4idea-cs-item{display:flex;align-items:center;gap:8px;width:100%;padding:5px 10px;border:none;border-radius:var(--dsw-radius-sm,8px);background:transparent;color:var(--dsw-alias-label-primary);font-family:inherit;font-size:13px;line-height:20px;cursor:pointer;text-align:left}',
+      '.git4idea-cs-item:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover)}',
+      '.git4idea-cs-item:disabled{opacity:.5;cursor:default}',
+      '.git4idea-cs-item[data-current=true]{color:var(--dsw-alias-brand-primary)}',
+      '.git4idea-cs-item svg{flex:none}',
+      '.git4idea-cs-item-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+      '.git4idea-cs-item-main{display:flex;flex-direction:column;min-width:0;flex:1}',
+      '.git4idea-cs-item-sub{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dsw-alias-label-tertiary);font-size:10px;line-height:12px}',
+      '.git4idea-cs-item-note{color:var(--dsw-alias-label-tertiary);font-size:11px;flex:none}',
+      '.git4idea-cs-item-counts{display:inline-flex;gap:5px;margin-left:auto;flex:none;font-variant-numeric:tabular-nums;font-size:11px}',
+      '.git4idea-cs-static{color:var(--dsw-alias-label-tertiary);cursor:default}',
       /* ---- ModelRoutePicker (issue #19) ---- */
-      '.dig-mrp-root{position:relative;display:inline-flex;flex:none;min-width:0}',
-      '.dig-mrp-trigger{display:inline-flex;align-items:center;gap:4px;min-width:0;max-width:220px;font-size:11px;line-height:16px}',
-      '.dig-mrp-trigger[data-open=true]{color:var(--dsw-alias-brand-primary)}',
-      '.dig-mrp-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
-      '.dig-mrp-effort{flex:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dsw-alias-label-tertiary);font-size:10px}',
-      '.dig-mrp-menu{max-width:300px}',
-      '.dig-mrp-row .dig-cs-item-name{display:none}',
-      '.dig-mrp-row-label{flex:none}',
-      '.dig-mrp-row-value{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-left:auto;color:var(--dsw-alias-label-tertiary)}',
-      '.dig-mrp-row-arrow{flex:none;display:inline-flex;color:var(--dsw-alias-label-tertiary)}',
-      '.dig-mrp-back{color:var(--dsw-alias-label-tertiary)}',
-      '.dig-mrp-group{padding:6px 10px 2px;color:var(--dsw-alias-label-tertiary);font-size:10px;line-height:14px}',
-      '.dig-mrp-empty{padding:10px;color:var(--dsw-alias-label-tertiary);font-size:12px}',
-      '.dig-mrp-error{padding:6px 10px;margin-bottom:2px;border-radius:var(--dsw-radius-sm,8px);background:rgba(220,38,38,.12);color:var(--dsw-alias-state-error-primary);font-size:11px;line-height:16px;word-break:break-word}',
-      'body[data-ds-dark-theme] .dig-mrp-error{background:rgba(248,113,113,.16)}',
+      '.git4idea-mrp-root{position:relative;display:inline-flex;flex:none;min-width:0}',
+      '.git4idea-mrp-trigger{display:inline-flex;align-items:center;gap:4px;min-width:0;max-width:220px;font-size:11px;line-height:16px}',
+      '.git4idea-mrp-trigger[data-open=true]{color:var(--dsw-alias-brand-primary)}',
+      '.git4idea-mrp-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+      '.git4idea-mrp-effort{flex:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dsw-alias-label-tertiary);font-size:10px}',
+      '.git4idea-mrp-menu{max-width:300px}',
+      '.git4idea-mrp-row .git4idea-cs-item-name{display:none}',
+      '.git4idea-mrp-row-label{flex:none}',
+      '.git4idea-mrp-row-value{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-left:auto;color:var(--dsw-alias-label-tertiary)}',
+      '.git4idea-mrp-row-arrow{flex:none;display:inline-flex;color:var(--dsw-alias-label-tertiary)}',
+      '.git4idea-mrp-back{color:var(--dsw-alias-label-tertiary)}',
+      '.git4idea-mrp-group{padding:6px 10px 2px;color:var(--dsw-alias-label-tertiary);font-size:10px;line-height:14px}',
+      '.git4idea-mrp-empty{padding:10px;color:var(--dsw-alias-label-tertiary);font-size:12px}',
+      '.git4idea-mrp-error{padding:6px 10px;margin-bottom:2px;border-radius:var(--dsw-radius-sm,8px);background:rgba(220,38,38,.12);color:var(--dsw-alias-state-error-primary);font-size:11px;line-height:16px;word-break:break-word}',
+      'body[data-ds-dark-theme] .git4idea-mrp-error{background:rgba(248,113,113,.16)}',
     ].concat(LANE_TRACE_RULES).join('\n')
 
     /* ============================== plugin ============================== */
@@ -15355,21 +15373,21 @@ window.__ModuleLoader__.load({
        package name is the natural value, and it is also the seat key the body
        registers under), the tab kind (unique across kinds — the shipped `git`
        kind is not ours to take), and the guide capsule that opens the tab. */
-    const NATIVE_ID = 'dsh-ide-git'
-    const NATIVE_KIND = 'ide-git'
+    const NATIVE_ID = 'dsh-git4idea'
+    const NATIVE_KIND = 'git4idea'
     const NATIVE_WORKSPACE_ITEMS = (state) => state.items
     /* The conversation.view slot id (issue #8). Order 30 sits the tab after
        Chat (0) and Trajectory (10), and after dsh-context's tab (20) when both
        are installed. */
-    const CONVERSATION_VIEW_ID = 'ide-git'
+    const CONVERSATION_VIEW_ID = 'git4idea'
     /* The native preview tab (external diff preview, 2026-10-08): a SECOND
        native right-sidebar type that exists only to show one diff. It carries
        no guide entry on purpose — nothing on the start page opens it; it opens
        itself when a diff verb fires with no better-sidebar to hand off to.
        Content follows the module-level store below, so every seat (the
        conversation tab, the native panel) feeds the same single preview. */
-    const NATIVE_PREVIEW_ID = 'dsh-ide-git-preview'
-    const NATIVE_PREVIEW_KIND = 'ide-git-preview'
+    const NATIVE_PREVIEW_ID = 'dsh-git4idea-preview'
+    const NATIVE_PREVIEW_KIND = 'git4idea-preview'
 
     /* The one diff seed the native preview tab shows. set() bumps a monotonous
        counter so a re-click of the SAME file still re-fetches; subscribers get
@@ -15568,12 +15586,12 @@ window.__ModuleLoader__.load({
         return () => { if (frame !== 0) cancelAnimationFrame(frame) }
       }, [text, run])
       if (run !== true) {
-        return E('span', { ref: boxRef, className: 'dig-cs-name' }, text)
+        return E('span', { ref: boxRef, className: 'git4idea-cs-name' }, text)
       }
-      return E('span', { ref: boxRef, className: 'dig-cs-name dig-cs-mrun', style: dur !== '' ? { '--dig-cs-marquee-dur': dur } : undefined },
-        E('span', { className: 'dig-cs-run' },
-          E('span', { className: 'dig-cs-chunk' }, text),
-          E('span', { className: 'dig-cs-chunk', 'aria-hidden': 'true' }, text)))
+      return E('span', { ref: boxRef, className: 'git4idea-cs-name git4idea-cs-mrun', style: dur !== '' ? { '--git4idea-cs-marquee-dur': dur } : undefined },
+        E('span', { className: 'git4idea-cs-run' },
+          E('span', { className: 'git4idea-cs-chunk' }, text),
+          E('span', { className: 'git4idea-cs-chunk', 'aria-hidden': 'true' }, text)))
     }
 
     /* ---- ModelRoutePicker (issue #19) ------------------------------------
@@ -15682,70 +15700,70 @@ window.__ModuleLoader__.load({
         }).catch(() => {})
       }
       const triggerTitle = t('modelRoute.trigger') + (current === null ? '' : ' · ' + current.provider + '/' + current.model + (effortLabel === '' ? '' : ' · ' + effortLabel))
-      return E('div', { className: 'dig-mrp-root', ref: rootRef },
+      return E('div', { className: 'git4idea-mrp-root', ref: rootRef },
         E('button', {
           type: 'button',
-          className: 'dig-btn dig-btn-small dig-mrp-trigger',
+          className: 'git4idea-btn git4idea-btn-small git4idea-mrp-trigger',
           'data-open': open === true ? 'true' : undefined,
           title: triggerTitle,
           onClick: () => { setOpen(!open); setPane('root') },
         },
           E(Icon, { name: 'settings', size: 11 }),
-          E('span', { className: 'dig-mrp-label' }, current === null ? t('modelRoute.pick') : modelName),
-          effortLabel === '' ? null : E('span', { className: 'dig-mrp-effort' }, effortLabel),
+          E('span', { className: 'git4idea-mrp-label' }, current === null ? t('modelRoute.pick') : modelName),
+          effortLabel === '' ? null : E('span', { className: 'git4idea-mrp-effort' }, effortLabel),
           E(Icon, { name: 'chevron', size: 9 })),
-        open !== true ? null : E('div', { className: 'dig-cs-menu dig-mrp-menu', role: 'menu' },
+        open !== true ? null : E('div', { className: 'git4idea-cs-menu git4idea-mrp-menu', role: 'menu' },
           s !== null && typeof s.error === 'string' && s.error !== ''
-            ? E('div', { className: 'dig-mrp-error', role: 'status' }, s.error)
+            ? E('div', { className: 'git4idea-mrp-error', role: 'status' }, s.error)
             : null,
           pane === 'root'
             ? [
               E('button', {
-                type: 'button', key: 'model', className: 'dig-cs-item dig-mrp-row', disabled: busy === true,
+                type: 'button', key: 'model', className: 'git4idea-cs-item git4idea-mrp-row', disabled: busy === true,
                 onClick: () => setPane('model'),
               },
-                E('span', { className: 'dig-mrp-row-label' }, t('modelRoute.modelRow')),
-                E('span', { className: 'dig-mrp-row-value' }, current === null ? t('modelRoute.pick') : modelName),
-                E('span', { className: 'dig-mrp-row-arrow' }, E(Icon, { name: 'chevron', size: 9 }))),
+                E('span', { className: 'git4idea-mrp-row-label' }, t('modelRoute.modelRow')),
+                E('span', { className: 'git4idea-mrp-row-value' }, current === null ? t('modelRoute.pick') : modelName),
+                E('span', { className: 'git4idea-mrp-row-arrow' }, E(Icon, { name: 'chevron', size: 9 }))),
               E('button', {
-                type: 'button', key: 'effort', className: 'dig-cs-item dig-mrp-row', disabled: busy === true || current === null || effortChoices.length === 0,
+                type: 'button', key: 'effort', className: 'git4idea-cs-item git4idea-mrp-row', disabled: busy === true || current === null || effortChoices.length === 0,
                 onClick: () => setPane('effort'),
               },
-                E('span', { className: 'dig-mrp-row-label' }, t('modelRoute.effortRow')),
-                E('span', { className: 'dig-mrp-row-value' }, effortChoices.length === 0 ? '' : (effortLabel === '' ? t('modelRoute.effortDefault') : effortLabel)),
-                E('span', { className: 'dig-mrp-row-arrow' }, E(Icon, { name: 'chevron', size: 9 }))),
+                E('span', { className: 'git4idea-mrp-row-label' }, t('modelRoute.effortRow')),
+                E('span', { className: 'git4idea-mrp-row-value' }, effortChoices.length === 0 ? '' : (effortLabel === '' ? t('modelRoute.effortDefault') : effortLabel)),
+                E('span', { className: 'git4idea-mrp-row-arrow' }, E(Icon, { name: 'chevron', size: 9 }))),
             ]
             : [
               E('button', {
-                type: 'button', key: 'back', className: 'dig-cs-item dig-mrp-back', disabled: busy === true,
+                type: 'button', key: 'back', className: 'git4idea-cs-item git4idea-mrp-back', disabled: busy === true,
                 onClick: () => setPane('root'),
               }, '‹ ' + (pane === 'model' ? t('modelRoute.modelRow') : t('modelRoute.effortRow'))),
             ],
           pane === 'model' && groups.length === 0
-            ? E('div', { className: 'dig-mrp-empty' }, t('modelRoute.empty'))
+            ? E('div', { className: 'git4idea-mrp-empty' }, t('modelRoute.empty'))
             : null,
           pane === 'model' && groups.map((group) => E(Fragment, { key: group.id },
-            E('div', { className: 'dig-mrp-group' }, group.name === undefined || group.name === null || group.name === '' ? group.id : group.name),
+            E('div', { className: 'git4idea-mrp-group' }, group.name === undefined || group.name === null || group.name === '' ? group.id : group.name),
             group.models.map((model) => {
               const selected = current !== null && current.provider === group.id && current.model === model.id
               return E('button', {
-                type: 'button', key: model.id, className: 'dig-cs-item', 'data-current': selected === true ? 'true' : undefined,
+                type: 'button', key: model.id, className: 'git4idea-cs-item', 'data-current': selected === true ? 'true' : undefined,
                 disabled: busy === true,
                 title: group.id + '/' + model.id,
                 onClick: () => choose({ provider: group.id, model: model.id }),
               },
-                E('span', { className: 'dig-cs-item-name' }, model.name === undefined || model.name === null ? model.id : model.name),
-                E('span', { className: 'dig-cs-item-note' }, selected === true ? E(Icon, { name: 'check', size: 11 }) : null))
+                E('span', { className: 'git4idea-cs-item-name' }, model.name === undefined || model.name === null ? model.id : model.name),
+                E('span', { className: 'git4idea-cs-item-note' }, selected === true ? E(Icon, { name: 'check', size: 11 }) : null))
             }))),
           pane === 'effort' && current !== null && effortChoices.map((level) => {
             const selected = effectiveEffort === level.effort
             return E('button', {
-              type: 'button', key: level.key, className: 'dig-cs-item', 'data-current': selected === true ? 'true' : undefined,
+              type: 'button', key: level.key, className: 'git4idea-cs-item', 'data-current': selected === true ? 'true' : undefined,
               disabled: busy === true,
               onClick: () => choose({ provider: current.provider, model: current.model, reasoningEffort: level.effort }),
             },
-              E('span', { className: 'dig-cs-item-name' }, level.label),
-              E('span', { className: 'dig-cs-item-note' }, selected === true ? E(Icon, { name: 'check', size: 11 }) : null))
+              E('span', { className: 'git4idea-cs-item-name' }, level.label),
+              E('span', { className: 'git4idea-cs-item-note' }, selected === true ? E(Icon, { name: 'check', size: 11 }) : null))
           })))
     }
 
@@ -15907,7 +15925,7 @@ window.__ModuleLoader__.load({
       }, [sessionId])
 
       /* Click-away closes the dropdown; nothing here is anchored to a panel
-         (.dig-root) — the pill lives in the host's composer DOM, so the menu
+         (.git4idea-root) — the pill lives in the host's composer DOM, so the menu
          is positioned inside this relative root. */
       useEffect(() => {
         if (menu === null) return undefined
@@ -16002,10 +16020,10 @@ window.__ModuleLoader__.load({
         rememberRepoShared(sessionId, path)
       }
 
-      return E('div', { ref: rootRef, className: 'dig-cs-root', 'data-dsh-ide-git-status': '' },
+      return E('div', { ref: rootRef, className: 'git4idea-cs-root', 'data-dsh-git4idea-status': '' },
         E('button', {
           type: 'button',
-          className: 'dig-cs-pill',
+          className: 'git4idea-cs-pill',
           title: singleRepo === true ? undefined : t('composer.repoHint'),
           disabled: singleRepo === true,
           onClick: singleRepo === true ? undefined : () => { setMenu(menu === 'repo' ? null : 'repo') },
@@ -16015,7 +16033,7 @@ window.__ModuleLoader__.load({
           singleRepo === true ? null : E(Icon, { name: 'chevron', size: 10 })),
         branchName !== null ? E('button', {
           type: 'button',
-          className: 'dig-cs-pill',
+          className: 'git4idea-cs-pill',
           title: t('composer.branchHint'),
           onClick: () => { if (menu !== 'branch') void openBranchMenu(); else setMenu(null) },
         },
@@ -16023,19 +16041,19 @@ window.__ModuleLoader__.load({
           E(ComposerMarqueeName, { text: detached === true ? t('composer.detached') : branchName }),
           E(Icon, { name: 'chevron', size: 10 })) : null,
         changesCount !== null && changesCount > 0
-          ? E('span', { className: 'dig-cs-badge dig-cs-changes', title: changesTitle }, '±' + String(changesCount),
-              fileSplit.added > 0 ? E('span', { className: 'dig-cs-split dig-cs-add' }, '+' + String(fileSplit.added)) : null,
-              fileSplit.deleted > 0 ? E('span', { className: 'dig-cs-split dig-cs-del' }, '−' + String(fileSplit.deleted)) : null)
+          ? E('span', { className: 'git4idea-cs-badge git4idea-cs-changes', title: changesTitle }, '±' + String(changesCount),
+              fileSplit.added > 0 ? E('span', { className: 'git4idea-cs-split git4idea-cs-add' }, '+' + String(fileSplit.added)) : null,
+              fileSplit.deleted > 0 ? E('span', { className: 'git4idea-cs-split git4idea-cs-del' }, '−' + String(fileSplit.deleted)) : null)
           : null,
         linesLive !== null && (linesLive.additions > 0 || linesLive.deletions > 0)
-          ? E('span', { className: 'dig-cs-lines' },
-              linesLive.additions > 0 ? E('span', { className: 'dig-cs-badge dig-cs-add', title: changesTitle }, '+' + String(linesLive.additions)) : null,
-              linesLive.deletions > 0 ? E('span', { className: 'dig-cs-badge dig-cs-del', title: changesTitle }, '−' + String(linesLive.deletions)) : null)
+          ? E('span', { className: 'git4idea-cs-lines' },
+              linesLive.additions > 0 ? E('span', { className: 'git4idea-cs-badge git4idea-cs-add', title: changesTitle }, '+' + String(linesLive.additions)) : null,
+              linesLive.deletions > 0 ? E('span', { className: 'git4idea-cs-badge git4idea-cs-del', title: changesTitle }, '−' + String(linesLive.deletions)) : null)
           : null,
-        behind > 0 ? E('span', { className: 'dig-cs-badge dig-cs-behind', title: t('composer.behindHint') }, '↓' + String(behind)) : null,
-        ahead > 0 ? E('span', { className: 'dig-cs-badge dig-cs-ahead', title: t('composer.aheadHint') }, '↑' + String(ahead)) : null,
-        error !== '' ? E('span', { className: 'dig-cs-error', title: error }, '×') : null,
-        menu === 'repo' ? E('div', { className: 'dig-cs-menu', 'data-cordis-panel': '' },
+        behind > 0 ? E('span', { className: 'git4idea-cs-badge git4idea-cs-behind', title: t('composer.behindHint') }, '↓' + String(behind)) : null,
+        ahead > 0 ? E('span', { className: 'git4idea-cs-badge git4idea-cs-ahead', title: t('composer.aheadHint') }, '↑' + String(ahead)) : null,
+        error !== '' ? E('span', { className: 'git4idea-cs-error', title: error }, '×') : null,
+        menu === 'repo' ? E('div', { className: 'git4idea-cs-menu', 'data-cordis-panel': '' },
           /* v0.19.2: one row per checkout — the repository's own name first
              (origin URL basename, falling back to the directory name), and the
              single-level directory name as a small sub line only when the two
@@ -16047,37 +16065,37 @@ window.__ModuleLoader__.load({
             return E('button', {
               key: row.path,
               type: 'button',
-              className: 'dig-cs-item',
+              className: 'git4idea-cs-item',
               'data-current': row.path === repoRoot ? 'true' : 'false',
               title: row.path,
               onClick: () => pickRepoRoot(row.path),
             },
               E(Icon, { name: 'commit', size: 11 }),
-              E('span', { className: 'dig-cs-item-main' },
-                E('span', { className: 'dig-cs-item-name' }, displayName),
-                dirName !== displayName ? E('span', { className: 'dig-cs-item-sub' }, dirName) : null))
+              E('span', { className: 'git4idea-cs-item-main' },
+                E('span', { className: 'git4idea-cs-item-name' }, displayName),
+                dirName !== displayName ? E('span', { className: 'git4idea-cs-item-sub' }, dirName) : null))
           }))
           : null,
         menu === 'branch' ? (branchLoading === true || branchList === null
-          ? E('div', { className: 'dig-cs-menu', 'data-cordis-panel': '' }, E('div', { className: 'dig-cs-item dig-cs-static' }, '…'))
-          : E('div', { className: 'dig-cs-menu', 'data-cordis-panel': '' },
+          ? E('div', { className: 'git4idea-cs-menu', 'data-cordis-panel': '' }, E('div', { className: 'git4idea-cs-item git4idea-cs-static' }, '…'))
+          : E('div', { className: 'git4idea-cs-menu', 'data-cordis-panel': '' },
             branchList.local.map((entry) => E('button', {
               key: entry.name,
               type: 'button',
-              className: 'dig-cs-item',
+              className: 'git4idea-cs-item',
               'data-current': entry.head === true ? 'true' : 'false',
               disabled: entry.worktree !== null || checkingOut !== '',
               title: entry.worktree !== null ? t('composer.inWorktree') : (checkingOut !== '' ? t('composer.busy') : entry.name),
               onClick: () => { void checkoutBranch(entry.name) },
             },
               E(Icon, { name: 'branch', size: 11 }),
-              E('span', { className: 'dig-cs-item-name' }, entry.name),
-              entry.worktree !== null ? E('span', { className: 'dig-cs-item-note' }, t('composer.inWorktree')) : null,
-              checkingOut === entry.name ? E('span', { className: 'dig-cs-item-note' }, '…') : null,
+              E('span', { className: 'git4idea-cs-item-name' }, entry.name),
+              entry.worktree !== null ? E('span', { className: 'git4idea-cs-item-note' }, t('composer.inWorktree')) : null,
+              checkingOut === entry.name ? E('span', { className: 'git4idea-cs-item-note' }, '…') : null,
               entry.ahead > 0 || entry.behind > 0
-                ? E('span', { className: 'dig-cs-item-counts' },
-                  entry.ahead > 0 ? E('span', { className: 'dig-cs-ahead' }, '↑' + String(entry.ahead)) : null,
-                  entry.behind > 0 ? E('span', { className: 'dig-cs-behind' }, '↓' + String(entry.behind)) : null)
+                ? E('span', { className: 'git4idea-cs-item-counts' },
+                  entry.ahead > 0 ? E('span', { className: 'git4idea-cs-ahead' }, '↑' + String(entry.ahead)) : null,
+                  entry.behind > 0 ? E('span', { className: 'git4idea-cs-behind' }, '↓' + String(entry.behind)) : null)
                 : null))))
           : null,
       )
@@ -16251,7 +16269,7 @@ window.__ModuleLoader__.load({
         : {}
       return E('div', Object.assign({
         ref: seatRef,
-        className: 'dig-conversation-seat',
+        className: 'git4idea-conversation-seat',
         style: immersive === true ? { height: '100%' } : (seatHeight === null ? undefined : { height: seatHeight + 'px' }),
       }, immersiveAttrs), E(LocaleLive, { ctx: ctx, scope: scope, t: props.t, visible: true }))
     }, (prev, next) => prev.sessionId === next.sessionId && prev.t === next.t && prev.ctx === next.ctx)
@@ -16363,19 +16381,19 @@ window.__ModuleLoader__.load({
           sidebarRight.openResource(address)
         } catch (error) { void error }
       }
-      return E('div', { className: 'dig-preview-root' },
-        E('div', { className: 'dig-preview-head' },
-          E('span', { className: 'dig-preview-title', title: title }, title === '' ? t('preview.title') : title),
-          seed === null ? null : E('div', { className: 'dig-preview-actions' },
-            E('button', { type: 'button', className: 'dig-preview-btn', 'aria-label': t('diff.copy'), title: t('diff.copy'), onClick: copyPatch },
+      return E('div', { className: 'git4idea-preview-root' },
+        E('div', { className: 'git4idea-preview-head' },
+          E('span', { className: 'git4idea-preview-title', title: title }, title === '' ? t('preview.title') : title),
+          seed === null ? null : E('div', { className: 'git4idea-preview-actions' },
+            E('button', { type: 'button', className: 'git4idea-preview-btn', 'aria-label': t('diff.copy'), title: t('diff.copy'), onClick: copyPatch },
               E(Icon, { name: copied === true ? 'check' : 'copy', size: 13 })),
-            E('button', { type: 'button', className: 'dig-preview-btn', 'aria-label': t('toolbar.refresh'), title: t('toolbar.refresh'), onClick: () => { setRefreshTick((n) => n + 1) } },
+            E('button', { type: 'button', className: 'git4idea-preview-btn', 'aria-label': t('toolbar.refresh'), title: t('toolbar.refresh'), onClick: () => { setRefreshTick((n) => n + 1) } },
               E(Icon, { name: 'refresh', size: 13 })))),
         seed === null
-          ? E('div', { className: 'dig-preview-body' }, E('div', { className: 'dig-empty' }, t('preview.hint')))
+          ? E('div', { className: 'git4idea-preview-body' }, E('div', { className: 'git4idea-empty' }, t('preview.hint')))
           : state.error !== null
-            ? E('div', { className: 'dig-preview-body' }, E('div', { className: 'dig-empty' }, state.error))
-            : E('div', { className: 'dig-preview-body' }, E(RenderBoundary, { message: t('preview.boundary') }, E(LineDiff, {
+            ? E('div', { className: 'git4idea-preview-body' }, E('div', { className: 'git4idea-empty' }, state.error))
+            : E('div', { className: 'git4idea-preview-body' }, E(RenderBoundary, { message: t('preview.boundary') }, E(LineDiff, {
                 patch: state.patch,
                 loading: state.loading,
                 t: t,
@@ -16387,10 +16405,10 @@ window.__ModuleLoader__.load({
 
     function apply(ctx) {
       const style = document.createElement('style')
-      style.setAttribute('data-dsh-ide-git', '')
+      style.setAttribute('data-dsh-git4idea', '')
       style.textContent = CSS
       document.head.appendChild(style)
-      ctx.effect(() => () => { style.remove() }, 'dsh-ide-git: panel styles')
+      ctx.effect(() => () => { style.remove() }, 'dsh-git4idea: panel styles')
 
       const t = translatorOf(ctx)
 
@@ -16402,7 +16420,7 @@ window.__ModuleLoader__.load({
       if (localeService !== undefined && typeof localeService.register === 'function') {
         ctx.effect(
           () => localeService.register(LOCALE_NS, Object.assign({ zh: ZH, en: EN }, LOCALES)),
-          'dsh-ide-git: locale dictionaries',
+          'dsh-git4idea: locale dictionaries',
         )
       }
 
@@ -16469,7 +16487,7 @@ window.__ModuleLoader__.load({
               try { offBody() } catch (error) { void error }
               try { offType() } catch (error) { void error }
             }
-          }, 'dsh-ide-git: native right-sidebar seats')
+          }, 'dsh-git4idea: native right-sidebar seats')
         })
       }
 
@@ -16518,7 +16536,7 @@ window.__ModuleLoader__.load({
             hostedByBetterSidebar = false
             hostNatively()
           }
-        }, 'dsh-ide-git: Git tab')
+        }, 'dsh-git4idea: Git tab')
       })
 
       /* ctx.inject runs its callback straight away when the service is already
@@ -16560,7 +16578,7 @@ window.__ModuleLoader__.load({
                    priority): better one missed re-registration — the next
                    config change or reload retries — than a sync that throws
                    inside every rail-config notification. */
-                console.warn('[dsh-ide-git] conversation seat registration failed: ' + String(error && error.message ? error.message : error))
+                console.warn('[dsh-git4idea] conversation seat registration failed: ' + String(error && error.message ? error.message : error))
               }
             } else if (enabled !== true && offView !== null) {
               try { offView() } catch (error) { void error }
@@ -16576,7 +16594,7 @@ window.__ModuleLoader__.load({
               offView = null
             }
           }
-        }, 'dsh-ide-git: conversation view tab')
+        }, 'dsh-git4idea: conversation view tab')
       })
 
       /* ---- door 4: the composer status pill (issue: status in the input bar) ---- */
@@ -16591,13 +16609,13 @@ window.__ModuleLoader__.load({
         if (pillSlots === undefined || pillSlots === null || typeof pillSlots.inject !== 'function') return
         pillCtx.effect(() => {
           const offPill = pillSlots.inject('conversation.input.left', () => pillSlots.register(
-            { name: 'conversation.input.left', id: 'dsh-ide-git:status', order: 20, locale: LOCALE_NS },
+            { name: 'conversation.input.left', id: 'dsh-git4idea:status', order: 20, locale: LOCALE_NS },
             (pillProps) => E(ComposerGitStatus, Object.assign({}, pillProps, { t: t, ctx: ctx })),
           ))
           return () => {
             try { offPill() } catch (error) { void error }
           }
-        }, 'dsh-ide-git: composer status pill')
+        }, 'dsh-git4idea: composer status pill')
       })
 
       /* ---- session-switch prewarm ---- */
@@ -16647,7 +16665,7 @@ window.__ModuleLoader__.load({
             for (const dispose of armed.values()) { try { dispose() } catch (error) { void error } }
             armed.clear()
           }
-        }, 'dsh-ide-git: session-switch prewarm')
+        }, 'dsh-git4idea: session-switch prewarm')
       })
 
       /* ---- panel model picker: the official directories resolver ---- */
@@ -16690,7 +16708,7 @@ window.__ModuleLoader__.load({
             if (typeof unsubscribe === 'function') unsubscribe()
             notifyRailConfig()
           }
-        }, 'dsh-ide-git: row config')
+        }, 'dsh-git4idea: row config')
       })
 
       /* The settings card, on the plugin detail page (plugins.bundle.config,
@@ -16709,10 +16727,10 @@ window.__ModuleLoader__.load({
           return () => {
             try { offBundle() } catch (error) { void error }
           }
-        }, 'dsh-ide-git: settings card')
+        }, 'dsh-git4idea: settings card')
       })
     }
 
-    return { name: 'dsh-ide-git', inject: [], apply }
+    return { name: 'dsh-git4idea', inject: [], apply }
   },
 })

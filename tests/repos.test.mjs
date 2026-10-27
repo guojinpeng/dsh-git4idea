@@ -1,5 +1,5 @@
 /**
- * dsh-ide-git — repository-picker integration test.
+ * dsh-git4idea — repository-picker integration test.
  *
  * Drives the real `repos` route against throwaway repositories built in the OS
  * temp dir. Git submodules are ordinary working trees with their own HEAD and
@@ -54,7 +54,7 @@ function call(method, payload) {
   return new Promise((resolve, reject) => {
     const req = new EventEmitter()
     req.method = 'POST'
-    req.url = '/dsh-ide-git/api/' + method
+    req.url = '/dsh-git4idea/api/' + method
     req.headers = { host: '127.0.0.1:3080', 'content-type': 'application/json' }
     req.destroy = () => {}
     const res = {
@@ -75,9 +75,9 @@ const find = (body, name) => rows(body).find((row) => row.name === name)
 
 before(() => {
   apply({ effect: (fn) => fn(), webServer: { register: (spec) => { route = spec; return () => {} } } })
-  assert.equal(route.path, '/dsh-ide-git/api')
+  assert.equal(route.path, '/dsh-git4idea/api')
 
-  const base = mkdtempSync(join(tmpdir(), 'dsh-ide-git-repos-'))
+  const base = mkdtempSync(join(tmpdir(), 'dsh-git4idea-repos-'))
   parent = join(base, 'parent')
   container = join(base, 'container')
   execFileSync('git', ['init', '-q', '-b', 'main', parent], { encoding: 'utf8' })
@@ -171,7 +171,7 @@ test('an uninitialised submodule is registered but not offered', async () => {
      there is no working tree to bind the panel to, so it must not become a
      picker row. The registration is what the requirement is about; a path with
      no `.git` is the discriminator. */
-  const blank = mkdtempSync(join(tmpdir(), 'dsh-ide-git-uninit-'))
+  const blank = mkdtempSync(join(tmpdir(), 'dsh-git4idea-uninit-'))
   try {
     execFileSync('git', ['init', '-q', '-b', 'main', blank], { encoding: 'utf8' })
     git(blank, 'config', 'core.autocrlf', 'false')

@@ -1,11 +1,11 @@
 {
-  "name": "dsh-ide-git",
+  "name": "dsh-git4idea",
   "version": "0.21.0",
-  "description": "DSH plugin: an IDE-grade Git tool window as a native dsh-better-sidebar tab — branch tree, commit graph, changes, commit details, JetBrains-style actions, in the right sidebar and the bottom panel. | DSH 插件:IDE 级 Git 工具窗口,以 dsh-better-sidebar 原生 Tab 挂载——分支树 / 提交图谱 / 变更与提交详情 / JetBrains 风格操作,右侧栏与底部面板双布局自适应。",
+  "description": "DSH plugin: an IDE-style Git tool window as a native panel — branch tree, commit graph, changes and commit details. | DSH 插件:IDE 风格 Git 工具窗口,以原生面板挂载——分支树 / 提交图谱 / 变更与提交 / 提交详情。",
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/KannaKuron/dsh-ide-git.git"
+    "url": "git+https://github.com/guojinpeng/dsh-git4idea.git"
   },
   "publishConfig": {
     "access": "public"
@@ -43,14 +43,11 @@
     "cordis.patch.yml",
     "dsh.plugin.json",
     "README.md",
-    "README_EN.md",
-    "docs/screenshots",
     "LICENSE"
   ],
   "scripts": {
     "test": "node --test tests/smoke.mjs tests/api.test.mjs tests/graph.test.mjs tests/repos.test.mjs",
-    "version": "node -e \"const fs=require('fs');const m=JSON.parse(fs.readFileSync('dsh.plugin.json','utf8'));const v=JSON.parse(fs.readFileSync('package.json','utf8')).version;m.version=v;fs.writeFileSync('dsh.plugin.json',JSON.stringify(m,null,2)+'\\n')\" && git add dsh.plugin.json",
-    "probe:settings-card": "node scripts/settings-card-probe.mjs"
+    "version": "node -e \"const fs=require('fs');const m=JSON.parse(fs.readFileSync('dsh.plugin.json','utf8'));const v=JSON.parse(fs.readFileSync('package.json','utf8')).version;m.version=v;fs.writeFileSync('dsh.plugin.json',JSON.stringify(m,null,2)+'\\n')\" && git add dsh.plugin.json"
   },
   "keywords": [
     "dsh",
@@ -77,9 +74,9 @@
       "optional": true
     }
   },
-  "homepage": "https://github.com/KannaKuron/dsh-ide-git",
+  "homepage": "https://github.com/guojinpeng/dsh-git4idea",
   "bugs": {
-    "url": "https://github.com/KannaKuron/dsh-ide-git/issues"
+    "url": "https://github.com/guojinpeng/dsh-git4idea/issues"
   },
   "icon": "./icon.svg"
 }

@@ -1,5 +1,5 @@
 /**
- * dsh-ide-git — commit-graph layout test (the client's branch lane algorithm).
+ * dsh-git4idea — commit-graph layout test (the client's branch lane algorithm).
  *
  * The graph is drawn per row, but the lanes are decided by a single pass in
  * `buildRows`: a lane is a slot that carries one pending commit downwards

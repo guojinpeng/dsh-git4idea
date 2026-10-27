@@ -1,9 +1,9 @@
 /**
- * dsh-ide-git — host half (plain JavaScript, no build step).
+ * dsh-git4idea — host half (plain JavaScript, no build step).
  *
  * One HTTP surface backs the browser panel:
  *
- *   POST /dsh-ide-git/api/<method>   -> { ok: true, data } | { ok: false, error }
+ *   POST /dsh-git4idea/api/<method>   -> { ok: true, data } | { ok: false, error }
  *
  * Every method is a thin, argv-array wrapper around the local `git` binary
  * (never a shell string), executed with the working directory the client sent
@@ -21,11 +21,11 @@ import { createHash } from 'node:crypto'
 import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, realpathSync, unlinkSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 
-export const name = 'dsh-ide-git'
+export const name = 'dsh-git4idea'
 export const inject = ['webServer']
 
 /* Row Config = the plugin's settings surface on dsh >= 0.1.7: the host persists
-   these values under the loader row id ('ide-git', see cordis.patch.yml) and the
+   these values under the loader row id ('git4idea', see cordis.patch.yml) and the
    browser reads them through ctx.configForms, so the settings card on the
    plugin's page and the action rail read ONE document. The rail's edit is one
    switch per action (`railRefresh` … `railPush`); a missing field means "default"
@@ -39,7 +39,7 @@ let Schema = null
 try {
   Schema = (await import('@deepseek-ai/schemastery')).default
 } catch (error) {
-  console.warn('[dsh-ide-git] @deepseek-ai/schemastery is not resolvable here; the row Config surface is absent'
+  console.warn('[dsh-git4idea] @deepseek-ai/schemastery is not resolvable here; the row Config surface is absent'
     + ' (the browser falls back to its localStorage rail config): ' + (error && error.message ? error.message : String(error)))
 }
 
@@ -89,7 +89,7 @@ function railConfigSchema(schema) {
 
 export const Config = Schema === null ? undefined : railConfigSchema(Schema)
 
-const ROUTE_PREFIX = '/dsh-ide-git/api'
+const ROUTE_PREFIX = '/dsh-git4idea/api'
 const MAX_OUTPUT_BYTES = 8 * 1024 * 1024
 
 /* Ring buffer of the most recent git runs — the panel's "Git output" view
@@ -1410,7 +1410,7 @@ async function undoApply(payload) {
       await git(root, ['branch', item.name, item.hash])
     }
   } else if (entry.kind === 'stash-drop') {
-    await git(root, ['stash', 'store', '-m', 'dsh-ide-git: restored ' + entry.label, entry.hash])
+    await git(root, ['stash', 'store', '-m', 'dsh-git4idea: restored ' + entry.label, entry.hash])
   } else if (entry.kind === 'discard') {
     // Refuse to trample anything typed since the discard: every target must
     // still look exactly the way the discard left it.
@@ -2169,7 +2169,7 @@ async function handle(req, res) {
 export function apply(ctx) {
   ctx.effect(
     () => ctx.webServer.register({ kind: 'prefix', path: ROUTE_PREFIX, handler: handle }),
-    'dsh-ide-git: /dsh-ide-git/api git routes',
+    'dsh-git4idea: /dsh-git4idea/api git routes',
   )
   /* AI commit message (issue #6). `llm` and `sessions` are injected HERE and not
      in `export const inject`: a host without them must still load the whole
@@ -2182,6 +2182,6 @@ export function apply(ctx) {
     injected.effect(() => {
       commitServices = { llm: llm, sessions: sessions }
       return () => { commitServices = null }
-    }, 'dsh-ide-git: ai commit message')
+    }, 'dsh-git4idea: ai commit message')
   })
 }
