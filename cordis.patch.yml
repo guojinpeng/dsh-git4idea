@@ -16,8 +16,8 @@
 #
 # Only the Node half loads through this row (the /dsh-git4idea/api git routes).
 # The web client half is served through exports["./client"] and mounted by the
-# browser boot graph; there it registers the panel in whichever seat the host
-# offers (better-sidebar tab, native right-sidebar seat, or the conversation tab).
+# browser boot graph; there it registers the panel in DSH's own right sidebar and
+# opens it by default, plus the optional tab in the conversation area.
 - insert:
     - id: git4idea
       name: 'dsh-git4idea'

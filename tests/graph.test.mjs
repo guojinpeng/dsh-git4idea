@@ -47,7 +47,7 @@ const buildRows = liftedBuildRows()
  * v0.5.4 near-miss: GraphCell was taught to read GRAPH_MAX_LANES but the
  * constant itself never made it into the file — the empty-state render and the
  * pure layout test both passed, while every real page died with a
- * ReferenceError that better-sidebar's error boundary swallowed. The graph is
+ * ReferenceError that the panel's error boundary swallowed. The graph is
  * not exercised by either of those, so the reference check lives here.
  */
 function assertIdentifiersDeclared(functionName) {

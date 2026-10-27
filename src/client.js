@@ -1,12 +1,13 @@
 /**
  * dsh-git4idea — client half (plain JavaScript, no build step).
  *
- * Registers ONE dsh-better-sidebar tab: an IDE-style Git tool window.
+ * An IDE-style Git tool window in DSH's own right sidebar
+ * (@deepseek-ai/dsh-client-ui-sidebar-right), plus an optional tab beside
+ * 对话/轨迹 in the conversation area.
  *
- * Two surfaces, one registration (better-sidebar 0.19.x): the DSH NATIVE right
- * sidebar (narrow, tall) and the plugin's bottom workbench (wide, flat). The
- * panel never asks which one it is in — it measures its container and picks a
- * chrome:
+ * One panel, two seats: the DSH native right sidebar (narrow, tall) and the
+ * conversation-area view (wide, tall). The panel never asks which one it is in
+ * — it measures its container and picks a chrome:
  *
  *   columns  wide and tall enough : repo/branch bar | tree | graph | changes
  *   stack    narrow and tall      : changes over graph, collapsible tree
@@ -14,7 +15,7 @@
  *
  * Theming: no hard-coded surfaces. Every surface is a --dsw-alias-* token, so
  * transparent themes and background plugins (dsh-any-background) show through,
- * exactly like better-sidebar's own panels do.
+ * exactly like the host's own panels do.
  */
 window.__ModuleLoader__.load({
   id: 'dsh-git4idea',
@@ -56,7 +57,6 @@ window.__ModuleLoader__.load({
        the host half registered at its upstream path. An origin-absolute base
        would escape the mount and 404 behind any strict proxy. */
     const API_BASE = 'dsh-git4idea/api'
-    const TAB_ID = 'dsh-git4idea:panel'
     /* The bundle's package name: the key the Plugins page uses for a bundle's own
        page and its `plugins.bundle.config` slot. */
     const SETTINGS_BUNDLE = 'dsh-git4idea'
@@ -8280,9 +8280,9 @@ window.__ModuleLoader__.load({
 
     /* The official right sidebar (ui-sidebar-right) is the only surface that can
        float a tab out, dock it back, split its pane or take it full screen, and it
-       is NOT there on every host: with dsh-better-sidebar loaded this panel lives
-       in THAT dock, an old host has no sidebarRight at all, and even on a host that
-       ships it the service is only provided once ui-sidebar-right has mounted —
+       is NOT there on every host: an old host has no sidebarRight at all, and even
+       on a host that ships it the service is only provided once
+       ui-sidebar-right has mounted —
        reading it during apply() returns undefined (measured on 0.1.7-rc.2). So the
        service is read at render time, and a missing one means these actions do not
        exist for this mount: no button, no error, no console noise. */
@@ -8296,7 +8296,7 @@ window.__ModuleLoader__.load({
     }
 
     /* What this mount can offer. `dock` is the wiring handed down to the panel
-       (null when nothing is wired, e.g. the better-sidebar door), `floatPaneId` is
+       (null when nothing is wired, e.g. the conversation-area seat), `floatPaneId` is
        the floating pane the panel is currently drawn in, read from the float
        layer's own marker. The face publishes operations only — no layout snapshot —
        so the float state has to come from there. */
@@ -9712,9 +9712,10 @@ window.__ModuleLoader__.load({
       }))
     }
 
-    /* Menus are laid out INSIDE the panel on purpose: dsh-better-sidebar's bottom
-       workbench declares contain: layout style, and layout containment makes that
-       element the containing block for position:fixed descendants. A viewport-
+    /* Menus are laid out INSIDE the panel on purpose: dock containers declare
+       `contain: layout style` (the bottom workbench does, and containment is what
+       keeps a docked pane from escaping its cell), and layout containment makes
+       that element the containing block for position:fixed descendants. A viewport-
        anchored menu inside a 300px-tall panel is therefore laid out against the
        panel with viewport coordinates, lands outside it and looks exactly like
        'right click does nothing'. Anchors become panel-relative offsets clamped to
@@ -13007,72 +13008,26 @@ window.__ModuleLoader__.load({
       }, [base])
 
       /* ---------- external diff preview (user request, 2026-10-08) ---------- */
-      /* 「点击文件预览」不再内嵌:预览交给 better-sidebar 内置的 diff tab
-         (type 'diff',Hidden 内置页,DiffTab 自己经它自家 git 通道拉 patch,
-         我们只递引用)。placement 跟随点击发生的容器——底部工作台里点开在
-         底部、右栏里点开在右栏,走底座的官方 onOpenDiff 交接(props 注入,
-         placement 由底座 store 决定);主对话区座位与原生座位没有该通道,
-         直接 betterSidebar.openTab 定向右栏(target: 'right')。两通道皆
-         不可用(无底座 / 老底座)→ 返回 false,调用方落回内嵌 diff 窗。
-         ref 的 worktree + repoRoot 都填本面板的仓库根:DiffTab 的加载器把
-         repoRoot 并进它自己的 git 调用,多仓库工作区不会落错仓库。 */
+      /* 「点击文件预览」不再内嵌:预览交给右侧栏的原生预览 tab —— 本插件自己
+         的第二个 sidebarRight 类型。seed 先写进 previewStore,再 openTab;tab 在
+         分栏里是单例,再点一次原地重写 seed 而不是堆 tab。seed 带 cwd(路由必需)
+         + repoRoot(跳过 rev-parse),多仓库工作区不会落错仓库。右侧栏服务不在
+         (老宿主)→ 返回 false,调用方落回内嵌 diff 窗。 */
       const previewDiff = useCallback((seed) => {
         if (repoRoot === null) return false
         const commitHash = seed.hash !== undefined && seed.hash !== null ? String(seed.hash) : null
-        const ref = commitHash !== null
-          ? { kind: 'commit', hash: commitHash.slice(0, 7), hashFull: commitHash, subject: seed.subject || '', worktree: repoRoot, repoRoot: repoRoot }
-          : { kind: 'worktree', path: seed.path, staged: seed.staged === true, untracked: seed.untracked === true ? true : undefined, worktree: repoRoot, repoRoot: repoRoot }
-        const title = commitHash !== null
-          ? commitHash.slice(0, 7) + (seed.subject ? ' ' + seed.subject : '')
-          : baseName(String(seed.path))
-        const id = commitHash !== null
-          ? 'diff:c:' + encodeURIComponent(repoRoot) + ':' + commitHash
-          : 'diff:w:' + encodeURIComponent(repoRoot) + ':' + (seed.staged === true ? 's' : 'u') + ':' + seed.path
-        const tab = { id: id, type: 'diff', title: title, diff: ref }
-        /* Seat channel first — the bottom workbench opens its own diff tab,
-           the right column opens it there; placement is the base's call. */
-        if (typeof props.openDiffExternal === 'function') {
-          try {
-            props.openDiffExternal(tab)
-            return true
-          } catch (error) { void error }
-        }
-        /* Conversation seat / native seat: aim at the right sidebar. The
-           capability gate keeps an older base (pre-targetedOpen) from
-           receiving a field it cannot place; any refusal falls through to
-           the inline pane below. */
-        let betterSidebar = undefined
-        try { betterSidebar = props.ctx === undefined || props.ctx === null ? undefined : props.ctx.get('betterSidebar') } catch (error) { void error }
-        if (betterSidebar !== undefined && betterSidebar !== null && typeof betterSidebar.openTab === 'function') {
-          const capabilities = betterSidebar.capabilities
-          const targeted = capabilities === undefined || capabilities === null || (Array.isArray(capabilities) && capabilities.indexOf('targetedOpen') >= 0)
-          if (targeted === true) {
-            try {
-              const scopeObject = scope || {}
-              betterSidebar.openTab({ type: 'diff', title: title, id: id, diff: ref, target: 'right' }, { sessionId: scopeObject.sessionId, cwd: scopeObject.cwd })
-              return true
-            } catch (error) { void error }
-          }
-        }
-        /* Native preview tab: the base is absent (or too old), so the plugin's
-           OWN second native right-sidebar type takes the preview. The seed
-           carries cwd (the route requires it) + repoRoot (skips the rev-parse);
-           the tab is a singleton per pane — a second click re-seeds it in
-           place instead of stacking tabs. */
         let sidebarRight = undefined
         try { sidebarRight = props.ctx === undefined || props.ctx === null ? undefined : props.ctx.get('sidebarRight') } catch (error) { void error }
-        if (sidebarRight !== undefined && sidebarRight !== null && typeof sidebarRight.openTab === 'function') {
-          try {
-            const scopeObject = scope || {}
-            previewStore.set(commitHash !== null
-              ? { hash: commitHash, subject: seed.subject || '', path: seed.path !== undefined && seed.path !== null ? seed.path : '', cwd: scopeObject.cwd, repoRoot: repoRoot, sessionId: scopeObject.sessionId }
-              : { path: seed.path, staged: seed.staged === true, untracked: seed.untracked === true ? true : undefined, cwd: scopeObject.cwd, repoRoot: repoRoot, sessionId: scopeObject.sessionId })
-            sidebarRight.openTab(NATIVE_PREVIEW_KIND)
-            return true
-          } catch (error) { void error }
-        }
-        return false
-      }, [repoRoot, scope, props.openDiffExternal, props.ctx])
+        if (sidebarRight === undefined || sidebarRight === null || typeof sidebarRight.openTab !== 'function') return false
+        try {
+          const scopeObject = scope || {}
+          previewStore.set(commitHash !== null
+            ? { hash: commitHash, subject: seed.subject || '', path: seed.path !== undefined && seed.path !== null ? seed.path : '', cwd: scopeObject.cwd, repoRoot: repoRoot, sessionId: scopeObject.sessionId }
+            : { path: seed.path, staged: seed.staged === true, untracked: seed.untracked === true ? true : undefined, cwd: scopeObject.cwd, repoRoot: repoRoot, sessionId: scopeObject.sessionId })
+          sidebarRight.openTab(NATIVE_PREVIEW_KIND)
+          return true
+        } catch (error) { return false }
+      }, [repoRoot, scope, props.ctx])
 
       /* The one diff verb every surface calls (row click, row menu, detail
          file menu, working-diff shortcut): external first, inline fallback. */
@@ -15360,7 +15315,7 @@ window.__ModuleLoader__.load({
     /* The native preview tab (external diff preview, 2026-10-08): a SECOND
        native right-sidebar type that exists only to show one diff. It carries
        no guide entry on purpose — nothing on the start page opens it; it opens
-       itself when a diff verb fires with no better-sidebar to hand off to.
+       itself when a diff verb fires.
        Content follows the module-level store below, so every seat (the
        conversation tab, the native panel) feeds the same single preview. */
     const NATIVE_PREVIEW_ID = 'dsh-git4idea-preview'
@@ -15388,14 +15343,13 @@ window.__ModuleLoader__.load({
 
     /* The native seat hands a tab the standard props; the panel wants
        `{ scope, t }`. A session's working directory is the path of the
-       workspace that accounts for it — the same value the better-sidebar seat
-       delivers as `scope.cwd`. */
+       workspace that accounts for it — the same value the sidebar seat delivers
+       as `scope.cwd`. */
     /* DSH's locale service notifies on every snapshot change, and its own
        components re-render on that. The panel is not one of DSH's components,
        so it subscribes for itself: a language switch then repaints the panel
        instead of waiting for the next page load. Everything the panel draws is
-       inside this wrapper — the better-sidebar tab and the native seat both go
-       through it. */
+       inside this wrapper — every seat goes through it. */
     function LocaleLive(props) {
       const [tick, setTick] = useState(0)
       useEffect(() => {
@@ -15734,6 +15688,10 @@ window.__ModuleLoader__.load({
           })))
     }
 
+    /* Once per page load: the right-sidebar tab is the default seat, and it opens
+       itself instead of waiting for a trip to the start page. */
+    let defaultSeatOpened = false
+
     function ComposerGitStatus(props) {
       const ctx = props.ctx
       const t = props.t
@@ -15771,6 +15729,23 @@ window.__ModuleLoader__.load({
         sync()
         return subscribeRailConfig(sync)
       }, [])
+
+      /* Default seat: open the right-sidebar tab once per page load. The open
+         rides this pill's mount because it is the one surface that exists only
+         while a conversation is on screen — the base throws on openTab when no
+         session is mounted — and the pill remounts on a session switch, so a
+         throw retries instead of losing the default. */
+      useEffect(() => {
+        if (defaultSeatOpened === true) return
+        if (ctx === undefined || ctx === null || typeof ctx.get !== 'function') return
+        let sidebarRight
+        try { sidebarRight = ctx.get('sidebarRight') } catch (error) { return }
+        if (sidebarRight === undefined || sidebarRight === null || typeof sidebarRight.openTab !== 'function') return
+        try {
+          sidebarRight.openTab(NATIVE_KIND)
+          defaultSeatOpened = true
+        } catch (error) { void error }
+      }, [ctx])
 
       /* cwd follows the session list, exactly like ConversationPanel. */
       useEffect(() => {
@@ -16150,9 +16125,10 @@ window.__ModuleLoader__.load({
         }
       }
       const scope = useMemo(() => ({ cwd: cwd, sessionId: sessionId }), [cwd, sessionId])
-      /* The dock actions need this tab's own identity, which only the native seat
-         binds; the better-sidebar door has no sidebarRight tab id and therefore
-         wires nothing (a panel hosted elsewhere must not float a foreign tab). */
+      /* The dock actions need this tab's own identity, which only this seat
+         binds; the conversation-area seat has no sidebarRight tab id and
+         therefore wires nothing (a panel hosted elsewhere must not float a
+         foreign tab). */
       const dock = readDockInfo(props.useTabInfo, props.ctx)
       return E(LocaleLive, { ctx: props.ctx, scope: scope, t: props.t, visible: true, dock: dock })
     }
@@ -16285,21 +16261,18 @@ window.__ModuleLoader__.load({
         )
       }
 
-      /* Two doors, one panel. dsh-better-sidebar also carries the bottom
-         workbench, so wherever it is loaded it stays the host; the native
-         right-sidebar seats are the fallback for a host running this plugin on
-         its own — registering both would draw the same panel twice in one
-         column, so a late-arriving better-sidebar takes the native one down. */
+      /* One panel, one home: DSH's own right sidebar (ui-sidebar-right). Both
+         native types register here — the panel itself (with its guide entry) and
+         the external diff preview — and the panel's tab is opened once per page
+         load, so the tool window is on screen without a trip to the start page. */
       let nativeFiber = null
-      let hostedByBetterSidebar = false
 
-      /* WAIT for both native seats instead of probing with ctx.get(): on a
-         host without better-sidebar this apply can run BEFORE ui-sidebar-right
-         provides the registry, and the old synchronous probe returned
-         silently — the native seats were then never registered (reproduced
-         on a clean instance and on the desktop app: the right sidebar showed
-         no Git card and the console stayed empty). ctx.inject() retries the
-         registration the moment the services appear. */
+      /* WAIT for the service instead of probing with ctx.get(): this apply can
+         run BEFORE ui-sidebar-right provides the registry, and a synchronous
+         probe returned silently — the seats were then never registered
+         (reproduced on a clean instance and on the desktop app: the right
+         sidebar showed no Git card and the console stayed empty). ctx.inject()
+         retries the registration the moment the services appear. */
       const hostNatively = () => {
         if (nativeFiber !== null) return
         nativeFiber = ctx.inject(['sidebarRightTabs', 'slots'], (nativeCtx) => {
@@ -16329,8 +16302,7 @@ window.__ModuleLoader__.load({
             ))
             /* The preview type has NO guide entry on purpose (start-page
                destinations are the main panel's job): it exists to receive the
-               openTab this plugin fires when a diff verb runs without a
-               better-sidebar to hand off to. Omitting `guide` is the registry's
+               openTab a diff verb fires. Omitting `guide` is the registry's
                documented way to stay off the guide page. */
             const offPreviewType = tabs.register({
               id: NATIVE_PREVIEW_ID,
@@ -16352,57 +16324,10 @@ window.__ModuleLoader__.load({
         })
       }
 
-      const takeNativeDown = () => {
-        if (nativeFiber === null) return
-        const fiber = nativeFiber
-        nativeFiber = null
-        void Promise.resolve(fiber.dispose()).catch((error) => { void error })
-      }
-
-      ctx.inject(['betterSidebar'], (tabCtx) => {
-        const betterSidebar = tabCtx.get('betterSidebar')
-        if (betterSidebar === undefined || typeof betterSidebar.registerTab !== 'function') return
-        hostedByBetterSidebar = true
-        takeNativeDown()
-        tabCtx.effect(() => {
-          const offTab = betterSidebar.registerTab({
-            id: TAB_ID,
-            title: () => t('title'),
-            description: () => t('description'),
-            icon: (size) => E(Icon, { name: 'commit', size: size === undefined ? 16 : size }),
-            order: 21,
-            single: true,
-            component: (tabProps) => E(LocaleLive, {
-              ctx: ctx,
-              scope: tabProps.scope,
-              t: t,
-              visible: tabProps.visible,
-              /* The base's own diff-tab hand-off (OpenTabSeed type 'diff').
-                 Where the diff tab lands — bottom workbench vs right column —
-                 is the base's store decision, made where the click happened:
-                 exactly the "preview beside this panel" behavior the seat
-                 should have. Absent on an older base; previewDiff falls back
-                 to the service openTab, then to the inline pane. */
-              openDiffExternal: typeof tabProps.onOpenDiff === 'function' ? tabProps.onOpenDiff : undefined,
-            }),
-          })
-          /* The base can go away at RUNTIME (disabled in the plugin panel, or
-             uninstalled): cordis unloads this effect when the service
-             disappears, and the panel must fall back to the native
-             right-sidebar seats instead of vanishing with the base. The
-             same inject re-fires when the service returns, and the
-             callback above takes the native seats down again. */
-          return () => {
-            try { offTab() } catch (error) { void error }
-            hostedByBetterSidebar = false
-            hostNatively()
-          }
-        }, 'dsh-git4idea: Git tab')
-      })
-
-      /* ctx.inject runs its callback straight away when the service is already
-         there, so only a host without better-sidebar reaches the native seats. */
-      if (!hostedByBetterSidebar) hostNatively()
+      /* ctx.inject runs its callback straight away when the services are already
+         there, and retries otherwise. There is no second host to defer to, so the
+         seats go up unconditionally. */
+      hostNatively()
 
       /* ---- door 3: the conversation-area view tab (issue #8) ---- */
       /* A third seat beside 对话/轨迹, registered into ui-conversation's

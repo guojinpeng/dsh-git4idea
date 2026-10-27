@@ -459,14 +459,16 @@ test('the diff pane context menu reads the selection before the menu opens (v0.1
     'the worktree pane remembers whether it shows staged or unstaged (showDiff inline leg)')
   assert.match(client, /setDiffContext\(\{ kind: 'commit', hash: seed\.hash, subject: seed\.subject \|\| '' \}\)/,
     'the commit-detail pane carries hash + subject at open time (showDiff inline leg)')
-  // The funnel itself: external channel first (seat onOpenDiff, then the
-  // base's openTab toward the right sidebar), inline only as a fallback —
-  // and the external ref carries the repo root both ways (worktree + repoRoot)
-  // so a multi-root workspace cannot land the diff in the wrong repository.
+  // The funnel itself: the right sidebar's preview tab first, inline only as a
+  // fallback — and the seed carries the repo root beside cwd (the route needs
+  // cwd, repoRoot skips the rev-parse) so a multi-root workspace cannot land
+  // the diff in the wrong repository.
   assert.match(client, /if \(previewDiff\(seed\) === true\) return/,
     'every diff verb goes through the external-first funnel')
-  assert.match(client, /worktree: repoRoot, repoRoot: repoRoot/,
-    'the external diff ref pins the repository root')
+  assert.match(client, /repoRoot: repoRoot, sessionId: scopeObject\.sessionId/,
+    'the external diff seed pins the repository root')
+  assert.match(client, /previewStore\.set\(commitHash !== null/,
+    'the seed is stored before the preview tab opens')
 
   // Nine new keys × 21 gates (the key-set test checks exact equality; this
   // says WHY they exist).
@@ -696,29 +698,23 @@ test('the rc.2 surface contract: one focus colour, radius tokens, round capsules
   }
 })
 
-test('client half has three doors: better-sidebar, native right sidebar, conversation view tab', () => {
-  assert.match(client, /const TAB_ID = 'dsh-git4idea:panel'/)
-  assert.match(client, /single: true/)
-  // Door 1 — dsh-better-sidebar, waited for through ctx.inject so a host that
-  // loads it late still gets the tab (and the bottom workbench with it).
-  assert.match(client, /ctx\.inject\(\['betterSidebar'\]/)
-  assert.match(client, /betterSidebar\.registerTab\(\{/)
-  // Door 2 — DSH's own right-sidebar seats, for a host running this plugin
-  // alone. Both doors can never be open at once.
-  // The native seats WAIT for their services (v0.5.3): the old synchronous
-  // ctx.get() probe ran before ui-sidebar-right provided the registry on the
-  // desktop app and on clean instances, then returned silently — no Git card,
-  // no error. ctx.inject() re-registers the moment the services appear.
+test('client half has two doors: the native right sidebar, the conversation view tab', () => {
+  // Door 1 — DSH's own right sidebar (ui-sidebar-right) is the only home: the
+  // panel registers a tab type plus its pane body, and the tab opens itself
+  // once per page load (default seat, from the composer pill's mount — the one
+  // surface that exists only while a conversation is on screen, because the
+  // base throws on openTab with no session mounted).
+  // The seats WAIT for their services (v0.5.3): the old synchronous ctx.get()
+  // probe ran before ui-sidebar-right provided the registry on the desktop app
+  // and on clean instances, then returned silently — no Git card, no error.
+  // ctx.inject() re-registers the moment the services appear.
   assert.match(client, /ctx\.inject\(\['sidebarRightTabs', 'slots'\]/, 'native seats wait for their services')
   assert.match(client, /slots\.inject\('sidebar\.right\.pane\.tab'/)
-  assert.match(client, /hostedByBetterSidebar/)
-  // The base can be disabled AT RUNTIME: cordis unloads the inject effect,
-  // and the cleanup must fall back to the native seats (v0.5.2 — the panel
-  // used to vanish until the next reload when better-sidebar was toggled
-  // off in the plugin panel).
-  assert.match(client, /return \(\) => \{/)
-  assert.match(client, /hostedByBetterSidebar = false/)
-  assert.match(client, /hostNatively\(\)\n\s*\}/)
+  assert.match(client, /^ {6}hostNatively\(\)$/m, 'the native seats go up unconditionally')
+  assert.doesNotMatch(client, /betterSidebar/, 'no dsh-better-sidebar service is read or registered')
+  assert.doesNotMatch(client, /registerTab\(/, 'the panel registers no foreign tab')
+  assert.match(client, /sidebarRight\.openTab\(NATIVE_KIND\)/, 'the default seat opens itself')
+  assert.match(client, /let defaultSeatOpened = false/, 'the default open happens once per page load')
   assert.match(client, /inject: \[\], apply/)
   // Door 3 — the conversation-area view tab (issue #8), beside 对话/轨迹: the
   // ui-conversation `conversation.view` slot, the same contract dsh-context
@@ -732,8 +728,6 @@ test('client half has three doors: better-sidebar, native right sidebar, convers
   assert.match(client, /name: 'conversation\.view', id: CONVERSATION_VIEW_ID, order: 30, locale: LOCALE_NS/)
   // The seat follows the setting live through the rail-config watchers.
   assert.match(client, /const unsubscribe = subscribeRailConfig\(sync\)/)
-  const registrations = client.match(/registerTab\(/g) || []
-  assert.equal(registrations.length, 1)
   // v0.14: TWO native tab types — the main panel (with its guide entry) and
   // the preview tab (guide-less by design: it opens itself from a diff verb,
   // it is not a start-page destination).
@@ -839,8 +833,8 @@ test('a discard is reversible through the same undo stack', () => {
 test('the dock actions exist only where the right sidebar can perform them', () => {
   // The official right sidebar is read at RENDER time: ctx.get('sidebarRight')
   // returns undefined while ui-sidebar-right has not mounted yet (measured on
-  // 0.1.7-rc.2), and a host running dsh-better-sidebar or an old host has none at
-  // all. Missing service = no buttons, no error.
+  // 0.1.7-rc.2), and an old host has none at all. Missing service = no buttons,
+  // no error.
   const start = client.indexOf('/* ---- dock action core')
   const end = client.indexOf('/* ---- end dock action core')
   assert.ok(start >= 0 && end > start, 'the dock action core must keep its markers')
@@ -887,11 +881,13 @@ test('the tree toggle is reachable again after it was folded', () => {
 })
 
 test('the dock actions are wired on the native seat only', () => {
-  // Door 2 (the native right-sidebar seat) owns a sidebarRight tab id; door 1
-  // (dsh-better-sidebar) does not, and floating a foreign tab id is not a thing.
+  // Only the native right-sidebar seat owns a sidebarRight tab id; the
+  // conversation-area seat has none, and floating a foreign tab id is not a
+  // thing.
   assert.match(client, /readDockInfo\(props\.useTabInfo, props\.ctx\)/, 'the native seat reads its own tab identity')
-  const better = client.slice(client.indexOf('betterSidebar.registerTab({'), client.indexOf('dsh-git4idea: Git tab'))
-  assert.doesNotMatch(better, /dock:/, 'the better-sidebar door must not wire dock actions')
+  assert.match(client, /E\(NativePanel, Object\.assign\(\{\}, tabProps/, 'the native seat hands the tab props straight to the panel')
+  const conversationSeat = client.slice(client.indexOf("className: 'git4idea-conversation-seat'"), client.indexOf("className: 'git4idea-conversation-seat'") + 600)
+  assert.doesNotMatch(conversationSeat, /dock:/, 'the conversation-area seat must not wire dock actions')
   assert.match(client, /try \{ info = useTabInfo\(\) \} catch \(error\) \{ void error \}/,
     'the slot reader throws until the tab is committed; a missing answer is a missing button')
   assert.match(client, /node\.closest\('\[data-dockkit-float\]'\)/, 'the float state comes from the float layer marker')

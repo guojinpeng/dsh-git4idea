@@ -14,7 +14,7 @@
  * same-origin by construction. A request is served only when the Host header
  * names a loopback authority or the browser marks the request as same-origin
  * (Sec-Fetch-Site) — a cross-site page cannot forge that header, which is the
- * same posture dsh-better-sidebar's own /sidebar/api routes take.
+ * same posture DSH's own web routes take.
  */
 import { spawn } from 'node:child_process'
 import { createHash } from 'node:crypto'

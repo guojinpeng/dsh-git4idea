@@ -2,7 +2,7 @@
   "id": "dsh-external/dsh-git4idea",
   "version": "0.21.0",
   "main": "./src/index.js",
-  "description": "IDE 风格 Git 面板:分支树 + 提交图谱 + 变更/暂存/提交 + 提交详情。装了 dsh-better-sidebar 时挂成它的原生 tab(右侧栏 + 底部工作台),没装时挂 DSH 原生右侧栏,也可挂到会话标签行。",
+  "description": "IDE 风格 Git 面板:分支树 + 提交图谱 + 变更/暂存/提交 + 提交详情。挂在 DSH 原生右侧栏并默认打开,也可挂到会话标签行(对话 / 轨迹 旁边)。",
   "engines": {
     "dsh": ">=0.1.6-alpha.2"
   },

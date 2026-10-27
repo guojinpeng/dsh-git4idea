@@ -54,7 +54,6 @@
     "dsh",
     "deepseek-harness",
     "dsh-plugin",
-    "dsh-better-sidebar",
     "git",
     "git-gui",
     "source-control",
@@ -64,14 +63,10 @@
   "license": "MIT",
   "peerDependencies": {
     "@deepseek-ai/cordis": "^4.0.1",
-    "@deepseek-ai/dsh": ">=0.1.6-alpha.2",
-    "dsh-better-sidebar": ">=0.12.0"
+    "@deepseek-ai/dsh": ">=0.1.6-alpha.2"
   },
   "peerDependenciesMeta": {
     "@deepseek-ai/dsh": {
-      "optional": true
-    },
-    "dsh-better-sidebar": {
       "optional": true
     }
   },
