@@ -1889,10 +1889,17 @@ test('the popover floats the IDEA row verbs and fetch keeps it open (m02697)', (
   assert.match(cssRule('.git4idea-cs-flyout'), /--dsw-alias-bg-layer-2:var\(--dsw-static-neutral-bluish-00/, 'the light flyout is opaque')
   assert.match(cssRule('body[data-ds-dark-theme] .git4idea-cs-flyout'), /--dsw-alias-bg-layer-2:var\(--dsw-static-neutral-bluish-850/, 'the dark flyout is opaque')
   assert.match(cssRule('.git4idea-cs-flyout'), /overflow:hidden/, 'labels clip at the card edge')
+  assert.match(cssRule('.git4idea-cs-flyout'), /width:max-content/, 'the card follows the longest label (m03424)')
+  assert.doesNotMatch(cssRule('.git4idea-cs-flyout'), /max-width:320px/, 'a long ref must widen the card, never truncate')
   assert.match(cssRule('.git4idea-cs-sub-item'), /height:24px/, 'one 24px row per verb')
   assert.match(cssRule('.git4idea-cs-sub-item'), /flex:none/, 'rows never shrink into each other')
-  assert.match(cssRule('.git4idea-cs-sub-label'), /text-overflow:ellipsis/, 'a long ref truncates instead of stretching the card')
-  assert.match(client, /className: 'git4idea-cs-sub-label'/, 'the labels use the truncating span')
+  assert.match(cssRule('.git4idea-cs-sub-label'), /white-space:nowrap/, 'the label never wraps inside a row')
+  assert.doesNotMatch(cssRule('.git4idea-cs-sub-label'), /text-overflow:ellipsis/, 'no ellipsis: the box grows instead')
+  assert.match(client, /className: 'git4idea-cs-sub-label'/, 'the labels use the nowrap span')
+  // The placement flip needs the real width: measuring the longest label keeps
+  // a wide card from being pushed off the right edge by the old 240px guess.
+  assert.match(client, /const labelWidthOf = \(text\) => \{/)
+  assert.match(client, /const flyoutWidth = Math\.max\(240, Math\.ceil\(widestLabel\) \+ 44\)/)
   assert.match(client, /menu === 'branch' && newBranchOpen !== true \? csFlyout\(\) : null/, 'the flyout is a sibling of the popover')
   assert.doesNotMatch(client, /rows\.push\(csSubmenu/, 'nothing is inserted under the row any more')
   // The four IDEA verbs: checkout, new branch from this ref, merge INTO the
