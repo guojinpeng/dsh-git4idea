@@ -1861,20 +1861,27 @@ test('the composer dock pill keeps only the branch, left of the session statisti
   assert.match(client, /\.git4idea-cs-pill\[aria-expanded=true\]/, 'the open menu keeps the pill lit')
 })
 
-test('the popover new branch is a modal that creates and checks out (m02016)', () => {
-  // The inline field is gone: naming a branch is now a modal card with an
-  // explicit Cancel and Create, so an accidental Enter cannot half-create a ref.
+test('naming a branch is a centered card that creates and checks it out (m02016, m03873)', () => {
+  // The popover no longer swaps its tree for a dialog (m03873 #2): the prompt
+  // is a frame-level card in the middle of the window, so the chooser can close
+  // while the name is still being typed.
   assert.doesNotMatch(client, /git4idea-cs-newline/, 'the inline new-branch row is gone')
-  assert.match(client, /className: 'git4idea-cs-menu git4idea-cs-dialog'/, 'the popover swaps the tree for the dialog')
-  assert.match(client, /t\('toolbar\.newBranch'\)/, 'the dialog is titled like the panel dialog')
+  assert.doesNotMatch(client, /git4idea-cs-dialog/, 'the popover no longer hosts the dialog')
+  assert.match(client, /const promptDialog = \{/, 'the prompt has its own store')
+  assert.match(client, /function CenteredPrompt\(props\) \{/, 'the card is a component')
+  assert.match(client, /className: 'git4idea-commit-overlay git4idea-prompt-overlay'/, 'the card centers over the frame')
+  assert.match(client, /E\(PromptDialogHost, null\)/, 'the frame host renders the card')
+  assert.match(cssRule('.git4idea-prompt-overlay'), /z-index:81/, 'the prompt stacks above the commit and push cards')
   // Create and switch are ONE git command, the same verb the panel dialog runs.
+  assert.match(client, /const openBranchPrompt = \(options\) => \{/, 'one helper raises every name prompt')
   assert.match(client, /await request\('checkout', payload\)/, 'the confirm runs checkout')
   assert.match(client, /branch: name, create: true, confirm: true/, 'the checkout creates the branch')
-  assert.match(client, /if \(newBranchTrack === true\) payload\.track = true/, 'a remote start point binds its upstream, a local one does not')
+  assert.match(client, /startPoint: entry\.name/, 'the branch forks from the selected ref')
+  assert.match(client, /if \(kind === 'remote'\) payload\.track = true/, 'a remote start point binds its upstream, a local one does not')
   // Cancel and Escape both drop the draft; the confirm starts disabled.
-  assert.match(client, /event\.key === 'Escape'\) closeNewBranch\(\)/, 'Escape cancels')
-  assert.match(client, /disabled: newBranchName\.trim\(\) === '' \|\| csBusy !== '' \|\| repoRoot === null/, 'an empty name cannot be submitted')
-  assert.match(client, /if \(newBranchOpen === true\) \{\n              return E\('div'/, 'the dialog returns before the tree renders')
+  assert.match(client, /event\.key === 'Escape'\) \{ event\.preventDefault\(\); if \(busy !== true\) props\.onCancel\(\) \}/, 'Escape cancels')
+  assert.match(client, /const ready = value\.trim\(\) !== '' && busy === false/, 'an empty name cannot be submitted')
+  assert.match(client, /if \(overlaySeatReady !== true\) \{ openPanelSeat\(\); return \}/, 'a host without the overlay falls back to the panel')
 })
 
 test('the popover floats the IDEA row verbs and fetch keeps it open (m02697)', () => {
@@ -1900,7 +1907,7 @@ test('the popover floats the IDEA row verbs and fetch keeps it open (m02697)', (
   // a wide card from being pushed off the right edge by the old 240px guess.
   assert.match(client, /const labelWidthOf = \(text\) => \{/)
   assert.match(client, /const flyoutWidth = Math\.max\(240, Math\.ceil\(widestLabel\) \+ 44\)/)
-  assert.match(client, /menu === 'branch' && newBranchOpen !== true \? csFlyout\(\) : null/, 'the flyout is a sibling of the popover')
+  assert.match(client, /menu === 'branch' \? csFlyout\(\) : null/, 'the flyout is a sibling of the popover')
   assert.doesNotMatch(client, /rows\.push\(csSubmenu/, 'nothing is inserted under the row any more')
   // The four IDEA verbs: checkout, new branch from this ref, merge INTO the
   // checked out branch, delete. Compare/seat shortcuts are gone.
@@ -1918,6 +1925,37 @@ test('the popover floats the IDEA row verbs and fetch keeps it open (m02697)', (
   // Fetch must refresh the list in place, not dismiss the chooser.
   assert.match(client, /await csCall\('fetch', \{ prune: true \}, \{ keepOpen: true \}\)/, 'fetch keeps the popover open')
   assert.match(client, /await loadBranches\(\)/, 'fetch reloads the refs it just refreshed')
+})
+
+test('a local branch row also updates, pushes and renames that branch (m03873)', () => {
+  // Update/push/rename act on the SELECTED ref, while the chooser's own
+  // commit and push stay about the checked-out branch.
+  assert.match(client, /id: 'update', icon: 'fetch', label: t\('action\.updateBranch'\)/, 'the row offers update')
+  assert.match(client, /id: 'push', icon: 'push', label: t\('action\.push'\)/, 'the row offers push')
+  assert.match(client, /id: 'rename', icon: 'file', label: t\('action\.rename'\)/, 'the row offers rename')
+  assert.equal((client.match(/^ +local \? \{$/gm) || []).length, 3, 'all three are local-row verbs only')
+  assert.match(client, /\.filter\(\(item\) => item !== null\)/, 'remote rows drop the holes instead of rendering them')
+  // Update fast-forwards the chosen ref: quickly when it is checked out,
+  // in place by refspec when it is not.
+  assert.match(client, /await csCall\('pull', \{ mode: 'ff-only' \}, \{ toast: toastText \}\)\n/, 'the checked-out branch is pulled ff-only')
+  assert.match(client, /branch: remoteBranch \+ ':' \+ entry\.name/, 'another branch is fast-forwarded in place')
+  // Push ships the selected branch; a new upstream is bound only when it lacks one.
+  assert.match(client, /const refspec = upstreamBranch === entry\.name \? entry\.name : entry\.name \+ ':' \+ upstreamBranch/, 'the push refspec targets the upstream name')
+  assert.match(client, /remote: remote, branch: refspec, confirm: true, setUpstream: slash <= 0/, 'the push confirms and can bind an upstream')
+  // Rename moves the ref and refreshes the pill when it was the checked-out one.
+  assert.match(client, /await request\('branchRename', \{/, 'rename calls the branchRename route')
+  assert.match(client, /if \(entry\.head === true\) notifyBranchSwitched\(sessionId, repoRoot\)/, 'renaming HEAD refreshes the composer pill')
+  // The flyout's flip estimate follows the verb count now that local rows have seven.
+  assert.match(client, /const items = csMenuItems\(\{ entry: entry, kind: kind \}\)/, 'the caller measures the same list it renders')
+  assert.match(client, /const flyoutHeight = 8 \+ items\.length \* 26/, 'the height follows the verb count')
+  // A verb that closes the chooser still reports: its error bar would be gone.
+  assert.match(client, /typeof options\.toast === 'string'/, 'csCall can raise a toast')
+  assert.match(client, /toastCenter\.push\(\{ text: toastText, tone: 'ok', icon: 'check' \}\)/, 'a completed verb reports success')
+  assert.match(client, /branchPushed/, 'a push reports with its own toast')
+  assert.doesNotMatch(client, /newBranchOpen/, 'the old inline dialog state is gone')
+  assert.equal((client.match(/'action\.updateBranch':/g) || []).length, 21, 'the update label exists in every dictionary')
+  assert.equal((client.match(/'toast\.branchUpdated':/g) || []).length, 21, 'the update toast exists in every dictionary')
+  assert.equal((client.match(/'toast\.branchPushed':/g) || []).length, 21, 'the push toast exists in every dictionary')
 })
 
 test('an outside checkout renames the composer pill without waiting for the summary poll (m02856)', () => {

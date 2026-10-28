@@ -217,6 +217,7 @@ window.__ModuleLoader__.load({
       'action.rebaseCurrentOnto': '将当前分支变基到此',
       'action.compare': '与当前分支比较',
       'action.update': '更新(Fetch)',
+      'action.updateBranch': '更新',
       'action.push': '推送',
       'action.newTag': '新建标签...',
       'action.cherryPick': '优选(Cherry-Pick)',
@@ -463,6 +464,8 @@ window.__ModuleLoader__.load({
       'push.hint': '双击文件查看变更',
       'toast.committed': '提交成功',
       'toast.pushed': '已将 {n} 个提交推送到 {target}',
+      'toast.branchUpdated': '已更新 {name}',
+      'toast.branchPushed': '已推送 {name}',
       'delete.confirm': '删除分支 {name}?删除后浮窗里可以撤回(未合并的分支 git 会拒绝删除)。',
       'discard.confirm': '丢弃 {path} 的更改?工作区内容会被覆盖,丢弃后浮窗里可以撤回。',
       'resetHard.confirm': '硬重置到 {hash}?未提交的更改会丢失。',
@@ -563,6 +566,7 @@ window.__ModuleLoader__.load({
       'action.rebaseCurrentOnto': 'Rebase current branch onto this',
       'action.compare': 'Compare with current branch',
       'action.update': 'Update (fetch)',
+      'action.updateBranch': '更新',
       'action.push': 'Push',
       'action.newTag': 'New tag...',
       'action.cherryPick': 'Cherry-pick',
@@ -809,6 +813,8 @@ window.__ModuleLoader__.load({
       'push.hint': 'Double-click a file to see its change',
       'toast.committed': 'Committed',
       'toast.pushed': 'Pushed {n} commits to {target}',
+      'toast.branchUpdated': '已更新 {name}',
+      'toast.branchPushed': '已推送 {name}',
       'delete.confirm': 'Delete branch {name}? A toast will offer to bring it back (git still refuses unmerged branches).',
       'discard.confirm': 'Discard changes in {path}? The working-tree content is overwritten — a toast will offer to bring it back.',
       'resetHard.confirm': 'Hard reset to {hash}? Uncommitted changes are lost.',
@@ -917,6 +923,7 @@ window.__ModuleLoader__.load({
         'action.rebaseCurrentOnto': '將當前分支變基到此',
         'action.compare': '同當前分支比較',
         'action.update': '更新(抓取)',
+      'action.updateBranch': '更新',
         'action.push': '推送',
         'action.newTag': '新建標籤...',
         'action.cherryPick': '揀選',
@@ -1163,6 +1170,8 @@ window.__ModuleLoader__.load({
         'push.hint': '雙擊檔案查看變更',
         'toast.committed': '提交成功',
         'toast.pushed': '已將 {n} 個提交推送到 {target}',
+      'toast.branchUpdated': '已更新 {name}',
+      'toast.branchPushed': '已推送 {name}',
         'delete.confirm': '刪除分支 {name}?之後可以喺提示條撤回(git 仍然會拒絕未合併嘅分支)。',
         'discard.confirm': '丟棄 {path} 嘅變更?工作區內容會被覆寫 —— 之後可以喺提示條撤回。',
         'resetHard.confirm': '硬重置到 {hash}?未提交嘅變更會遺失。',
@@ -1263,6 +1272,7 @@ window.__ModuleLoader__.load({
         'action.rebaseCurrentOnto': '將目前分支變基到此',
         'action.compare': '與目前分支比較',
         'action.update': '更新(抓取)',
+      'action.updateBranch': '更新',
         'action.push': '推送',
         'action.newTag': '新建標籤...',
         'action.cherryPick': '揀選',
@@ -1509,6 +1519,8 @@ window.__ModuleLoader__.load({
         'push.hint': '雙擊檔案查看變更',
         'toast.committed': '提交成功',
         'toast.pushed': '已將 {n} 個提交推送到 {target}',
+      'toast.branchUpdated': '已更新 {name}',
+      'toast.branchPushed': '已推送 {name}',
         'delete.confirm': '刪除分支 {name}?之後可從提示條撤回(git 仍會拒絕未合併的分支)。',
         'discard.confirm': '丟棄 {path} 的變更?工作區內容會被覆寫 —— 之後可從提示條撤回。',
         'resetHard.confirm': '硬重置到 {hash}?未提交的變更會遺失。',
@@ -1609,6 +1621,7 @@ window.__ModuleLoader__.load({
         'action.rebaseCurrentOnto': '將當前分支變基到此',
         'action.compare': '同當前分支比較',
         'action.update': '更新(抓取)',
+      'action.updateBranch': '更新',
         'action.push': '推送',
         'action.newTag': '新建標籤...',
         'action.cherryPick': '揀選',
@@ -1855,6 +1868,8 @@ window.__ModuleLoader__.load({
         'push.hint': '雙擊檔案查看變更',
         'toast.committed': '提交成功',
         'toast.pushed': '已將 {n} 個提交推送到 {target}',
+      'toast.branchUpdated': '已更新 {name}',
+      'toast.branchPushed': '已推送 {name}',
         'delete.confirm': '刪除分支 {name}?之後可以喺提示條撤回(git 仍然會拒絕未合併嘅分支)。',
         'discard.confirm': '丟棄 {path} 嘅變更?工作區內容會被覆寫 —— 之後可以喺提示條撤回。',
         'resetHard.confirm': '硬重置到 {hash}?未提交嘅變更會遺失。',
@@ -1955,6 +1970,7 @@ window.__ModuleLoader__.load({
         'action.rebaseCurrentOnto': '現在のブランチをここにリベース',
         'action.compare': '現在のブランチと比較',
         'action.update': '更新(フェッチ)',
+      'action.updateBranch': '更新',
         'action.push': 'プッシュ',
         'action.newTag': '新しいタグ...',
         'action.cherryPick': 'チェリーピック',
@@ -2201,6 +2217,8 @@ window.__ModuleLoader__.load({
         'push.hint': 'ファイルをダブルクリックすると変更を表示します',
         'toast.committed': 'コミットしました',
         'toast.pushed': '{n} 件のコミットを {target} にプッシュしました',
+      'toast.branchUpdated': '{name} を更新しました',
+      'toast.branchPushed': '{name} をプッシュしました',
         'delete.confirm': 'ブランチ {name} を削除しますか?その後トーストから復元できます(git は未マージのブランチを引き続き拒否します)。',
         'discard.confirm': '{path} の変更を破棄しますか?ワークツリーの内容が上書きされます —— その後トーストから復元できます。',
         'resetHard.confirm': '{hash} にハードリセットしますか?未コミットの変更は失われます。',
@@ -2301,6 +2319,7 @@ window.__ModuleLoader__.load({
         'action.rebaseCurrentOnto': '현재 브랜치를 여기로 리베이스',
         'action.compare': '현재 브랜치와 비교',
         'action.update': '업데이트(페치)',
+      'action.updateBranch': '업데이트',
         'action.push': '푸시',
         'action.newTag': '새 태그...',
         'action.cherryPick': '체리픽',
@@ -2547,6 +2566,8 @@ window.__ModuleLoader__.load({
         'push.hint': '파일을 두 번 클릭하면 변경 내용을 볼 수 있습니다',
         'toast.committed': '커밋했습니다',
         'toast.pushed': '{n}개 커밋을 {target}에 푸시했습니다',
+      'toast.branchUpdated': '{name} 업데이트됨',
+      'toast.branchPushed': '{name} 푸시됨',
         'delete.confirm': '브랜치 {name}을(를) 삭제할까요? 이후 토스트에서 복원할 수 있습니다(git은 병합되지 않은 브랜치를 계속 거부합니다).',
         'discard.confirm': '{path}의 변경 사항을 버릴까요? 워크트리 내용이 덮어써집니다 —— 이후 토스트에서 복원할 수 있습니다.',
         'resetHard.confirm': '{hash}로 하드 리셋할까요? 커밋하지 않은 변경 사항은 사라집니다.',
@@ -2647,6 +2668,7 @@ window.__ModuleLoader__.load({
         'action.rebaseCurrentOnto': 'Aktuellen Branch hierauf rebasen',
         'action.compare': 'Mit aktuellem Branch vergleichen',
         'action.update': 'Aktualisieren (fetch)',
+      'action.updateBranch': 'Aktualisieren',
         'action.push': 'Push',
         'action.newTag': 'Neuer Tag...',
         'action.cherryPick': 'Cherry-Pick',
@@ -2893,6 +2915,8 @@ window.__ModuleLoader__.load({
         'push.hint': 'Datei doppelklicken, um die Änderung zu sehen',
         'toast.committed': 'Committet',
         'toast.pushed': '{n} Commits nach {target} gepusht',
+      'toast.branchUpdated': '{name} aktualisiert',
+      'toast.branchPushed': '{name} gepusht',
         'delete.confirm': 'Branch {name} löschen? Ein Hinweis kann ihn danach zurückholen (git verweigert weiterhin nicht gemergte Branches).',
         'discard.confirm': 'Änderungen in {path} verwerfen? Der Arbeitsbaum wird überschrieben —— ein Hinweis kann sie danach zurückholen.',
         'resetHard.confirm': 'Hart auf {hash} zurücksetzen? Nicht committete Änderungen gehen verloren.',
@@ -2993,6 +3017,7 @@ window.__ModuleLoader__.load({
         'action.rebaseCurrentOnto': 'Rebaser la branche courante sur celle-ci',
         'action.compare': 'Comparer avec la branche courante',
         'action.update': 'Mettre à jour (fetch)',
+      'action.updateBranch': 'Mettre à jour',
         'action.push': 'Pousser',
         'action.newTag': 'Nouvelle étiquette...',
         'action.cherryPick': 'Cherry-pick',
@@ -3239,6 +3264,8 @@ window.__ModuleLoader__.load({
         'push.hint': 'Double-cliquez un fichier pour voir la modification',
         'toast.committed': 'Commité',
         'toast.pushed': '{n} commits poussés vers {target}',
+      'toast.branchUpdated': '{name} mis à jour',
+      'toast.branchPushed': '{name} poussé',
         'delete.confirm': 'Supprimer la branche {name} ? Une notification peut ensuite la rétablir (git refuse toujours les branches non fusionnées).',
         'discard.confirm': 'Abandonner les modifications de {path} ? Le contenu de l’arbre de travail est écrasé —— une notification peut ensuite le rétablir.',
         'resetHard.confirm': 'Réinitialisation dure sur {hash} ? Les modifications non validées sont perdues.',
@@ -3339,6 +3366,7 @@ window.__ModuleLoader__.load({
         'action.rebaseCurrentOnto': 'Перебазировать текущую ветку сюда',
         'action.compare': 'Сравнить с текущей веткой',
         'action.update': 'Обновить (fetch)',
+      'action.updateBranch': 'Обновить',
         'action.push': 'Отправить',
         'action.newTag': 'Новый тег...',
         'action.cherryPick': 'Cherry-pick',
@@ -3585,6 +3613,8 @@ window.__ModuleLoader__.load({
         'push.hint': 'Дважды щёлкните файл, чтобы увидеть изменение',
         'toast.committed': 'Коммит создан',
         'toast.pushed': 'Отправлено {n} коммитов в {target}',
+      'toast.branchUpdated': '{name} обновлена',
+      'toast.branchPushed': '{name} отправлена',
         'delete.confirm': 'Удалить ветку {name}? Уведомление затем сможет её вернуть (git по-прежнему откажет для несмёрженных веток).',
         'discard.confirm': 'Отменить изменения в {path}? Содержимое рабочего дерева будет перезаписано —— уведомление затем сможет его вернуть.',
         'resetHard.confirm': 'Жёсткий сброс на {hash}? Незакоммиченные изменения будут потеряны.',
@@ -3685,6 +3715,7 @@ window.__ModuleLoader__.load({
         'action.rebaseCurrentOnto': 'Rebasear a branch atual sobre esta',
         'action.compare': 'Comparar com a branch atual',
         'action.update': 'Atualizar (fetch)',
+      'action.updateBranch': 'Atualizar',
         'action.push': 'Enviar',
         'action.newTag': 'Nova tag...',
         'action.cherryPick': 'Cherry-pick',
@@ -3931,6 +3962,8 @@ window.__ModuleLoader__.load({
         'push.hint': 'Clique duas vezes no arquivo para ver a alteração',
         'toast.committed': 'Commit feito',
         'toast.pushed': '{n} commits enviados para {target}',
+      'toast.branchUpdated': '{name} atualizado',
+      'toast.branchPushed': '{name} enviado',
         'delete.confirm': 'Excluir a branch {name}? Um aviso ainda poderá trazê-la de volta (o git continua recusando branches não mescladas).',
         'discard.confirm': 'Descartar as alterações em {path}? O conteúdo da árvore de trabalho será sobrescrito —— um aviso ainda poderá trazê-lo de volta.',
         'resetHard.confirm': 'Redefinição forçada para {hash}? Alterações não commitadas serão perdidas.',
@@ -4031,6 +4064,7 @@ window.__ModuleLoader__.load({
         'action.rebaseCurrentOnto': 'Rebase del branch corrente su questo',
         'action.compare': 'Confronta con il branch corrente',
         'action.update': 'Aggiorna (fetch)',
+      'action.updateBranch': 'Aggiorna',
         'action.push': 'Push',
         'action.newTag': 'Nuovo tag...',
         'action.cherryPick': 'Cherry-pick',
@@ -4277,6 +4311,8 @@ window.__ModuleLoader__.load({
         'push.hint': 'Fai doppio clic sul file per vedere la modifica',
         'toast.committed': 'Commit eseguito',
         'toast.pushed': '{n} commit inviati a {target}',
+      'toast.branchUpdated': '{name} aggiornato',
+      'toast.branchPushed': '{name} inviato',
         'delete.confirm': 'Eliminare il branch {name}? Un avviso potrà comunque riportarlo indietro (git continua a rifiutare i branch non uniti).',
         'discard.confirm': 'Scartare le modifiche in {path}? Il contenuto dell’albero di lavoro viene sovrascritto —— un avviso potrà comunque riportarlo indietro.',
         'resetHard.confirm': 'Reset forzato a {hash}? Le modifiche non committate andranno perse.',
@@ -4377,6 +4413,7 @@ window.__ModuleLoader__.load({
         'action.rebaseCurrentOnto': 'Huidige branch rebasen op deze',
         'action.compare': 'Vergelijken met huidige branch',
         'action.update': 'Bijwerken (fetch)',
+      'action.updateBranch': 'Bijwerken',
         'action.push': 'Pushen',
         'action.newTag': 'Nieuwe tag...',
         'action.cherryPick': 'Cherry-pick',
@@ -4623,6 +4660,8 @@ window.__ModuleLoader__.load({
         'push.hint': 'Dubbelklik een bestand om de wijziging te zien',
         'toast.committed': 'Gecommit',
         'toast.pushed': '{n} commits naar {target} gepusht',
+      'toast.branchUpdated': '{name} bijgewerkt',
+      'toast.branchPushed': '{name} gepusht',
         'delete.confirm': 'Branch {name} verwijderen? Een melding kan hem daarna nog terugbrengen (git weigert nog steeds niet-samengevoegde branches).',
         'discard.confirm': 'Wijzigingen in {path} weggooien? De inhoud van de werkboom wordt overschreven —— een melding kan die daarna nog terugbrengen.',
         'resetHard.confirm': 'Hard resetten naar {hash}? Niet-gecommitte wijzigingen gaan verloren.',
@@ -4723,6 +4762,7 @@ window.__ModuleLoader__.load({
         'action.rebaseCurrentOnto': 'Zrebase’uj bieżącą gałąź na tę',
         'action.compare': 'Porównaj z bieżącą gałęzią',
         'action.update': 'Odśwież (fetch)',
+      'action.updateBranch': 'Aktualizuj',
         'action.push': 'Wypchnij',
         'action.newTag': 'Nowy tag...',
         'action.cherryPick': 'Cherry-pick',
@@ -4969,6 +5009,8 @@ window.__ModuleLoader__.load({
         'push.hint': 'Kliknij plik dwukrotnie, aby zobaczyć zmianę',
         'toast.committed': 'Utworzono commit',
         'toast.pushed': 'Wysłano {n} commitów do {target}',
+      'toast.branchUpdated': 'Zaktualizowano {name}',
+      'toast.branchPushed': 'Wypchnięto {name}',
         'delete.confirm': 'Usunąć gałąź {name}? Powiadomienie może ją potem przywrócić (git nadal odmawia dla niescalonych gałęzi).',
         'discard.confirm': 'Odrzucić zmiany w {path}? Zawartość drzewa roboczego zostanie nadpisana —— powiadomienie może ją potem przywrócić.',
         'resetHard.confirm': 'Twarde przywrócenie do {hash}? Niezapisane zmiany przepadną.',
@@ -5069,6 +5111,7 @@ window.__ModuleLoader__.load({
         'action.rebaseCurrentOnto': 'Rebasa aktuell gren mot denna',
         'action.compare': 'Jämför med aktuell gren',
         'action.update': 'Uppdatera (fetch)',
+      'action.updateBranch': 'Uppdatera',
         'action.push': 'Pusha',
         'action.newTag': 'Ny tagg...',
         'action.cherryPick': 'Cherry-pick',
@@ -5315,6 +5358,8 @@ window.__ModuleLoader__.load({
         'push.hint': 'Dubbelklicka en fil för att se ändringen',
         'toast.committed': 'Committat',
         'toast.pushed': 'Skickade {n} commits till {target}',
+      'toast.branchUpdated': '{name} uppdaterad',
+      'toast.branchPushed': '{name} pushad',
         'delete.confirm': 'Ta bort grenen {name}? En avisering kan sedan fortfarande återställa den (git nekar fortfarande till ej sammanfogade grenar).',
         'discard.confirm': 'Förkasta ändringar i {path}? Arbetsträdets innehåll skrivs över —— en avisering kan sedan fortfarande återställa det.',
         'resetHard.confirm': 'Hård återställning till {hash}? Ej committade ändringar går förlorade.',
@@ -5415,6 +5460,7 @@ window.__ModuleLoader__.load({
         'action.rebaseCurrentOnto': 'Geçerli dalı bunun üzerine rebase et',
         'action.compare': 'Geçerli dalla karşılaştır',
         'action.update': 'Güncelle (fetch)',
+      'action.updateBranch': 'Güncelle',
         'action.push': 'Gönder',
         'action.newTag': 'Yeni etiket...',
         'action.cherryPick': 'Cherry-pick',
@@ -5661,6 +5707,8 @@ window.__ModuleLoader__.load({
         'push.hint': 'Değişikliği görmek için dosyaya çift tıklayın',
         'toast.committed': 'Commit oluşturuldu',
         'toast.pushed': '{n} commit {target} dalına gönderildi',
+      'toast.branchUpdated': '{name} güncellendi',
+      'toast.branchPushed': '{name} gönderildi',
         'delete.confirm': '{name} dalı silinsin mi? Ardından bir bildirim onu geri getirebilir (git birleştirilmemiş dalları yine de reddeder).',
         'discard.confirm': '{path} içindeki değişiklikler atılsın mı? Çalışma ağacının içeriği üzerine yazılır —— ardından bir bildirim onu geri getirebilir.',
         'resetHard.confirm': '{hash} sürümüne zorla sıfırlansın mı? Commit’lenmemiş değişiklikler kaybolur.',
@@ -5761,6 +5809,7 @@ window.__ModuleLoader__.load({
         'action.rebaseCurrentOnto': 'Rebase branch saat ini ke ini',
         'action.compare': 'Bandingkan dengan branch saat ini',
         'action.update': 'Perbarui (fetch)',
+      'action.updateBranch': 'Perbarui',
         'action.push': 'Push',
         'action.newTag': 'Tag baru...',
         'action.cherryPick': 'Cherry-pick',
@@ -6007,6 +6056,8 @@ window.__ModuleLoader__.load({
         'push.hint': 'Klik dua kali file untuk melihat perubahan',
         'toast.committed': 'Commit dibuat',
         'toast.pushed': '{n} commit didorong ke {target}',
+      'toast.branchUpdated': '{name} diperbarui',
+      'toast.branchPushed': '{name} didorong',
         'delete.confirm': 'Hapus branch {name}? Notifikasi masih bisa mengembalikannya (git tetap menolak branch yang belum digabung).',
         'discard.confirm': 'Buang perubahan di {path}? Isi worktree ditimpa —— notifikasi masih bisa mengembalikannya.',
         'resetHard.confirm': 'Reset keras ke {hash}? Perubahan yang belum di-commit akan hilang.',
@@ -6107,6 +6158,7 @@ window.__ModuleLoader__.load({
         'action.rebaseCurrentOnto': 'Rebase nhánh hiện tại lên nhánh này',
         'action.compare': 'So sánh với nhánh hiện tại',
         'action.update': 'Cập nhật (fetch)',
+      'action.updateBranch': 'Cập nhật',
         'action.push': 'Push',
         'action.newTag': 'Thẻ mới...',
         'action.cherryPick': 'Cherry-pick',
@@ -6353,6 +6405,8 @@ window.__ModuleLoader__.load({
         'push.hint': 'Nhấp đúp tệp để xem thay đổi',
         'toast.committed': 'Đã commit',
         'toast.pushed': 'Đã đẩy {n} commit tới {target}',
+      'toast.branchUpdated': 'Đã cập nhật {name}',
+      'toast.branchPushed': 'Đã đẩy {name}',
         'delete.confirm': 'Xoá nhánh {name}? Thông báo sau đó vẫn có thể khôi phục (git vẫn từ chối nhánh chưa hợp nhất).',
         'discard.confirm': 'Bỏ thay đổi trong {path}? Nội dung worktree sẽ bị ghi đè —— thông báo sau đó vẫn có thể khôi phục.',
         'resetHard.confirm': 'Đặt lại cứng về {hash}? Thay đổi chưa commit sẽ mất.',
@@ -6453,6 +6507,7 @@ window.__ModuleLoader__.load({
         'action.rebaseCurrentOnto': 'إعادة تأسيس الفرع الحالي على هذا',
         'action.compare': 'المقارنة مع الفرع الحالي',
         'action.update': 'تحديث (fetch)',
+      'action.updateBranch': 'تحديث',
         'action.push': 'دفع',
         'action.newTag': 'وسم جديد...',
         'action.cherryPick': 'انتقاء',
@@ -6699,6 +6754,8 @@ window.__ModuleLoader__.load({
         'push.hint': 'انقر نقرًا مزدوجًا على الملف لعرض التغيير',
         'toast.committed': 'تم إنشاء الالتزام',
         'toast.pushed': 'تم إرسال {n} التزامات إلى {target}',
+      'toast.branchUpdated': 'تم تحديث {name}',
+      'toast.branchPushed': 'تم دفع {name}',
         'delete.confirm': 'حذف الفرع {name}? يمكن لإشعار بعد ذلك أن يعيده (سيظل git يرفض الفروع غير المدمجة).',
         'discard.confirm': 'تجاهل التغييرات في {path}? سيُستبدل محتوى شجرة العمل —— ويمكن لإشعار بعد ذلك أن يعيده.',
         'resetHard.confirm': 'إعادة تعيين قسرية إلى {hash}? ستفقد التغييرات غير الملتزَم بها.',
@@ -6799,6 +6856,7 @@ window.__ModuleLoader__.load({
         'action.rebaseCurrentOnto': 'वर्तमान शाखा को इस पर रीबेस करें',
         'action.compare': 'वर्तमान शाखा से तुलना करें',
         'action.update': 'अद्यतन करें (fetch)',
+      'action.updateBranch': 'अपडेट',
         'action.push': 'पुश',
         'action.newTag': 'नया टैग...',
         'action.cherryPick': 'चेरी-पिक',
@@ -7045,6 +7103,8 @@ window.__ModuleLoader__.load({
         'push.hint': 'बदलाव देखने के लिए फ़ाइल पर डबल-क्लिक करें',
         'toast.committed': 'कमिट हो गया',
         'toast.pushed': '{n} कमिट {target} पर पुश किए गए',
+      'toast.branchUpdated': '{name} अपडेट हुआ',
+      'toast.branchPushed': '{name} पुश हुआ',
         'delete.confirm': 'शाखा {name} हटाएँ? बाद में एक सूचना इसे वापस ला सकती है (git अब भी अनमर्ज्ड शाखाओं से इनकार करता है)।',
         'discard.confirm': '{path} में परिवर्तन छोड़ें? वर्कट्री की सामग्री अधिलेखित हो जाएगी —— बाद में एक सूचना इसे वापस ला सकती है।',
         'resetHard.confirm': '{hash} पर हार्ड रीसेट करें? बिना कमिट किए परिवर्तन खो जाएँगे।',
@@ -7145,6 +7205,7 @@ window.__ModuleLoader__.load({
         'action.rebaseCurrentOnto': 'รีเบสแบรนช์ปัจจุบันไปที่นี้',
         'action.compare': 'เปรียบเทียบกับแบรนช์ปัจจุบัน',
         'action.update': 'อัปเดต (fetch)',
+      'action.updateBranch': 'อัปเดต',
         'action.push': 'พุช',
         'action.newTag': 'แท็กใหม่...',
         'action.cherryPick': 'เชอร์รีพิก',
@@ -7391,6 +7452,8 @@ window.__ModuleLoader__.load({
         'push.hint': 'ดับเบิลคลิกไฟล์เพื่อดูการเปลี่ยนแปลง',
         'toast.committed': 'คอมมิตแล้ว',
         'toast.pushed': 'ส่ง {n} คอมมิตไปยัง {target} แล้ว',
+      'toast.branchUpdated': 'อัปเดต {name} แล้ว',
+      'toast.branchPushed': 'ส่ง {name} แล้ว',
         'delete.confirm': 'ลบแบรนช์ {name}? จากนั้นยังกู้คืนได้ผ่านการแจ้งเตือน (git ยังคงปฏิเสธแบรนช์ที่ยังไม่รวม)',
         'discard.confirm': 'ทิ้งการเปลี่ยนแปลงใน {path}? เนื้อหาของเวิร์กทรีจะถูกเขียนทับ —— จากนั้นยังกู้คืนได้ผ่านการแจ้งเตือน',
         'resetHard.confirm': 'ฮาร์ดรีเซ็ตไปที่ {hash}? การเปลี่ยนแปลงที่ยังไม่คอมมิตจะหายไป',
@@ -15761,18 +15824,12 @@ window.__ModuleLoader__.load({
       '.git4idea-cs-tool[aria-disabled="true"]{opacity:.4;cursor:default}',
       '.git4idea-cs-sections{flex:1;min-height:0;overflow:auto;padding:0 4px 4px}',
       '.git4idea-cs-head{padding:5px 8px 2px;color:var(--dsw-alias-label-tertiary);font-size:11px;font-weight:600;text-transform:none}',
-      /* New-branch dialog (m02016): the popover box swaps the tree for this card. */
-      '.git4idea-cs-dialog{display:flex;flex-direction:column;gap:8px;padding:8px;overflow:visible;max-height:none}',
-      '.git4idea-cs-dialog-title{font-size:12px;font-weight:700;color:var(--dsw-alias-label-primary)}',
-      '.git4idea-cs-dialog-sub{color:var(--dsw-alias-label-tertiary);font-size:11px;line-height:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
-      '.git4idea-cs-dialog-input{flex:none;width:100%}',
-      '.git4idea-cs-dialog-error{margin:0}',
-      '.git4idea-cs-dialog-actions{display:flex;justify-content:flex-end;gap:6px}',
-      '.git4idea-cs-dialog-btn{height:24px;padding:0 12px;flex:none;border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-sm,8px);background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;font-size:12px;font-weight:600;cursor:pointer}',
-      '.git4idea-cs-dialog-btn:hover{background:var(--dsw-alias-interactive-bg-hover)}',
-      '.git4idea-cs-dialog-ok{border-color:transparent;background:var(--dsw-alias-brand-primary);color:var(--dsw-alias-brand-on-primary,#fff)}',
-      '.git4idea-cs-dialog-ok:hover{background:var(--dsw-alias-brand-primary)}',
-      '.git4idea-cs-dialog-ok:disabled{opacity:.45;cursor:default}',
+      /* Name prompts (m03873): a centered card, not a box that swaps the tree,
+         so the chooser may close while the prompt stays up. One step above the
+         commit and push cards (z 80) since it is the transient of the two. */
+      '.git4idea-prompt-overlay{z-index:81}',
+      '.git4idea-prompt-card{width:min(420px,92vw)}',
+      '.git4idea-dialog-error{color:var(--dsw-alias-state-error-primary,#e5484d);font-size:12px;line-height:16px;white-space:pre-wrap;max-height:120px;overflow:auto}',
       /* Inline secondary menu (m01737 #5): one row per verb, indented under
          the branch row it belongs to. */
       /* Row flyout (m02697 #2): floats beside the chooser, anchored on the row.
@@ -16241,6 +16298,101 @@ window.__ModuleLoader__.load({
        second registration, and its mount could lag the click - which is exactly
        the flash-then-vanish the user reported. The bodies are keyed by
        repository, so no summary, ticked file or diff survives a new dialog. */
+    /* Branch verbs that need a name render HERE, in the middle of the window
+       (m03873). A card inside the composer popover would be clipped by its
+       scroll box and would read as anchored to a row; the frame overlay keeps
+       the same shape as the commit card. */
+    const promptDialog = {
+      entry: null,
+      hosted: false,
+      listeners: new Set(),
+      set(entry) {
+        promptDialog.entry = entry
+        for (const listener of promptDialog.listeners) {
+          try { listener() } catch (error) { void error }
+        }
+      },
+      subscribe(listener) {
+        promptDialog.listeners.add(listener)
+        return () => { promptDialog.listeners.delete(listener) }
+      },
+    }
+
+    function CenteredPrompt(props) {
+      const [value, setValue] = useState(props.initialValue === undefined ? '' : props.initialValue)
+      const [error, setError] = useState('')
+      const [busy, setBusy] = useState(false)
+      const alive = useRef(true)
+      const ref = useRef(null)
+      useEffect(() => { if (ref.current !== null) ref.current.focus() }, [])
+      useEffect(() => () => { alive.current = false }, [])
+      const textOf = (caught) => (caught !== null && caught !== undefined && typeof caught.message === 'string' && caught.message !== ''
+        ? caught.message
+        : String(caught))
+      const ready = value.trim() !== '' && busy === false
+      const submit = () => {
+        if (ready !== true) return
+        const name = value.trim()
+        setBusy(true)
+        setError('')
+        Promise.resolve(props.onSubmit(name)).catch((caught) => {
+          if (alive.current === true) setError(textOf(caught))
+        }).then(() => {
+          if (alive.current === true) setBusy(false)
+        })
+      }
+      const onKey = (event) => {
+        if (event.key === 'Enter') { event.preventDefault(); submit() }
+        if (event.key === 'Escape') { event.preventDefault(); if (busy !== true) props.onCancel() }
+      }
+      return E('div', {
+        className: 'git4idea-commit-overlay git4idea-prompt-overlay',
+        'data-git4idea-prompt': '',
+        onMouseDown: (event) => { if (event.target === event.currentTarget && busy !== true) props.onCancel() },
+      },
+        E('div', { className: 'git4idea-dialog git4idea-prompt-card' },
+          E('div', { className: 'git4idea-dialog-title' }, props.title),
+          props.text === undefined || props.text === '' ? null : E('div', { className: 'git4idea-dialog-text' }, props.text),
+          E('input', {
+            ref: ref, className: 'git4idea-input', value: value, spellCheck: false,
+            placeholder: props.placeholder === undefined ? '' : props.placeholder,
+            onChange: (event) => setValue(event.target.value), onKeyDown: onKey,
+          }),
+          error === '' ? null : E('div', { className: 'git4idea-dialog-error', title: error }, error),
+          E('div', { className: 'git4idea-dialog-actions' },
+            E('button', {
+              type: 'button', className: 'git4idea-btn',
+              onClick: () => { if (busy !== true) props.onCancel() },
+            }, props.cancelLabel),
+            E('button', {
+              type: 'button', className: 'git4idea-btn git4idea-btn-primary',
+              disabled: ready === false, onClick: submit,
+            }, props.okLabel))))
+    }
+
+    function PromptDialogHost(props) {
+      const [entry, setEntry] = useState(promptDialog.entry)
+      useEffect(() => {
+        const sync = () => setEntry(promptDialog.entry)
+        sync()
+        const off = promptDialog.subscribe(sync)
+        promptDialog.hosted = true
+        return () => { promptDialog.hosted = false; off() }
+      }, [])
+      if (entry === null) return null
+      return E(CenteredPrompt, {
+        key: entry.key === undefined ? 'prompt' : entry.key,
+        title: entry.title,
+        text: entry.text,
+        initialValue: entry.initialValue,
+        placeholder: entry.placeholder,
+        okLabel: entry.okLabel,
+        cancelLabel: entry.cancelLabel,
+        onSubmit: entry.onSubmit,
+        onCancel: entry.onCancel === undefined ? () => { promptDialog.set(null) } : entry.onCancel,
+      })
+    }
+
     function GitDialogHost(props) {
       const [entry, setEntry] = useState(commitDialog.entry)
       const [pushEntry, setPushEntry] = useState(pushDialog.entry)
@@ -16273,7 +16425,8 @@ window.__ModuleLoader__.load({
           t: props.t,
           ctx: props.ctx,
           onClose: () => { pushDialog.set(null) },
-        }))
+        }),
+        E(PromptDialogHost, null))
     }
 
     /* The card is the panel's commit layer, rebuilt without the panel: every
@@ -16492,16 +16645,6 @@ window.__ModuleLoader__.load({
          bottom. Everything here runs on this pill's own API calls — it lives in
          the host composer and cannot reach the panel. */
       const [branchFilter, setBranchFilter] = useState('')
-      const [newBranchOpen, setNewBranchOpen] = useState(false)
-      const [newBranchName, setNewBranchName] = useState('')
-      /* Where a new branch forks from (m01737 #5): the row menu opens the
-         inline name field with this ref, so "new branch from 'origin/x'" is one
-         step instead of a checkout first. */
-      const [newBranchFrom, setNewBranchFrom] = useState('')
-      /* Only a REMOTE start point may bind an upstream. A local branch with a
-         slash in its name is not a tracking ref, and `--track` on it makes git
-         refuse the whole checkout. */
-      const [newBranchTrack, setNewBranchTrack] = useState(false)
       /* Folded folders of the popover tree, keyed by slash path. Absent means
          open — the tree starts expanded like the IDE's branch chooser. */
       const [csFolded, setCsFolded] = useState({})
@@ -16720,6 +16863,7 @@ window.__ModuleLoader__.load({
       const csCall = async (action, payload, options) => {
         if (repoRoot === null || csBusy !== '') return
         const keepOpen = options !== undefined && options.keepOpen === true
+        const toastText = options !== undefined && typeof options.toast === 'string' ? options.toast : ''
         setCsBusy(action)
         try {
           const result = await request(action, Object.assign({ cwd: cwd, repoRoot: repoRoot }, payload))
@@ -16728,6 +16872,9 @@ window.__ModuleLoader__.load({
           if (keepOpen !== true) setMenu(null)
           setTick((value) => value + 1)
           notifyBranchSwitched(sessionId, repoRoot)
+          /* A row verb that closes the chooser has no error bar left on screen:
+             its result lands in the frame notifications instead (m03873). */
+          if (toastText !== '') toastCenter.push({ text: toastText, tone: 'ok', icon: 'check' })
           /* A merge that stops on conflicts exits 0-as-data, not as a refusal:
              report it instead of closing as if it had succeeded cleanly. */
           if (action === 'merge' && result !== null && result !== undefined && result.conflicted === true) {
@@ -16735,8 +16882,12 @@ window.__ModuleLoader__.load({
             setError(output === '' ? action : output)
           }
         } catch (caught) {
+          const message = caught instanceof Error ? caught.message : String(caught)
           if (keepOpen !== true) setMenu(null)
-          setError(caught instanceof Error ? caught.message : String(caught))
+          setError(message)
+          /* Closing the chooser hides the popover error bar, so the failure must
+             also surface where the result will be looked for (m03873). */
+          if (keepOpen !== true && action !== 'merge') toastCenter.push({ text: message, tone: 'error', icon: 'close' })
         } finally { setCsBusy('') }
       }
       const openPanelSeat = () => {
@@ -16773,39 +16924,51 @@ window.__ModuleLoader__.load({
         }
         openPanelSeat()
       }
-      /* Create-and-switch in one step (m02016): the dialog's confirm runs
-         `git checkout -b` — the same verb the panel's dialog uses — so the new
-         branch is never a dangling ref the user still has to check out. A
-         remote start point also binds the upstream, like every other path here. */
-      const createBranch = async () => {
-        const name = newBranchName.trim()
-        if (name === '' || repoRoot === null || csBusy !== '') return
-        setCsBusy('newBranch')
-        try {
-          const payload = {
-            cwd: cwd, repoRoot: repoRoot, branch: name, create: true, confirm: true,
-          }
-          if (newBranchFrom !== '') {
-            payload.startPoint = newBranchFrom
-            if (newBranchTrack === true) payload.track = true
-          }
-          await request('checkout', payload)
-          setNewBranchName('')
-          setNewBranchFrom('')
-          setNewBranchTrack(false)
-          setNewBranchOpen(false)
-          setMenu(null)
-          setTick((value) => value + 1)
-          notifyBranchSwitched(sessionId, repoRoot)
-        } catch (caught) {
-          setError(caught instanceof Error ? caught.message : String(caught))
-        } finally { setCsBusy('') }
+      /* Name prompts (new branch, rename) live in the FRAME overlay, centered on
+         the window (m03873). The chooser closes first: the card is not part of
+         its scroll body and must survive the popover closing. */
+      const openBranchPrompt = (options) => {
+        if (repoRoot === null) return
+        if (overlaySeatReady !== true) { openPanelSeat(); return }
+        promptDialog.set(Object.assign({}, options, {
+          cancelLabel: t('confirm.cancel'),
+          okLabel: t('confirm.ok'),
+          onCancel: () => { promptDialog.set(null) },
+        }))
+        setMenu(null)
+        setCsMenu(null)
+        setError('')
       }
-      const closeNewBranch = () => {
-        setNewBranchName('')
-        setNewBranchFrom('')
-        setNewBranchTrack(false)
-        setNewBranchOpen(false)
+      /* 更新 works on the SELECTED branch (m03873). The checked-out branch is
+         pulled ff-only; any other branch is fast-forwarded in place by a
+         refspec fetch, which git refuses to move backwards. */
+      const updateBranch = async (entry) => {
+        if (repoRoot === null || csBusy !== '') return
+        const toastText = fill(t('toast.branchUpdated'), { name: entry.name })
+        if (entry.head === true) {
+          await csCall('pull', { mode: 'ff-only' }, { toast: toastText })
+          return
+        }
+        const upstream = entry.upstream === null || entry.upstream === undefined ? '' : String(entry.upstream)
+        const slash = upstream.indexOf('/')
+        const remote = slash > 0 ? upstream.slice(0, slash) : 'origin'
+        const remoteBranch = slash > 0 ? upstream.slice(slash + 1) : entry.name
+        await csCall('fetch', { remote: remote, branch: remoteBranch + ':' + entry.name }, { toast: toastText })
+      }
+      /* 推送 ships the SELECTED branch (m03873). The checked-out branch keeps
+         the full push card, which previews the commits and files; any other
+         branch has no preview route, so it pushes straight from the row. */
+      const pushBranch = async (entry) => {
+        if (repoRoot === null || csBusy !== '') return
+        if (entry.head === true) { openPushDialog(); return }
+        const upstream = entry.upstream === null || entry.upstream === undefined ? '' : String(entry.upstream)
+        const slash = upstream.indexOf('/')
+        const remote = slash > 0 ? upstream.slice(0, slash) : 'origin'
+        const upstreamBranch = slash > 0 ? upstream.slice(slash + 1) : entry.name
+        const refspec = upstreamBranch === entry.name ? entry.name : entry.name + ':' + upstreamBranch
+        await csCall('push', {
+          remote: remote, branch: refspec, confirm: true, setUpstream: slash <= 0,
+        }, { toast: fill(t('toast.branchPushed'), { name: entry.name }) })
       }
       /* A remote row that has no local twin is checked out as a tracking branch
          in one step (the panel's row menu does the same). Only the secondary
@@ -16871,10 +17034,13 @@ window.__ModuleLoader__.load({
           }
           return width
         }
-        const widestLabel = csMenuItems({ entry: entry, kind: kind })
+        const items = csMenuItems({ entry: entry, kind: kind })
+        const widestLabel = items
           .reduce((widest, item) => Math.max(widest, labelWidthOf(item.label)), 0)
         const flyoutWidth = Math.max(240, Math.ceil(widestLabel) + 44)
-        const flyoutHeight = 112
+        /* One 26px row per verb plus the 8px padding (m03873 grew the local
+           list from four to seven, so the height can no longer be a constant). */
+        const flyoutHeight = 8 + items.length * 26
         const gutter = 6
         const viewportWidth = typeof window === 'undefined' ? 0 : (window.innerWidth || 0)
         const viewportHeight = typeof window === 'undefined' ? 0 : (window.innerHeight || 0)
@@ -16917,10 +17083,27 @@ window.__ModuleLoader__.load({
             run: () => {
               setCsMenu(null)
               setError('')
-              setNewBranchFrom(entry.name)
-              setNewBranchTrack(kind === 'remote')
-              setNewBranchName(kind === 'remote' ? entry.name.slice(entry.name.indexOf('/') + 1) : '')
-              setNewBranchOpen(true)
+              openBranchPrompt({
+                key: 'new|' + kind + '|' + entry.name,
+                title: t('toolbar.newBranch'),
+                text: entry.name,
+                initialValue: kind === 'remote' ? entry.name.slice(entry.name.indexOf('/') + 1) : '',
+                placeholder: t('prompt.newBranch'),
+                onSubmit: async (name) => {
+                  const payload = {
+                    cwd: cwd, repoRoot: repoRoot, branch: name, create: true, confirm: true,
+                    startPoint: entry.name,
+                  }
+                  /* Only a REMOTE start point may bind an upstream: `--track` on a
+                     local name git cannot resolve as a tracking ref fails the
+                     whole checkout. */
+                  if (kind === 'remote') payload.track = true
+                  await request('checkout', payload)
+                  promptDialog.set(null)
+                  setTick((value) => value + 1)
+                  notifyBranchSwitched(sessionId, repoRoot)
+                },
+              })
             },
           },
           {
@@ -16929,12 +17112,51 @@ window.__ModuleLoader__.load({
             disabled: entry.head === true || branchName === null || blocked,
             run: () => { setCsMenu(null); void csCall('merge', { branch: entry.name }) },
           },
+          /* Local rows only (m03873): update and push act on the SELECTED ref,
+             not on HEAD; rename needs a local branch to move. The checked-out
+             row keeps working too — pull/push then mean what they say on it. */
+          local ? {
+            id: 'update', icon: 'fetch', label: t('action.updateBranch'),
+            disabled: csBusy !== '',
+            run: () => { setCsMenu(null); void updateBranch(entry) },
+          } : null,
+          local ? {
+            id: 'push', icon: 'push', label: t('action.push'),
+            disabled: csBusy !== '',
+            run: () => { setCsMenu(null); void pushBranch(entry) },
+          } : null,
+          local ? {
+            id: 'rename', icon: 'file', label: t('action.rename'),
+            disabled: csBusy !== '',
+            run: () => {
+              setCsMenu(null)
+              openBranchPrompt({
+                key: 'rename|' + entry.name,
+                title: t('action.rename'),
+                text: entry.name,
+                initialValue: entry.name,
+                placeholder: t('prompt.renameBranch'),
+                onSubmit: async (name) => {
+                  if (name === entry.name) { promptDialog.set(null); return }
+                  await request('branchRename', {
+                    cwd: cwd, repoRoot: repoRoot, from: entry.name, to: name,
+                  })
+                  promptDialog.set(null)
+                  setTick((value) => value + 1)
+                  if (entry.head === true) notifyBranchSwitched(sessionId, repoRoot)
+                },
+              })
+            },
+          } : null,
           {
             id: 'delete', icon: 'trash', tone: 'danger', danger: true, label: t('action.delete'),
             disabled: entry.head === true && local,
             run: () => { setCsMenu(null); csDelete(entry, kind) },
           },
-        ]
+          /* Remote rows get no update/push/rename (m03873), so the list can
+             carry holes — drop them once here; the caller measures and counts
+             the same array. */
+        ].filter((item) => item !== null)
       }
       const csFlyout = () => (csMenu === null ? null : E('div', {
         className: 'git4idea-cs-flyout',
@@ -17054,38 +17276,6 @@ window.__ModuleLoader__.load({
               csTree('remote', t('branches.remote'), csEntries(branchList.remote), 'remote') || [],
               csTree('tags', t('branches.tags'), csEntries(branchList.tags), 'tags') || [],
             )
-            /* New-branch dialog (m02016): the popover ITSELF becomes the dialog
-               while a name is being typed. A card floating inside the scrollable
-               tree would be clipped or dragged by the tree's scroll offset; one
-               box that swaps content has neither failure mode, and Cancel gets
-               the tree back. Create runs the checkout, so the new branch is
-               also the current one. */
-            if (newBranchOpen === true) {
-              return E('div', {
-                className: 'git4idea-cs-menu git4idea-cs-dialog', 'data-cordis-panel': '',
-                onKeyDown: (event) => { if (event.key === 'Escape') closeNewBranch() },
-              },
-                E('div', { className: 'git4idea-cs-dialog-title' }, t('toolbar.newBranch')),
-                newBranchFrom !== '' ? E('div', { className: 'git4idea-cs-dialog-sub', title: newBranchFrom },
-                  t('action.newBranchFrom') + ' · ' + newBranchFrom) : null,
-                E('input', {
-                  className: 'git4idea-cs-input git4idea-cs-dialog-input', value: newBranchName,
-                  spellCheck: false, autoFocus: true,
-                  placeholder: t('prompt.newBranch'),
-                  onChange: (event) => setNewBranchName(event.target.value),
-                  onKeyDown: (event) => { if (event.key === 'Enter') void createBranch() },
-                }),
-                error !== '' ? E('div', { className: 'git4idea-cs-errorbar git4idea-cs-dialog-error', title: error }, error) : null,
-                E('div', { className: 'git4idea-cs-dialog-actions' },
-                  E('button', {
-                    type: 'button', className: 'git4idea-cs-dialog-btn', onClick: closeNewBranch,
-                  }, t('confirm.cancel')),
-                  E('button', {
-                    type: 'button', className: 'git4idea-cs-dialog-btn git4idea-cs-dialog-ok',
-                    disabled: newBranchName.trim() === '' || csBusy !== '' || repoRoot === null,
-                    onClick: () => { void createBranch() },
-                  }, t('confirm.ok'))))
-            }
             return E('div', { ref: popRef, className: 'git4idea-cs-menu git4idea-cs-branches', 'data-cordis-panel': '' },
               E('div', { className: 'git4idea-cs-search' },
                 E('input', {
@@ -17140,7 +17330,7 @@ window.__ModuleLoader__.load({
           : null,
         /* Root-level sibling of the popover, not a child of it: the popover body
            clips and scrolls, which would cut the menu off. */
-        menu === 'branch' && newBranchOpen !== true ? csFlyout() : null,
+        menu === 'branch' ? csFlyout() : null,
       )
     }
 
