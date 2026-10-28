@@ -216,7 +216,7 @@ test('send payloads are self-describing (git commit / branch + repo, v0.13.3 fee
   // would also catch a missing one, a named guard says WHY they must stay).
   for (const key of ['send.commitText', 'send.branchText']) {
     const occurrences = client.split("'" + key + "'").length - 1
-    assert.ok(occurrences >= 21, key + ' must ship in ZH + EN + every LOCALES entry (saw ' + occurrences + ')')
+    assert.ok(occurrences >= 2, key + ' must ship in both shipped dictionaries (saw ' + occurrences + ')')
   }
   // Both git-summary menus (branch + commit) close over the funnel and the
   // label; a stale closure would send the PREVIOUS repo's name (invariant 12:
@@ -476,7 +476,7 @@ test('the diff pane context menu reads the selection before the menu opens (v0.1
   // says WHY they exist).
   for (const key of ['menu.sendDiffLinesToChat', 'menu.sendDiffSnippetToChat', 'menu.copyDiffRef', 'send.diffLinesCommit', 'send.diffLinesWorktree', 'send.diffStaged', 'send.diffUnstaged', 'send.diffNewLines', 'send.diffOldLines']) {
     const occurrences = client.split("'" + key + "'").length - 1
-    assert.ok(occurrences >= 21, key + ' must ship in ZH + EN + every LOCALES entry (saw ' + occurrences + ')')
+    assert.ok(occurrences >= 2, key + ' must ship in both shipped dictionaries (saw ' + occurrences + ')')
   }
 })
 
@@ -638,7 +638,9 @@ test('the rc.2 surface contract: theme-owned menu material on its own layer', ()
   // alone would still let a 16px menu escape an 8px inset, and the 8px inset alone
   // only balances against `left/top >= 4` in ContextMenu.
   assert.match(menu, /box-sizing:border-box/)
-  assert.match(menu, /max-height:calc\(100% - 8px\)/)
+  // m04510 caps the menu at a fixed 320px so a long ref list scrolls instead of
+  // growing past the panel edge.
+  assert.match(menu, /max-height:min\(320px,calc\(100% - 8px\)\)/)
   assert.match(cssRule('.git4idea-menu-wrap'), /max-width:calc\(100% - 8px\)/)
   assert.match(client, /className: 'git4idea-menu-scroll'/)
   assert.match(client, /'data-menu-material': 'translucent'/)
@@ -719,16 +721,15 @@ test('client half has two doors: the native right sidebar, the conversation view
   assert.match(client, /inject: \[\], apply/)
   // Door 3 — the conversation-area view tab (issue #8), beside 对话/轨迹: the
   // ui-conversation `conversation.view` slot, the same contract dsh-context
-  // rides. ON by default; the row Config's `conversationTab` switch in the
-  // settings card drives it live (register/unregister, no reload), and a host
-  // without the row Config keeps the tab (no editor surface exists there).
+  // rides. Always on since m04492: the row Config's `conversationTab` switch
+  // went with the settings card, so the tab is a constant rather than a
+  // register/unregister pair.
   assert.match(client, /const CONVERSATION_VIEW_ID = 'git4idea'/)
-  assert.match(client, /const conversationTabEnabled = \(\) => \{/)
-  assert.match(client, /return value !== false/, 'an absent or true field means the tab is shown')
+  assert.match(client, /const conversationTabEnabled = \(\) => true/)
   assert.match(client, /slots\.inject\('conversation\.view', \(\) => slots\.register\(/)
   assert.match(client, /name: 'conversation\.view', id: CONVERSATION_VIEW_ID, order: 30, locale: LOCALE_NS/)
-  // The seat follows the setting live through the rail-config watchers.
-  assert.match(client, /const unsubscribe = subscribeRailConfig\(sync\)/)
+  // m04492: the switch is a constant, so nothing subscribes to a config.
+  assert.doesNotMatch(client, /subscribeRailConfig/, 'm04492: no row Config subscription is left to drive it')
   // v0.14: TWO native tab types — the main panel and the preview tab. Both are
   // guide-less since m02407 #1: the plugin keeps no entry on the start page, and
   // the preview tab only exists to receive the openTab a diff verb fires.
@@ -740,7 +741,7 @@ test('client half has two doors: the native right sidebar, the conversation view
     'the preview tab carries no guide entry (it is not a start-page destination)')
   assert.doesNotMatch(client, /guide:/, 'no tab type advertises a start-page entry (m02407 #1)')
   const slotSeats = client.match(/slots\.register\(/g) || []
-  assert.equal(slotSeats.length, 4, 'four keyed-slot seats: native pane, preview pane, settings card, conversation view')
+  assert.equal(slotSeats.length, 3, 'three keyed-slot seats: native pane, preview pane, conversation view')
 })
 
 test('host half is an ESM cordis plugin with argv-only git calls', () => {
@@ -900,47 +901,49 @@ test('the dock actions are wired on the native seat only', () => {
   assert.match(client, /node\.closest\('\[data-dockkit-float\]'\)/, 'the float state comes from the float layer marker')
 })
 
-test('every shipped dictionary carries the same key set as zh', () => {
-  // A locale block is preceded by a /* locale: <tag> */ marker, so the blocks
-  // can be sliced without parsing the file. Equality matters because a key
-  // missing from a third language falls back to English at lookup time — a
-  // silent half-translated panel, which is exactly what this catches.
-  //
-  // Each block is cut at its OWN closing brace: the text after the last
-  // dictionary is ordinary code, and a perfectly innocent `'data-action': 'tree',`
-  // in a component reads exactly like a dictionary entry to a line scanner.
-  const keyLines = (segment) => [...segment.matchAll(/^ +'([^']+)': '/gm)].map((match) => match[1]).sort()
-  const bodyOf = (segment) => {
-    const start = segment.indexOf('{')
-    let depth = 0
-    for (let index = start; index < segment.length; index += 1) {
-      if (segment[index] === '{') depth += 1
-      else if (segment[index] === '}') {
-        depth -= 1
-        if (depth === 0) return segment.slice(start, index + 1)
-      }
-    }
-    throw new Error('unterminated dictionary')
-  }
-  const zhSegment = client.slice(client.indexOf('const ZH = {'), client.indexOf('const EN = {'))
-  const zhKeys = keyLines(zhSegment)
+test('the shipped dictionaries come from locale/*.json (m04501)', () => {
+  // m04501 pulled both dictionaries out of client.js into locale/{zh,en}.json and
+  // put ONE tool in charge: utils/i18n.js reads the JSON and rewrites the two
+  // embedded blocks. The bundle cannot require a JSON file at runtime (see
+  // @deepseek-ai/dsh-client-modules: a client bundle resolves only frozen
+  // platform modules), so the copy is generated — never hand-edited. Equality is
+  // the point: a key that drifted would fall back to English mid-panel.
+  const zh = JSON.parse(read('locale/zh.json'))
+  const en = JSON.parse(read('locale/en.json'))
+  const zhKeys = Object.keys(zh.messages).sort()
+  assert.deepEqual(Object.keys(en.messages).sort(), zhKeys, 'en and zh must carry the same key set')
   assert.ok(zhKeys.length >= 140, 'the zh dictionary looks truncated: ' + zhKeys.length)
-
-  const parts = client.split('/* locale: ')
-  assert.ok(parts.length - 1 >= 3, 'expected at least three third-language dictionaries, saw ' + (parts.length - 1))
-  for (let index = 1; index < parts.length; index += 1) {
-    const tag = parts[index].slice(0, parts[index].indexOf(' */'))
-    assert.deepEqual(keyLines(bodyOf(parts[index])), zhKeys, 'dictionary ' + tag + ' does not match the zh key set')
+  for (const [tag, data] of [['zh', zh], ['en', en]]) {
+    assert.equal(typeof data.meta, 'object', tag + ' needs a meta block for the Plugins page')
+    assert.ok(typeof data.meta.title === 'string' && data.meta.title !== '', tag + '.meta.title must be set')
+    assert.ok(typeof data.meta.description === 'string' && data.meta.description !== '', tag + '.meta.description must be set')
+    assert.match(client, new RegExp('i18n:generated:' + tag), 'the embedded ' + tag + ' block is marked generated')
+    assert.match(client, new RegExp('/i18n:generated:' + tag), 'the embedded ' + tag + ' block is closed')
   }
+  // One copy of each dictionary lives in the bundle, and no third language does.
+  assert.match(client, /\n    const ZH = \{\n/)
+  assert.match(client, /\n    const EN = \{\n/)
+  assert.doesNotMatch(client, /\/\* locale: [a-z-]+ \*\//, 'the per-language inline dictionaries are gone')
+  assert.match(client, /tag\.split\('-'\)\[0\] === 'zh' \? ZH : EN/, 'only zh resolves to zh; every other tag falls back to en')
+  assert.match(client, /localeService\.register\(LOCALE_NS, \{ zh: ZH, en: EN \}\)/, 'both dictionaries publish under the plugin namespace')
+  const tool = read('utils/i18n.js')
+  assert.match(tool, /export function sync\(/, 'the extractor owns the embedded blocks')
+  assert.match(tool, /export function translate\(messages, key, params\)/, 'one translator resolves {name} placeholders')
+  assert.match(tool, /export const SUPPORTED_LOCALES = \['en', 'zh'\]/, 'the shipped language list lives in one place')
+  const pkg = JSON.parse(read('package.json'))
+  assert.equal(pkg.scripts['i18n'], 'node utils/i18n.js sync')
+  assert.equal(pkg.scripts['i18n:check'], 'node utils/i18n.js check')
+  assert.ok(pkg.files.includes('utils'), 'the extractor ships with the bundle')
 })
 
 test('the repo ships one README and no upstream bookkeeping', () => {
-  // This fork keeps the code, not the upstream paperwork: AGENTS.md,
-  // CHANGELOG.md, README_EN.md, docs/, scripts/, screenshots.json and .github/
-  // were removed on purpose. A stale copy landing back here would drag the old
-  // release machinery (and its fixed ids) along, so the absence is asserted.
+  // This fork keeps the code, not the upstream paperwork: CHANGELOG.md,
+  // README_EN.md, docs/, scripts/, screenshots.json and .github/ were removed
+  // on purpose. A stale copy landing back here would drag the old release
+  // machinery (and its fixed ids) along, so the absence is asserted. AGENTS.md
+  // is NOT on the list: it is the repository owner's own brief, not upstream.
   assert.ok(exists('README.md'), 'the one README must stay')
-  for (const gone of ['AGENTS.md', 'CHANGELOG.md', 'README_EN.md', 'docs', 'scripts', 'screenshots.json', '.github']) {
+  for (const gone of ['CHANGELOG.md', 'README_EN.md', 'docs', 'scripts', 'screenshots.json', '.github']) {
     assert.ok(!exists(gone), gone + ' must not come back')
   }
 })
@@ -1168,154 +1171,27 @@ test('a divider only exists when it can move something', () => {
   assert.equal(wide.overrides.diff, 200, 'a columns diff ratio converts against the body height')
 })
 
-test('a rail switch writes exactly its own field, and a refused write rolls back', () => {
-  // task-30. Three shapes are locked here because each one produced a switch
-  // that lied about the Host's document:
-  //  1. one field per write — a whole-config write derived from a stale render
-  //     clobbers a sibling toggled a moment earlier (measured: 4 of 16 rapid
-  //     toggles never reached the row Config);
-  //  2. the user's intent is kept SYNCHRONOUSLY — two clicks inside one frame
-  //     both read the pre-click snapshot, so the second click recomputed the
-  //     same target and the toggle was lost (a fast double click netted one step);
-  //  3. a refused/failed write puts the switch back and says so — never a switch
-  //     that stays flipped while the Host still holds the old value.
-  const core = client.slice(client.indexOf('/* ---- rail config core'), client.indexOf('/* ---- end rail config core'))
-  const helpers = new Function('RAIL_IDS', core
-    + '\nreturn { railFieldOf: railFieldOf, railIdOfField: railIdOfField }')(['refresh', 'tree', 'float', 'newBranch'])
-  for (const id of ['refresh', 'tree', 'float', 'newBranch']) {
-    assert.equal(helpers.railIdOfField(helpers.railFieldOf(id)), id, 'railIdOfField must invert railFieldOf for ' + id)
-  }
-  assert.equal(helpers.railIdOfField('railNope'), null, 'a field no action owns must not become a row-Config key')
-  assert.equal(helpers.railIdOfField('rail'), null)
-
-  const writer = client.slice(client.indexOf('function writeRailFields('), client.indexOf('/* One-shot move of the pre-settings rail config'))
-  assert.ok(writer.length > 300, 'writeRailFields must exist')
-  assert.match(writer, /active\.mutate\(ops\)/, 'a burst is submitted as ONE atomic mutation')
-  assert.match(writer, /if \(ready\.writable !== true \|\| typeof active\.mutate !== 'function'\) return \{ sent: false, reason: 'read-only' \}/,
-    'a read-only document must refuse instead of pretending')
-  assert.match(writer, /if \(railForm !== null\) return \{ sent: false, reason: 'not-ready' \}/,
-    'a config surface that has not answered yet must refuse rather than fall through to the legacy home')
-  assert.match(writer, /railIdOfField\(String\(op\.path\[0\]\)\)/, 'the legacy branch addresses ids through the inverse map')
-  assert.match(client, /function writeRailField\(field, value, form\) \{\n\s+return writeRailFields\(\[\{ op: 'set', path: \[field\], value: value \}\], form\)/,
-    'the single-field writer is a wrapper over the batched one')
-
-  const card = client.slice(client.indexOf('function RailSettingsCard('), client.indexOf('function RailSettings('))
-  assert.match(card, /const intent = useRef\(\{\}\)/, 'the intent map must live in a ref (synchronous, survives re-render)')
-  assert.match(card, /Object\.prototype\.hasOwnProperty\.call\(intent\.current, field\)/,
-    'both shown() and toggle() must read the synchronous intent before the snapshot')
-  assert.match(card, /const FLUSH_MS = 250|FLUSH_MS/, 'the write window is a named constant')
-  assert.match(card, /const dirty = useRef\(new Map\(\)\)/, 'the card collects touched fields WITH their target')
-  assert.match(card, /dirty\.current\.set\(field, wanted\)/, 'the target is recorded per field')
-  // The accepted document can already agree with the user's new value, which
-  // clears the optimistic intent before the flush runs; a flush reading the
-  // render-time intent would then submit the OPPOSITE of the click (measured: a
-  // fast double click wrote the switch back to false).
-  assert.match(card, /const targets = new Map\(dirty\.current\)/, 'the flush reads the recorded targets, not the render-time intent')
-  assert.match(card, /value: targets\.get\(field\) === true/, 'the submitted value comes from the recorded target')
-  assert.match(card, /scheduleFlush\(\)/, 'a toggle schedules a flush instead of writing immediately')
-  assert.match(card, /const outcome = writeRailFields\(ops, scope\)/, 'the flush submits the whole burst at once')
-  assert.match(card, /const rollbackFields = \(fields\) => \{/, 'a refused or failed batch has a rollback')
-  assert.match(card, /delete intent\.current\[field\]/, 'the rollback clears the optimistic intent')
-  assert.match(card, /if \(accepted !== true\) \{/, 'the settled promise decides whether to roll back')
-  assert.match(card, /const reconcile = \(field, want, attempt\) => \{/, 'the card reconciles against the accepted document')
-  assert.match(card, /if \(hostValue === want\) return/, 'a converged field needs no further work')
-  assert.match(card, /if \(attempt === 0\) \{/, 'a lost write is re-issued exactly once')
-  // The control's own answer is the TARGET; inverting it writes the opposite.
-  assert.match(card, /const wanted = fromControl !== null/, 'the control value is the target when available')
-  assert.match(card, /\? fromControl\n/, 'fromControl is used as-is, never inverted')
-  assert.match(card, /typeof event\.target\.checked === 'boolean'/, 'the control is read through the event, with a fallback for the label span')
-  assert.match(card, /reconcile\(field, targets\.get\(field\) === true, 0\)/, 'every accepted batch schedules the check against its target')
-  assert.match(card, /for \(const timer of Array\.from\(timers\.current\)\) clearTimeout\(timer\)/, 'unmount clears pending checks')
-  assert.match(card, /t\('settings\.rail\.writeFailed'\)/, 'a refused write is told to the user')
-  assert.match(card, /t\('settings\.rail\.readonly'\)/, 'a read-only host is told to the user')
-  assert.match(card, /disabled: readOnly === true/, 'read-only switches are disabled, not dead controls')
-
-  // Both new sentences exist in every dictionary (the key-set test would also
-  // catch a missing one, but a named guard says WHY it must stay).
-  for (const key of ['settings.rail.writeFailed', 'settings.rail.readonly']) {
-    const occurrences = client.split("'" + key + "'").length - 1
-    assert.ok(occurrences >= 22, key + ' must ship in ZH + EN + every LOCALES entry (saw ' + occurrences + ')')
-  }
-
-  // The placement switch (issue #8) rides the same optimistic-write contract.
-  assert.match(card, /'data-placement-row': field/, 'the placement row is addressable')
-  assert.match(card, /const field = 'conversationTab'/, 'one row-Config field backs the switch')
-  assert.match(card, /values\[field\] !== false/, 'an absent value means the default: shown')
-  assert.match(host, /shape\.conversationTab = live\(schema\.boolean\(\)\.default\(true\)\)/,
-    'the host schema declares the field with default true')
-  // The immersive switch (issue #8 round 3): the SAME contract, and the SAME
-  // trap — a client-side field the host schema does not declare is rejected by
-  // the Host's volatility check ("Config field … is not volatile"), the mutate
-  // fails without any console noise, and the switch silently rolls back. Both
-  // halves must declare the field; both defaults must be true.
-  assert.match(card, /const field = 'immersive'/, 'the immersive switch is backed by its own row-Config field')
-  assert.match(host, /shape\.immersive = live\(schema\.boolean\(\)\.default\(true\)\)/,
-    'the host schema declares the immersive field with default true')
-  // The composer-status switch (v0.19.0) shipped WITHOUT its host field and the
-  // Host refused every write: the card rolled the switch back and said "设置没写
-  // 进去" (v0.19.7 user report). It is the same contract as the two above.
-  assert.match(card, /const field = 'composerStatus'/, 'the composer pill switch is backed by its own row-Config field')
-  assert.match(host, /shape\.composerStatus = live\(schema\.boolean\(\)\.default\(true\)\)/,
-    'the host schema declares the composerStatus field with default true')
-  // Generic guard, so the NEXT field cannot repeat the v0.19.7 bug: every
-  // row-Config field the card writes must be declared volatile in the host
-  // schema. Rail fields are covered by the RAIL_CONFIG_IDS parity test above.
-  const writtenFields = new Set()
-  for (const match of card.matchAll(/const field = '([A-Za-z]+)'/g)) writtenFields.add(match[1])
-  for (const match of card.matchAll(/(?:textRow|selectRow)\('([A-Za-z]+)'/g)) writtenFields.add(match[1])
-  assert.ok(writtenFields.size >= 5, 'the card should still write the placement and commit fields')
-  for (const field of writtenFields) {
-    assert.match(host, new RegExp('shape\\.' + field + ' = live\\(schema\\.'),
-      'the host schema must declare the row-Config field the card writes: ' + field)
-  }
-  // The label click must INVERT what is on screen. The old spelling of the
-  // fallback (`cond ? a : values[field] !== false) !== true`) parses as
-  // `cond ? a : (values[field] !== false)` and then negates only the last
-  // operand, so a label click recomputed the CURRENT value and wrote it back —
-  // a silent no-op. One shared helper keeps the inversion on the whole value.
-  assert.match(card, /const placementTarget = \(field, fromControl\) => \{/,
-    'the placement target rule lives in one helper')
-  assert.match(card, /return current !== true/, 'the fallback target is the inverse of what is on screen')
-  // Check CODE, not the comment that quotes the old spelling.
-  const cardCode = card.replace(/\/\*[\s\S]*?\*\//g, '')
-  assert.doesNotMatch(cardCode, /values\[field\] !== false\) !== true/,
-    'the precedence trap must not come back: parenthesize the whole fallback')
-  for (const field of ['conversationTab', 'immersive', 'composerStatus']) {
-    assert.match(card, new RegExp("const field = '" + field + "'\\n\\s+const inputId = 'git4idea-placement-' \\+ field\\n\\s+const shown = placementShown\\(field\\)"),
-      field + ' must read its switch state through placementShown')
-  }
-  assert.match(card, /const wanted = placementTarget\(field, fromControl\)/,
-    'every placement toggle derives its target from the shared helper')
-  for (const key of ['settings.placement.title', 'settings.placement.tab', 'settings.placement.tabHint',
-    'settings.placement.immersive', 'settings.placement.immersiveHint']) {
-    const occurrences = client.split("'" + key + "'").length - 1
-    assert.ok(occurrences >= 22, key + ' must ship in ZH + EN + every LOCALES entry (saw ' + occurrences + ')')
-  }
-})
-
-test('the settings card folds into collapsible sections, collapsed by default', () => {
-  // The card's controls group into three functional domains behind fold headers
-  // (action rail / placement / AI commit), all collapsed until clicked. The
-  // component is HAND-DRAWN on purpose: the official disclosure row is not
-  // reachable through this plugin's restricted require — dsh-gitbash-shell
-  // v0.38.0-0.38.3 watched it silently degrade to a flat title+stack pile on a
-  // real machine. The readonly/error notes stay OUTSIDE the folds: they are
-  // status, not settings, and a collapsed section must never hide them.
-  const card = client.slice(client.indexOf('function RailSettingsCard('), client.indexOf('function RailSettings('))
-  assert.match(card, /const \[folds, setFolds\] = useState\(\{\}\)/,
-    'the fold state is a hook, declared above every early return')
-  assert.match(card, /className: 'git4idea-foldHead'/, 'each section header is a real button')
-  assert.match(card, /'aria-expanded': open \? 'true' : 'false'/, 'the header announces its state to assistive tech')
-  assert.match(card, /open \? E\('div', \{ className: 'git4idea-stack' \}, body\) : null/,
-    'a collapsed section renders no body at all')
-  for (const key of ['settings.rail.title', 'settings.placement.title', 'settings.commit.title']) {
-    assert.match(card, new RegExp("fold\\('" + key.replace(/\./g, '\\.') + "'"),
-      'the ' + key + ' section header comes from the dictionary')
-  }
-  const titleOccurrences = client.split("'settings.rail.title'").length - 1
-  assert.ok(titleOccurrences >= 22, 'settings.rail.title must ship in ZH + EN + every LOCALES entry (saw ' + titleOccurrences + ')')
-  assert.doesNotMatch(card, /className: 'git4idea-settings-sub'/,
-    'the flat section titles are gone, replaced by fold headers')
+test('the settings surface is code defaults only (m04492)', () => {
+  // The plugin shipped a settings card (action rail / placement / AI commit)
+  // backed by the host row Config, plus a one-shot localStorage migration. The
+  // owner asked for none of it: every option now uses its code default, nothing
+  // reads a config document, and the rail editor is gone with the gear that
+  // opened it. The whole surface is pinned ABSENT so it cannot creep back.
+  assert.doesNotMatch(client, /RailSettingsCard|RailSettings\b/, 'the settings card and the rail editor are gone')
+  assert.doesNotMatch(client, /configForms/, 'no config-form registration is left')
+  assert.doesNotMatch(client, /railFormReady|writeRailFields|writeRailField|migrateRailConfig|subscribeRailConfig/, 'no row-Config writer is left')
+  assert.doesNotMatch(client, /slots\.register\(\{ name: 'plugins\.bundle\.config'/, 'the plugin page no longer mounts a settings card')
+  assert.doesNotMatch(client, /data-action': 'settings'/, 'the gear is gone from the rail')
+  assert.doesNotMatch(host, /railConfigSchema|export const Config/, 'the host declares no row Config')
+  assert.doesNotMatch(host, /@deepseek-ai\/schemastery/, 'the host no longer resolves a schema module')
+  assert.doesNotMatch(host, /ctx\.configForms/, 'the host does not reach a config service')
+  // What remains is the rail's own local order, kept where it always lived.
+  assert.match(client, /function readRailConfig\(\)/, 'the panel still reads its local rail order')
+  assert.match(client, /function writeRailConfig\(config\)/, 'the panel still writes its local rail order')
+  // The three former settings fall back to constants.
+  assert.match(client, /function readCommitSettings\(\) \{\n\s+return \{ model: '', reasoning: '', prompt: '' \}/, 'AI commit settings are the defaults')
+  assert.match(client, /function conversationImmersiveEnabled\(\) \{\n\s+return true/, 'the immersive default is a constant')
+  assert.match(client, /function composerStatusEnabled\(\) \{\n\s+return true/, 'the composer pill default is a constant')
 })
 
 test('the ai commit message keeps the model honest and the input bounded', async () => {
@@ -1419,76 +1295,12 @@ test('the ai commit message keeps the model honest and the input bounded', async
   assert.match(block, /effectiveReasoning === '' \? null : effectiveReasoning/, 'the response reports the effort actually sent')
   assert.match(block, /sawReasoning === true/, 'a budget burned by reasoning is named as such')
   assert.match(block, /spent the whole output budget/, 'the max-tokens diagnosis says what to do about it')
-  assert.match(host, /'commit-models': commitModels/, 'the settings card has a model catalog route')
-  assert.match(host, /'commit-efforts': commitEfforts/, 'the settings card has a per-model efforts route')
-  assert.match(client, /commit-models/, 'the client queries the host model catalog for the picker')
-  assert.match(client, /commit-efforts/, 'the client queries the per-model efforts for the picker')
-  assert.match(client, /'settings\.commit\.modelFollow'/, 'the picker has its follow-the-session option')
-  assert.match(client, /'settings\.commit\.reasoningDefault'/, 'the picker has its no-reasoning default option')
-  assert.match(host, /shape\.commitModel|commitModel/, 'the model setting lives in the row Config')
-})
-
-test('the legacy rail migration lands every field, or does not claim to have run', async () => {
-  // DEF-2 (P1): the migration used to fire sixteen unawaited set() calls and
-  // stamp the marker immediately, so an upgrading user silently lost rail
-  // settings (measured: 15 of 16 fields, and once all of them) and the marker
-  // stopped any retry. It now submits ONE atomic mutation and only stamps the
-  // marker once the Host accepted it.
-  const source = client.slice(client.indexOf('function migrateRailConfig('), client.indexOf('function subscribeRailConfig('))
-  assert.ok(source.length > 300, 'migrateRailConfig must exist')
-  const build = (storage, outcome, accepted) => {
-    const calls = []
-    const notify = []
-    const window = {
-      localStorage: {
-        getItem: (key) => (Object.prototype.hasOwnProperty.call(storage, key) ? storage[key] : null),
-        setItem: (key, value) => { storage[key] = value; notify.push(key) },
-      },
-    }
-    const writeRailFields = (ops, form) => { calls.push({ ops: ops, form: form }); return outcome }
-    const run = new Function('window', 'RAIL_KEY', 'RAIL_MIGRATED_KEY', 'RAIL_IDS', 'railFieldOf', 'railValuesOfConfig', 'normalizeRail', 'railFormReady', 'writeRailFields', 'console',
-      'let railMigrating = false\n' + source + '\nreturn migrateRailConfig')(window, 'dsh-git4idea.rail.v1', 'dsh-git4idea.rail.v1.migrated',
-      ['refresh', 'tag', 'push'],
-      (id) => 'rail' + id.charAt(0).toUpperCase() + id.slice(1),
-      (config) => ({ railRefresh: config.hidden.indexOf('refresh') < 0, railTag: config.hidden.indexOf('tag') < 0, railPush: config.hidden.indexOf('push') < 0 }),
-      (raw) => ({ order: [], hidden: Array.isArray(raw.hidden) ? raw.hidden : [] }),
-      () => ({ status: 'ready', value: accepted }),
-      writeRailFields,
-      { warn: () => {} })
-    return { run: run, calls: calls, storage: storage, notify: notify, form: { name: 'form' } }
-  }
-
-  // 1 — every legacy field goes in ONE atomic mutation, and the marker follows the write.
-  const ok = build({ 'dsh-git4idea.rail.v1': JSON.stringify({ order: [], hidden: ['refresh', 'tag'] }) }, { sent: true, settled: Promise.resolve(true) }, { railRefresh: true, railTag: true, railPush: true })
-  ok.run(ok.form)
-  assert.equal(ok.calls.length, 1, 'the migration submits exactly one write')
-  assert.deepEqual(ok.calls[0].ops, [
-    { op: 'set', path: ['railRefresh'], value: false },
-    { op: 'set', path: ['railTag'], value: false },
-  ], 'only the fields that actually differ are submitted, one op each')
-  assert.equal(ok.storage['dsh-git4idea.rail.v1.migrated'], undefined, 'the marker must not be stamped before the Host answers')
-  await new Promise((resolve) => setTimeout(resolve, 0))
-  assert.equal(ok.storage['dsh-git4idea.rail.v1.migrated'], '1', 'the marker is stamped once the write was accepted')
-
-  // 2 — a refused write leaves the migration unmarked, and the next load retries.
-  const refused = build({ 'dsh-git4idea.rail.v1': JSON.stringify({ order: [], hidden: ['push'] }) }, { sent: true, settled: Promise.resolve(false) }, {})
-  refused.run(refused.form)
-  await new Promise((resolve) => setTimeout(resolve, 0))
-  assert.equal(refused.storage['dsh-git4idea.rail.v1.migrated'], undefined, 'a refused write must not be marked as migrated')
-  refused.run(refused.form)
-  assert.equal(refused.calls.length, 2, 'the next load retries the migration')
-  const notReady = build({ 'dsh-git4idea.rail.v1': JSON.stringify({ order: [], hidden: ['push'] }) }, { sent: false, reason: 'read-only' }, {})
-  notReady.run(notReady.form)
-  assert.equal(notReady.storage['dsh-git4idea.rail.v1.migrated'], undefined, 'an unwritable document must not be marked as migrated')
-
-  // 3 — once migrated, it never runs twice, and a config that already agrees is a no-op.
-  const already = build({ 'dsh-git4idea.rail.v1': JSON.stringify({ order: [], hidden: ['push'] }), 'dsh-git4idea.rail.v1.migrated': '1' }, { sent: true, settled: Promise.resolve(true) }, {})
-  already.run(already.form)
-  assert.equal(already.calls.length, 0, 'a migrated profile is not migrated again')
-  const same = build({ 'dsh-git4idea.rail.v1': JSON.stringify({ order: [], hidden: [] }) }, { sent: true, settled: Promise.resolve(true) }, { railRefresh: true, railTag: true, railPush: true })
-  same.run(same.form)
-  assert.equal(same.calls.length, 0, 'a document that already matches is not rewritten')
-  assert.equal(same.storage['dsh-git4idea.rail.v1.migrated'], '1', 'and it still counts as migrated')
+  // m04492 removed the settings card, and its model catalog went with it: with
+  // no stored model the message follows the session route.
+  assert.doesNotMatch(host, /'commit-models': commitModels/, 'the settings-card catalog route went with the card')
+  assert.doesNotMatch(host, /'commit-efforts': commitEfforts/, 'the settings-card efforts route went with the card')
+  assert.doesNotMatch(client, /'settings\.commit\./, 'no settings-card model keys are left')
+  assert.match(host, /fallbackRouteOf/, 'with no stored model the message follows the session route')
 })
 
 test('the overwrite-draft confirmation carries both button labels in every dictionary', () => {
@@ -1502,97 +1314,8 @@ test('the overwrite-draft confirmation carries both button labels in every dicti
   assert.match(dialog, /cancelLabel: t\('confirm\.cancel'\)/, 'the cancel button needs a label')
   for (const key of ['confirm.ok', 'confirm.cancel']) {
     const occurrences = client.split("'" + key + "'").length - 1
-    assert.ok(occurrences >= 21, key + ' must exist in ZH + EN + every LOCALES entry (saw ' + occurrences + ')')
+    assert.ok(occurrences >= 2, key + ' must exist in both shipped dictionaries (saw ' + occurrences + ')')
   }
-})
-
-test('the settings entry draws a gear, not a sunburst', () => {
-  // The rail's settings button used to render a centre dot with eight rays — a
-  // brightness glyph users read as "sun" — under the name `settings`. The entry
-  // now carries the official product gear (toothed contour + centre hole).
-  const start = client.indexOf('settings: [')
-  assert.ok(start > 0, 'the settings entry must stay in the icon table')
-  const line = client.slice(start, client.indexOf('],', start))
-  const paths = [...line.matchAll(/"d":"([^"]*)"/g)].map((match) => match[1])
-  assert.equal(paths.length, 1, 'the IDE gear is one contour with an even-odd hole')
-  assert.ok(paths[0].length > 300, 'the contour must be the long toothed outline, not a small circle')
-  assert.match(line, /"f":1/, 'the gear is a filled silhouette')
-  for (const ray of ['M8 1.8v1.5', 'M8 12.7v1.5', 'M1.8 8h1.5', 'M12.7 8h1.5']) {
-    assert.ok(line.indexOf(ray) < 0, 'no sun ray survives in the gear: ' + ray)
-  }
-  assert.match(client, /E\(Icon, \{ name: 'settings', size: 18 \}\)/, 'the rail settings button still uses it')
-})
-
-test('the rail settings live in the row Config, with localStorage only as the legacy home', () => {
-  // One document, one editor. dsh >= 0.1.7 persists a plugin's settings as the
-  // row Config and serves it through ctx.configForms; the settings card on the
-  // plugin's page edits it, the rail reads it, and the pre-0.9 localStorage value
-  // is migrated once. An older host has no such service — there the localStorage
-  // home and the in-panel editor stay.
-  const start = client.indexOf('/* ---- rail config core')
-  const end = client.indexOf('/* ---- end rail config core')
-  assert.ok(start >= 0 && end > start, 'the rail config core must keep its markers')
-  const core = new Function('RAIL_IDS', client.slice(start, end)
-    + '\nreturn { railFieldOf: railFieldOf, railConfigOfValues: railConfigOfValues, railValuesOfConfig: railValuesOfConfig }')(['refresh', 'tree', 'float'])
-  assert.equal(core.railFieldOf('newBranch'), 'railNewBranch')
-  assert.equal(core.railFieldOf('float'), 'railFloat')
-  assert.deepEqual(core.railConfigOfValues({ railRefresh: true, railTree: false }), { order: ['refresh', 'tree', 'float'], hidden: ['tree'] })
-  assert.deepEqual(core.railConfigOfValues(null).hidden, [], 'a missing field means the default, which is shown')
-  assert.deepEqual(core.railValuesOfConfig({ hidden: ['float'] }), { railRefresh: true, railTree: true, railFloat: false })
-
-  // The host schema mirrors the client rail ids — a new action must not be
-  // silently missing from the settings surface.
-  const hostIds = host.slice(host.indexOf('const RAIL_CONFIG_IDS = ['), host.indexOf(']', host.indexOf('const RAIL_CONFIG_IDS = [')))
-  const schemaIds = [...hostIds.matchAll(/'([a-zA-Z]+)'/g)].map((match) => match[1])
-  const specIds = [...client.slice(client.indexOf('const RAIL_SPECS = ['), client.indexOf('const RAIL_IDS =')).matchAll(/\{ id: '([^']+)'/g)].map((match) => match[1])
-  // m01216 #5 trimmed the rail to the seven branch-tree actions; the host row
-  // Config must still mirror them one-for-one and in order.
-  assert.ok(specIds.length >= 7, 'RAIL_SPECS should still be the action authority')
-  assert.deepEqual(schemaIds, specIds, 'the host row Config must mirror RAIL_SPECS exactly (and in order)')
-  assert.match(host, /shape\['rail' \+ id\.charAt\(0\)\.toUpperCase\(\) \+ id\.slice\(1\)\] = live\(schema\.boolean\(\)\.default\(true\)\)/,
-    'every action is a volatile boolean defaulting to shown')
-  assert.match(host, /export const Config = Schema === null \? undefined : railConfigSchema\(Schema\)/,
-    'an unresolvable schema module must only disable the surface, never the row')
-
-  // The host schema must declare EVERY field the client's settings card writes,
-  // each one volatile (the Host refuses a write to a path that is not
-  // volatile: `Config field "x" is not volatile`). v0.19.0-v0.19.6 wrote
-  // `composerStatus` with no declaration at all, so the Host refused the write,
-  // the card rolled the switch back and showed "设置没写进去" (v0.19.7 user
-  // report). This list is the write surface; adding a card field without the
-  // matching host line must turn this test red.
-  const cardSource = client.slice(client.indexOf('function RailSettingsCard('), client.indexOf('function RailSettings('))
-  const cardFields = new Set()
-  for (const match of cardSource.matchAll(/const field = '([A-Za-z]+)'/g)) cardFields.add(match[1])
-  for (const match of cardSource.matchAll(/(?:textRow|selectRow)\('([A-Za-z]+)'/g)) cardFields.add(match[1])
-  for (const field of cardFields) {
-    assert.match(host, new RegExp('shape\\.' + field + ' = live\\(schema\\.(?:boolean|string)\\(\\)'),
-      'the host row Config must declare the field the settings card writes: ' + field)
-  }
-  assert.ok(cardFields.has('composerStatus'), 'the composer pill switch is part of the write surface')
-
-  // Invariant 2, amended: the host half still imports only node: builtins; the
-  // single non-node module it may REACH (lazily, guarded) is the host-provided
-  // schema module every sibling plugin uses to declare its row Config.
-  const dynamicImports = [...host.matchAll(/await import\('([^']+)'\)/g)].map((match) => match[1])
-  assert.deepEqual(dynamicImports, ['@deepseek-ai/schemastery'], 'the only allowed non-node reach, and it must stay dynamic')
-  assert.doesNotMatch(host, /from '(?!node:)/, 'host half may only import node: builtins')
-
-  // Client wiring: the detail-page seat (the legacy Settings → Plugins seat went
-  // away with the raised host floor), soft services, one-shot migration.
-  assert.match(client, /const SETTINGS_BUNDLE = 'dsh-git4idea'/)
-  assert.match(client, /const RAIL_NS = 'git4idea'/)
-  assert.match(client, /slots\.inject\('plugins\.bundle\.config'/)
-  assert.match(client, /\{ name: 'plugins\.bundle\.config', key: SETTINGS_BUNDLE, locale: LOCALE_NS \}/)
-  assert.doesNotMatch(client, /settings\.plugin\.item/, 'the legacy settings-list seat must stay gone')
-  assert.match(client, /ctx\.inject\(\['configForms'\]/)
-  assert.match(client, /const RAIL_MIGRATED_KEY = 'dsh-git4idea\.rail\.v1\.migrated'/)
-  assert.match(client, /navigation\.openBundle\(SETTINGS_BUNDLE\)/, 'the gear opens the plugin page when the host has one')
-  assert.match(client, /const openSettings = navigation !== undefined && navigation !== null && typeof navigation\.openBundle === 'function'/,
-    'pluginNavigation is read at RENDER time and soft (it may be undefined)')
-  // The in-panel editor exists only where the row Config does not.
-  assert.match(client, /railForm === null \|\| props\.openSettings === null \|\| props\.openSettings === undefined \? 'panel' : 'page'/,
-    'the gear falls back to the in-panel editor only without the config/navigation pair')
 })
 
 test('every overlay is clamped to the panel it lives in', () => {
@@ -1917,7 +1640,7 @@ test('the popover floats the IDEA row verbs and fetch keeps it open (m02697)', (
   assert.match(client, /fill\(t\('action\.mergeInto'\), \{ from: entry\.name, to: branchName === null \? '' : branchName \}\)/, 'merge names both refs')
   assert.match(client, /void csCall\('merge', \{ branch: entry\.name \}\)/, 'merge runs the selected ref into the current branch')
   assert.doesNotMatch(client, /setCsMenu\(null\); openPanelSeat\(\)/, 'the popover compare row is gone; the panel menu keeps its own')
-  assert.equal((client.match(/'action\.mergeInto':/g) || []).length, 21, 'the merge label exists in every dictionary')
+  assert.equal((client.match(/'action\.mergeInto':/g) || []).length, 2, 'the merge label exists in both dictionaries')
   // Every row advertises the menu with a tail chevron; the flyout tracks the row.
   assert.match(client, /className: 'git4idea-cs-item-tail'/, 'rows carry a tail slot')
   assert.match(client, /onClick: \(event\) => \{ openCsMenu\(entry, kind, event\) \}/, 'the row passes its rect to the menu')
@@ -1953,9 +1676,9 @@ test('a local branch row also updates, pushes and renames that branch (m03873)',
   assert.match(client, /toastCenter\.push\(\{ text: toastText, tone: 'ok', icon: 'check' \}\)/, 'a completed verb reports success')
   assert.match(client, /branchPushed/, 'a push reports with its own toast')
   assert.doesNotMatch(client, /newBranchOpen/, 'the old inline dialog state is gone')
-  assert.equal((client.match(/'action\.updateBranch':/g) || []).length, 21, 'the update label exists in every dictionary')
-  assert.equal((client.match(/'toast\.branchUpdated':/g) || []).length, 21, 'the update toast exists in every dictionary')
-  assert.equal((client.match(/'toast\.branchPushed':/g) || []).length, 21, 'the push toast exists in every dictionary')
+  assert.equal((client.match(/'action\.updateBranch':/g) || []).length, 2, 'the update label exists in both dictionaries')
+  assert.equal((client.match(/'toast\.branchUpdated':/g) || []).length, 2, 'the update toast exists in both dictionaries')
+  assert.equal((client.match(/'toast\.branchPushed':/g) || []).length, 2, 'the push toast exists in both dictionaries')
 })
 
 test('an outside checkout renames the composer pill without waiting for the summary poll (m02856)', () => {
@@ -1983,8 +1706,8 @@ test('the composer commit verb raises the dialog on the conversation page (m0209
   // The composer is inside a dock container with contain:layout, so the card
   // must be fixed AND mounted outside that container.
   assert.match(client, /\.git4idea-commit-overlay\{position:fixed;inset:0;z-index:80/, 'the overlay is viewport-fixed')
-  assert.match(client, /title: t\('changes\.commit'\), onClick: openCommitDialog/, 'the popover commit verb raises the dialog directly')
-  assert.doesNotMatch(client, /title: t\('changes\.commit'\), onClick: openPanelSeat/, 'no seat detour is left on the commit verb')
+  assert.match(client, /'data-tip': t\('changes\.commit'\), onClick: openCommitDialog/, 'the popover commit verb raises the dialog directly')
+  assert.doesNotMatch(client, /'data-tip': t\('changes\.commit'\), onClick: openPanelSeat/, 'no seat detour is left on the commit verb')
   // One dialog, its own routes: it must not depend on a mounted Git tab.
   assert.match(client, /await request\('commit', Object\.assign\(\{\}, base, \{/, 'the card runs the commit route itself')
   assert.match(client, /void call\('discard', \{ paths: \[item\.path\], confirm: true, untracked: group === 'untracked' \}\)/, 'discard keeps the panel confirmation copy and confirm flag')
@@ -2072,7 +1795,7 @@ test('panel model picker rides the official model directories (v0.21.0, issue #1
   assert.match(cssRule('.git4idea-mrp-menu'), /max-width:300px/, 'the menu narrows to the panel')
   assert.match(cssRule('.git4idea-mrp-error'), /word-break:break-word/, 'errors wrap instead of overflowing')
   // Dictionary: the six picker keys exist in every gate (21 × 6).
-  assert.equal((client.match(/'modelRoute\.[\w.]+':/g) || []).length, 126, 'the six picker keys exist in all 21 gates')
+  assert.equal((client.match(/'modelRoute\.[\w.]+':/g) || []).length, 12, 'the six picker keys exist in both dictionaries')
 })
 
 
@@ -2106,7 +1829,7 @@ test('upstream management: bind, drop and create-tracking from menus (v0.20.0, i
   assert.match(cssRule('.git4idea-row-upstream'), /max-width:180px/, 'the inline target is capped so it cannot starve the label')
   // Dictionary: 21 gates for all six new keys (key-set equality test pins parity).
   for (const key of ['action.setUpstream', 'action.unsetUpstream', 'action.createLocalBranch', 'prompt.createTracking', 'more.setUpstreamHead', 'more.unsetUpstreamHead']) {
-    assert.equal((client.match(new RegExp("'" + key.replace(/\./g, '\\.') + "':", 'g')) || []).length, 21, '21 gates carry ' + key)
+    assert.equal((client.match(new RegExp("'" + key.replace(/\./g, '\\.') + "':", 'g')) || []).length, 2, 'both dictionaries carry ' + key)
   }
 })
 
@@ -2182,6 +1905,6 @@ test('the push dialog previews its commits and the file card floats (m02986)', (
   // Eight keys × 21 gates; the key-set test pins exact parity.
   for (const key of ['push.title', 'push.none', 'push.detached', 'push.noRemote', 'push.truncated', 'push.hint', 'toast.committed', 'toast.pushed']) {
     const occurrences = client.split("'" + key + "'").length - 1
-    assert.ok(occurrences >= 21, key + ' must ship in ZH + EN + every LOCALES entry (saw ' + occurrences + ')')
+    assert.ok(occurrences >= 2, key + ' must ship in both shipped dictionaries (saw ' + occurrences + ')')
   }
 })

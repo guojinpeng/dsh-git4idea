@@ -24,69 +24,6 @@ import path from 'node:path'
 export const name = 'dsh-git4idea'
 export const inject = ['webServer']
 
-/* Row Config = the plugin's settings surface on dsh >= 0.1.7: the host persists
-   these values under the loader row id ('git4idea', see cordis.patch.yml) and the
-   browser reads them through ctx.configForms, so the settings card on the
-   plugin's page and the action rail read ONE document. The rail's edit is one
-   switch per action (`railRefresh` … `railPush`); a missing field means "default"
-   (the action is shown), which is what keeps an action added by a later version
-   visible on an older profile.
-   `@deepseek-ai/schemastery` is resolved LAZILY: it is a host-provided module
-   (every sibling plugin declares its row Config the same way), and on a host that
-   cannot resolve it the row config is passed through unvalidated instead of the
-   whole row disappearing — so the browser keeps its localStorage home there. */
-let Schema = null
-try {
-  Schema = (await import('@deepseek-ai/schemastery')).default
-} catch (error) {
-  console.warn('[dsh-git4idea] @deepseek-ai/schemastery is not resolvable here; the row Config surface is absent'
-    + ' (the browser falls back to its localStorage rail config): ' + (error && error.message ? error.message : String(error)))
-}
-
-/** Rail action ids, in rail order. MUST mirror RAIL_SPECS in src/client.js. */
-const RAIL_CONFIG_IDS = [
-  'tree', 'newBranch', 'pull', 'delete', 'compare', 'fetch', 'favorite',
-]
-
-/** Volatile refs (dsh >= 0.1.7 settings contract) or plain values on older hosts. */
-function live(schema) {
-  return typeof schema.volatile === 'function' ? schema.volatile() : schema
-}
-
-function railConfigSchema(schema) {
-  const shape = {}
-  for (const id of RAIL_CONFIG_IDS) {
-    shape['rail' + id.charAt(0).toUpperCase() + id.slice(1)] = live(schema.boolean().default(true))
-  }
-  /* AI commit message (issue #6), the three settings the user asked for. Empty
-     string means "follow whatever the session is using" / "no extra prompt", so
-     an untouched profile behaves exactly like the feature's default. */
-  shape.commitModel = live(schema.string().default(''))
-  shape.commitReasoning = live(schema.string().default(''))
-  shape.commitPrompt = live(schema.string().default(''))
-  /* Conversation-area view tab (issue #8): on by default, switchable off from
-     the plugin settings card. false means "do not register the
-     conversation.view seat at all" — the sidebar and dock seats are not
-     affected; a missing field means the default (shown). */
-  shape.conversationTab = live(schema.boolean().default(true))
-  /* Immersive conversation seat (issue #8 round 3): on by default. false means
-     the seat falls back to the pin-to-scrollport layout with a visible
-     composer; a missing field means the default (on). NOTE: the field MUST be
-     declared here — the Host rejects row-Config writes for paths the schema
-     does not mark volatile ("Config field … is not volatile"), and the settings
-     switch then rolls back silently. */
-  shape.immersive = live(schema.boolean().default(true))
-  /* Composer status pill (v0.19.0): the settings card's "输入框 Git 状态" switch
-     and the pill itself read this field. v0.19.0-v0.19.6 shipped the switch and
-     the reader WITHOUT this declaration, so the Host rejected every write with
-     `Config field "composerStatus" is not volatile` — the card rolled the switch
-     back and said "设置没写进去". Any new row-Config field the client writes MUST
-     be declared (and volatile) here, or the write is refused before it lands. */
-  shape.composerStatus = live(schema.boolean().default(true))
-  return schema.object(shape)
-}
-
-export const Config = Schema === null ? undefined : railConfigSchema(Schema)
 
 const ROUTE_PREFIX = '/dsh-git4idea/api'
 const MAX_OUTPUT_BYTES = 8 * 1024 * 1024
@@ -1873,6 +1810,12 @@ async function fallbackRouteOf() {
   return null
 }
 
+/** The bare uuid behind a session id, whichever prefix the caller used. */
+function bareSessionId(id) {
+  const text = String(id).trim()
+  return text.indexOf('session-') === 0 ? text.slice('session-'.length) : text
+}
+
 /** Route the call exactly like the session does when it talks to the model. */
 async function commitRouteOf(payload) {
   const wanted = typeof payload.model === 'string' ? payload.model.trim() : ''
@@ -1880,8 +1823,18 @@ async function commitRouteOf(payload) {
     const id = typeof payload.sessionId === 'string' ? payload.sessionId.trim() : ''
     if (id === '') throw new PanelError('no-session', 'no session id: cannot follow the session model route', 502)
     const list = commitServices.sessions.list()
-    const session = list.filter((row) => String(row.id) === id)[0]
-    if (session === undefined) throw new PanelError('no-session', 'unknown session "' + id + '"', 502)
+    /* m04498: ids cross the wire in both shapes — the shell's projections and
+       the scope hand out the bare uuid, while the composer sometimes carries
+       'session-<uuid>'. Compare on the bare form so either shape finds its row. */
+    const wanted = bareSessionId(id)
+    const session = list.filter((row) => String(row.id) === id || bareSessionId(row.id) === wanted)[0]
+    if (session === undefined) {
+      /* A session that this host does not serve must not fail the button: the
+         served fallback is what every blank session already uses. */
+      const fallback = await fallbackRouteOf()
+      if (fallback !== null) return { provider: fallback.provider, model: fallback.model, source: 'fallback' }
+      throw new PanelError('no-session', 'unknown session "' + id + '"', 502)
+    }
     let header = null
     try { header = session.requestHeader() } catch (error) { header = null; void error }
     const config = header === null || header === undefined || header.config === undefined || header.config === null ? {} : header.config
@@ -1930,71 +1883,6 @@ async function quietOffEffortOf(route) {
   } catch (error) {
     void error
     return ''
-  }
-}
-
-/** The settings card's model picker: every provider route this host serves and
-    the models each one lists. The catalog is advisory (routing accepts
-    unlisted ids, see commitRouteOf), so a stored hand-typed value stays valid
-    even when it is not in this list. */
-async function commitModels() {
-  if (commitServices === null) {
-    throw new PanelError('no-host-service', 'this host does not serve llm + sessions, so there is no model catalog here', 501)
-  }
-  const providers = []
-  for (const row of commitServices.llm.listProviders()) {
-    /* One provider's discovery failing must not hide the others: its entry
-       ships with an empty model list and the picker still works. */
-    let models = []
-    try { models = await commitServices.llm.listModels(row.id) } catch (error) { models = []; void error }
-    providers.push({
-      id: row.id,
-      name: typeof row.name === 'string' && row.name !== '' ? row.name : row.id,
-      models: models
-        .filter((model) => model !== null && typeof model === 'object' && typeof model.id === 'string' && model.id !== '')
-        .map((model) => ({ id: model.id, name: typeof model.name === 'string' && model.name !== '' ? model.name : model.id })),
-    })
-  }
-  return { providers: providers }
-}
-
-/** The settings card's reasoning picker: the efforts one exact provider/model
-    route accepts. An unreachable capability lookup answers with an EMPTY list
-    (the browser falls back to its text field) instead of an error — the picker
-    is a convenience, not a gate. */
-async function commitEfforts(payload) {
-  if (commitServices === null) {
-    throw new PanelError('no-host-service', 'this host does not serve llm + sessions, so there are no reasoning efforts here', 501)
-  }
-  const wanted = typeof payload.model === 'string' ? payload.model.trim() : ''
-  const slash = wanted.indexOf('/')
-  if (slash <= 0 || slash === wanted.length - 1 || wanted.indexOf('/', slash + 1) >= 0) {
-    throw badRequest('model must look like "provider/model"')
-  }
-  const provider = wanted.slice(0, slash)
-  const model = wanted.slice(slash + 1)
-  const known = commitServices.llm.listProviders().map((row) => row.id)
-  if (known.indexOf(provider) < 0) {
-    throw new PanelError('unknown-provider', 'unknown provider "' + provider + '"; this host serves: ' + known.join(', '))
-  }
-  if (typeof commitServices.llm.resolveModelInfo !== 'function') {
-    return { provider: provider, model: model, efforts: [], defaultEffort: null }
-  }
-  try {
-    const info = await commitServices.llm.resolveModelInfo(provider, model)
-    const reasoning = info !== null && typeof info === 'object' && info.reasoning !== null && typeof info.reasoning === 'object' ? info.reasoning : null
-    const efforts = reasoning !== null && Array.isArray(reasoning.efforts) ? reasoning.efforts : []
-    return {
-      provider: provider,
-      model: model,
-      efforts: efforts
-        .filter((row) => row !== null && typeof row === 'object' && typeof row.id === 'string' && row.id !== '')
-        .map((row) => ({ id: row.id, name: typeof row.name === 'string' && row.name !== '' ? row.name : row.id })),
-      defaultEffort: reasoning !== null && typeof reasoning.defaultEffort === 'string' ? reasoning.defaultEffort : null,
-    }
-  } catch (error) {
-    void error
-    return { provider: provider, model: model, efforts: [], defaultEffort: null }
   }
 }
 
@@ -2093,8 +1981,6 @@ async function commitMessage(payload) {
 const METHODS = {
   version,
   'commit-message': commitMessage,
-  'commit-models': commitModels,
-  'commit-efforts': commitEfforts,
   repos,
   summary,
   head: headState,

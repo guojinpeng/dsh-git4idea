@@ -1,6 +1,6 @@
 {
   "name": "dsh-git4idea",
-  "version": "0.21.0",
+  "version": "0.22.0",
   "description": "DSH plugin: an IDE-style Git tool window as a native panel — branch tree, commit graph, changes and commit details. | DSH 插件:IDE 风格 Git 工具窗口,以原生面板挂载——分支树 / 提交图谱 / 变更与提交 / 提交详情。",
   "type": "module",
   "repository": {
@@ -15,7 +15,8 @@
     ".": "./src/index.js",
     "./client": "./src/client.js",
     "./package.json": "./package.json",
-    "./locale/*.json": "./locale/*.json"
+    "./locale/*.json": "./locale/*.json",
+    "./utils/i18n.js": "./utils/i18n.js"
   },
   "engines": {
     "node": ">=18",
@@ -38,6 +39,7 @@
   "files": [
     "icon.svg",
     "locale",
+    "utils",
     "src/index.js",
     "src/client.js",
     "cordis.patch.yml",
@@ -48,6 +50,8 @@
   ],
   "scripts": {
     "test": "node --test tests/smoke.mjs tests/api.test.mjs tests/graph.test.mjs tests/repos.test.mjs",
+    "i18n": "node utils/i18n.js sync",
+    "i18n:check": "node utils/i18n.js check",
     "version": "node -e \"const fs=require('fs');const m=JSON.parse(fs.readFileSync('dsh.plugin.json','utf8'));const v=JSON.parse(fs.readFileSync('package.json','utf8')).version;m.version=v;fs.writeFileSync('dsh.plugin.json',JSON.stringify(m,null,2)+'\\n')\" && git add dsh.plugin.json"
   },
   "keywords": [

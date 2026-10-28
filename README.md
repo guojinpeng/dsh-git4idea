@@ -19,7 +19,8 @@
 - **变更卡**：双击任意文件（推送弹窗、提交详情）都在页面中央浮出独立 diff 卡，不再把右侧栏切走。主题、行号、hunk 高亮与提交弹窗右侧一致。
 - **提交并推送拆两步**：先提交，成功才关提交窗并打开推送窗；推送成功再关。任一步失败都停在当前卡片上，并在右下角通知里说明原因。
 - **右下角通知**：git 的结果与异常都走右下角通知，默认 5 秒消失；鼠标移到通知上暂停计时，离开后重新计 5 秒。通知默认折成 2 行，悬停展开全文，内容过长时可滚动。
-- **IDE 式动作条**：按面板自身尺寸决定放几个按钮，放不下的收进 `⋯`；顺序与显隐可在设置里改。
+- **IDE 式动作条**：按面板自身尺寸决定放几个按钮，放不下的收进 `⋯`；七个动词与顺序是代码里的默认值，没有配置项。
+- **悬停提示**：动作条、顶栏、分支行、变更行的每个按钮悬停约 0.35 秒后在指针下方显示说明，面板滚动时自动收起；不再依赖浏览器原生 `title`（它有时不出现）。
 
 ## 安装
 
@@ -31,22 +32,37 @@ dsh plugin --profile desktop add dsh-git4idea
 
 ## 配置
 
-设置卡片里的「面板」分区（与 DSH 的 row Config 同步）：
+没有配置面。设置卡片、row Config 与迁移逻辑都已移除，所有行为用代码里的默认值：
 
-| 字段 | 作用 |
+| 行为 | 默认值 |
 | --- | --- |
-| `conversationTab` | 是否在会话标签行注册 Git 页（默认开） |
-| `immersive` | 会话内 Git 页是否用沉浸式布局（默认开） |
-| `composerStatus` | 输入框下方是否显示当前分支（默认开） |
-| `rail*` | 动作条每个按钮的显隐（7 个布尔字段：tree / newBranch / pull / delete / compare / fetch / favorite） |
-| `commitModel` / `commitReasoning` / `commitPrompt` | 「AI 写提交信息」用哪个模型、哪档思考、附加提示 |
+| 会话标签行的 Git 页 | 常开 |
+| 会话内布局 | 沉浸式 |
+| 输入框下方分支胶囊 | 常显 |
+| 动作条 | 七个动词：分支栏收缩 / 新建分支 / 从远程拉取更新 / 删除分支 / 对比差异 / fetch / 星标 |
+| AI 写提交信息 | 跟随当前会话的模型路由（会话没配模型时用宿主服务的第一个模型） |
+
+## 文案（i18n）
+
+面板文案只有一个来源：`locale/zh.json` 与 `locale/en.json` 的 `messages`。客户端 bundle 在运行时不读文件（DSH 的客户端半只解析冻结的平台模块），所以这两份 JSON 会被内联进 `src/client.js` 的 `ZH` / `EN` 块。
+
+改文案只改 JSON，然后同步内联副本：
+
+```bash
+npm run i18n        # 用 locale/*.json 重写 client.js 里的内联块
+npm run i18n:check  # 只校验内联块与 JSON 是否一致（不写文件）
+```
+
+`utils/i18n.js` 是唯一的工具：读取语言文件、解析 `{name}` 占位、生成内联块。语种只有 `zh` 与 `en`，其它标签（`zh-CN`、`zh-TW` 之外的 `ja`、`de` 等）回落到 `en`。
 
 ## 开发
 
 无构建：`src/index.js` 是宿主半（只 import `node:` 内置模块，git 调用永远是 argv 数组），`src/client.js` 是客户端半（单文件，保持 `window.__ModuleLoader__.load` 包装，只 require `react`）。
 
 ```bash
-npm test   # smoke + api + graph + repos
+npm test          # smoke + api + graph + repos
+npm run i18n      # 改完 locale/*.json 后同步 client.js 的内联块
+npm run i18n:check
 ```
 
 ## 许可

@@ -844,8 +844,20 @@ test('commit-message: a blank session falls back to the served models; unknown p
   assert.equal(noModels.status, 502)
   assert.equal(noModels.body.error.code, 'no-models')
   assert.match(noModels.body.error.message, /pick a model/, 'the refusal carries the old next step')
-  const noSession = await withServices(fakeLlm([{ type: 'finish', reason: { kind: 'stop' } }]), { list: () => [] }, (call) => call('commit-message', { cwd: repo, sessionId: 'ghost' }))
-  assert.equal(noSession.body.error.code, 'no-session')
+  // m04498: an id this host does not serve must not kill the button. It takes
+  // the same served fallback a blank session takes.
+  const seenGhost = []
+  const ghost = await withServices(fakeLlm([{ type: 'text-delta', index: 0, text: 'chore: ghost' }, { type: 'finish', reason: { kind: 'stop' } }], seenGhost), { list: () => [] }, (call) => call('commit-message', { cwd: repo, sessionId: 'ghost' }))
+  assert.equal(ghost.status, 200, JSON.stringify(ghost.body))
+  assert.equal(ghost.body.data.routeSource, 'fallback', 'an unknown session falls back instead of failing')
+  assert.equal(seenGhost[0].model, 'deepseek-flash', 'the fallback still spends a served model')
+  // m04498: the shell hands out the bare uuid while the composer carries
+  // 'session-<uuid>'. Both shapes must find the same served row.
+  const seenPrefixed = []
+  const prefixed = await withServices(fakeLlm([{ type: 'text-delta', index: 0, text: 'chore: prefixed' }, { type: 'finish', reason: { kind: 'stop' } }], seenPrefixed), { list: () => [{ id: 'sess-1', requestHeader: () => ({ config: { provider: 'deepseek-official', model: 'deepseek-flash' } }) }] }, (call) => call('commit-message', { cwd: repo, sessionId: 'session-sess-1' }))
+  assert.equal(prefixed.status, 200, JSON.stringify(prefixed.body))
+  assert.equal(prefixed.body.data.routeSource, 'session', 'the prefixed id still resolves the session route')
+  assert.equal(seenPrefixed[0].provider, 'deepseek-official', 'the matched row supplies the route')
   const badShape = await withServices(fakeLlm([]), fakeSessions({ provider: 'p', model: 'm' }), (call) => call('commit-message', { cwd: repo, sessionId: 's', model: 'deepseek-flash' }))
   assert.equal(badShape.status, 400)
   assert.match(badShape.body.error.message, /provider\/model/)
@@ -901,35 +913,6 @@ test('commit-message: the reasoning default is off when offered, and never assum
     assert.equal(result.status, 200, JSON.stringify(result.body))
     assert.equal(seen[0].reasoningEffort, undefined, 'a failed lookup leaves the effort to the adapter')
   }
-})
-
-test('commit-models and commit-efforts feed the settings card pickers', async () => {
-  const catalog = await withServices(fakeLlm([]), fakeSessions({ provider: 'p', model: 'm' }), (call) => call('commit-models', {}))
-  assert.equal(catalog.status, 200, JSON.stringify(catalog.body))
-  assert.equal(catalog.body.data.providers.length, 1)
-  assert.equal(catalog.body.data.providers[0].id, 'deepseek-official')
-  assert.equal(catalog.body.data.providers[0].name, 'DeepSeek')
-  assert.deepEqual(catalog.body.data.providers[0].models.map((row) => row.id), ['deepseek-flash'])
-  const efforts = await withServices(fakeLlm([]), fakeSessions({ provider: 'p', model: 'm' }), (call) => call('commit-efforts', { model: 'deepseek-official/deepseek-flash' }))
-  assert.equal(efforts.status, 200, JSON.stringify(efforts.body))
-  assert.deepEqual(efforts.body.data.efforts.map((row) => row.id), ['off', 'high'])
-  assert.equal(efforts.body.data.defaultEffort, 'high')
-  const badShape = await withServices(fakeLlm([]), fakeSessions({ provider: 'p', model: 'm' }), (call) => call('commit-efforts', { model: 'nope' }))
-  assert.equal(badShape.status, 400)
-  assert.match(badShape.body.error.message, /provider\/model/)
-  const badProvider = await withServices(fakeLlm([]), fakeSessions({ provider: 'p', model: 'm' }), (call) => call('commit-efforts', { model: 'ghost/x' }))
-  assert.equal(badProvider.body.error.code, 'unknown-provider')
-  /* The picker is a convenience, not a gate: a capability lookup that fails
-     answers an EMPTY list (the browser keeps its text field), not an error. */
-  const broken = {
-    listProviders: () => [{ id: 'deepseek-official', name: 'DeepSeek' }],
-    listModels: async () => [],
-    resolveModelInfo: async () => { throw new Error('capability lookup down') },
-    stream: () => chunksOf([]),
-  }
-  const quiet = await withServices(broken, fakeSessions({ provider: 'p', model: 'm' }), (call) => call('commit-efforts', { model: 'deepseek-official/deepseek-flash' }))
-  assert.equal(quiet.status, 200, JSON.stringify(quiet.body))
-  assert.deepEqual(quiet.body.data.efforts, [])
 })
 
 test('commit-message: a host without llm/sessions answers no-host-service instead of hanging', async () => {
