@@ -1956,7 +1956,9 @@ test('the composer commit verb raises the dialog on the conversation page (m0209
   assert.match(client, /commitDialog\.set\(null\)/, 'closing drops the request')
   // A host without the slot keeps one working path: the old seat.
   assert.match(client, /if \(repoRoot === null\) \{ openPanelSeat\(\); return \}/, 'a repo-less session still opens the seat')
-  assert.match(client, /if \(commitDialog\.hosted === true\) \{/, 'the seat is only a fallback when the overlay never mounted')
+  assert.match(client, /if \(overlaySeatReady === true\) \{/, 'the seat is only a fallback when no overlay host registered')
+  assert.match(client, /overlaySeatReady = true/, 'registration flips readiness synchronously')
+  assert.doesNotMatch(client, /commitDialog\.hosted === true/, 'readiness no longer waits for a mount effect')
 })
 
 test('long branch names cap at 220px and scroll only on hover, seamlessly (v0.19.13)', () => {
@@ -2115,8 +2117,10 @@ test('the push dialog previews its commits and the file card floats (m02986)', (
   assert.equal((client.match(/run: \(\) => openPushDialog\(\)/g) || []).length, 3, 'palette and both menus share one verb')
   assert.match(client, /if \(remoteReady !== true \|\| blocked === true\) return\n            openPushDialog\(\)/, 'the toolbar button runs the same verb')
   assert.match(client, /const openPushDialog = useCallback\(\(\) => \{/, 'the panel keeps one helper')
-  assert.match(client, /if \(repoRoot === null \|\| pushDialog\.hosted !== true\) \{[^}]*setDialog\(\{ kind: 'push' \}\)[^}]*return/,
-    'a host without the overlay keeps the in-panel push dialog')
+  assert.match(client, /const \[pushOpen, setPushOpen\] = useState\(null\)/, 'the panel raises the push card in its own root (m03471)')
+  assert.match(client, /pushOpen === null \? null : E\(PushDialogBody, \{/, 'the card is plain panel state, so it cannot flash')
+  assert.match(client, /git4idea-commit-overlay-inline/, 'the in-panel card anchors to the panel root')
+  assert.doesNotMatch(client, /setDialog\(\{ kind: 'push' \}\)/, 'no native confirm path is left for push')
 
   // Commit + push is two steps now: commit, close, then push. Both dialogs and
   // the composer pill follow the same order.
@@ -2126,12 +2130,13 @@ test('the push dialog previews its commits and the file card floats (m02986)', (
     'the commit dialog closes before the push dialog opens')
   assert.match(panelCommit, /(?:toastCenter\.push|pushToast)\(\{ text: t\('toast.committed'\)/, 'the commit result lands in the notifications')
   assert.match(client, /if \(push === true\) pushDialog\.set\(\{ cwd: entry\.cwd, repoRoot: entry\.repoRoot, sessionId: entry\.sessionId \}\)/)
-  assert.match(client, /if \(pushDialog\.hosted === true\) \{[^}]*pushDialog\.set\(\{ sessionId: sessionId, cwd: cwd, repoRoot: repoRoot \}\)/,
+  assert.match(client, /if \(overlaySeatReady === true\) \{[^}]*pushDialog\.set\(\{ sessionId: sessionId, cwd: cwd, repoRoot: repoRoot \}\)/,
     'the composer pill raises the card too')
 
   // Notifications are frame-wide now (the cards live outside the panel).
   assert.match(client, /id: 'dsh-git4idea:file'/)
-  assert.match(client, /id: 'dsh-git4idea:push'/)
+  assert.doesNotMatch(client, /id: 'dsh-git4idea:push'/, 'the separate push seat is gone')
+  assert.match(client, /function GitDialogHost\(/, 'one host carries the commit and push cards')
   assert.match(client, /id: 'dsh-git4idea:toasts'/)
   assert.match(client, /'\.git4idea-toasts\{position:fixed;right:12px;bottom:12px;/, 'the stack leaves the panel for the viewport corner')
   assert.match(client, /'\.git4idea-commit-overlay\{position:fixed;inset:0;z-index:80/, 'the push card is viewport-anchored like the commit card')

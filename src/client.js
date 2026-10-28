@@ -10679,6 +10679,14 @@ window.__ModuleLoader__.load({
         props.toasts.map((item) => E(ToastItem, { key: item.id, item: item })))
     }
 
+    /* Hosts that carry `shell.overlay` set this once the four dialog seats are
+       registered (m03471). It is set SYNCHRONOUSLY by the registration call, so
+       an entry that is raised before React has mounted the host still lands in
+       the store and is adopted on mount. The old gate read a host-lifetime flag
+       that was only true AFTER an effect ran; a click during mount, or a host
+       that never mounted, fell through to the sidebar or the native confirm. */
+    let overlaySeatReady = false
+
     /* One bottom-right stack for the whole frame (m02986). The commit, push and
        file dialogs live in shell.overlay - outside the panel's own React root or
        the Git tab - so the queue cannot be panel state any more. Module-level
@@ -11347,18 +11355,7 @@ window.__ModuleLoader__.load({
             className: 'git4idea-input git4idea-input-compact', value: filter, spellCheck: false,
             placeholder: t('branches.filter'),
             onChange: (event) => setFilter(event.target.value),
-          }),
-          /* The IDE log folds the branch pane from its own header chevron
-             (the stripe's first button); the same gesture lives here so the
-             pane can be collapsed without reaching for the rail. */
-          typeof props.onCollapse === 'function' ? E('button', {
-            type: 'button',
-            className: 'git4idea-icon-btn',
-            'data-action': 'tree-collapse',
-            title: t('toolbar.tree'),
-            'aria-label': t('toolbar.tree'),
-            onClick: () => props.onCollapse(),
-          }, E(Icon, { name: 'chevronLeft', size: 14 })) : null),
+          })),
         E('div', {
           className: 'git4idea-tree-scroll',
           ref: treeScrollRef,
@@ -13408,16 +13405,17 @@ window.__ModuleLoader__.load({
         void openDiff({ path: seed.path, staged: seed.staged === true })
       }, [previewDiff, openDiff])
 
-      /* Push is a dialog now (m02986): the commits about to leave first, then
-         the confirmation. A host without shell.overlay keeps the old confirm. */
+      /* Push is a dialog now (m02986), and m03471 moved it INTO the panel: the
+         Git tab is already on screen, so the card is plain panel state. The
+         frame overlay version flashed when its host mounted late, and a second
+         click fell through to the native confirm. The composer pill keeps the
+         overlay store - it can be the only seat on screen. */
+      const [pushOpen, setPushOpen] = useState(null)
       const openPushDialog = useCallback(() => {
         const scopeObject = scope || {}
-        if (repoRoot === null || pushDialog.hosted !== true) {
-          setDialog({ kind: 'push' })
-          return
-        }
-        pushDialog.set({ cwd: scopeObject.cwd, repoRoot: repoRoot, sessionId: scopeObject.sessionId })
-      }, [repoRoot, scope])
+        if (repoRoot === null) return
+        setPushOpen({ cwd: cwd, repoRoot: repoRoot, sessionId: scopeObject.sessionId })
+      }, [cwd, repoRoot, scope])
 
 
       const selectCommit = useCallback(async (commit) => {
@@ -14765,7 +14763,7 @@ window.__ModuleLoader__.load({
               title: t('toolbar.tree'),
               onClick: () => foldTree(!treeOpen),
             }, E(Icon, { name: treeOpen ? 'chevronLeft' : 'chevronRight' }))),
-          treeOpen ? E('div', { className: 'git4idea-compact-tree', 'data-pane': 'tree', style: paneStyle('tree') }, E(BranchTree, { t: t, branches: branches, favorites: favorites, onCheckout: checkout, onBrowse: browseBranch, onBranchMenu: branchMenu, onDeleteEntries: deleteBranchEntries, onCopyValues: copyValues, onPicksChange: onBranchPicks, clearSignal: pickEpochs.tree, onCollapse: () => foldTree(false) })) : null,
+          treeOpen ? E('div', { className: 'git4idea-compact-tree', 'data-pane': 'tree', style: paneStyle('tree') }, E(BranchTree, { t: t, branches: branches, favorites: favorites, onCheckout: checkout, onBrowse: browseBranch, onBranchMenu: branchMenu, onDeleteEntries: deleteBranchEntries, onCopyValues: copyValues, onPicksChange: onBranchPicks, clearSignal: pickEpochs.tree })) : null,
           treeOpen ? gutter('tree', 'prev') : null,
           view === 'changes' ? changesPane : view === 'detail'
             ? E('div', { className: 'git4idea-pane git4idea-pane-main git4idea-pane-detail' }, detailPane)
@@ -14774,7 +14772,7 @@ window.__ModuleLoader__.load({
         // The collapse chevron lives in the action rail, in the same column as the
         // other buttons (m01216 #3), so a folded tree needs no strip of its own.
         body = E('div', { className: 'git4idea-body git4idea-body-columns', ref: bodyRef },
-          treeOpen ? E('div', { className: 'git4idea-pane git4idea-pane-tree', 'data-pane': 'tree', style: paneStyle('tree') }, E(BranchTree, { t: t, branches: branches, favorites: favorites, onCheckout: checkout, onBrowse: browseBranch, onBranchMenu: branchMenu, onDeleteEntries: deleteBranchEntries, onCopyValues: copyValues, onPicksChange: onBranchPicks, clearSignal: pickEpochs.tree, onCollapse: () => foldTree(false) })) : null,
+          treeOpen ? E('div', { className: 'git4idea-pane git4idea-pane-tree', 'data-pane': 'tree', style: paneStyle('tree') }, E(BranchTree, { t: t, branches: branches, favorites: favorites, onCheckout: checkout, onBrowse: browseBranch, onBranchMenu: branchMenu, onDeleteEntries: deleteBranchEntries, onCopyValues: copyValues, onPicksChange: onBranchPicks, clearSignal: pickEpochs.tree })) : null,
           treeOpen ? gutter('tree', 'prev') : null,
           E('div', { className: 'git4idea-pane git4idea-pane-main' }, historyPane, diffGutter, diffPane),
           gutter('changes', 'next'),
@@ -14783,7 +14781,7 @@ window.__ModuleLoader__.load({
           E('div', { className: 'git4idea-pane git4idea-pane-changes git4idea-pane-detail', 'data-pane': 'changes', style: paneStyle('changes') }, detailPane))
       } else {
         body = E('div', { className: 'git4idea-body git4idea-body-stack', ref: bodyRef },
-          treeOpen ? E('div', { className: 'git4idea-pane git4idea-pane-tree-stack', 'data-pane': 'tree', style: paneStyle('tree') }, E(BranchTree, { t: t, branches: branches, favorites: favorites, onCheckout: checkout, onBrowse: browseBranch, onBranchMenu: branchMenu, onDeleteEntries: deleteBranchEntries, onCopyValues: copyValues, onPicksChange: onBranchPicks, clearSignal: pickEpochs.tree, onCollapse: () => foldTree(false) })) : null,
+          treeOpen ? E('div', { className: 'git4idea-pane git4idea-pane-tree-stack', 'data-pane': 'tree', style: paneStyle('tree') }, E(BranchTree, { t: t, branches: branches, favorites: favorites, onCheckout: checkout, onBrowse: browseBranch, onBranchMenu: branchMenu, onDeleteEntries: deleteBranchEntries, onCopyValues: copyValues, onPicksChange: onBranchPicks, clearSignal: pickEpochs.tree })) : null,
           treeOpen ? gutter('tree', 'prev') : null,
           E('div', { className: 'git4idea-pane git4idea-pane-changes-stack git4idea-pane-detail', 'data-pane': 'changes', style: paneStyle('changes') }, detailPane),
           gutter('changes', 'prev'),
@@ -15054,20 +15052,6 @@ window.__ModuleLoader__.load({
           onConfirm: () => { setDialog(null); void run('checkout', { branch: dialog.hash }) },
         }))
       }
-      if (dialog !== null && dialog.kind === 'push') {
-        const branch = summary === null ? '' : summary.branch
-        const target = summary === null || summary.upstream === null ? 'origin' : summary.upstream
-        overlays.push(E(ConfirmDialog, {
-          key: 'push', t: t,
-          title: t('confirm.title'), text: fill(t('push.confirm'), { branch: branch, upstream: target }),
-          okLabel: t('confirm.ok'), cancelLabel: t('confirm.cancel'),
-          onCancel: () => setDialog(null),
-          onConfirm: () => {
-            setDialog(null)
-            void run('push', { confirm: true, setUpstream: summary !== null && summary.upstream === null })
-          },
-        }))
-      }
       // Batch push of the picked local branches — one confirmation naming every
       // branch, then a plain `git push origin name` per branch (each sets its
       // own upstream when it does not track one yet).
@@ -15105,6 +15089,14 @@ window.__ModuleLoader__.load({
           columns === true && repoRoot !== null ? renderRail(true) : null,
           body),
         commitLayer,
+        pushOpen === null ? null : E(PushDialogBody, {
+          key: 'git4idea-panel-push',
+          entry: pushOpen,
+          t: t,
+          ctx: props.ctx,
+          inline: true,
+          onClose: () => { setPushOpen(null) },
+        }),
         gitOutput === null ? null : E(GitOutputDrawer, {
           t: t, entries: gitOutput,
           onRefresh: () => { void openGitOutput() },
@@ -15314,6 +15306,8 @@ window.__ModuleLoader__.load({
          containers whose contain:layout would capture an absolute box. */
       '.git4idea-commit-overlay{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--dsw-alias-bg-scrim,rgba(0,0,0,.32));-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family,system-ui,sans-serif);font-size:13px;line-height:1.5;font-weight:600}',
       '.git4idea-commit-overlay .git4idea-commit-layer-card{width:min(1100px,94vw);height:min(720px,88vh)}',
+      '.git4idea-commit-overlay-inline{position:absolute;z-index:57;padding:16px}',
+      '.git4idea-commit-overlay-inline .git4idea-push-card{width:min(1100px,94%);height:min(720px,88%)}',
       /* Single-file diff dialog (m02986): the commit card's right pane, lifted
          into its own window. The preview root already owns the head/body split. */
       '.git4idea-file-card{display:flex;flex-direction:column;width:min(1100px,94vw);height:min(720px,88vh);overflow:hidden;border-radius:var(--dsw-radius-md,12px);border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1,var(--dsw-alias-bg-layer-2));box-shadow:var(--dsw-elevation-prominent,0 18px 48px rgba(0,0,0,.45))}',
@@ -16242,28 +16236,44 @@ window.__ModuleLoader__.load({
       },
     }
 
-    /* Mounted once by the overlay slot, it renders nothing until a composer
-       raises it. The body is keyed by repository, so no summary, ticked file or
-       diff survives from the previous dialog. */
-    function CommitDialogHost(props) {
+    /* Mounted once by the overlay slot, it renders nothing until a seat raises a
+       card. One host carries both cards (m03471): the push seat used to be a
+       second registration, and its mount could lag the click - which is exactly
+       the flash-then-vanish the user reported. The bodies are keyed by
+       repository, so no summary, ticked file or diff survives a new dialog. */
+    function GitDialogHost(props) {
       const [entry, setEntry] = useState(commitDialog.entry)
+      const [pushEntry, setPushEntry] = useState(pushDialog.entry)
       useEffect(() => {
         const sync = () => setEntry(commitDialog.entry)
+        const syncPush = () => setPushEntry(pushDialog.entry)
         sync()
+        syncPush()
         const off = commitDialog.subscribe(sync)
+        const offPush = pushDialog.subscribe(syncPush)
         commitDialog.hosted = true
+        pushDialog.hosted = true
         return () => {
           commitDialog.hosted = false
+          pushDialog.hosted = false
           off()
+          offPush()
         }
       }, [])
-      if (entry === null) return null
-      return E(CommitDialogBody, {
-        key: entry.sessionId + '|' + entry.repoRoot,
-        entry: entry,
-        t: props.t,
-        onClose: () => commitDialog.set(null),
-      })
+      return E(Fragment, null,
+        entry === null ? null : E(CommitDialogBody, {
+          key: entry.sessionId + '|' + entry.repoRoot,
+          entry: entry,
+          t: props.t,
+          onClose: () => commitDialog.set(null),
+        }),
+        pushEntry === null ? null : E(PushDialogBody, {
+          key: 'push|' + pushEntry.sessionId + '|' + pushEntry.repoRoot,
+          entry: pushEntry,
+          t: props.t,
+          ctx: props.ctx,
+          onClose: () => { pushDialog.set(null) },
+        }))
     }
 
     /* The card is the panel's commit layer, rebuilt without the panel: every
@@ -16745,7 +16755,7 @@ window.__ModuleLoader__.load({
          falls back to the seat so the verb never dies silently. */
       const openCommitDialog = () => {
         if (repoRoot === null) { openPanelSeat(); return }
-        if (commitDialog.hosted === true) {
+        if (overlaySeatReady === true) {
           commitDialog.set({ sessionId: sessionId, cwd: cwd, repoRoot: repoRoot })
           setMenu(null)
           return
@@ -16756,7 +16766,7 @@ window.__ModuleLoader__.load({
          the commits and files instead of publishing on a bare confirm. */
       const openPushDialog = () => {
         if (repoRoot === null) { openPanelSeat(); return }
-        if (pushDialog.hosted === true) {
+        if (overlaySeatReady === true) {
           pushDialog.set({ sessionId: sessionId, cwd: cwd, repoRoot: repoRoot })
           setMenu(null)
           return
@@ -17512,23 +17522,6 @@ window.__ModuleLoader__.load({
       },
     }
 
-    function PushDialogHost(props) {
-      const [entry, setEntry] = useState(pushDialog.entry)
-      useEffect(() => {
-        const off = pushDialog.subscribe(() => { setEntry(pushDialog.entry) })
-        pushDialog.hosted = true
-        return () => { pushDialog.hosted = false; off() }
-      }, [])
-      if (entry === null) return null
-      return E(PushDialogBody, {
-        key: entry.sessionId + '|' + entry.repoRoot,
-        entry: entry,
-        t: props.t,
-        ctx: props.ctx,
-        onClose: () => { pushDialog.set(null) },
-      })
-    }
-
     function PushDialogBody(props) {
       const t = props.t
       const entry = props.entry
@@ -17620,7 +17613,7 @@ window.__ModuleLoader__.load({
               ? t('push.none')
               : ''
       return E('div', {
-        className: 'git4idea-commit-overlay',
+        className: 'git4idea-commit-overlay' + (props.inline === true ? ' git4idea-commit-overlay-inline' : ''),
         'data-git4idea-push-dialog': '',
         onMouseDown: (event) => { if (event.target === event.currentTarget) props.onClose() },
       }, E('div', { className: 'git4idea-push-card' },
@@ -17855,27 +17848,24 @@ window.__ModuleLoader__.load({
         overlayCtx.effect(() => {
           const offCommit = overlaySlots.inject('shell.overlay', () => overlaySlots.register(
             { name: 'shell.overlay', id: 'dsh-git4idea:commit', locale: LOCALE_NS },
-            (overlayProps) => E(CommitDialogHost, Object.assign({}, overlayProps, { t: t, ctx: ctx })),
+            (overlayProps) => E(GitDialogHost, Object.assign({}, overlayProps, { t: t, ctx: ctx })),
           ))
           const offFile = overlaySlots.inject('shell.overlay', () => overlaySlots.register(
             { name: 'shell.overlay', id: 'dsh-git4idea:file', locale: LOCALE_NS },
             (overlayProps) => E(FileDialogHost, Object.assign({}, overlayProps, { t: t, ctx: ctx })),
           ))
-          const offPush = overlaySlots.inject('shell.overlay', () => overlaySlots.register(
-            { name: 'shell.overlay', id: 'dsh-git4idea:push', locale: LOCALE_NS },
-            (overlayProps) => E(PushDialogHost, Object.assign({}, overlayProps, { t: t, ctx: ctx })),
-          ))
           const offToasts = overlaySlots.inject('shell.overlay', () => overlaySlots.register(
             { name: 'shell.overlay', id: 'dsh-git4idea:toasts', locale: LOCALE_NS },
             (overlayProps) => E(ToastHost, Object.assign({}, overlayProps, { t: t })),
           ))
+          overlaySeatReady = true
           return () => {
+            overlaySeatReady = false
             commitDialog.set(null)
             fileDialog.set(null)
             pushDialog.set(null)
             try { offCommit() } catch (error) { void error }
             try { offFile() } catch (error) { void error }
-            try { offPush() } catch (error) { void error }
             try { offToasts() } catch (error) { void error }
           }
         }, 'dsh-git4idea: commit, file and push overlays')
