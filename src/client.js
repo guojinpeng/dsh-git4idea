@@ -455,6 +455,14 @@ window.__ModuleLoader__.load({
       'counts.conflicted': '冲突 {n}',
       'push.confirm': '将 {branch} 推送到 {upstream}?',
       'push.confirmMany': "将推送 {n} 个分支:{names}。确定?",
+      'push.title': '将提交推送到 {branch}',
+      'push.none': '没有可推送的提交',
+      'push.detached': 'HEAD 处于游离状态，无法推送',
+      'push.noRemote': '未配置远程仓库',
+      'push.truncated': '只显示最近 {n} 个提交',
+      'push.hint': '双击文件查看变更',
+      'toast.committed': '提交成功',
+      'toast.pushed': '已将 {n} 个提交推送到 {target}',
       'delete.confirm': '删除分支 {name}?删除后浮窗里可以撤回(未合并的分支 git 会拒绝删除)。',
       'discard.confirm': '丢弃 {path} 的更改?工作区内容会被覆盖,丢弃后浮窗里可以撤回。',
       'resetHard.confirm': '硬重置到 {hash}?未提交的更改会丢失。',
@@ -793,6 +801,14 @@ window.__ModuleLoader__.load({
       'counts.conflicted': 'Conflicts {n}',
       'push.confirm': 'Push {branch} to {upstream}?',
       'push.confirmMany': "Push {n} branch(es): {names}?",
+      'push.title': 'Push commits to {branch}',
+      'push.none': 'Nothing to push',
+      'push.detached': 'HEAD is detached, nothing can be pushed',
+      'push.noRemote': 'No remote is configured',
+      'push.truncated': 'Showing the latest {n} commits only',
+      'push.hint': 'Double-click a file to see its change',
+      'toast.committed': 'Committed',
+      'toast.pushed': 'Pushed {n} commits to {target}',
       'delete.confirm': 'Delete branch {name}? A toast will offer to bring it back (git still refuses unmerged branches).',
       'discard.confirm': 'Discard changes in {path}? The working-tree content is overwritten — a toast will offer to bring it back.',
       'resetHard.confirm': 'Hard reset to {hash}? Uncommitted changes are lost.',
@@ -1139,6 +1155,14 @@ window.__ModuleLoader__.load({
         'counts.conflicted': '衝突 {n}',
         'push.confirm': '將 {branch} 推送到 {upstream}?',
         'push.confirmMany': "將推送 {n} 個分支:{names}。確定?",
+        'push.title': '將提交推送到 {branch}',
+        'push.none': '沒有可推送的提交',
+        'push.detached': 'HEAD 處於游離狀態，無法推送',
+        'push.noRemote': '未設定遠端倉庫',
+        'push.truncated': '只顯示最近 {n} 個提交',
+        'push.hint': '雙擊檔案查看變更',
+        'toast.committed': '提交成功',
+        'toast.pushed': '已將 {n} 個提交推送到 {target}',
         'delete.confirm': '刪除分支 {name}?之後可以喺提示條撤回(git 仍然會拒絕未合併嘅分支)。',
         'discard.confirm': '丟棄 {path} 嘅變更?工作區內容會被覆寫 —— 之後可以喺提示條撤回。',
         'resetHard.confirm': '硬重置到 {hash}?未提交嘅變更會遺失。',
@@ -1477,6 +1501,14 @@ window.__ModuleLoader__.load({
         'counts.conflicted': '衝突 {n}',
         'push.confirm': '將 {branch} 推送到 {upstream}?',
         'push.confirmMany': "將推送 {n} 個分支:{names}。確定?",
+        'push.title': '將提交推送到 {branch}',
+        'push.none': '沒有可推送的提交',
+        'push.detached': 'HEAD 處於分離狀態，無法推送',
+        'push.noRemote': '未設定遠端倉庫',
+        'push.truncated': '只顯示最近 {n} 個提交',
+        'push.hint': '雙擊檔案查看變更',
+        'toast.committed': '提交成功',
+        'toast.pushed': '已將 {n} 個提交推送到 {target}',
         'delete.confirm': '刪除分支 {name}?之後可從提示條撤回(git 仍會拒絕未合併的分支)。',
         'discard.confirm': '丟棄 {path} 的變更?工作區內容會被覆寫 —— 之後可從提示條撤回。',
         'resetHard.confirm': '硬重置到 {hash}?未提交的變更會遺失。',
@@ -1815,6 +1847,14 @@ window.__ModuleLoader__.load({
         'counts.conflicted': '衝突 {n}',
         'push.confirm': '將 {branch} 推送到 {upstream}?',
         'push.confirmMany': "將推送 {n} 個分支:{names}。確定?",
+        'push.title': '將提交推送到 {branch}',
+        'push.none': '沒有可推送的提交',
+        'push.detached': 'HEAD 處於游離狀態，無法推送',
+        'push.noRemote': '未設定遠端倉庫',
+        'push.truncated': '只顯示最近 {n} 個提交',
+        'push.hint': '雙擊檔案查看變更',
+        'toast.committed': '提交成功',
+        'toast.pushed': '已將 {n} 個提交推送到 {target}',
         'delete.confirm': '刪除分支 {name}?之後可以喺提示條撤回(git 仍然會拒絕未合併嘅分支)。',
         'discard.confirm': '丟棄 {path} 嘅變更?工作區內容會被覆寫 —— 之後可以喺提示條撤回。',
         'resetHard.confirm': '硬重置到 {hash}?未提交嘅變更會遺失。',
@@ -2153,6 +2193,14 @@ window.__ModuleLoader__.load({
         'counts.conflicted': '競合 {n}',
         'push.confirm': '{branch} を {upstream} にプッシュしますか?',
         'push.confirmMany': "{n} 個のブランチをプッシュします:{names}。よろしいですか?",
+        'push.title': '{branch} にコミットをプッシュ',
+        'push.none': 'プッシュするコミットはありません',
+        'push.detached': 'HEAD が分離されているためプッシュできません',
+        'push.noRemote': 'リモートが設定されていません',
+        'push.truncated': '最新 {n} 件のコミットのみ表示しています',
+        'push.hint': 'ファイルをダブルクリックすると変更を表示します',
+        'toast.committed': 'コミットしました',
+        'toast.pushed': '{n} 件のコミットを {target} にプッシュしました',
         'delete.confirm': 'ブランチ {name} を削除しますか?その後トーストから復元できます(git は未マージのブランチを引き続き拒否します)。',
         'discard.confirm': '{path} の変更を破棄しますか?ワークツリーの内容が上書きされます —— その後トーストから復元できます。',
         'resetHard.confirm': '{hash} にハードリセットしますか?未コミットの変更は失われます。',
@@ -2491,6 +2539,14 @@ window.__ModuleLoader__.load({
         'counts.conflicted': '충돌 {n}',
         'push.confirm': '{branch}을(를) {upstream}에 푸시할까요?',
         'push.confirmMany': "{n}개 브랜치를 푸시합니다: {names}. 확입니까?",
+        'push.title': '{branch}에 커밋 푸시',
+        'push.none': '푸시할 커밋이 없습니다',
+        'push.detached': 'HEAD가 분리되어 있어 푸시할 수 없습니다',
+        'push.noRemote': '원격이 설정되어 있지 않습니다',
+        'push.truncated': '최근 {n}개 커밋만 표시합니다',
+        'push.hint': '파일을 두 번 클릭하면 변경 내용을 볼 수 있습니다',
+        'toast.committed': '커밋했습니다',
+        'toast.pushed': '{n}개 커밋을 {target}에 푸시했습니다',
         'delete.confirm': '브랜치 {name}을(를) 삭제할까요? 이후 토스트에서 복원할 수 있습니다(git은 병합되지 않은 브랜치를 계속 거부합니다).',
         'discard.confirm': '{path}의 변경 사항을 버릴까요? 워크트리 내용이 덮어써집니다 —— 이후 토스트에서 복원할 수 있습니다.',
         'resetHard.confirm': '{hash}로 하드 리셋할까요? 커밋하지 않은 변경 사항은 사라집니다.',
@@ -2829,6 +2885,14 @@ window.__ModuleLoader__.load({
         'counts.conflicted': 'Konflikte {n}',
         'push.confirm': '{branch} nach {upstream} pushen?',
         'push.confirmMany': "{n} Branch(es) pushen: {names}?",
+        'push.title': 'Commits nach {branch} pushen',
+        'push.none': 'Keine Commits zum Pushen',
+        'push.detached': 'HEAD ist abgekoppelt, kein Push möglich',
+        'push.noRemote': 'Kein Remote konfiguriert',
+        'push.truncated': 'Nur die letzten {n} Commits werden angezeigt',
+        'push.hint': 'Datei doppelklicken, um die Änderung zu sehen',
+        'toast.committed': 'Committet',
+        'toast.pushed': '{n} Commits nach {target} gepusht',
         'delete.confirm': 'Branch {name} löschen? Ein Hinweis kann ihn danach zurückholen (git verweigert weiterhin nicht gemergte Branches).',
         'discard.confirm': 'Änderungen in {path} verwerfen? Der Arbeitsbaum wird überschrieben —— ein Hinweis kann sie danach zurückholen.',
         'resetHard.confirm': 'Hart auf {hash} zurücksetzen? Nicht committete Änderungen gehen verloren.',
@@ -3167,6 +3231,14 @@ window.__ModuleLoader__.load({
         'counts.conflicted': 'Conflits {n}',
         'push.confirm': 'Pousser {branch} vers {upstream} ?',
         'push.confirmMany': "Pousser {n} branche(s) : {names} ?",
+        'push.title': 'Pousser les commits vers {branch}',
+        'push.none': 'Rien à pousser',
+        'push.detached': 'HEAD est détaché, aucun push possible',
+        'push.noRemote': 'Aucun dépôt distant configuré',
+        'push.truncated': 'Seuls les {n} derniers commits sont affichés',
+        'push.hint': 'Double-cliquez un fichier pour voir la modification',
+        'toast.committed': 'Commité',
+        'toast.pushed': '{n} commits poussés vers {target}',
         'delete.confirm': 'Supprimer la branche {name} ? Une notification peut ensuite la rétablir (git refuse toujours les branches non fusionnées).',
         'discard.confirm': 'Abandonner les modifications de {path} ? Le contenu de l’arbre de travail est écrasé —— une notification peut ensuite le rétablir.',
         'resetHard.confirm': 'Réinitialisation dure sur {hash} ? Les modifications non validées sont perdues.',
@@ -3505,6 +3577,14 @@ window.__ModuleLoader__.load({
         'counts.conflicted': 'Конфликты {n}',
         'push.confirm': 'Отправить {branch} в {upstream}?',
         'push.confirmMany': "Отправить ветки ({n}): {names}?",
+        'push.title': 'Отправить коммиты в {branch}',
+        'push.none': 'Нет коммитов для отправки',
+        'push.detached': 'HEAD отсоединён, отправка невозможна',
+        'push.noRemote': 'Удалённый репозиторий не настроен',
+        'push.truncated': 'Показаны только последние {n} коммитов',
+        'push.hint': 'Дважды щёлкните файл, чтобы увидеть изменение',
+        'toast.committed': 'Коммит создан',
+        'toast.pushed': 'Отправлено {n} коммитов в {target}',
         'delete.confirm': 'Удалить ветку {name}? Уведомление затем сможет её вернуть (git по-прежнему откажет для несмёрженных веток).',
         'discard.confirm': 'Отменить изменения в {path}? Содержимое рабочего дерева будет перезаписано —— уведомление затем сможет его вернуть.',
         'resetHard.confirm': 'Жёсткий сброс на {hash}? Незакоммиченные изменения будут потеряны.',
@@ -3843,6 +3923,14 @@ window.__ModuleLoader__.load({
         'counts.conflicted': 'Conflitos {n}',
         'push.confirm': 'Enviar {branch} para {upstream}?',
         'push.confirmMany': "Enviar {n} branch(es): {names}?",
+        'push.title': 'Enviar commits para {branch}',
+        'push.none': 'Nada para enviar',
+        'push.detached': 'HEAD está destacado, não é possível enviar',
+        'push.noRemote': 'Nenhum remoto configurado',
+        'push.truncated': 'Mostrando apenas os últimos {n} commits',
+        'push.hint': 'Clique duas vezes no arquivo para ver a alteração',
+        'toast.committed': 'Commit feito',
+        'toast.pushed': '{n} commits enviados para {target}',
         'delete.confirm': 'Excluir a branch {name}? Um aviso ainda poderá trazê-la de volta (o git continua recusando branches não mescladas).',
         'discard.confirm': 'Descartar as alterações em {path}? O conteúdo da árvore de trabalho será sobrescrito —— um aviso ainda poderá trazê-lo de volta.',
         'resetHard.confirm': 'Redefinição forçada para {hash}? Alterações não commitadas serão perdidas.',
@@ -4181,6 +4269,14 @@ window.__ModuleLoader__.load({
         'counts.conflicted': 'Conflitti {n}',
         'push.confirm': 'Inviare {branch} a {upstream}?',
         'push.confirmMany': "Eseguire il push di {n} branch: {names}?",
+        'push.title': 'Invia i commit a {branch}',
+        'push.none': 'Niente da inviare',
+        'push.detached': 'HEAD è separato, invio non possibile',
+        'push.noRemote': 'Nessun remoto configurato',
+        'push.truncated': 'Mostrati solo gli ultimi {n} commit',
+        'push.hint': 'Fai doppio clic sul file per vedere la modifica',
+        'toast.committed': 'Commit eseguito',
+        'toast.pushed': '{n} commit inviati a {target}',
         'delete.confirm': 'Eliminare il branch {name}? Un avviso potrà comunque riportarlo indietro (git continua a rifiutare i branch non uniti).',
         'discard.confirm': 'Scartare le modifiche in {path}? Il contenuto dell’albero di lavoro viene sovrascritto —— un avviso potrà comunque riportarlo indietro.',
         'resetHard.confirm': 'Reset forzato a {hash}? Le modifiche non committate andranno perse.',
@@ -4519,6 +4615,14 @@ window.__ModuleLoader__.load({
         'counts.conflicted': 'Conflicten {n}',
         'push.confirm': '{branch} naar {upstream} pushen?',
         'push.confirmMany': "{n} branch(es) pushen: {names}?",
+        'push.title': 'Commits naar {branch} pushen',
+        'push.none': 'Niets om te pushen',
+        'push.detached': 'HEAD is losgekoppeld, pushen niet mogelijk',
+        'push.noRemote': 'Geen remote geconfigureerd',
+        'push.truncated': 'Alleen de laatste {n} commits worden getoond',
+        'push.hint': 'Dubbelklik een bestand om de wijziging te zien',
+        'toast.committed': 'Gecommit',
+        'toast.pushed': '{n} commits naar {target} gepusht',
         'delete.confirm': 'Branch {name} verwijderen? Een melding kan hem daarna nog terugbrengen (git weigert nog steeds niet-samengevoegde branches).',
         'discard.confirm': 'Wijzigingen in {path} weggooien? De inhoud van de werkboom wordt overschreven —— een melding kan die daarna nog terugbrengen.',
         'resetHard.confirm': 'Hard resetten naar {hash}? Niet-gecommitte wijzigingen gaan verloren.',
@@ -4857,6 +4961,14 @@ window.__ModuleLoader__.load({
         'counts.conflicted': 'Konflikty {n}',
         'push.confirm': 'Wypchnąć {branch} do {upstream}?',
         'push.confirmMany': "Wysłać gałęzie ({n}): {names}?",
+        'push.title': 'Wyślij commity do {branch}',
+        'push.none': 'Brak commitów do wysłania',
+        'push.detached': 'HEAD jest odłączony, wysyłanie niemożliwe',
+        'push.noRemote': 'Nie skonfigurowano zdalnego repozytorium',
+        'push.truncated': 'Pokazano tylko ostatnie {n} commitów',
+        'push.hint': 'Kliknij plik dwukrotnie, aby zobaczyć zmianę',
+        'toast.committed': 'Utworzono commit',
+        'toast.pushed': 'Wysłano {n} commitów do {target}',
         'delete.confirm': 'Usunąć gałąź {name}? Powiadomienie może ją potem przywrócić (git nadal odmawia dla niescalonych gałęzi).',
         'discard.confirm': 'Odrzucić zmiany w {path}? Zawartość drzewa roboczego zostanie nadpisana —— powiadomienie może ją potem przywrócić.',
         'resetHard.confirm': 'Twarde przywrócenie do {hash}? Niezapisane zmiany przepadną.',
@@ -5195,6 +5307,14 @@ window.__ModuleLoader__.load({
         'counts.conflicted': 'Konflikter {n}',
         'push.confirm': 'Pusha {branch} till {upstream}?',
         'push.confirmMany': "Pusha {n} gren(ar): {names}?",
+        'push.title': 'Skicka commits till {branch}',
+        'push.none': 'Inget att skicka',
+        'push.detached': 'HEAD är frånkopplad, kan inte skicka',
+        'push.noRemote': 'Ingen fjärr konfigurerad',
+        'push.truncated': 'Visar endast de senaste {n} commitsen',
+        'push.hint': 'Dubbelklicka en fil för att se ändringen',
+        'toast.committed': 'Committat',
+        'toast.pushed': 'Skickade {n} commits till {target}',
         'delete.confirm': 'Ta bort grenen {name}? En avisering kan sedan fortfarande återställa den (git nekar fortfarande till ej sammanfogade grenar).',
         'discard.confirm': 'Förkasta ändringar i {path}? Arbetsträdets innehåll skrivs över —— en avisering kan sedan fortfarande återställa det.',
         'resetHard.confirm': 'Hård återställning till {hash}? Ej committade ändringar går förlorade.',
@@ -5533,6 +5653,14 @@ window.__ModuleLoader__.load({
         'counts.conflicted': 'Çakışmalar {n}',
         'push.confirm': '{branch} dalı {upstream} deposuna gönderilsin mi?',
         'push.confirmMany': "{n} dal gönderilecek: {names}. Emin misiniz?",
+        'push.title': 'Commitleri {branch} dalına gönder',
+        'push.none': 'Gönderilecek commit yok',
+        'push.detached': 'HEAD ayrık, gönderilemez',
+        'push.noRemote': 'Uzak depo yapılandırılmadı',
+        'push.truncated': 'Yalnızca son {n} commit gösteriliyor',
+        'push.hint': 'Değişikliği görmek için dosyaya çift tıklayın',
+        'toast.committed': 'Commit oluşturuldu',
+        'toast.pushed': '{n} commit {target} dalına gönderildi',
         'delete.confirm': '{name} dalı silinsin mi? Ardından bir bildirim onu geri getirebilir (git birleştirilmemiş dalları yine de reddeder).',
         'discard.confirm': '{path} içindeki değişiklikler atılsın mı? Çalışma ağacının içeriği üzerine yazılır —— ardından bir bildirim onu geri getirebilir.',
         'resetHard.confirm': '{hash} sürümüne zorla sıfırlansın mı? Commit’lenmemiş değişiklikler kaybolur.',
@@ -5871,6 +5999,14 @@ window.__ModuleLoader__.load({
         'counts.conflicted': 'Konflik {n}',
         'push.confirm': 'Push {branch} ke {upstream}?',
         'push.confirmMany': "Push {n} branch: {names}?",
+        'push.title': 'Dorong commit ke {branch}',
+        'push.none': 'Tidak ada commit untuk didorong',
+        'push.detached': 'HEAD terlepas, tidak dapat mendorong',
+        'push.noRemote': 'Tidak ada remote yang dikonfigurasi',
+        'push.truncated': 'Hanya menampilkan {n} commit terbaru',
+        'push.hint': 'Klik dua kali file untuk melihat perubahan',
+        'toast.committed': 'Commit dibuat',
+        'toast.pushed': '{n} commit didorong ke {target}',
         'delete.confirm': 'Hapus branch {name}? Notifikasi masih bisa mengembalikannya (git tetap menolak branch yang belum digabung).',
         'discard.confirm': 'Buang perubahan di {path}? Isi worktree ditimpa —— notifikasi masih bisa mengembalikannya.',
         'resetHard.confirm': 'Reset keras ke {hash}? Perubahan yang belum di-commit akan hilang.',
@@ -6209,6 +6345,14 @@ window.__ModuleLoader__.load({
         'counts.conflicted': 'Xung đột {n}',
         'push.confirm': 'Push {branch} lên {upstream}?',
         'push.confirmMany': "Push {n} nhánh: {names}?",
+        'push.title': 'Đẩy commit tới {branch}',
+        'push.none': 'Không có commit để đẩy',
+        'push.detached': 'HEAD đang tách rời, không thể đẩy',
+        'push.noRemote': 'Chưa cấu hình remote',
+        'push.truncated': 'Chỉ hiển thị {n} commit gần nhất',
+        'push.hint': 'Nhấp đúp tệp để xem thay đổi',
+        'toast.committed': 'Đã commit',
+        'toast.pushed': 'Đã đẩy {n} commit tới {target}',
         'delete.confirm': 'Xoá nhánh {name}? Thông báo sau đó vẫn có thể khôi phục (git vẫn từ chối nhánh chưa hợp nhất).',
         'discard.confirm': 'Bỏ thay đổi trong {path}? Nội dung worktree sẽ bị ghi đè —— thông báo sau đó vẫn có thể khôi phục.',
         'resetHard.confirm': 'Đặt lại cứng về {hash}? Thay đổi chưa commit sẽ mất.',
@@ -6547,6 +6691,14 @@ window.__ModuleLoader__.load({
         'counts.conflicted': 'التعارضات {n}',
         'push.confirm': 'دفع {branch} إلى {upstream}?',
         'push.confirmMany': "دفع {n} فروع: {names}؟",
+        'push.title': 'إرسال الالتزامات إلى {branch}',
+        'push.none': 'لا توجد التزامات لإرسالها',
+        'push.detached': 'HEAD منفصل، لا يمكن الإرسال',
+        'push.noRemote': 'لم يتم تكوين مستودع بعيد',
+        'push.truncated': 'يتم عرض أحدث {n} التزامات فقط',
+        'push.hint': 'انقر نقرًا مزدوجًا على الملف لعرض التغيير',
+        'toast.committed': 'تم إنشاء الالتزام',
+        'toast.pushed': 'تم إرسال {n} التزامات إلى {target}',
         'delete.confirm': 'حذف الفرع {name}? يمكن لإشعار بعد ذلك أن يعيده (سيظل git يرفض الفروع غير المدمجة).',
         'discard.confirm': 'تجاهل التغييرات في {path}? سيُستبدل محتوى شجرة العمل —— ويمكن لإشعار بعد ذلك أن يعيده.',
         'resetHard.confirm': 'إعادة تعيين قسرية إلى {hash}? ستفقد التغييرات غير الملتزَم بها.',
@@ -6885,6 +7037,14 @@ window.__ModuleLoader__.load({
         'counts.conflicted': 'टकराव {n}',
         'push.confirm': '{branch} को {upstream} पर पुश करें?',
         'push.confirmMany': "{n} शाखाएँ पुश करें: {names}?",
+        'push.title': '{branch} पर कमिट पुश करें',
+        'push.none': 'पुश करने के लिए कोई कमिट नहीं',
+        'push.detached': 'HEAD अलग है, पुश नहीं कर सकते',
+        'push.noRemote': 'कोई रिमोट कॉन्फ़िगर नहीं है',
+        'push.truncated': 'केवल नवीनतम {n} कमिट दिखाए जा रहे हैं',
+        'push.hint': 'बदलाव देखने के लिए फ़ाइल पर डबल-क्लिक करें',
+        'toast.committed': 'कमिट हो गया',
+        'toast.pushed': '{n} कमिट {target} पर पुश किए गए',
         'delete.confirm': 'शाखा {name} हटाएँ? बाद में एक सूचना इसे वापस ला सकती है (git अब भी अनमर्ज्ड शाखाओं से इनकार करता है)।',
         'discard.confirm': '{path} में परिवर्तन छोड़ें? वर्कट्री की सामग्री अधिलेखित हो जाएगी —— बाद में एक सूचना इसे वापस ला सकती है।',
         'resetHard.confirm': '{hash} पर हार्ड रीसेट करें? बिना कमिट किए परिवर्तन खो जाएँगे।',
@@ -7223,6 +7383,14 @@ window.__ModuleLoader__.load({
         'counts.conflicted': 'ความขัดแย้ง {n}',
         'push.confirm': 'พุช {branch} ไปที่ {upstream}?',
         'push.confirmMany': "จะ Push {n} สาขา: {names} ใช่หรือไม่?",
+        'push.title': 'ส่งคอมมิตไปยัง {branch}',
+        'push.none': 'ไม่มีคอมมิตให้ส่ง',
+        'push.detached': 'HEAD แยกออก ส่งไม่ได้',
+        'push.noRemote': 'ยังไม่ได้ตั้งค่า remote',
+        'push.truncated': 'แสดงเฉพาะ {n} คอมมิตล่าสุด',
+        'push.hint': 'ดับเบิลคลิกไฟล์เพื่อดูการเปลี่ยนแปลง',
+        'toast.committed': 'คอมมิตแล้ว',
+        'toast.pushed': 'ส่ง {n} คอมมิตไปยัง {target} แล้ว',
         'delete.confirm': 'ลบแบรนช์ {name}? จากนั้นยังกู้คืนได้ผ่านการแจ้งเตือน (git ยังคงปฏิเสธแบรนช์ที่ยังไม่รวม)',
         'discard.confirm': 'ทิ้งการเปลี่ยนแปลงใน {path}? เนื้อหาของเวิร์กทรีจะถูกเขียนทับ —— จากนั้นยังกู้คืนได้ผ่านการแจ้งเตือน',
         'resetHard.confirm': 'ฮาร์ดรีเซ็ตไปที่ {hash}? การเปลี่ยนแปลงที่ยังไม่คอมมิตจะหายไป',
@@ -10511,6 +10679,50 @@ window.__ModuleLoader__.load({
         props.toasts.map((item) => E(ToastItem, { key: item.id, item: item })))
     }
 
+    /* One bottom-right stack for the whole frame (m02986). The commit, push and
+       file dialogs live in shell.overlay - outside the panel's own React root or
+       the Git tab - so the queue cannot be panel state any more. Module-level
+       exactly like commitDialog: the panel, the composer pill and the overlay
+       hosts all push into this one list, and one ToastHost renders it. */
+    const toastCenter = {
+      items: [],
+      nextId: 0,
+      listeners: new Set(),
+      emit() {
+        for (const listener of Array.from(this.listeners)) {
+          try { listener() } catch (error) { void error }
+        }
+      },
+      push(toast) {
+        this.nextId += 1
+        const id = 'git4idea-toast-' + String(this.nextId)
+        const ttl = toast.ttl === undefined ? (toast.actionLabel === undefined ? 5000 : 30000) : toast.ttl
+        this.items = this.items.concat([Object.assign({ id: id, ttl: ttl, onClose: () => { toastCenter.drop(id) } }, toast)])
+        this.emit()
+        return id
+      },
+      drop(id) {
+        const next = this.items.filter((item) => item.id !== id)
+        if (next.length === this.items.length) return
+        this.items = next
+        this.emit()
+      },
+      subscribe(listener) {
+        this.listeners.add(listener)
+        return () => { this.listeners.delete(listener) }
+      },
+    }
+
+    function ToastHost(props) {
+      const [items, setItems] = useState(() => toastCenter.items)
+      useEffect(() => {
+        const sync = () => setItems(toastCenter.items)
+        sync()
+        return toastCenter.subscribe(sync)
+      }, [])
+      return E(ToastStack, { t: props.t, toasts: items })
+    }
+
     function PromptDialog(props) {
       const [value, setValue] = useState(props.initialValue === undefined ? '' : props.initialValue)
       const ref = useRef(null)
@@ -12510,29 +12722,17 @@ window.__ModuleLoader__.load({
       const [railTick, setRailTick] = useState(0)
       const [railSettings, setRailSettings] = useState(false)
       const [railBox, setRailBox] = useState({ width: 0, height: 0 })
-      const [toasts, setToasts] = useState([])
 
       /* ---------- toast plumbing ---------- */
       /* Declared early on purpose: the guard, the loaders and every menu builder
          close over pushToast, and a hooks dependency array is evaluated during
          render (invariant 12) — the plumbing has to exist before them, and the
-         sink effect has to run before the first load reports a failure. */
-      const toastSeq = useRef(0)
+         sink effect has to run before the first load reports a failure. The
+         queue itself is the frame-wide store (m02986), so the same five-second
+         rule covers notifications raised by the overlay dialogs too. */
+      const dropToast = useCallback((id) => { toastCenter.drop(id) }, [])
 
-      const dropToast = useCallback((id) => {
-        setToasts((list) => list.filter((item) => item.id !== id))
-      }, [])
-
-      /* m02407 #3: five seconds by default — the countdown itself lives in
-         ToastItem, because pausing it on hover is per-notification state. An undo
-         chip keeps its longer life: it is the only way back from a delete. */
-      const pushToast = useCallback((toast) => {
-        toastSeq.current += 1
-        const id = 'toast-' + String(toastSeq.current)
-        const ttl = toast.ttl === undefined ? (toast.actionLabel === undefined ? 5000 : 30000) : toast.ttl
-        setToasts((list) => list.concat([Object.assign({ id: id, ttl: ttl, onClose: () => dropToast(id) }, toast)]))
-        return id
-      }, [dropToast])
+      const pushToast = useCallback((toast) => toastCenter.push(toast), [])
 
       /* The guard and the loaders report through setError/setNote; both feed
          this sink so every failure and every background result lands in the
@@ -13169,23 +13369,27 @@ window.__ModuleLoader__.load({
         }
       }, [base])
 
-      /* ---------- external diff preview (user request, 2026-10-08) ---------- */
-      /* 「点击文件预览」不再内嵌:预览交给右侧栏的原生预览 tab —— 本插件自己
-         的第二个 sidebarRight 类型。seed 先写进 previewStore,再 openTab;tab 在
-         分栏里是单例,再点一次原地重写 seed 而不是堆 tab。seed 带 cwd(路由必需)
-         + repoRoot(跳过 rev-parse),多仓库工作区不会落错仓库。右侧栏服务不在
-         (老宿主)→ 返回 false,调用方落回内嵌 diff 窗。 */
+      /* ---------- external diff preview ---------- */
+      /* m02986: a diff opens as a card over the page, not a sidebar tab. The
+         same card serves the push dialog's file list. The sidebar preview type
+         stays registered as the fallback for a host without shell.overlay, and
+         the inline pane remains the last resort (no right sidebar either). */
       const previewDiff = useCallback((seed) => {
         if (repoRoot === null) return false
         const commitHash = seed.hash !== undefined && seed.hash !== null ? String(seed.hash) : null
+        const scopeObject = scope || {}
+        const dialogSeed = commitHash !== null
+          ? { hash: commitHash, subject: seed.subject || '', path: seed.path !== undefined && seed.path !== null ? seed.path : '', cwd: scopeObject.cwd, repoRoot: repoRoot, sessionId: scopeObject.sessionId }
+          : { path: seed.path, staged: seed.staged === true, untracked: seed.untracked === true ? true : undefined, cwd: scopeObject.cwd, repoRoot: repoRoot, sessionId: scopeObject.sessionId }
+        if (fileDialog.hosted === true) {
+          fileDialog.set(dialogSeed)
+          return true
+        }
         let sidebarRight = undefined
         try { sidebarRight = props.ctx === undefined || props.ctx === null ? undefined : props.ctx.get('sidebarRight') } catch (error) { void error }
         if (sidebarRight === undefined || sidebarRight === null || typeof sidebarRight.openTab !== 'function') return false
         try {
-          const scopeObject = scope || {}
-          previewStore.set(commitHash !== null
-            ? { hash: commitHash, subject: seed.subject || '', path: seed.path !== undefined && seed.path !== null ? seed.path : '', cwd: scopeObject.cwd, repoRoot: repoRoot, sessionId: scopeObject.sessionId }
-            : { path: seed.path, staged: seed.staged === true, untracked: seed.untracked === true ? true : undefined, cwd: scopeObject.cwd, repoRoot: repoRoot, sessionId: scopeObject.sessionId })
+          previewStore.set(dialogSeed)
           sidebarRight.openTab(NATIVE_PREVIEW_KIND)
           return true
         } catch (error) { return false }
@@ -13203,6 +13407,18 @@ window.__ModuleLoader__.load({
         setDiffContext({ kind: 'worktree', staged: seed.staged === true })
         void openDiff({ path: seed.path, staged: seed.staged === true })
       }, [previewDiff, openDiff])
+
+      /* Push is a dialog now (m02986): the commits about to leave first, then
+         the confirmation. A host without shell.overlay keeps the old confirm. */
+      const openPushDialog = useCallback(() => {
+        const scopeObject = scope || {}
+        if (repoRoot === null || pushDialog.hosted !== true) {
+          setDialog({ kind: 'push' })
+          return
+        }
+        pushDialog.set({ cwd: scopeObject.cwd, repoRoot: repoRoot, sessionId: scopeObject.sessionId })
+      }, [repoRoot, scope])
+
 
       const selectCommit = useCallback(async (commit) => {
         setSelectedHash(commit.hash)
@@ -13572,7 +13788,7 @@ window.__ModuleLoader__.load({
               }),
           null,
           { id: 'update', icon: 'fetch', tone: 'cyan', label: t('action.update'), run: () => { void run('fetch', { prune: true }) } },
-          { id: 'push', icon: 'push', tone: 'success', label: t('action.push'), disabled: blocked, reason: t('operation.hint'), run: () => setDialog({ kind: 'push' }) },
+          { id: 'push', icon: 'push', tone: 'success', label: t('action.push'), disabled: blocked, reason: t('operation.hint'), run: () => openPushDialog() },
         ].filter((item) => item !== null)
         openMenuAt(event, items)
       }, [branches, checkout, run, t, compareWith, toggleFavoriteBranch, openMenuAt, favorites, blocked, sendGitSummaryToChat, repoLabel, copyValues])
@@ -13909,7 +14125,7 @@ window.__ModuleLoader__.load({
           'aria-disabled': remoteReady !== true || blocked === true ? 'true' : 'false',
           onClick: () => {
             if (remoteReady !== true || blocked === true) return
-            setDialog({ kind: 'push' })
+            openPushDialog()
           },
         }, E(Icon, { name: 'push', size: 14 })),
         E('button', {
@@ -14126,7 +14342,7 @@ window.__ModuleLoader__.load({
           null,
           /* —— top-level sync (VS Code header row) —— */
           { id: 'mm-pull', icon: 'pull', tone: 'accent', label: t('toolbar.pull'), disabled: remoteReady !== true || tracked !== true || blocked, reason, run: () => { void run('pull', { mode: 'ff-only' }) } },
-          { id: 'mm-push', icon: 'push', tone: 'success', label: t('toolbar.push'), disabled: remoteReady !== true || blocked, reason, run: () => setDialog({ kind: 'push' }) },
+          { id: 'mm-push', icon: 'push', tone: 'success', label: t('toolbar.push'), disabled: remoteReady !== true || blocked, reason, run: () => openPushDialog() },
           { id: 'mm-clone', icon: 'plus', tone: 'secondary', label: t('more.clone'), run: () => setDialog({ kind: 'clone' }) },
           { id: 'mm-checkout', icon: 'checkout', tone: 'accent', label: t('action.checkout') + '...', disabled: otherBranches.length === 0 || blocked, reason, run: (ev) => pickBranchMenu(ev, 'checkout') },
           { id: 'mm-fetch', icon: 'fetch', tone: 'cyan', label: t('toolbar.fetch'), disabled: remoteReady !== true, reason, run: () => { void run('fetch', { prune: true }) } },
@@ -14161,7 +14377,7 @@ window.__ModuleLoader__.load({
             { id: 'pp-pull-rebase', label: t('more.pullRebase'), disabled: remoteReady !== true || tracked !== true || blocked, reason, run: () => { void run('pull', { mode: 'rebase' }) } },
             { id: 'pp-pull-from', label: t('more.pullFrom'), disabled: remoteNames.length === 0, reason, run: pickRemote((name) => { void run('pull', { mode: 'ff-only', remote: name }) }) },
             null,
-            { id: 'pp-push', label: t('toolbar.push'), disabled: remoteReady !== true || blocked, reason, run: () => setDialog({ kind: 'push' }) },
+            { id: 'pp-push', label: t('toolbar.push'), disabled: remoteReady !== true || blocked, reason, run: () => openPushDialog() },
             { id: 'pp-push-force', label: t('more.pushForce'), danger: true, disabled: remoteReady !== true || blocked, reason, run: () => setDialog({ kind: 'pushForce' }) },
             { id: 'pp-push-to', label: t('more.pushTo'), disabled: remoteNames.length === 0 || blocked, reason, run: pickRemote((name) => { void run('push', { remote: name, confirm: true }) }) },
             null,
@@ -14239,17 +14455,20 @@ window.__ModuleLoader__.load({
         request: request, cwd: cwd, sessionId: sessionId, commitSettings: commitSettings, base: base,
         showIgnored: showIgnored,
         onToggleIgnored: () => setShowIgnored((value) => !value),
-        // Commit-and-push carries the confirm flag with it: the button already
-        // says exactly what it will publish, so the host guard is satisfied by
-        // the click itself rather than by a second dialog.
+        // Commit and push are two steps now (m02986): the commit lands, the
+        // layer closes, and only then does the push dialog open with the fresh
+        // commits. Failures stay in the layer; results go to notifications.
         onCommit: (message, amend, push, paths) => {
           void (async () => {
             /* paths: the ticked set; the host stages exactly these before it
                commits, so an unticked file is never swept in by `git add -A`. */
-            const result = await run('commit', { message: message, amend: amend, push: push === true, confirm: push === true, paths: paths })
+            const result = await run('commit', { message: message, amend: amend, paths: paths })
             /* Only a landed commit closes the layer; a rejected one keeps the
                message on screen while the failure surfaces as a notification. */
-            if (result !== undefined) setCommitOpen(false)
+            if (result === undefined) return
+            setCommitOpen(false)
+            pushToast({ text: t('toast.committed'), tone: 'ok', icon: 'check' })
+            if (push === true) openPushDialog()
           })()
         },
         onStage: (item) => { void run('stage', { paths: [item.path] }) },
@@ -14891,8 +15110,7 @@ window.__ModuleLoader__.load({
           onRefresh: () => { void openGitOutput() },
           onClose: () => setGitOutput(null),
         }),
-        overlays,
-        E(ToastStack, { t: t, toasts: toasts }))
+        overlays)
     }
 
     function copyText(text) {
@@ -15038,7 +15256,9 @@ window.__ModuleLoader__.load({
       '.git4idea-foldTitle{min-width:0;overflow-wrap:anywhere}',
       '.git4idea-root-narrow .git4idea-menu-item{white-space:normal}',
       '.git4idea-root-narrow .git4idea-toast-text{white-space:normal}',
-      '.git4idea-toasts{position:absolute;right:8px;bottom:8px;display:flex;flex-direction:column;gap:6px;z-index:80;max-width:min(380px,92%);align-items:stretch}',
+      /* m02986: the queue is frame-wide now, so the stack pins to the viewport
+         corner (inside shell.overlay) instead of the panel's own box. */
+      '.git4idea-toasts{position:fixed;right:12px;bottom:12px;display:flex;flex-direction:column;gap:6px;z-index:90;max-width:min(380px,92%);align-items:stretch}',
       '.git4idea-toast{display:flex;align-items:flex-start;gap:8px;padding:6px 8px;border-radius:var(--dsw-radius-sm,8px);background:var(--dsw-alias-bg-layer-2,var(--dsw-alias-bg-layer-1));border:0;box-shadow:var(--dsw-elevation-prominent,0 8px 22px rgba(0,0,0,.32))}',
       '.git4idea-toast-icon{display:inline-flex;flex:none;margin-top:2px;color:var(--dsw-alias-label-secondary)}',
       '.git4idea-toast-warn .git4idea-toast-icon{color:var(--dsw-alias-state-warn-primary,var(--dsw-alias-brand-primary))}',
@@ -15094,6 +15314,33 @@ window.__ModuleLoader__.load({
          containers whose contain:layout would capture an absolute box. */
       '.git4idea-commit-overlay{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--dsw-alias-bg-scrim,rgba(0,0,0,.32));-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family,system-ui,sans-serif);font-size:13px;line-height:1.5;font-weight:600}',
       '.git4idea-commit-overlay .git4idea-commit-layer-card{width:min(1100px,94vw);height:min(720px,88vh)}',
+      /* Single-file diff dialog (m02986): the commit card's right pane, lifted
+         into its own window. The preview root already owns the head/body split. */
+      '.git4idea-file-card{display:flex;flex-direction:column;width:min(1100px,94vw);height:min(720px,88vh);overflow:hidden;border-radius:var(--dsw-radius-md,12px);border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1,var(--dsw-alias-bg-layer-2));box-shadow:var(--dsw-elevation-prominent,0 18px 48px rgba(0,0,0,.45))}',
+      '.git4idea-file-card .git4idea-preview-root{background:transparent}',
+      /* Push dialog (m02986): commits on the left, the selected commit's files on
+         the right. Double-clicking a file raises the diff dialog above. */
+      '.git4idea-push-card{display:flex;flex-direction:column;width:min(1100px,94vw);height:min(720px,88vh);overflow:hidden;border-radius:var(--dsw-radius-md,12px);border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1,var(--dsw-alias-bg-layer-2));box-shadow:var(--dsw-elevation-prominent,0 18px 48px rgba(0,0,0,.45))}',
+      '.git4idea-push-target{flex:none;max-width:40%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dsw-alias-label-tertiary);font-weight:500}',
+      '.git4idea-push-body{flex:1;min-height:0;display:flex;overflow:hidden}',
+      '.git4idea-push-commits{width:calc((100% - 1px)*2/5);flex:none;display:flex;flex-direction:column;overflow:auto;padding:4px;border-right:1px solid var(--dsw-alias-border-l2)}',
+      '.git4idea-push-commit{display:flex;align-items:center;gap:8px;width:100%;flex:none;padding:4px 6px;border:0;border-radius:calc(var(--dsw-radius-sm,8px) - 2px);background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer}',
+      '.git4idea-push-commit:hover{background:var(--dsw-alias-interactive-bg-hover)}',
+      '.git4idea-push-commit-on{background:var(--dsw-alias-interactive-bg-selected)}',
+      '.git4idea-push-commit:focus-visible{outline:1px solid var(--dsw-alias-brand-primary);outline-offset:-1px}',
+      '.git4idea-push-subject{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}',
+      '.git4idea-push-hash{flex:none;color:var(--dsw-alias-label-tertiary);font-size:11px;font-weight:500}',
+      '.git4idea-push-note{flex:none;padding:4px 6px;color:var(--dsw-alias-label-tertiary);font-size:11px;font-weight:500}',
+      '.git4idea-push-files{flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden}',
+      '.git4idea-push-files-head{display:flex;align-items:center;gap:8px;min-width:0;flex:none;padding:6px 8px;border-bottom:1px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-secondary);font-weight:500}',
+      '.git4idea-push-files-subject{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dsw-alias-label-primary);font-weight:600}',
+      '.git4idea-push-files-count{flex:none;color:var(--dsw-alias-label-tertiary);font-size:11px}',
+      '.git4idea-push-file-list{flex:1;min-height:0;overflow:auto;padding:4px}',
+      '.git4idea-push-file{cursor:pointer;border-radius:calc(var(--dsw-radius-sm,8px) - 2px);padding:3px 6px}',
+      '.git4idea-push-file:hover{background:var(--dsw-alias-interactive-bg-hover)}',
+      '.git4idea-push-file:focus-visible{outline:1px solid var(--dsw-alias-brand-primary);outline-offset:-1px}',
+      '.git4idea-push-foot{display:flex;align-items:center;gap:8px;flex:none;padding:6px 8px;border-top:1px solid var(--dsw-alias-border-l2)}',
+      '.git4idea-push-footnote{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dsw-alias-label-tertiary);font-size:11px;font-weight:500}',
       '.git4idea-commit-layer-head{display:flex;align-items:center;gap:8px;padding:5px 8px;flex:none;border-bottom:1px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-secondary)}',
       '.git4idea-commit-layer-title{font-weight:600;color:var(--dsw-alias-label-primary)}',
       '.git4idea-commit-layer-body{flex:1;min-height:0;display:flex;overflow:hidden}',
@@ -16081,7 +16328,9 @@ window.__ModuleLoader__.load({
       }
       /* A landed commit closes the card and tells every branch readout to
          refresh; a rejected one keeps the box filled with the error above it.
-         ChangesPanel has already cleared its draft by the time this returns. */
+         ChangesPanel has already cleared its draft by the time this returns.
+         m02986: the push is a second, explicit step — hand over to the push
+         dialog only after the commit route reports success. */
       const commit = (message, amend, push, paths) => {
         void (async () => {
           setBusy(true)
@@ -16090,11 +16339,11 @@ window.__ModuleLoader__.load({
             await request('commit', Object.assign({}, base, {
               message: message,
               amend: amend === true,
-              push: push === true,
-              confirm: push === true,
               paths: paths,
             }))
             try { notifyBranchSwitched(entry.sessionId, entry.repoRoot) } catch (caught) { void caught }
+            toastCenter.push({ text: t('toast.committed'), tone: 'ok', icon: 'check' })
+            if (push === true) pushDialog.set({ cwd: entry.cwd, repoRoot: entry.repoRoot, sessionId: entry.sessionId })
             props.onClose()
           } catch (caught) {
             setError(messageOf(caught))
@@ -16496,6 +16745,17 @@ window.__ModuleLoader__.load({
         }
         openPanelSeat()
       }
+      /* Push followed the commit dialog (m02986): the popover verb previews
+         the commits and files instead of publishing on a bare confirm. */
+      const openPushDialog = () => {
+        if (repoRoot === null) { openPanelSeat(); return }
+        if (pushDialog.hosted === true) {
+          pushDialog.set({ sessionId: sessionId, cwd: cwd, repoRoot: repoRoot })
+          setMenu(null)
+          return
+        }
+        openPanelSeat()
+      }
       /* Create-and-switch in one step (m02016): the dialog's confirm runs
          `git checkout -b` — the same verb the panel's dialog uses — so the new
          branch is never a dangling ref the user still has to check out. A
@@ -16827,7 +17087,7 @@ window.__ModuleLoader__.load({
                 E('button', {
                   type: 'button', className: 'git4idea-cs-action', title: t('toolbar.push'),
                   'aria-disabled': repoRoot === null || csBusy !== '' ? 'true' : 'false',
-                  onClick: () => { void csCall('push', { confirm: true }) },
+                  onClick: openPushDialog,
                 }, E(Icon, { name: 'push', size: 12 }), E('span', null, t('toolbar.push'))),
                 E('button', {
                   type: 'button', className: 'git4idea-cs-action', title: t('toolbar.newBranch'),
@@ -17058,10 +17318,9 @@ window.__ModuleLoader__.load({
        the rev-parse). Rendered through the SAME DiffBody the inline pane uses,
        so host DiffBlock reuse, the hand-drawn fallback and the binary/empty
        states are all identical. */
-    function NativePreviewPanel(props) {
+    function DiffPreview(props) {
       const t = props.t
-      const [seed, setSeed] = useState(() => previewStore.seed)
-      useEffect(() => previewStore.subscribe(() => { setSeed(previewStore.seed) }), [])
+      const seed = props.seed
       const seedKey = seed === null
         ? ''
         : (seed.hash !== undefined && seed.hash !== null
@@ -17144,6 +17403,10 @@ window.__ModuleLoader__.load({
               E(Icon, { name: copied === true ? 'check' : 'copy', size: 13 })),
             E('button', { type: 'button', className: 'git4idea-preview-btn', 'aria-label': t('toolbar.refresh'), title: t('toolbar.refresh'), onClick: () => { setRefreshTick((n) => n + 1) } },
               E(Icon, { name: 'refresh', size: 13 })))),
+          props.onClose === undefined ? null : E('button', {
+            type: 'button', className: 'git4idea-preview-btn', 'aria-label': t('toast.close'), title: t('toast.close'),
+            onClick: props.onClose,
+          }, E(Icon, { name: 'close', size: 13 })),
         seed === null
           ? E('div', { className: 'git4idea-preview-body' }, E('div', { className: 'git4idea-empty' }, t('preview.hint')))
           : state.error !== null
@@ -17156,6 +17419,251 @@ window.__ModuleLoader__.load({
                    tool jumps to the host's whole-file preview. */
                 onOpenFile: seed.path !== undefined && seed.path !== null && seed.path !== '' ? openInFilePreview : undefined,
               }))))
+    }
+    /* The sidebar preview tab keeps its store contract: the shell below feeds
+       DiffPreview the seed the panel published. */
+    function NativePreviewPanel(props) {
+      const [seed, setSeed] = useState(() => previewStore.seed)
+      useEffect(() => previewStore.subscribe(() => { setSeed(previewStore.seed) }), [])
+      return E(DiffPreview, { seed: seed, t: props.t, ctx: props.ctx })
+    }
+
+    /* One diff card, floated (m02986). The panel used to push every diff into
+       the right sidebar; the user wants the change to open over the page, and
+       the push dialog reuses the same card for its file list. */
+    const fileDialog = {
+      entry: null,
+      hosted: false,
+      listeners: new Set(),
+      set(entry) {
+        fileDialog.entry = entry
+        for (const listener of fileDialog.listeners) {
+          try { listener() } catch (error) { void error }
+        }
+      },
+      subscribe(listener) {
+        fileDialog.listeners.add(listener)
+        return () => { fileDialog.listeners.delete(listener) }
+      },
+    }
+
+    function FileDialogHost(props) {
+      const [entry, setEntry] = useState(fileDialog.entry)
+      useEffect(() => {
+        const off = fileDialog.subscribe(() => { setEntry(fileDialog.entry) })
+        fileDialog.hosted = true
+        return () => { fileDialog.hosted = false; off() }
+      }, [])
+      useEffect(() => {
+        if (entry === null) return undefined
+        const onKey = (event) => { if (event.key === 'Escape') fileDialog.set(null) }
+        document.addEventListener('keydown', onKey)
+        return () => { document.removeEventListener('keydown', onKey) }
+      }, [entry])
+      if (entry === null) return null
+      return E('div', {
+        className: 'git4idea-commit-overlay',
+        'data-git4idea-file-dialog': '',
+        onMouseDown: (event) => { if (event.target === event.currentTarget) fileDialog.set(null) },
+      }, E('div', { className: 'git4idea-file-card' },
+        E(DiffPreview, {
+          seed: entry,
+          t: props.t,
+          ctx: props.ctx,
+          onClose: () => { fileDialog.set(null) },
+        })))
+    }
+
+    /* The push dialog (m02986): the commits about to leave, and the files of
+       the selected commit. Pushing runs the same host route as before; the
+       result lands in the bottom-right notifications. */
+    const pushDialog = {
+      entry: null,
+      hosted: false,
+      listeners: new Set(),
+      set(entry) {
+        pushDialog.entry = entry
+        for (const listener of pushDialog.listeners) {
+          try { listener() } catch (error) { void error }
+        }
+      },
+      subscribe(listener) {
+        pushDialog.listeners.add(listener)
+        return () => { pushDialog.listeners.delete(listener) }
+      },
+    }
+
+    function PushDialogHost(props) {
+      const [entry, setEntry] = useState(pushDialog.entry)
+      useEffect(() => {
+        const off = pushDialog.subscribe(() => { setEntry(pushDialog.entry) })
+        pushDialog.hosted = true
+        return () => { pushDialog.hosted = false; off() }
+      }, [])
+      if (entry === null) return null
+      return E(PushDialogBody, {
+        key: entry.sessionId + '|' + entry.repoRoot,
+        entry: entry,
+        t: props.t,
+        ctx: props.ctx,
+        onClose: () => { pushDialog.set(null) },
+      })
+    }
+
+    function PushDialogBody(props) {
+      const t = props.t
+      const entry = props.entry
+      const base = { cwd: entry.cwd, repoRoot: entry.repoRoot }
+      const [data, setData] = useState(null)
+      const [error, setError] = useState('')
+      const [selected, setSelected] = useState(null)
+      const [files, setFiles] = useState([])
+      const [filesLoading, setFilesLoading] = useState(false)
+      const [busy, setBusy] = useState(false)
+      const messageOf = (caught) => (caught instanceof Error ? caught.message : String(caught))
+      useEffect(() => {
+        let alive = true
+        void (async () => {
+          try {
+            const next = await request('push-preview', base)
+            if (alive !== true) return
+            setData(next)
+            setSelected(next.commits.length === 0 ? null : next.commits[0].hash)
+          } catch (caught) {
+            if (alive === true) setError(messageOf(caught))
+          }
+        })()
+        return () => { alive = false }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+      }, [])
+      useEffect(() => {
+        if (selected === null) { setFiles([]); return undefined }
+        let alive = true
+        setFilesLoading(true)
+        void (async () => {
+          try {
+            const detail = await request('commitDetail', Object.assign({}, base, { hash: selected }))
+            if (alive === true) setFiles(detail.files)
+          } catch (caught) {
+            if (alive === true) { setFiles([]); setError(messageOf(caught)) }
+          } finally {
+            if (alive === true) setFilesLoading(false)
+          }
+        })()
+        return () => { alive = false }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+      }, [selected])
+      useEffect(() => {
+        const onKey = (event) => { if (event.key === 'Escape') props.onClose() }
+        document.addEventListener('keydown', onKey)
+        return () => { document.removeEventListener('keydown', onKey) }
+      }, [])
+      const commit = data === null ? null : data.commits.find((item) => item.hash === selected)
+      const openFile = (file) => {
+        if (commit === null) return
+        fileDialog.set({
+          hash: commit.hash,
+          subject: commit.subject,
+          path: file.path,
+          cwd: entry.cwd,
+          repoRoot: entry.repoRoot,
+          sessionId: entry.sessionId,
+        })
+      }
+      const runPush = async () => {
+        if (busy === true || data === null) return
+        setBusy(true)
+        try {
+          await request('push', Object.assign({}, base, {
+            confirm: true,
+            setUpstream: data.upstream === null,
+          }))
+          toastCenter.push({
+            text: fill(t('toast.pushed'), { n: data.commits.length, target: data.target }),
+            tone: 'ok',
+            icon: 'check',
+          })
+          props.onClose()
+        } catch (caught) {
+          toastCenter.push({ text: messageOf(caught), tone: 'error', icon: 'close' })
+        } finally {
+          setBusy(false)
+        }
+      }
+      const canPush = data !== null && data.detached === false && data.remotes.length > 0 && data.commits.length > 0 && busy === false
+      const emptyNote = data === null
+        ? (error === '' ? t('status.busy') : error)
+        : data.detached === true
+          ? t('push.detached')
+          : data.remotes.length === 0
+            ? t('push.noRemote')
+            : data.commits.length === 0
+              ? t('push.none')
+              : ''
+      return E('div', {
+        className: 'git4idea-commit-overlay',
+        'data-git4idea-push-dialog': '',
+        onMouseDown: (event) => { if (event.target === event.currentTarget) props.onClose() },
+      }, E('div', { className: 'git4idea-push-card' },
+        E('div', { className: 'git4idea-commit-layer-head' },
+          E(Icon, { name: 'push', size: 14 }),
+          E('span', { className: 'git4idea-commit-layer-title' }, data === null ? t('toolbar.push') : fill(t('push.title'), { branch: data.branch })),
+          data === null || data.target === '' ? null : E('span', { className: 'git4idea-push-target git4idea-mono' }, data.target),
+          E('span', { className: 'git4idea-topbar-spacer' }),
+          E('button', {
+            type: 'button', className: 'git4idea-icon-btn', 'aria-label': t('toast.close'), title: t('toast.close'),
+            onClick: () => { props.onClose() },
+          }, E(Icon, { name: 'close', size: 13 }))),
+        E('div', { className: 'git4idea-push-body' },
+          E('div', { className: 'git4idea-push-commits' },
+            data === null || data.commits.length === 0
+              ? E('div', { className: 'git4idea-empty' }, emptyNote)
+              : data.commits.map((item) => E('button', {
+                  key: item.hash,
+                  type: 'button',
+                  className: 'git4idea-push-commit' + (item.hash === selected ? ' git4idea-push-commit-on' : ''),
+                  title: item.subject,
+                  onClick: () => { setSelected(item.hash) },
+                },
+                E(Icon, { name: 'commit', size: 12 }),
+                E('span', { className: 'git4idea-push-subject' }, item.subject),
+                E('span', { className: 'git4idea-push-hash git4idea-mono' }, item.shortHash))),
+            data === null || data.truncated !== true ? null : E('div', { className: 'git4idea-push-note' }, fill(t('push.truncated'), { n: data.commits.length }))),
+          E('div', { className: 'git4idea-push-files' },
+            commit === null
+              ? E('div', { className: 'git4idea-empty' }, t('detail.pick'))
+              : E('div', { className: 'git4idea-push-files-head' },
+                  E('span', { className: 'git4idea-mono' }, commit.shortHash),
+                  E('span', { className: 'git4idea-push-files-subject' }, commit.subject),
+                  E('span', { className: 'git4idea-push-files-count' }, t('detail.files') + ' · ' + String(files.length))),
+            commit === null ? null : E('div', { className: 'git4idea-push-file-list' },
+              filesLoading === true
+                ? E('div', { className: 'git4idea-empty' }, t('diff.loading'))
+                : files.length === 0
+                  ? E('div', { className: 'git4idea-empty' }, t('detail.noFiles'))
+                  : files.map((file) => E('div', {
+                      key: file.path,
+                      className: 'git4idea-row git4idea-row-file git4idea-push-file',
+                      title: file.path + '\n' + t('preview.openFile'),
+                      tabIndex: 0,
+                      onDoubleClick: () => { openFile(file) },
+                      onKeyDown: (event) => { if (event.key === 'Enter') openFile(file) },
+                    },
+                    FileTypeGlyph({ path: file.path }),
+                    E('span', { className: 'git4idea-row-label' }, baseName(file.path)),
+                    E('span', { className: 'git4idea-row-dir' }, dirName(file.path)),
+                    file.additions > 0 ? E('span', { className: 'git4idea-stat-add' }, '+' + file.additions) : null,
+                    file.deletions > 0 ? E('span', { className: 'git4idea-stat-del' }, '-' + file.deletions) : null))))),
+        E('div', { className: 'git4idea-push-foot' },
+          E('span', { className: 'git4idea-push-footnote' }, emptyNote !== '' ? emptyNote : t('push.hint')),
+          E('span', { className: 'git4idea-topbar-spacer' }),
+          E('button', { type: 'button', className: 'git4idea-btn', onClick: () => { props.onClose() } }, t('confirm.cancel')),
+          E('button', {
+            type: 'button',
+            className: 'git4idea-btn git4idea-btn-primary',
+            disabled: canPush !== true,
+            onClick: () => { void runPush() },
+          }, busy === true ? t('status.busy') : t('toolbar.push')))))
     }
 
     function apply(ctx) {
@@ -17316,25 +17824,42 @@ window.__ModuleLoader__.load({
         }, 'dsh-git4idea: composer dock pill')
       })
 
-      /* ---- frame-wide commit dialog seat (m02090) ---- */
+      /* ---- frame-wide dialog + notification seats (m02090, m02986) ---- */
       /* `shell.overlay` is the host's frame-wide layer (ui-chat registers its
          quota notice there). The composer pill cannot host a viewport dialog
-         itself — its dock container has contain:layout — so the card rides this
-         seat and is opened through the module store above. Optional on purpose:
-         a host without the slot keeps the sidebar fallback. */
+         itself — its dock container has contain:layout — so every card rides
+         this seat and is opened through the module stores above. Optional on
+         purpose: a host without the slot keeps the sidebar fallback. */
       ctx.inject(['slots'], (overlayCtx) => {
         const overlaySlots = overlayCtx.get('slots')
         if (overlaySlots === undefined || overlaySlots === null || typeof overlaySlots.inject !== 'function') return
         overlayCtx.effect(() => {
-          const offOverlay = overlaySlots.inject('shell.overlay', () => overlaySlots.register(
+          const offCommit = overlaySlots.inject('shell.overlay', () => overlaySlots.register(
             { name: 'shell.overlay', id: 'dsh-git4idea:commit', locale: LOCALE_NS },
             (overlayProps) => E(CommitDialogHost, Object.assign({}, overlayProps, { t: t, ctx: ctx })),
           ))
+          const offFile = overlaySlots.inject('shell.overlay', () => overlaySlots.register(
+            { name: 'shell.overlay', id: 'dsh-git4idea:file', locale: LOCALE_NS },
+            (overlayProps) => E(FileDialogHost, Object.assign({}, overlayProps, { t: t, ctx: ctx })),
+          ))
+          const offPush = overlaySlots.inject('shell.overlay', () => overlaySlots.register(
+            { name: 'shell.overlay', id: 'dsh-git4idea:push', locale: LOCALE_NS },
+            (overlayProps) => E(PushDialogHost, Object.assign({}, overlayProps, { t: t, ctx: ctx })),
+          ))
+          const offToasts = overlaySlots.inject('shell.overlay', () => overlaySlots.register(
+            { name: 'shell.overlay', id: 'dsh-git4idea:toasts', locale: LOCALE_NS },
+            (overlayProps) => E(ToastHost, Object.assign({}, overlayProps, { t: t })),
+          ))
           return () => {
             commitDialog.set(null)
-            try { offOverlay() } catch (error) { void error }
+            fileDialog.set(null)
+            pushDialog.set(null)
+            try { offCommit() } catch (error) { void error }
+            try { offFile() } catch (error) { void error }
+            try { offPush() } catch (error) { void error }
+            try { offToasts() } catch (error) { void error }
           }
-        }, 'dsh-git4idea: commit dialog overlay')
+        }, 'dsh-git4idea: commit, file and push overlays')
       })
 
       /* ---- session-switch prewarm ---- */

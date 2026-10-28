@@ -467,8 +467,10 @@ test('the diff pane context menu reads the selection before the menu opens (v0.1
     'every diff verb goes through the external-first funnel')
   assert.match(client, /repoRoot: repoRoot, sessionId: scopeObject\.sessionId/,
     'the external diff seed pins the repository root')
-  assert.match(client, /previewStore\.set\(commitHash !== null/,
-    'the seed is stored before the preview tab opens')
+  assert.match(client, /const dialogSeed = commitHash !== null/,
+    'the seed is built once, before either the card or the sidebar leg runs')
+  assert.match(client, /previewStore\.set\(dialogSeed\)/,
+    'the sidebar fallback still stores the seed before its preview tab opens')
 
   // Nine new keys × 21 gates (the key-set test checks exact equality; this
   // says WHY they exist).
@@ -2048,5 +2050,78 @@ test('upstream management: bind, drop and create-tracking from menus (v0.20.0, i
   // Dictionary: 21 gates for all six new keys (key-set equality test pins parity).
   for (const key of ['action.setUpstream', 'action.unsetUpstream', 'action.createLocalBranch', 'prompt.createTracking', 'more.setUpstreamHead', 'more.unsetUpstreamHead']) {
     assert.equal((client.match(new RegExp("'" + key.replace(/\./g, '\\.') + "':", 'g')) || []).length, 21, '21 gates carry ' + key)
+  }
+})
+
+test('the push dialog previews its commits and the file card floats (m02986)', () => {
+  // Host: one read-only route. It reuses the log record shape and caps the
+  // list like every other history route; nothing here writes a ref.
+  assert.match(host, /const PUSH_PREVIEW_LIMIT = 300/)
+  assert.match(host, /async function pushPreview\(payload\)/)
+  assert.match(host, /'push-preview': pushPreview,/, 'the route is registered under the API prefix')
+  const writeSet = host.slice(host.indexOf('const WRITE_METHODS'), host.indexOf('])', host.indexOf('const WRITE_METHODS')))
+  assert.doesNotMatch(writeSet, /push-preview/, 'push-preview stays read-only')
+  assert.match(host, /const range = upstream === null \? \['HEAD', '--not', '--remotes'\] : \[upstream \+ '\.\.HEAD'\]/,
+    'without an upstream the range is everything no remote has')
+  assert.match(host, /setUpstream/, 'the client asks the push route to set an upstream on a first push')
+
+  // File card: same frame-wide seat and card shell as the commit dialog.
+  assert.match(client, /const fileDialog = \{/)
+  assert.match(client, /'data-git4idea-file-dialog': ''/)
+  assert.match(client, /className: 'git4idea-file-card'/)
+  assert.match(client, /E\(DiffPreview, \{\n          seed: entry,/, 'the card reuses the one diff renderer')
+  assert.match(client, /onClose: \(\) => \{ fileDialog\.set\(null\) \}/, 'the card has its own close')
+  assert.match(client, /if \(event\.key === 'Escape'\) fileDialog\.set\(null\)/)
+
+  // previewDiff prefers the card; the sidebar stays as the fallback for a host
+  // that registers no shell.overlay.
+  const funnel = client.slice(client.indexOf('const previewDiff ='), client.indexOf('const openPushDialog = useCallback'))
+  assert.ok(funnel.length > 400, 'the funnel must be found whole')
+  assert.match(funnel, /if \(fileDialog\.hosted === true\) \{[^}]*fileDialog\.set\(dialogSeed\)[^}]*return true/,
+    'a hosted card wins over the sidebar tab')
+  assert.match(funnel, /previewStore\.set\(dialogSeed\)/, 'the sidebar leg still exists')
+
+  // Push dialog content: commits on the left, the selected commit's files on
+  // the right, and a double click hands one file to the file card.
+  assert.match(client, /const pushDialog = \{/)
+  assert.match(client, /'data-git4idea-push-dialog': ''/)
+  assert.match(client, /request\('push-preview', base\)/)
+  assert.match(client, /setSelected\(next\.commits\.length === 0 \? null : next\.commits\[0\]\.hash\)/, 'the newest commit opens selected')
+  assert.match(client, /request\('commitDetail', Object\.assign\(\{\}, base, \{ hash: selected \}\)\)/)
+  assert.match(client, /const openFile = \(file\) => \{/)
+  assert.match(client, /fileDialog\.set\(\{\n          hash: commit\.hash,/, 'a file double click floats the diff card')
+  assert.match(client, /onDoubleClick: \(\) => \{ openFile\(file\) \}/)
+  assert.match(client, /const canPush = data !== null && data\.detached === false && data\.remotes\.length > 0 && data\.commits\.length > 0 && busy === false/)
+  assert.match(client, /request\('push', Object\.assign\(\{\}, base, \{\n            confirm: true,\n            setUpstream: data\.upstream === null,/, 'the first push sets the upstream')
+
+  // Four push verbs all raise the same card; only the panel fallback survives.
+  assert.equal((client.match(/run: \(\) => openPushDialog\(\)/g) || []).length, 3, 'palette and both menus share one verb')
+  assert.match(client, /if \(remoteReady !== true \|\| blocked === true\) return\n            openPushDialog\(\)/, 'the toolbar button runs the same verb')
+  assert.match(client, /const openPushDialog = useCallback\(\(\) => \{/, 'the panel keeps one helper')
+  assert.match(client, /if \(repoRoot === null \|\| pushDialog\.hosted !== true\) \{[^}]*setDialog\(\{ kind: 'push' \}\)[^}]*return/,
+    'a host without the overlay keeps the in-panel push dialog')
+
+  // Commit + push is two steps now: commit, close, then push. Both dialogs and
+  // the composer pill follow the same order.
+  const panelCommit = client.slice(client.indexOf("const result = await run('commit'"), client.indexOf("const result = await run('commit'") + 900)
+  assert.match(panelCommit, /run\('commit', \{ message: message, amend: amend, paths: paths \}\)/, 'the commit run no longer pushes')
+  assert.ok(panelCommit.indexOf('setCommitOpen(false)') < panelCommit.indexOf('if (push === true) openPushDialog()'),
+    'the commit dialog closes before the push dialog opens')
+  assert.match(panelCommit, /(?:toastCenter\.push|pushToast)\(\{ text: t\('toast.committed'\)/, 'the commit result lands in the notifications')
+  assert.match(client, /if \(push === true\) pushDialog\.set\(\{ cwd: entry\.cwd, repoRoot: entry\.repoRoot, sessionId: entry\.sessionId \}\)/)
+  assert.match(client, /if \(pushDialog\.hosted === true\) \{[^}]*pushDialog\.set\(\{ sessionId: sessionId, cwd: cwd, repoRoot: repoRoot \}\)/,
+    'the composer pill raises the card too')
+
+  // Notifications are frame-wide now (the cards live outside the panel).
+  assert.match(client, /id: 'dsh-git4idea:file'/)
+  assert.match(client, /id: 'dsh-git4idea:push'/)
+  assert.match(client, /id: 'dsh-git4idea:toasts'/)
+  assert.match(client, /'\.git4idea-toasts\{position:fixed;right:12px;bottom:12px;/, 'the stack leaves the panel for the viewport corner')
+  assert.match(client, /'\.git4idea-commit-overlay\{position:fixed;inset:0;z-index:80/, 'the push card is viewport-anchored like the commit card')
+
+  // Eight keys × 21 gates; the key-set test pins exact parity.
+  for (const key of ['push.title', 'push.none', 'push.detached', 'push.noRemote', 'push.truncated', 'push.hint', 'toast.committed', 'toast.pushed']) {
+    const occurrences = client.split("'" + key + "'").length - 1
+    assert.ok(occurrences >= 21, key + ' must ship in ZH + EN + every LOCALES entry (saw ' + occurrences + ')')
   }
 })

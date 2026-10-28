@@ -722,6 +722,44 @@ async function headState(payload) {
    passes, concurrent, packed as [path, additions, deletions, binary] rows so
    they survive JSON. Paths are post-rename paths — exactly what `summary`
    decorates its entries with. Read-only: deliberately not in WRITE_METHODS. */
+/* The push dialog's list (m02986): which commits this branch would send and
+   where they go. With an upstream the range is upstream..HEAD - exactly what
+   `git push` updates. Without one it is every commit the configured remotes do
+   not carry yet (HEAD --not --remotes): what the first `push -u` would publish.
+   Read-only: one config read and one log. */
+const PUSH_PREVIEW_LIMIT = 300
+async function pushPreview(payload) {
+  const cwd = cwdOf(payload)
+  const root = await repoRootOf(cwd, payload)
+  const branch = await currentBranchOf(root)
+  const detached = branch === 'HEAD'
+  const upstream = detached ? null : await upstreamOf(root, branch)
+  const remotesOut = await runGit(root, ['remote'])
+  const remotes = remotesOut.code === 0
+    ? remotesOut.stdout.split('\n').map((line) => line.trim()).filter((line) => line !== '')
+    : []
+  let remote = null
+  if (detached === false) {
+    const configured = await runGit(root, ['config', '--get', 'branch.' + branch + '.remote'])
+    if (configured.code === 0 && configured.stdout.trim() !== '' && configured.stdout.trim() !== '.') remote = configured.stdout.trim()
+  }
+  if (remote === null && upstream !== null) remote = upstream.split('/')[0]
+  if (remote === null && remotes.length > 0) remote = remotes[0]
+  let commits = []
+  let truncated = false
+  if (detached === false) {
+    const range = upstream === null ? ['HEAD', '--not', '--remotes'] : [upstream + '..HEAD']
+    const out = await runGit(root, ['log', '--max-count=' + (PUSH_PREVIEW_LIMIT + 1), '--date-order', '--pretty=format:' + LOG_FORMAT, ...range])
+    if (out.code === 0) {
+      const all = parseLog(out.stdout)
+      truncated = all.length > PUSH_PREVIEW_LIMIT
+      commits = truncated ? all.slice(0, PUSH_PREVIEW_LIMIT) : all
+    }
+  }
+  const target = upstream !== null ? upstream : (remote === null ? branch : remote + '/' + branch)
+  return { repoRoot: root, branch, detached, upstream, remote, target, remotes, commits, truncated, count: commits.length }
+}
+
 async function stats(payload) {
   const root = await repoRootOf(cwdOf(payload), payload)
   const [unstaged, staged] = await Promise.all([
@@ -2060,6 +2098,7 @@ const METHODS = {
   repos,
   summary,
   head: headState,
+  'push-preview': pushPreview,
   stats,
   branches,
   log,

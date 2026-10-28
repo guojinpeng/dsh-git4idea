@@ -144,6 +144,54 @@ test('head is the two-command probe the composer pill polls (m02856)', async () 
     rmSync(other, { recursive: true, force: true })
   }
 })
+test('push-preview lists the commits a push would send (m02986)', async () => {
+  const other = mkdtempSync(join(tmpdir(), 'dsh-git4idea-push-'))
+  const bare = mkdtempSync(join(tmpdir(), 'dsh-git4idea-push-bare-'))
+  const run = (...args) => execFileSync('git', args, { cwd: other, encoding: 'utf8' })
+  try {
+    run('init', '-q', '-b', 'main')
+    run('config', 'core.autocrlf', 'false')
+    run('config', 'user.name', 'Check')
+    run('config', 'user.email', 'check@example.com')
+    writeFileSync(join(other, 'a.txt'), 'one\n')
+    run('add', '-A')
+    run('commit', '-q', '-m', 'first')
+    execFileSync('git', ['init', '-q', '--bare', bare], { encoding: 'utf8' })
+    run('remote', 'add', 'origin', bare)
+    run('push', '-q', '-u', 'origin', 'main')
+
+    /* Everything already pushed: the dialog opens with nothing to send. */
+    const clean = await call('push-preview', { cwd: other })
+    assert.equal(clean.status, 200)
+    assert.equal(clean.body.ok, true)
+    assert.equal(clean.body.data.branch, 'main')
+    assert.equal(clean.body.data.detached, false)
+    assert.equal(clean.body.data.upstream, 'origin/main')
+    assert.deepEqual(clean.body.data.remotes, ['origin'])
+    assert.equal(clean.body.data.target, 'origin/main')
+    assert.equal(clean.body.data.count, 0)
+    assert.deepEqual(clean.body.data.commits, [])
+    assert.equal(clean.body.data.truncated, false)
+
+    /* One commit ahead: the list carries it and its detail is fetchable. */
+    writeFileSync(join(other, 'b.txt'), 'bee\n')
+    run('add', '-A')
+    run('commit', '-q', '-m', 'second')
+    const ahead = await call('push-preview', { cwd: other })
+    assert.equal(ahead.body.data.count, 1)
+    assert.equal(ahead.body.data.commits.length, 1)
+    const top = ahead.body.data.commits[0]
+    assert.match(top.hash, /^[0-9a-f]{40}$/)
+    assert.equal(top.subject, 'second')
+    const detail = await call('commitDetail', { cwd: other, hash: top.hash })
+    assert.equal(detail.status, 200)
+    assert.deepEqual(detail.body.data.files.map((file) => file.path), ['b.txt'])
+  } finally {
+    rmSync(other, { recursive: true, force: true })
+    rmSync(bare, { recursive: true, force: true })
+  }
+})
+
 
 test('summary with stats: false defers the diffstats, stats delivers phase two (issue #11)', async () => {
   const deferred = await call('summary', { cwd: repo, stats: false })
