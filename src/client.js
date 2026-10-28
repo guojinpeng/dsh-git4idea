@@ -2696,7 +2696,13 @@ window.__ModuleLoader__.load({
         try { console.error('[dsh-git4idea] preview render failed:', error) } catch (_) { /* diagnostics must never rethrow */ }
       }
       render() {
-        if (this.state.failed === true) return E('div', { className: 'git4idea-preview-boundary' }, this.props.message)
+        if (this.state.failed === true) {
+          return E('div', { className: 'git4idea-preview-boundary' },
+            E('span', { className: 'git4idea-preview-boundary-text' }, this.props.message),
+            this.props.onClose === undefined ? null : E('button', {
+              type: 'button', className: 'git4idea-btn', onClick: this.props.onClose,
+            }, this.props.closeLabel === undefined ? '×' : this.props.closeLabel))
+        }
         return this.props.children
       }
     }
@@ -8880,20 +8886,30 @@ window.__ModuleLoader__.load({
           offPush()
         }
       }, [])
+      /* A throw inside either card used to unmount the overlay slot for the rest
+         of the page load — the card vanished once and never came back (m04102).
+         The boundary keeps the failure local and offers the same close the card
+         has, so the next click starts from a clean mount. */
+      const guard = (key, onClose, child) => E(RenderBoundary, {
+        key: key,
+        message: props.t('preview.boundary'),
+        onClose: onClose,
+        closeLabel: props.t('confirm.cancel'),
+      }, child)
       return E(Fragment, null,
-        entry === null ? null : E(CommitDialogBody, {
+        entry === null ? null : guard('commit|' + entry.sessionId + '|' + entry.repoRoot, () => commitDialog.set(null), E(CommitDialogBody, {
           key: entry.sessionId + '|' + entry.repoRoot,
           entry: entry,
           t: props.t,
           onClose: () => commitDialog.set(null),
-        }),
-        pushEntry === null ? null : E(PushDialogBody, {
+        })),
+        pushEntry === null ? null : guard('push|' + pushEntry.sessionId + '|' + pushEntry.repoRoot, () => { pushDialog.set(null) }, E(PushDialogBody, {
           key: 'push|' + pushEntry.sessionId + '|' + pushEntry.repoRoot,
           entry: pushEntry,
           t: props.t,
           ctx: props.ctx,
           onClose: () => { pushDialog.set(null) },
-        }),
+        })),
         E(PromptDialogHost, null))
     }
 
@@ -10167,6 +10183,26 @@ window.__ModuleLoader__.load({
       },
     }
 
+    /* m04102: the frame-level push card vanished on its first open and never
+       came back. A throw while rendering an overlay is fatal for that slot for
+       the rest of the page load, and the card read the payload as if every
+       field existed — a host that answered without the newer `remotes` /
+       `detached` keys threw on `data.remotes.length` before the first paint.
+       Normalise once here so an older host still renders a usable card. */
+    function pushPreviewOf(raw) {
+      const bag = raw === null || typeof raw !== 'object' ? {} : raw
+      return {
+        branch: typeof bag.branch === 'string' ? bag.branch : '',
+        detached: bag.detached === true,
+        upstream: typeof bag.upstream === 'string' && bag.upstream !== '' ? bag.upstream : null,
+        remote: typeof bag.remote === 'string' ? bag.remote : '',
+        target: typeof bag.target === 'string' ? bag.target : '',
+        remotes: Array.isArray(bag.remotes) ? bag.remotes : [],
+        commits: Array.isArray(bag.commits) ? bag.commits : [],
+        truncated: bag.truncated === true,
+      }
+    }
+
     function PushDialogBody(props) {
       const t = props.t
       const entry = props.entry
@@ -10184,8 +10220,9 @@ window.__ModuleLoader__.load({
           try {
             const next = await request('push-preview', base)
             if (alive !== true) return
-            setData(next)
-            setSelected(next.commits.length === 0 ? null : next.commits[0].hash)
+            const normalized = pushPreviewOf(next)
+            setData(normalized)
+            setSelected(normalized.commits.length === 0 ? null : normalized.commits[0].hash)
           } catch (caught) {
             if (alive === true) setError(messageOf(caught))
           }
