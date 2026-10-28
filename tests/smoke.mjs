@@ -1883,6 +1883,16 @@ test('the popover floats the IDEA row verbs and fetch keeps it open (m02697)', (
   assert.match(host, /'show', '--no-color', '--no-ext-diff', '-U3', '--format=', '-m', '--first-parent'/, 'a merge commit diffs against its first parent')
   // The verb list is a root-level floating layer, not a row inserted in the tree.
   assert.match(cssRule('.git4idea-cs-flyout'), /position:absolute/, 'the row menu floats')
+  // The composer seat's layer tokens are translucent: a flyout that only reads
+  // them lets the branch rows show through its labels (m03354). It must pin
+  // the same opaque statics the chooser uses, in both themes.
+  assert.match(cssRule('.git4idea-cs-flyout'), /--dsw-alias-bg-layer-2:var\(--dsw-static-neutral-bluish-00/, 'the light flyout is opaque')
+  assert.match(cssRule('body[data-ds-dark-theme] .git4idea-cs-flyout'), /--dsw-alias-bg-layer-2:var\(--dsw-static-neutral-bluish-850/, 'the dark flyout is opaque')
+  assert.match(cssRule('.git4idea-cs-flyout'), /overflow:hidden/, 'labels clip at the card edge')
+  assert.match(cssRule('.git4idea-cs-sub-item'), /height:24px/, 'one 24px row per verb')
+  assert.match(cssRule('.git4idea-cs-sub-item'), /flex:none/, 'rows never shrink into each other')
+  assert.match(cssRule('.git4idea-cs-sub-label'), /text-overflow:ellipsis/, 'a long ref truncates instead of stretching the card')
+  assert.match(client, /className: 'git4idea-cs-sub-label'/, 'the labels use the truncating span')
   assert.match(client, /menu === 'branch' && newBranchOpen !== true \? csFlyout\(\) : null/, 'the flyout is a sibling of the popover')
   assert.doesNotMatch(client, /rows\.push\(csSubmenu/, 'nothing is inserted under the row any more')
   // The four IDEA verbs: checkout, new branch from this ref, merge INTO the

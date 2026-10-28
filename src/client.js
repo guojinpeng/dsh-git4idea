@@ -15783,8 +15783,15 @@ window.__ModuleLoader__.load({
          the branch row it belongs to. */
       /* Row flyout (m02697 #2): floats beside the chooser, anchored on the row.
          Root-relative because the composer seat is the containing block. */
-      '.git4idea-cs-flyout{position:absolute;z-index:62;display:flex;flex-direction:column;gap:1px;min-width:240px;max-width:320px;padding:4px;border-radius:var(--dsw-radius-sm,8px);background:var(--dsw-alias-bg-layer-2);box-shadow:var(--dsw-elevation-prominent,0 8px 24px rgba(0,0,0,.32));color:var(--dsw-alias-label-secondary)}',
-      '.git4idea-cs-sub-item{display:flex;align-items:center;gap:6px;width:100%;height:24px;padding:0 6px;border:none;border-radius:var(--dsw-radius-xs,6px);background:transparent;color:var(--dsw-alias-label-primary);font:inherit;font-size:12px;text-align:left;cursor:pointer}',
+      /* The composer seat's layer tokens are translucent, so a flyout that
+         only reads --dsw-alias-bg-layer-2 shows the branch rows behind its
+         labels. Pin the two menu surfaces to the same opaque statics the
+         chooser uses (issue #15), then paint with the menu token. */
+      '.git4idea-cs-flyout{--dsw-alias-bg-layer-1:var(--dsw-static-neutral-bluish-00,#fff);--dsw-alias-bg-layer-2:var(--dsw-static-neutral-bluish-00,#fff);position:absolute;z-index:62;display:flex;flex-direction:column;gap:1px;min-width:240px;max-width:320px;padding:4px;border-radius:var(--dsw-radius-sm,8px);overflow:hidden;background:var(--dsh-any-op-menu-cordis,var(--dsw-alias-bg-layer-2));box-shadow:var(--dsw-elevation-prominent,0 8px 24px rgba(0,0,0,.32));color:var(--dsw-alias-label-secondary)}',
+      'body[data-ds-dark-theme] .git4idea-cs-flyout{--dsw-alias-bg-layer-1:var(--dsw-static-neutral-bluish-875,#232324);--dsw-alias-bg-layer-2:var(--dsw-static-neutral-bluish-850,#2c2c2e)}',
+      '.git4idea-cs-sub-item{display:flex;align-items:center;gap:6px;width:100%;height:24px;padding:0 6px;flex:none;border:none;border-radius:var(--dsw-radius-xs,6px);background:transparent;color:var(--dsw-alias-label-primary);font:inherit;font-size:12px;line-height:24px;text-align:left;cursor:pointer}',
+      '.git4idea-cs-sub-item svg{flex:none}',
+      '.git4idea-cs-sub-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
       '.git4idea-cs-sub-item:hover:not([aria-disabled="true"]){background:var(--dsw-alias-interactive-bg-selected)}',
       '.git4idea-cs-sub-item[data-tone="danger"]{color:var(--dsw-alias-state-error-primary)}',
       '.git4idea-cs-sub-item[aria-disabled="true"]{opacity:.4;cursor:default}',
@@ -16919,7 +16926,7 @@ window.__ModuleLoader__.load({
         'aria-disabled': item.disabled === true ? 'true' : 'false',
         title: csMenu.entry.name,
         onClick: () => { if (item.disabled !== true) item.run() },
-      }, E(Icon, { name: item.icon, size: 12 }), E('span', null, item.label)))))
+      }, E(Icon, { name: item.icon, size: 12 }), E('span', { className: 'git4idea-cs-sub-label' }, item.label)))))
       const csNeedle = branchFilter.trim().toLowerCase()
       const csEntries = (list) => (Array.isArray(list) ? list : []).filter((entry) => csNeedle === ''
         || String(entry.name).toLowerCase().indexOf(csNeedle) >= 0)
