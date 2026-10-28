@@ -1874,6 +1874,32 @@ test('the popover new branch is a modal that creates and checks out (m02016)', (
   assert.match(client, /if \(newBranchOpen === true\) \{\n              return E\('div'/, 'the dialog returns before the tree renders')
 })
 
+test('the popover floats the IDEA row verbs and fetch keeps it open (m02697)', () => {
+  // A merge commit carries no patch of its own; without -m --first-parent the
+  // change list had 33 files while the diff pane said there was nothing to show.
+  assert.match(host, /'show', '--no-color', '--no-ext-diff', '-U3', '--format=', '-m', '--first-parent'/, 'a merge commit diffs against its first parent')
+  // The verb list is a root-level floating layer, not a row inserted in the tree.
+  assert.match(cssRule('.git4idea-cs-flyout'), /position:absolute/, 'the row menu floats')
+  assert.match(client, /menu === 'branch' && newBranchOpen !== true \? csFlyout\(\) : null/, 'the flyout is a sibling of the popover')
+  assert.doesNotMatch(client, /rows\.push\(csSubmenu/, 'nothing is inserted under the row any more')
+  // The four IDEA verbs: checkout, new branch from this ref, merge INTO the
+  // checked out branch, delete. Compare/seat shortcuts are gone.
+  assert.match(client, /id: 'checkout', icon: 'checkout'/, 'checkout stays first')
+  assert.match(client, /id: 'newBranch', icon: 'branchCreate'/, 'new branch from this ref')
+  assert.match(client, /id: 'merge', icon: 'compare'/, 'merge is offered')
+  assert.match(client, /fill\(t\('action\.mergeInto'\), \{ from: entry\.name, to: branchName === null \? '' : branchName \}\)/, 'merge names both refs')
+  assert.match(client, /void csCall\('merge', \{ branch: entry\.name \}\)/, 'merge runs the selected ref into the current branch')
+  assert.doesNotMatch(client, /setCsMenu\(null\); openPanelSeat\(\)/, 'the popover compare row is gone; the panel menu keeps its own')
+  assert.equal((client.match(/'action\.mergeInto':/g) || []).length, 21, 'the merge label exists in every dictionary')
+  // Every row advertises the menu with a tail chevron; the flyout tracks the row.
+  assert.match(client, /className: 'git4idea-cs-item-tail'/, 'rows carry a tail slot')
+  assert.match(client, /onClick: \(event\) => \{ openCsMenu\(entry, kind, event\) \}/, 'the row passes its rect to the menu')
+  assert.match(client, /setCsMenu\(\{ entry: entry, kind: kind, x: x, y: y \}\)/, 'the menu stores root-relative offsets')
+  // Fetch must refresh the list in place, not dismiss the chooser.
+  assert.match(client, /await csCall\('fetch', \{ prune: true \}, \{ keepOpen: true \}\)/, 'fetch keeps the popover open')
+  assert.match(client, /await loadBranches\(\)/, 'fetch reloads the refs it just refreshed')
+})
+
 test('the composer commit verb raises the dialog on the conversation page (m02090)', () => {
   // 提交 used to open the right-sidebar seat and then need a SECOND click on
   // that tab's own 提交 button. The verb now raises a card straight over the

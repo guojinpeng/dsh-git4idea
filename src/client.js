@@ -213,6 +213,7 @@ window.__ModuleLoader__.load({
       'action.rename': '重命名...',
       'action.delete': '删除',
       'action.mergeIntoCurrent': '合并到当前分支',
+      'action.mergeInto': '将 ‘{from}’ 合并到 ‘{to}’ 中',
       'action.rebaseCurrentOnto': '将当前分支变基到此',
       'action.compare': '与当前分支比较',
       'action.update': '更新(Fetch)',
@@ -550,6 +551,7 @@ window.__ModuleLoader__.load({
       'action.rename': 'Rename...',
       'action.delete': 'Delete',
       'action.mergeIntoCurrent': 'Merge into current branch',
+      'action.mergeInto': 'Merge ‘{from}’ into ‘{to}’',
       'action.rebaseCurrentOnto': 'Rebase current branch onto this',
       'action.compare': 'Compare with current branch',
       'action.update': 'Update (fetch)',
@@ -895,6 +897,7 @@ window.__ModuleLoader__.load({
         'action.rename': '重新命名...',
         'action.delete': '刪除',
         'action.mergeIntoCurrent': '合併到當前分支',
+        'action.mergeInto': '將 ‘{from}’ 合併到 ‘{to}’ 中',
         'action.rebaseCurrentOnto': '將當前分支變基到此',
         'action.compare': '同當前分支比較',
         'action.update': '更新(抓取)',
@@ -1232,6 +1235,7 @@ window.__ModuleLoader__.load({
         'action.rename': '重新命名...',
         'action.delete': '刪除',
         'action.mergeIntoCurrent': '合併到目前分支',
+        'action.mergeInto': '將 ‘{from}’ 合併到 ‘{to}’ 中',
         'action.rebaseCurrentOnto': '將目前分支變基到此',
         'action.compare': '與目前分支比較',
         'action.update': '更新(抓取)',
@@ -1569,6 +1573,7 @@ window.__ModuleLoader__.load({
         'action.rename': '重新命名...',
         'action.delete': '刪除',
         'action.mergeIntoCurrent': '合併到當前分支',
+        'action.mergeInto': '將 ‘{from}’ 合併到 ‘{to}’ 中',
         'action.rebaseCurrentOnto': '將當前分支變基到此',
         'action.compare': '同當前分支比較',
         'action.update': '更新(抓取)',
@@ -1906,6 +1911,7 @@ window.__ModuleLoader__.load({
         'action.rename': '名前を変更...',
         'action.delete': '削除',
         'action.mergeIntoCurrent': '現在のブランチにマージ',
+        'action.mergeInto': '‘{from}’ を ‘{to}’ にマージ',
         'action.rebaseCurrentOnto': '現在のブランチをここにリベース',
         'action.compare': '現在のブランチと比較',
         'action.update': '更新(フェッチ)',
@@ -2243,6 +2249,7 @@ window.__ModuleLoader__.load({
         'action.rename': '이름 바꾸기...',
         'action.delete': '삭제',
         'action.mergeIntoCurrent': '현재 브랜치로 병합',
+        'action.mergeInto': '‘{from}’을(를) ‘{to}’(으)로 병합',
         'action.rebaseCurrentOnto': '현재 브랜치를 여기로 리베이스',
         'action.compare': '현재 브랜치와 비교',
         'action.update': '업데이트(페치)',
@@ -2580,6 +2587,7 @@ window.__ModuleLoader__.load({
         'action.rename': 'Umbenennen...',
         'action.delete': 'Löschen',
         'action.mergeIntoCurrent': 'In aktuellen Branch mergen',
+        'action.mergeInto': '‘{from}’ in ‘{to}’ mergen',
         'action.rebaseCurrentOnto': 'Aktuellen Branch hierauf rebasen',
         'action.compare': 'Mit aktuellem Branch vergleichen',
         'action.update': 'Aktualisieren (fetch)',
@@ -2917,6 +2925,7 @@ window.__ModuleLoader__.load({
         'action.rename': 'Renommer...',
         'action.delete': 'Supprimer',
         'action.mergeIntoCurrent': 'Fusionner dans la branche courante',
+        'action.mergeInto': 'Fusionner ‘{from}’ dans ‘{to}’',
         'action.rebaseCurrentOnto': 'Rebaser la branche courante sur celle-ci',
         'action.compare': 'Comparer avec la branche courante',
         'action.update': 'Mettre à jour (fetch)',
@@ -3254,6 +3263,7 @@ window.__ModuleLoader__.load({
         'action.rename': 'Переименовать...',
         'action.delete': 'Удалить',
         'action.mergeIntoCurrent': 'Влить в текущую ветку',
+        'action.mergeInto': 'Влить ‘{from}’ в ‘{to}’',
         'action.rebaseCurrentOnto': 'Перебазировать текущую ветку сюда',
         'action.compare': 'Сравнить с текущей веткой',
         'action.update': 'Обновить (fetch)',
@@ -3591,6 +3601,7 @@ window.__ModuleLoader__.load({
         'action.rename': 'Renomear...',
         'action.delete': 'Excluir',
         'action.mergeIntoCurrent': 'Mesclar na branch atual',
+        'action.mergeInto': 'Mesclar ‘{from}’ em ‘{to}’',
         'action.rebaseCurrentOnto': 'Rebasear a branch atual sobre esta',
         'action.compare': 'Comparar com a branch atual',
         'action.update': 'Atualizar (fetch)',
@@ -3928,6 +3939,7 @@ window.__ModuleLoader__.load({
         'action.rename': 'Rinomina...',
         'action.delete': 'Elimina',
         'action.mergeIntoCurrent': 'Unisci nel branch corrente',
+        'action.mergeInto': 'Unisci ‘{from}’ in ‘{to}’',
         'action.rebaseCurrentOnto': 'Rebase del branch corrente su questo',
         'action.compare': 'Confronta con il branch corrente',
         'action.update': 'Aggiorna (fetch)',
@@ -4265,6 +4277,7 @@ window.__ModuleLoader__.load({
         'action.rename': 'Hernoemen...',
         'action.delete': 'Verwijderen',
         'action.mergeIntoCurrent': 'Samenvoegen in huidige branch',
+        'action.mergeInto': '‘{from}’ samenvoegen in ‘{to}’',
         'action.rebaseCurrentOnto': 'Huidige branch rebasen op deze',
         'action.compare': 'Vergelijken met huidige branch',
         'action.update': 'Bijwerken (fetch)',
@@ -4602,6 +4615,7 @@ window.__ModuleLoader__.load({
         'action.rename': 'Zmień nazwę...',
         'action.delete': 'Usuń',
         'action.mergeIntoCurrent': 'Scal z bieżącą gałęzią',
+        'action.mergeInto': 'Scal ‘{from}’ z ‘{to}’',
         'action.rebaseCurrentOnto': 'Zrebase’uj bieżącą gałąź na tę',
         'action.compare': 'Porównaj z bieżącą gałęzią',
         'action.update': 'Odśwież (fetch)',
@@ -4939,6 +4953,7 @@ window.__ModuleLoader__.load({
         'action.rename': 'Byt namn...',
         'action.delete': 'Ta bort',
         'action.mergeIntoCurrent': 'Sammanfoga in i aktuell gren',
+        'action.mergeInto': 'Sammanfoga ‘{from}’ i ‘{to}’',
         'action.rebaseCurrentOnto': 'Rebasa aktuell gren mot denna',
         'action.compare': 'Jämför med aktuell gren',
         'action.update': 'Uppdatera (fetch)',
@@ -5276,6 +5291,7 @@ window.__ModuleLoader__.load({
         'action.rename': 'Yeniden adlandır...',
         'action.delete': 'Sil',
         'action.mergeIntoCurrent': 'Geçerli dala birleştir',
+        'action.mergeInto': '‘{from}’ dalını ‘{to}’ içine birleştir',
         'action.rebaseCurrentOnto': 'Geçerli dalı bunun üzerine rebase et',
         'action.compare': 'Geçerli dalla karşılaştır',
         'action.update': 'Güncelle (fetch)',
@@ -5613,6 +5629,7 @@ window.__ModuleLoader__.load({
         'action.rename': 'Ganti nama...',
         'action.delete': 'Hapus',
         'action.mergeIntoCurrent': 'Gabungkan ke branch saat ini',
+        'action.mergeInto': 'Gabungkan ‘{from}’ ke ‘{to}’',
         'action.rebaseCurrentOnto': 'Rebase branch saat ini ke ini',
         'action.compare': 'Bandingkan dengan branch saat ini',
         'action.update': 'Perbarui (fetch)',
@@ -5950,6 +5967,7 @@ window.__ModuleLoader__.load({
         'action.rename': 'Đổi tên...',
         'action.delete': 'Xoá',
         'action.mergeIntoCurrent': 'Hợp nhất vào nhánh hiện tại',
+        'action.mergeInto': 'Hợp nhất ‘{from}’ vào ‘{to}’',
         'action.rebaseCurrentOnto': 'Rebase nhánh hiện tại lên nhánh này',
         'action.compare': 'So sánh với nhánh hiện tại',
         'action.update': 'Cập nhật (fetch)',
@@ -6287,6 +6305,7 @@ window.__ModuleLoader__.load({
         'action.rename': 'إعادة التسمية...',
         'action.delete': 'حذف',
         'action.mergeIntoCurrent': 'الدمج في الفرع الحالي',
+        'action.mergeInto': 'دمج ‘{from}’ في ‘{to}’',
         'action.rebaseCurrentOnto': 'إعادة تأسيس الفرع الحالي على هذا',
         'action.compare': 'المقارنة مع الفرع الحالي',
         'action.update': 'تحديث (fetch)',
@@ -6624,6 +6643,7 @@ window.__ModuleLoader__.load({
         'action.rename': 'नाम बदलें...',
         'action.delete': 'हटाएँ',
         'action.mergeIntoCurrent': 'वर्तमान शाखा में मर्ज करें',
+        'action.mergeInto': '‘{from}’ को ‘{to}’ में मर्ज करें',
         'action.rebaseCurrentOnto': 'वर्तमान शाखा को इस पर रीबेस करें',
         'action.compare': 'वर्तमान शाखा से तुलना करें',
         'action.update': 'अद्यतन करें (fetch)',
@@ -6961,6 +6981,7 @@ window.__ModuleLoader__.load({
         'action.rename': 'เปลี่ยนชื่อ...',
         'action.delete': 'ลบ',
         'action.mergeIntoCurrent': 'รวมเข้าแบรนช์ปัจจุบัน',
+        'action.mergeInto': 'รวม ‘{from}’ เข้ากับ ‘{to}’',
         'action.rebaseCurrentOnto': 'รีเบสแบรนช์ปัจจุบันไปที่นี้',
         'action.compare': 'เปรียบเทียบกับแบรนช์ปัจจุบัน',
         'action.update': 'อัปเดต (fetch)',
@@ -15482,7 +15503,9 @@ window.__ModuleLoader__.load({
       '.git4idea-cs-item-main{display:flex;flex-direction:column;min-width:0;flex:1}',
       '.git4idea-cs-item-sub{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dsw-alias-label-tertiary);font-size:10px;line-height:12px}',
       '.git4idea-cs-item-note{color:var(--dsw-alias-label-tertiary);font-size:11px;flex:none}',
-      '.git4idea-cs-item-counts{display:inline-flex;gap:5px;margin-left:auto;flex:none;font-variant-numeric:tabular-nums;font-size:11px}',
+      '.git4idea-cs-item-counts{display:inline-flex;gap:5px;flex:none;font-variant-numeric:tabular-nums;font-size:11px}',
+      '.git4idea-cs-item-tail{display:inline-flex;align-items:center;gap:6px;margin-left:auto;flex:none;color:var(--dsw-alias-label-tertiary)}',
+      '.git4idea-cs-item[data-menu=true]{background:var(--dsw-alias-interactive-bg-selected)}',
       '.git4idea-cs-static{color:var(--dsw-alias-label-tertiary);cursor:default}',
       /* Branch popover (m01216 #10): the tree's search box, the fetched sections
          and the three actions, in one card above the composer. It is taller than
@@ -15511,7 +15534,9 @@ window.__ModuleLoader__.load({
       '.git4idea-cs-dialog-ok:disabled{opacity:.45;cursor:default}',
       /* Inline secondary menu (m01737 #5): one row per verb, indented under
          the branch row it belongs to. */
-      '.git4idea-cs-sub{display:flex;flex-direction:column;gap:1px;margin:2px 4px 4px 18px;padding:3px;border-radius:var(--dsw-radius-sm,8px);background:var(--dsw-alias-interactive-bg-hover)}',
+      /* Row flyout (m02697 #2): floats beside the chooser, anchored on the row.
+         Root-relative because the composer seat is the containing block. */
+      '.git4idea-cs-flyout{position:absolute;z-index:62;display:flex;flex-direction:column;gap:1px;min-width:240px;max-width:320px;padding:4px;border-radius:var(--dsw-radius-sm,8px);background:var(--dsw-alias-bg-layer-2);box-shadow:var(--dsw-elevation-prominent,0 8px 24px rgba(0,0,0,.32));color:var(--dsw-alias-label-secondary)}',
       '.git4idea-cs-sub-item{display:flex;align-items:center;gap:6px;width:100%;height:24px;padding:0 6px;border:none;border-radius:var(--dsw-radius-xs,6px);background:transparent;color:var(--dsw-alias-label-primary);font:inherit;font-size:12px;text-align:left;cursor:pointer}',
       '.git4idea-cs-sub-item:hover:not([aria-disabled="true"]){background:var(--dsw-alias-interactive-bg-selected)}',
       '.git4idea-cs-sub-item[data-tone="danger"]{color:var(--dsw-alias-state-error-primary)}',
@@ -16213,6 +16238,9 @@ window.__ModuleLoader__.load({
       const [csMenu, setCsMenu] = useState(null)
       const [csBusy, setCsBusy] = useState('')
       const rootRef = useRef(null)
+      /* Measured to place the row flyout: the popover's right edge decides
+         whether it opens to the right or flips to the left of the popover. */
+      const popRef = useRef(null)
 
       /* The switch flips live through the same rail-config notify walk the
          settings card and the conversation tab ride. */
@@ -16340,19 +16368,24 @@ window.__ModuleLoader__.load({
       const branchName = summary !== null && typeof summary.branch === 'string' && summary.branch !== '' ? summary.branch : null
       const detached = summary !== null && summary.detached === true
 
-      const openBranchMenu = async () => {
-        setMenu('branch')
-        /* A warm page (panel or prewarm) fills the list this tick; the fetch
-           below re-proves it. On failure keep whatever is showing. */
+      /* Split out of openBranchMenu so a fetch can refresh the refs WITHOUT
+         closing the popover (m02697 #4). A warm page (panel or prewarm) fills the
+         list this tick; the request below re-proves it. On failure keep whatever
+         is showing. */
+      const loadBranches = async () => {
         const seed = readPaintPage(repoRoot)
         const seeded = seed !== undefined && seed.branches !== undefined && seed.branches !== null ? seed.branches : null
-        setBranchList(seeded)
+        if (seeded !== null) setBranchList(seeded)
         setBranchLoading(seeded === null)
         try {
           const branchesData = await request('branches', { cwd: cwd, repoRoot: repoRoot })
           setBranchList(branchesData)
           mergePaintPage(repoRoot, { branches: branchesData })
         } catch (caught) { void caught } finally { setBranchLoading(false) }
+      }
+      const openBranchMenu = async () => {
+        setMenu('branch')
+        await loadBranches()
       }
       const checkoutBranch = async (name) => {
         if (repoRoot === null || checkingOut !== '') return
@@ -16369,16 +16402,25 @@ window.__ModuleLoader__.load({
       }
       /* Popover actions (m01216 #10). Nothing here may depend on panel state:
          the pill lives in the host composer, outside the panel's React tree. */
-      const csCall = async (action, payload) => {
+      const csCall = async (action, payload, options) => {
         if (repoRoot === null || csBusy !== '') return
+        const keepOpen = options !== undefined && options.keepOpen === true
         setCsBusy(action)
         try {
-          await request(action, Object.assign({ cwd: cwd, repoRoot: repoRoot }, payload))
-          setMenu(null)
+          const result = await request(action, Object.assign({ cwd: cwd, repoRoot: repoRoot }, payload))
+          /* fetch keeps the chooser on screen (m02697 #4): it refreshes the same
+             list the user is looking at, so closing it would undo the point. */
+          if (keepOpen !== true) setMenu(null)
           setTick((value) => value + 1)
           notifyBranchSwitched(sessionId, repoRoot)
+          /* A merge that stops on conflicts exits 0-as-data, not as a refusal:
+             report it instead of closing as if it had succeeded cleanly. */
+          if (action === 'merge' && result !== null && result !== undefined && result.conflicted === true) {
+            const output = typeof result.output === 'string' ? result.output.trim() : ''
+            setError(output === '' ? action : output)
+          }
         } catch (caught) {
-          setMenu(null)
+          if (keepOpen !== true) setMenu(null)
           setError(caught instanceof Error ? caught.message : String(caught))
         } finally { setCsBusy('') }
       }
@@ -16478,24 +16520,57 @@ window.__ModuleLoader__.load({
         }
         void csCall('branchDelete', { name: entry.name, confirm: true })
       }
-      /* Row menu (m01737 #5): a click selects the row and opens the IDEA verb
-         list beside it. Offsets are root-relative, the same convention the
-         panel menu uses, because the composer seat is its own containing block. */
-      /* The verb list opens inline under its row rather than as a floating
-         layer: the popover body is a scrolling, clipped box, so a positioned
-         submenu would be cut off at the first row near the fold. Inline keeps
-         every item reachable at any scroll offset. */
-      const openCsMenu = (entry, kind) => {
-        setCsMenu((current) => (current !== null && current.entry === entry && current.kind === kind ? null : { entry: entry, kind: kind }))
+      /* Row menu (m01737 #5, floated beside the popover since m02697 #2): a
+         click SELECTS the row and shows the IDEA verb list next to the chooser,
+         anchored on that row. The list cannot live inside the popover body —
+         that box scrolls and clips — but it must not push the tree either, so
+         it is a root-level floating layer. Offsets are root-relative because the
+         composer seat is the containing block. */
+      const openCsMenu = (entry, kind, event) => {
+        if (csMenu !== null && csMenu.entry === entry && csMenu.kind === kind) { setCsMenu(null); return }
+        const root = rootRef.current
+        const pop = popRef.current
+        const rootRect = root !== null && root !== undefined ? root.getBoundingClientRect() : { left: 0, top: 0 }
+        const popRect = pop !== null && pop !== undefined ? pop.getBoundingClientRect() : null
+        const rowRect = event !== undefined && event !== null && event.currentTarget !== null && event.currentTarget !== undefined
+          ? event.currentTarget.getBoundingClientRect() : null
+        /* Four verbs: 4 * 26 + 8 padding, plus the shadow gutter. */
+        const flyoutWidth = 240
+        const flyoutHeight = 112
+        const gutter = 6
+        const viewportWidth = typeof window === 'undefined' ? 0 : (window.innerWidth || 0)
+        const viewportHeight = typeof window === 'undefined' ? 0 : (window.innerHeight || 0)
+        let x = popRect === null ? 0 : popRect.right - rootRect.left + gutter
+        /* Flip to the popover's left side when the right edge is too close to
+           the viewport, the way the IDE keeps a submenu on screen. */
+        if (popRect !== null && viewportWidth > 0 && popRect.right + gutter + flyoutWidth > viewportWidth - 8) {
+          x = popRect.left - rootRect.left - flyoutWidth - gutter
+        }
+        if (x < 4) x = 4
+        /* The chooser opens UPWARD from the composer, so a row's root-relative
+           top is negative by design — clamping it to 0 would drop the menu onto
+           the pill. Clamp against the viewport instead. */
+        let y = rowRect === null ? 0 : rowRect.top - rootRect.top
+        if (viewportHeight > 0) {
+          const maxY = viewportHeight - rootRect.top - flyoutHeight - 8
+          const minY = 8 - rootRect.top
+          if (y > maxY) y = maxY
+          if (y < minY) y = minY
+        }
+        setCsMenu({ entry: entry, kind: kind, x: x, y: y })
       }
       const csMenuItems = (sel) => {
         const entry = sel.entry
         const kind = sel.kind
         const local = kind === 'local'
+        const blocked = entry.worktree !== null || checkingOut !== ''
+        /* The four verbs the IDEA row menu offers (m02697 #3). Merge always runs
+           in the direction IDEA words it: the SELECTED ref is merged INTO the
+           branch checked out right now, never the other way round. */
         return [
           {
             id: 'checkout', icon: 'checkout', tone: 'accent', label: t('action.checkout'),
-            disabled: entry.head === true || entry.worktree !== null || checkingOut !== '',
+            disabled: entry.head === true || blocked,
             run: () => { setCsMenu(null); csCheckout(entry, kind) },
           },
           {
@@ -16510,28 +16585,32 @@ window.__ModuleLoader__.load({
               setNewBranchOpen(true)
             },
           },
-          null,
-          { id: 'compare', icon: 'filter', tone: 'violet', label: t('action.compare'), run: () => { setCsMenu(null); openPanelSeat() } },
-          null,
+          {
+            id: 'merge', icon: 'compare', tone: 'violet',
+            label: fill(t('action.mergeInto'), { from: entry.name, to: branchName === null ? '' : branchName }),
+            disabled: entry.head === true || branchName === null || blocked,
+            run: () => { setCsMenu(null); void csCall('merge', { branch: entry.name }) },
+          },
           {
             id: 'delete', icon: 'trash', tone: 'danger', danger: true, label: t('action.delete'),
             disabled: entry.head === true && local,
             run: () => { setCsMenu(null); csDelete(entry, kind) },
           },
-        ].filter((item) => item !== null)
+        ]
       }
-      const csSubmenu = (sel) => E('div', { key: 'sub:' + sel.entry.name, className: 'git4idea-cs-sub' },
-        csMenuItems(sel).map((item) => item === null
-          ? E('div', { key: 'sep', className: 'git4idea-cs-sub-sep' })
-          : E('button', {
-            key: item.id,
-            type: 'button',
-            className: 'git4idea-cs-sub-item',
-            'data-tone': item.danger === true ? 'danger' : (item.tone === undefined ? 'secondary' : item.tone),
-            'aria-disabled': item.disabled === true ? 'true' : 'false',
-            title: sel.entry.name,
-            onClick: () => { if (item.disabled !== true) item.run() },
-          }, E(Icon, { name: item.icon, size: 12 }), E('span', null, item.label))))
+      const csFlyout = () => (csMenu === null ? null : E('div', {
+        className: 'git4idea-cs-flyout',
+        'data-cordis-panel': '',
+        style: { left: String(csMenu.x) + 'px', top: String(csMenu.y) + 'px' },
+      }, csMenuItems(csMenu).map((item) => E('button', {
+        key: item.id,
+        type: 'button',
+        className: 'git4idea-cs-sub-item',
+        'data-tone': item.danger === true ? 'danger' : (item.tone === undefined ? 'secondary' : item.tone),
+        'aria-disabled': item.disabled === true ? 'true' : 'false',
+        title: csMenu.entry.name,
+        onClick: () => { if (item.disabled !== true) item.run() },
+      }, E(Icon, { name: item.icon, size: 12 }), E('span', null, item.label)))))
       const csNeedle = branchFilter.trim().toLowerCase()
       const csEntries = (list) => (Array.isArray(list) ? list : []).filter((entry) => csNeedle === ''
         || String(entry.name).toLowerCase().indexOf(csNeedle) >= 0)
@@ -16547,17 +16626,21 @@ window.__ModuleLoader__.load({
         disabled: entry.worktree !== null || checkingOut !== '',
         style: { paddingLeft: String(6 + depth * 12) + 'px' },
         title: entry.worktree !== null ? t('composer.inWorktree') : (checkingOut !== '' ? t('composer.busy') : entry.name),
-        onClick: () => { openCsMenu(entry, kind) },
+        onClick: (event) => { openCsMenu(entry, kind, event) },
       },
         E(Icon, { name: kind === 'tags' ? 'tag' : 'branch', size: 11 }),
         E('span', { className: 'git4idea-cs-item-name' }, entry.name.slice(entry.name.lastIndexOf('/') + 1)),
         entry.worktree !== null ? E('span', { className: 'git4idea-cs-item-note' }, t('composer.inWorktree')) : null,
         checkingOut === entry.name ? E('span', { className: 'git4idea-cs-item-note' }, '…') : null,
-        entry.ahead > 0 || entry.behind > 0
-          ? E('span', { className: 'git4idea-cs-item-counts' },
-            entry.ahead > 0 ? E('span', { className: 'git4idea-cs-ahead' }, '↑' + String(entry.ahead)) : null,
-            entry.behind > 0 ? E('span', { className: 'git4idea-cs-behind' }, '↓' + String(entry.behind)) : null)
-          : null)
+        /* Every row advertises the menu with a tail chevron (m02697 #2): the
+           user should not have to click a row to discover the verbs. */
+        E('span', { className: 'git4idea-cs-item-tail' },
+          entry.ahead > 0 || entry.behind > 0
+            ? E('span', { className: 'git4idea-cs-item-counts' },
+              entry.ahead > 0 ? E('span', { className: 'git4idea-cs-ahead' }, '↑' + String(entry.ahead)) : null,
+              entry.behind > 0 ? E('span', { className: 'git4idea-cs-behind' }, '↓' + String(entry.behind)) : null)
+            : null,
+          E(Icon, { name: 'chevronRight', size: 10 })))
       const csTree = (key, label, entries, kind) => {
         if (entries.length === 0) return null
         const root = { folders: new Map(), leaves: [] }
@@ -16590,7 +16673,6 @@ window.__ModuleLoader__.load({
           })
           for (const entry of node.leaves) {
             rows.push(csLeaf(entry, kind, depth))
-            if (csMenu !== null && csMenu.entry === entry && csMenu.kind === kind) rows.push(csSubmenu(csMenu))
           }
         }
         walk(root, '', 0)
@@ -16666,7 +16748,7 @@ window.__ModuleLoader__.load({
                     onClick: () => { void createBranch() },
                   }, t('confirm.ok'))))
             }
-            return E('div', { className: 'git4idea-cs-menu git4idea-cs-branches', 'data-cordis-panel': '' },
+            return E('div', { ref: popRef, className: 'git4idea-cs-menu git4idea-cs-branches', 'data-cordis-panel': '' },
               E('div', { className: 'git4idea-cs-search' },
                 E('input', {
                   className: 'git4idea-cs-input', value: branchFilter, spellCheck: false,
@@ -16677,7 +16759,14 @@ window.__ModuleLoader__.load({
                   type: 'button', className: 'git4idea-cs-tool',
                   title: t('toolbar.fetch'),
                   'aria-disabled': repoRoot === null || csBusy !== '' ? 'true' : 'false',
-                  onClick: () => { void csCall('fetch', { prune: true }) },
+                  /* Fetch keeps the chooser open (m02697 #4): it refreshes the
+                     refs the user is looking at, then reloads that same list. */
+                  onClick: () => {
+                    void (async () => {
+                      await csCall('fetch', { prune: true }, { keepOpen: true })
+                      await loadBranches()
+                    })()
+                  },
                 }, E(Icon, { name: 'fetch', size: 13 }))),
               error !== '' ? E('div', { className: 'git4idea-cs-errorbar', title: error }, error) : null,
               /* Actions sit under the search box and above the tree, one per row
@@ -16701,11 +16790,19 @@ window.__ModuleLoader__.load({
                     setNewBranchOpen(true)
                   },
                 }, E(Icon, { name: 'plus', size: 12 }), E('span', null, t('toolbar.newBranch')))),
-              E('div', { className: 'git4idea-cs-sections' },
+              E('div', {
+                className: 'git4idea-cs-sections',
+                /* The flyout is anchored to a row: once the tree scrolls, that
+                   anchor is stale, so the menu closes instead of drifting. */
+                onScroll: () => { if (csMenu !== null) setCsMenu(null) },
+              },
                 sections.length === 0 ? E('div', { className: 'git4idea-cs-item git4idea-cs-static' }, t('filter.none')) : sections),
               )
           })())
           : null,
+        /* Root-level sibling of the popover, not a child of it: the popover body
+           clips and scrolls, which would cut the menu off. */
+        menu === 'branch' && newBranchOpen !== true ? csFlyout() : null,
       )
     }
 

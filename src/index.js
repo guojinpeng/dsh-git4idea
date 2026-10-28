@@ -919,7 +919,13 @@ async function diff(payload) {
   if (payload.staged === true) args.push('--cached')
   if (typeof payload.hash === 'string' && payload.hash.trim() !== '') {
     args.length = 0
-    args.push('show', '--no-color', '--no-ext-diff', '-U3', '--format=', requireRef(payload.hash, 'hash'))
+    /* A merge commit has no patch of its own: plain `git show` prints the
+       message and stops, so the panel's change list (which reads
+       `show --numstat -m --first-parent`) had files to list while the diff pane
+       said "no textual differences". -m --first-parent makes a merge diff
+       against the branch it was merged INTO, the same side the file list and
+       the IDE show (m02697 #1). */
+    args.push('show', '--no-color', '--no-ext-diff', '-U3', '--format=', '-m', '--first-parent', requireRef(payload.hash, 'hash'))
   }
   if (typeof payload.path === 'string' && payload.path.trim() !== '') args.push('--', requireRelativePath(payload.path))
   const out = await git(root, args)
