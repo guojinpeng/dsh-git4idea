@@ -700,10 +700,9 @@ test('the rc.2 surface contract: one focus colour, radius tokens, round capsules
 
 test('client half has two doors: the native right sidebar, the conversation view tab', () => {
   // Door 1 — DSH's own right sidebar (ui-sidebar-right) is the only home: the
-  // panel registers a tab type plus its pane body, and the tab opens itself
-  // once per page load (default seat, from the composer pill's mount — the one
-  // surface that exists only while a conversation is on screen, because the
-  // base throws on openTab with no session mounted).
+  // panel registers a tab type plus its pane body, and opens on demand from the
+  // composer pill. m02407 #1 removed the once-per-page default seat: the Git tab
+  // in the conversation header is the only door, and nothing opens at startup.
   // The seats WAIT for their services (v0.5.3): the old synchronous ctx.get()
   // probe ran before ui-sidebar-right provided the registry on the desktop app
   // and on clean instances, then returned silently — no Git card, no error.
@@ -713,8 +712,8 @@ test('client half has two doors: the native right sidebar, the conversation view
   assert.match(client, /^ {6}hostNatively\(\)$/m, 'the native seats go up unconditionally')
   assert.doesNotMatch(client, /betterSidebar/, 'no dsh-better-sidebar service is read or registered')
   assert.doesNotMatch(client, /registerTab\(/, 'the panel registers no foreign tab')
-  assert.match(client, /sidebarRight\.openTab\(NATIVE_KIND\)/, 'the default seat opens itself')
-  assert.match(client, /let defaultSeatOpened = false/, 'the default open happens once per page load')
+  assert.match(client, /sidebarRight\.openTab\(NATIVE_KIND\)/, 'the panel still opens on demand from the composer pill')
+  assert.doesNotMatch(client, /defaultSeatOpened/, 'm02407 #1: no seat opens itself at page load')
   assert.match(client, /inject: \[\], apply/)
   // Door 3 — the conversation-area view tab (issue #8), beside 对话/轨迹: the
   // ui-conversation `conversation.view` slot, the same contract dsh-context
@@ -728,15 +727,16 @@ test('client half has two doors: the native right sidebar, the conversation view
   assert.match(client, /name: 'conversation\.view', id: CONVERSATION_VIEW_ID, order: 30, locale: LOCALE_NS/)
   // The seat follows the setting live through the rail-config watchers.
   assert.match(client, /const unsubscribe = subscribeRailConfig\(sync\)/)
-  // v0.14: TWO native tab types — the main panel (with its guide entry) and
-  // the preview tab (guide-less by design: it opens itself from a diff verb,
-  // it is not a start-page destination).
+  // v0.14: TWO native tab types — the main panel and the preview tab. Both are
+  // guide-less since m02407 #1: the plugin keeps no entry on the start page, and
+  // the preview tab only exists to receive the openTab a diff verb fires.
   const nativeTypes = client.match(/tabs\.register\(\{/g) || []
   assert.equal(nativeTypes.length, 2, 'two native tab types: the main panel and the preview tab')
   assert.match(client, /const NATIVE_PREVIEW_ID = 'dsh-git4idea-preview'/)
   assert.match(client, /keepMounted: true/, 'the preview tab keeps its body across tab switches')
   assert.doesNotMatch(client, /NATIVE_PREVIEW_ID,\n\s*kind: NATIVE_PREVIEW_KIND,\n\s*title: \(\) => t\('preview\.title'\),\n\s*keepMounted: true,\n\s*guide:/,
     'the preview tab carries no guide entry (it is not a start-page destination)')
+  assert.doesNotMatch(client, /guide:/, 'no tab type advertises a start-page entry (m02407 #1)')
   const slotSeats = client.match(/slots\.register\(/g) || []
   assert.equal(slotSeats.length, 4, 'four keyed-slot seats: native pane, preview pane, settings card, conversation view')
 })
@@ -1059,8 +1059,9 @@ test('the pane clamps hold at both ends and never shrink a pane below its own bo
   const core = paneCore()
   const tall = { width: 500, height: 900 }
 
-  // Nothing stored → no inline override at all: the stylesheet default (200px
-  // tree, 290px changes, the percentage caps) keeps rendering as before.
+  // Nothing stored → no inline override at all: the stylesheet defaults render
+  // untouched (proportional 1:2:2 columns since m02407 #2, the stacked ratios
+  // otherwise).
   const fresh = core.paneGeometry('stack', tall, core.normalizePanes(null))
   assert.deepEqual(fresh.overrides, {})
   assert.equal(fresh.bucket, 'stack:tall')
@@ -1082,27 +1083,32 @@ test('the pane clamps hold at both ends and never shrink a pane below its own bo
   assert.equal(tiny.overrides.tree, core.PANE_LIMITS['stack:tree'].min)
   assert.equal(tiny.overrides.changes, core.PANE_LIMITS['stack:changes'].min)
 
-  // A huge container still stops at the absolute maxima...
+  // A huge container keeps the proportional 1:2:2 defaults (m02407 #2), and the
+  // ceiling follows the box a pane already occupies — the same "never shrink an
+  // untouched pane" rule as the 674px case below, so 1/5 and 2/5 of 3000 are
+  // what the stored 1:1 ratios clamp to.
   const roomy = core.paneGeometry('columns', { width: 3000, height: 400 },
     core.normalizePanes({ panes: { 'columns:wide': { tree: 1, changes: 1 } } }))
-  assert.equal(roomy.overrides.tree, core.PANE_LIMITS['columns:tree'].max)
-  assert.equal(roomy.overrides.changes, core.PANE_LIMITS['columns:changes'].max)
+  assert.equal(roomy.overrides.tree, Math.round(core.PANE_DEFAULTS['columns:tree'].ratio * 3000))
+  assert.equal(roomy.overrides.changes, Math.round(core.PANE_DEFAULTS['columns:changes'].ratio * 3000))
   // ...and a container that cannot hold every default at once hands out what is
-  // left, still leaving the middle pane its floor — no overflow.
+  // left, still leaving the middle pane at least its floor — no overflow.
   const fit = core.paneGeometry('columns', { width: 700, height: 400 },
     core.normalizePanes({ panes: { 'columns:wide': { tree: 1, changes: 1 } } }))
-  assert.equal(700 - fit.overrides.tree - fit.overrides.changes - 2 * core.PANE_GUTTER_PX, core.PANE_MAIN_FLOOR_PX)
+  assert.ok(700 - fit.overrides.tree - fit.overrides.changes - 2 * core.PANE_GUTTER_PX >= core.PANE_MAIN_FLOOR_PX,
+    'the middle pane keeps at least its floor')
 
-  // The 674px column of the reported bug (issue #5 follow-up): 200 + 290 + 240
-  // cannot all hold, and the OLD ceiling (140) came out below the tree's own 201.
-  // The ceiling now never goes below the box a pane already occupies, so the
-  // first drag to the right can only GROW it.
+  // The 674px column of the reported bug (issue #5 follow-up): the measured
+  // boxes (201 + 291 + 240 + gutters) cannot all hold, and the OLD ceiling (140)
+  // came out below the tree's own 201. The ceiling now never goes below the box a
+  // pane already occupies, so the first drag to the right can only GROW it.
   const boxes = { tree: 201, changes: 291 }
   const pinned = core.paneGeometry('columns', { width: 674, height: 482 }, core.normalizePanes(null), boxes)
   assert.equal(pinned.bucket, 'columns:wide')
   assert.ok(pinned.limits.tree.max > boxes.tree, 'the tree keeps room to grow (max ' + pinned.limits.tree.max + ' vs ' + boxes.tree + ')')
   assert.ok(pinned.limits.tree.max - boxes.tree >= 20, 'and it is a usable step, not a token pixel')
-  assert.ok(pinned.limits.tree.max >= core.PANE_DEFAULTS['columns:tree'].px, 'the ceiling is never below the pane\'s own default')
+  assert.ok(pinned.limits.tree.max >= Math.round(core.PANE_DEFAULTS['columns:tree'].ratio * 674),
+    'the ceiling is never below the pane\'s proportional default')
   assert.ok(pinned.limits.tree.now === undefined || pinned.limits.tree.now <= pinned.limits.tree.max)
   assert.equal(674 - 2 * core.PANE_GUTTER_PX - pinned.limits.tree.max - boxes.changes, core.PANE_MAIN_FLOOR_PX,
     'the relaxed tier still keeps the middle pane its floor')
@@ -1598,7 +1604,12 @@ test('every overlay is clamped to the panel it lives in', () => {
   assert.match(cssRule('.git4idea-dialog'), /min-width:min\(240px,100%\)/)
   assert.match(cssRule('.git4idea-dialog'), /max-width:min\(420px,94%\)/)
   assert.match(cssRule('.git4idea-dialog-wide'), /min-width:min\(360px,92%\)/)
-  assert.match(cssRule('.git4idea-toasts'), /max-width:min\(340px,92%\)/)
+  assert.match(cssRule('.git4idea-toasts'), /max-width:min\(380px,92%\)/)
+  // m02407 #3: a toast folds to two lines, expands whole on hover (or a click),
+  // and scrolls instead of growing past the viewport.
+  assert.match(cssRule('.git4idea-toast-text'), /-webkit-line-clamp:2/)
+  assert.match(cssRule('.git4idea-toast:hover .git4idea-toast-text,.git4idea-toast-open .git4idea-toast-text'),
+    /-webkit-line-clamp:unset;max-height:min\(40vh,240px\);overflow:auto/)
   // Under the compact threshold the panel marks itself, and the nowrap labels that
   // would otherwise be clipped start wrapping inside the clamped box.
   assert.match(client, /compact \? ' git4idea-root-narrow' : ''/)

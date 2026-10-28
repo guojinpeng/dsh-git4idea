@@ -8099,8 +8099,8 @@ window.__ModuleLoader__.load({
        dragged one is remembered as a ratio. The diff's 0.55 IS the stylesheet's
        max-height:55%, so an undragged window renders identically to before. */
     const PANE_DEFAULTS = {
-      'columns:tree': { px: 200 },
-      'columns:changes': { px: 290 },
+      'columns:tree': { ratio: 0.2 },
+      'columns:changes': { ratio: 0.4 },
       'columns:diff': { ratio: 0.55 },
       'stack:tree': { ratio: 0.36 },
       'stack:changes': { ratio: 0.46 },
@@ -10431,24 +10431,63 @@ window.__ModuleLoader__.load({
             E('button', { type: 'button', className: 'git4idea-btn git4idea-btn-primary', onClick: props.onClose }, t('confirm.ok')))))
     }
 
-    /* Transient result chips, anchored inside the panel (see ContextMenu for why
-       nothing here is position:fixed). A toast can carry one action — currently
-       'undo', which is how a real delete is still reversible. */
-    function ToastStack(props) {
-      if (props.toasts.length === 0) return null
-      return E('div', { className: 'git4idea-toasts' }, props.toasts.map((item) => E('div', {
-        key: item.id,
-        className: 'git4idea-toast' + (item.tone === undefined ? '' : ' git4idea-toast-' + item.tone),
+    /* One notification in the bottom-right stack (m02407 #3). It closes itself
+       after ttl ms; a pointer on it holds that count and leaving restarts a fresh
+       five seconds. A long result folds to two lines — hovering shows the whole
+       text, a click pins it open, and an over-long one scrolls. */
+    function ToastItem(props) {
+      const item = props.item
+      const ttl = item.ttl === undefined ? 5000 : item.ttl
+      const [open, setOpen] = useState(false)
+      const [hovered, setHovered] = useState(false)
+      const left = useRef(ttl)
+      const since = useRef(0)
+      useEffect(() => {
+        if (hovered === true || ttl <= 0) return undefined
+        since.current = Date.now()
+        const timer = setTimeout(() => item.onClose(), left.current)
+        return () => {
+          clearTimeout(timer)
+          left.current = Math.max(1200, left.current - (Date.now() - since.current))
+        }
+      }, [hovered, ttl, item])
+      const leave = () => {
+        left.current = ttl
+        setHovered(false)
+      }
+      const toggle = () => setOpen((value) => value !== true)
+      return E('div', {
+        className: 'git4idea-toast' + (item.tone === undefined ? '' : ' git4idea-toast-' + item.tone)
+          + (open === true ? ' git4idea-toast-open' : ''),
+        onMouseEnter: () => setHovered(true),
+        onMouseLeave: leave,
       },
         E('span', { className: 'git4idea-toast-icon' }, E(Icon, { name: item.icon === undefined ? 'check' : item.icon, size: 13 })),
-        E('span', { className: 'git4idea-toast-text', title: item.text }, item.text),
+        E('div', {
+          className: 'git4idea-toast-text',
+          role: 'button',
+          tabIndex: 0,
+          'aria-expanded': open === true ? 'true' : 'false',
+          onClick: toggle,
+          onKeyDown: (event) => {
+            if (event.key !== 'Enter' && event.key !== ' ') return
+            event.preventDefault()
+            toggle()
+          },
+        }, item.text),
         item.actionLabel === undefined ? null : E('button', {
           type: 'button', className: 'git4idea-toast-action', onClick: () => item.onAction(),
         }, item.actionLabel),
         E('button', {
           type: 'button', className: 'git4idea-icon-btn git4idea-icon-btn-small',
           title: props.t('toast.close'), onClick: () => item.onClose(),
-        }, E(Icon, { name: 'close', size: 11 })))))
+        }, E(Icon, { name: 'close', size: 11 })))
+    }
+
+    function ToastStack(props) {
+      if (props.toasts.length === 0) return null
+      return E('div', { className: 'git4idea-toasts', role: 'status', 'aria-live': 'polite' },
+        props.toasts.map((item) => E(ToastItem, { key: item.id, item: item })))
     }
 
     function PromptDialog(props) {
@@ -12369,8 +12408,19 @@ window.__ModuleLoader__.load({
       const [branches, setBranches] = useState(null)
       const [commits, setCommits] = useState([])
       const [hasMore, setHasMore] = useState(false)
-      const [error, setError] = useState(null)
-      const [note, setNote] = useState(null)
+      /* m02407 #3: the result strip above the body is gone. Failures and the
+         outcome of a background git command become notifications in the
+         bottom-right stack instead. The sink is a ref because the callbacks that
+         report (the guard, the loaders) are declared above the toast plumbing. */
+      const notifySink = useRef(null)
+      const setError = useCallback((text) => {
+        if (text === undefined || text === null || String(text) === '') return
+        if (notifySink.current !== null) notifySink.current(String(text), 'error')
+      }, [])
+      const setNote = useCallback((text) => {
+        if (text === undefined || text === null || String(text) === '') return
+        if (notifySink.current !== null) notifySink.current(String(text), 'info')
+      }, [])
       const [busy, setBusy] = useState(false)
       const [view, setView] = useState('history')
       /* Pane sizes are remembered per surface (see the pane sizing core). The ref
@@ -12441,6 +12491,37 @@ window.__ModuleLoader__.load({
       const [railBox, setRailBox] = useState({ width: 0, height: 0 })
       const [toasts, setToasts] = useState([])
 
+      /* ---------- toast plumbing ---------- */
+      /* Declared early on purpose: the guard, the loaders and every menu builder
+         close over pushToast, and a hooks dependency array is evaluated during
+         render (invariant 12) — the plumbing has to exist before them, and the
+         sink effect has to run before the first load reports a failure. */
+      const toastSeq = useRef(0)
+
+      const dropToast = useCallback((id) => {
+        setToasts((list) => list.filter((item) => item.id !== id))
+      }, [])
+
+      /* m02407 #3: five seconds by default — the countdown itself lives in
+         ToastItem, because pausing it on hover is per-notification state. An undo
+         chip keeps its longer life: it is the only way back from a delete. */
+      const pushToast = useCallback((toast) => {
+        toastSeq.current += 1
+        const id = 'toast-' + String(toastSeq.current)
+        const ttl = toast.ttl === undefined ? (toast.actionLabel === undefined ? 5000 : 30000) : toast.ttl
+        setToasts((list) => list.concat([Object.assign({ id: id, ttl: ttl, onClose: () => dropToast(id) }, toast)]))
+        return id
+      }, [dropToast])
+
+      /* The guard and the loaders report through setError/setNote; both feed
+         this sink so every failure and every background result lands in the
+         bottom-right stack instead of a strip above the panes. */
+      useEffect(() => {
+        notifySink.current = (text, tone) => {
+          pushToast({ text: text, tone: tone, icon: tone === 'error' ? 'close' : 'check' })
+        }
+        return () => { notifySink.current = null }
+      }, [pushToast])
       const cwd = typeof scope.cwd === 'string' && scope.cwd !== '' ? scope.cwd : undefined
       const sessionId = typeof scope.sessionId === 'string' ? scope.sessionId : 'default'
       const base = useMemo(() => ({ cwd: cwd, repoRoot: repoRoot === null ? undefined : repoRoot }), [cwd, repoRoot])
@@ -12874,7 +12955,7 @@ window.__ModuleLoader__.load({
          MANUAL refresh passes it: the network call is the slow part, so the
          automatic refreshes (12s poll, post-action, mount) stay off it, and a
          failed fetch degrades silently — a refresh must not turn into an
-         error banner just because the network is down. While it runs the rail
+         error notification just because the network is down. While it runs the rail
          icon spins: fetching is allowed to take a moment, and the spin says
          the wait is real while blocking a second click. */
       /* Declared before refresh (hooks dep TDZ rule): the manual refresh
@@ -13153,31 +13234,6 @@ window.__ModuleLoader__.load({
         })
       }, [])
 
-      /* ---------- toast plumbing ---------- */
-      /* Declared BEFORE the context menus on purpose: the send-to-chat bindings
-         and every menu builder close over pushToast, and a hooks dependency
-         array is evaluated during render (invariant 12) — the plumbing has to
-         exist by the time those arrays are evaluated. */
-      const toastTimers = useRef([])
-      const toastSeq = useRef(0)
-
-      useEffect(() => () => {
-        for (const timer of toastTimers.current) clearTimeout(timer)
-        toastTimers.current = []
-      }, [])
-
-      const dropToast = useCallback((id) => {
-        setToasts((list) => list.filter((item) => item.id !== id))
-      }, [])
-
-      const pushToast = useCallback((toast) => {
-        toastSeq.current += 1
-        const id = 'toast-' + String(toastSeq.current)
-        setToasts((list) => list.concat([Object.assign({ id: id, onClose: () => dropToast(id) }, toast)]))
-        const ttl = toast.ttl === undefined ? (toast.actionLabel === undefined ? 9000 : 30000) : toast.ttl
-        if (ttl > 0) toastTimers.current.push(setTimeout(() => dropToast(id), ttl))
-        return id
-      }, [dropToast])
 
       /* Send-to-chat (v0.14): one funnel for the three context menus. The
          insertion target is the CURRENT session's composer (scope.sessionId);
@@ -13861,15 +13917,6 @@ window.__ModuleLoader__.load({
           E('span', null, t('changes.commit')),
           dirty > 0 ? E('span', { className: 'git4idea-topbar-commit-count' }, String(dirty)) : null))
 
-      const banner = error === null ? null : E('div', { className: 'git4idea-banner' },
-        E('span', { className: 'git4idea-banner-text' }, error),
-        E('button', { type: 'button', className: 'git4idea-link', onClick: () => setError(null) }, t('error.dismiss')))
-
-      const noteBanner = note === null ? null : E('div', { className: 'git4idea-note' },
-        E('span', { className: 'git4idea-banner-text' }, note),
-        E('button', { type: 'button', className: 'git4idea-link', onClick: () => setNote(null) }, t('error.dismiss')))
-
-
       /* The log never leaves the middle column any more: the picked commit
          renders beside it (m01216), so the list stays put while the detail loads. */
       const historyPane = E(HistoryList, {
@@ -14180,7 +14227,7 @@ window.__ModuleLoader__.load({
                commits, so an unticked file is never swept in by `git add -A`. */
             const result = await run('commit', { message: message, amend: amend, push: push === true, confirm: push === true, paths: paths })
             /* Only a landed commit closes the layer; a rejected one keeps the
-               message on screen with the error banner right above it. */
+               message on screen while the failure surfaces as a notification. */
             if (result !== undefined) setCommitOpen(false)
           })()
         },
@@ -14250,7 +14297,7 @@ window.__ModuleLoader__.load({
          HEAD, so a non-HEAD branch is fast-forwarded in place via a refspec
          fetch (`git fetch origin name:name` — git refuses a non-ff update,
          which is exactly the safety we want). run() never throws (the guard
-         turns failures into the error banner), so one bad branch does not
+         turns failures into a notification), so one bad branch does not
          abort the rest of the batch. */
       const pullPickedBranches = async (picked) => {
         for (const item of picked) {
@@ -14814,7 +14861,6 @@ window.__ModuleLoader__.load({
         ref: hostRef,
       }, topBar,
         columns === true || repoRoot === null ? null : renderRail(false),
-        banner, noteBanner,
         E('div', { className: 'git4idea-shell' },
           columns === true && repoRoot !== null ? renderRail(true) : null,
           body),
@@ -14971,12 +15017,16 @@ window.__ModuleLoader__.load({
       '.git4idea-foldTitle{min-width:0;overflow-wrap:anywhere}',
       '.git4idea-root-narrow .git4idea-menu-item{white-space:normal}',
       '.git4idea-root-narrow .git4idea-toast-text{white-space:normal}',
-      '.git4idea-toasts{position:absolute;right:8px;bottom:8px;display:flex;flex-direction:column;gap:6px;z-index:80;max-width:min(340px,92%)}',
-      '.git4idea-toast{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:var(--dsw-radius-sm,8px);background:var(--dsw-alias-bg-layer-2,var(--dsw-alias-bg-layer-1));border:0;box-shadow:var(--dsw-elevation-prominent,0 8px 22px rgba(0,0,0,.32))}',
-      '.git4idea-toast-icon{display:inline-flex;flex:none;color:var(--dsw-alias-label-secondary)}',
+      '.git4idea-toasts{position:absolute;right:8px;bottom:8px;display:flex;flex-direction:column;gap:6px;z-index:80;max-width:min(380px,92%);align-items:stretch}',
+      '.git4idea-toast{display:flex;align-items:flex-start;gap:8px;padding:6px 8px;border-radius:var(--dsw-radius-sm,8px);background:var(--dsw-alias-bg-layer-2,var(--dsw-alias-bg-layer-1));border:0;box-shadow:var(--dsw-elevation-prominent,0 8px 22px rgba(0,0,0,.32))}',
+      '.git4idea-toast-icon{display:inline-flex;flex:none;margin-top:2px;color:var(--dsw-alias-label-secondary)}',
       '.git4idea-toast-warn .git4idea-toast-icon{color:var(--dsw-alias-state-warn-primary,var(--dsw-alias-brand-primary))}',
       '.git4idea-toast-ok .git4idea-toast-icon{color:var(--dsw-alias-state-success-primary)}',
-      '.git4idea-toast-text{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}',
+      '.git4idea-toast-error .git4idea-toast-icon{color:var(--dsw-alias-state-error-primary)}',
+      /* m02407 #3: two lines while the pointer is away, the whole result while it
+         is on the chip, and a pinned-open chip scrolls past min(40vh, 240px). */
+      '.git4idea-toast-text{flex:1;min-width:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-wrap;overflow-wrap:anywhere;font-weight:500;cursor:pointer}',
+      '.git4idea-toast:hover .git4idea-toast-text,.git4idea-toast-open .git4idea-toast-text{display:block;-webkit-line-clamp:unset;max-height:min(40vh,240px);overflow:auto}',
       '.git4idea-toast-action{border:none;background:transparent;color:var(--dsw-alias-brand-primary);font:inherit;font-weight:600;cursor:pointer;padding:0 2px;flex:none}',
       '.git4idea-toast-action:hover{text-decoration:underline}',
       '.git4idea-opchip{flex:none;padding:0 6px;border-radius:999px;corner-shape:round;background:color-mix(in srgb, var(--dsw-alias-state-warn-primary,var(--dsw-alias-brand-primary)) 20%, transparent);color:var(--dsw-alias-state-warn-primary,var(--dsw-alias-brand-primary));font-weight:500;white-space:nowrap}',
@@ -14993,10 +15043,12 @@ window.__ModuleLoader__.load({
       '.git4idea-body-stack{flex-direction:column}',
       '.git4idea-body-compact{flex-direction:column}',
       '.git4idea-pane{display:flex;flex-direction:column;min-height:0;min-width:0}',
-      '.git4idea-pane-tree{width:200px;flex:none;border-right:1px solid var(--dsw-alias-border-l2)}',
+      /* m02407 #2: the columns split 1:2:2 — the two 8px dividers come off the top
+         first, then one fifth to the tree and two fifths to each of the other two. */
+      '.git4idea-pane-tree{width:calc((100% - 16px)/5);flex:none;border-right:1px solid var(--dsw-alias-border-l2)}',
       '.git4idea-pane-tree-stack{max-height:36%;flex:none;border-bottom:1px solid var(--dsw-alias-border-l2)}',
       '.git4idea-pane-main{flex:1;min-width:0}',
-      '.git4idea-pane-changes{width:290px;flex:none;border-left:1px solid var(--dsw-alias-border-l2)}',
+      '.git4idea-pane-changes{width:calc((100% - 16px)*2/5);flex:none;border-left:1px solid var(--dsw-alias-border-l2)}',
       '.git4idea-pane-changes-stack{max-height:46%;flex:none;border-bottom:1px solid var(--dsw-alias-border-l2)}',
       /* Commit detail (m01216 #8): the third column IS the detail now, so the
          file list owns the top two thirds and the message the bottom third; each
@@ -15880,10 +15932,6 @@ window.__ModuleLoader__.load({
           })))
     }
 
-    /* Once per page load: the right-sidebar tab is the default seat, and it opens
-       itself instead of waiting for a trip to the start page. */
-    let defaultSeatOpened = false
-
     /* ---- the commit dialog on the conversation page (m02090) ----
        The composer's 提交 verb used to open the right-sidebar seat and then ask
        for a SECOND click on that tab's own 提交 button. It now raises this card
@@ -16173,23 +16221,6 @@ window.__ModuleLoader__.load({
         sync()
         return subscribeRailConfig(sync)
       }, [])
-
-      /* Default seat: open the right-sidebar tab once per page load. The open
-         rides this pill's mount because it is the one surface that exists only
-         while a conversation is on screen — the base throws on openTab when no
-         session is mounted — and the pill remounts on a session switch, so a
-         throw retries instead of losing the default. */
-      useEffect(() => {
-        if (defaultSeatOpened === true) return
-        if (ctx === undefined || ctx === null || typeof ctx.get !== 'function') return
-        let sidebarRight
-        try { sidebarRight = ctx.get('sidebarRight') } catch (error) { return }
-        if (sidebarRight === undefined || sidebarRight === null || typeof sidebarRight.openTab !== 'function') return
-        try {
-          sidebarRight.openTab(NATIVE_KIND)
-          defaultSeatOpened = true
-        } catch (error) { void error }
-      }, [ctx])
 
       /* cwd follows the session list, exactly like ConversationPanel. */
       useEffect(() => {
@@ -17022,20 +17053,13 @@ window.__ModuleLoader__.load({
           if (tabs === undefined || typeof tabs.register !== 'function') return
           if (slots === undefined || typeof slots.inject !== 'function') return
           nativeCtx.effect(() => {
+            /* m02407 #1: no start-page entry any more. The only door is the Git
+               tab in the conversation header; omitting `guide` is the registry's
+               documented way to stay off the start page. */
             const offType = tabs.register({
               id: NATIVE_ID,
               kind: NATIVE_KIND,
               title: () => t('title'),
-              guide: [{
-                id: 'git',
-                order: 21,
-                title: () => t('title'),
-                description: () => t('description'),
-                icon: (iconProps) => E(Icon, {
-                  name: 'commit',
-                  size: iconProps === undefined || iconProps.size === undefined ? 16 : iconProps.size,
-                }),
-              }],
             })
             const offBody = slots.inject('sidebar.right.pane.tab', () => slots.register(
               { name: 'sidebar.right.pane.tab', key: NATIVE_ID },
