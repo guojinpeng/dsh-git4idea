@@ -11,6 +11,7 @@
 - **提交图谱**：lane 拓扑 + ref 徽章，无限滚动，按文本 / 哈希 / 作者 / 分支 / 日期 / 路径过滤。
 - **变更与提交**：分组变更列表、暂存 / 取消暂存 / 丢弃、提交框；「提交并推送」一步到位。
 - **提交详情**：作者、日期、完整信息、变更文件与逐行 diff（双列行号、± 统计、hunk 高亮）。
+- **会话内提交**：点输入框分支胶囊里的「提交」，直接在当前会话上弹出提交窗口（变更列表 + diff + 提交框），不用先打开右侧栏、再点一次。
 - **IDE 式动作条**：按面板自身尺寸决定放几个按钮，放不下的收进 `⋯`；顺序与显隐可在设置里改。
 
 ## 安装
@@ -30,7 +31,7 @@ dsh plugin --profile desktop add dsh-git4idea
 | `conversationTab` | 是否在会话标签行注册 Git 页（默认开） |
 | `immersive` | 会话内 Git 页是否用沉浸式布局（默认开） |
 | `composerStatus` | 输入框下方是否显示当前分支（默认开） |
-| `rail*` | 动作条每个按钮的显隐（16 个布尔字段） |
+| `rail*` | 动作条每个按钮的显隐（7 个布尔字段：tree / newBranch / pull / delete / compare / fetch / favorite） |
 | `commitModel` / `commitReasoning` / `commitPrompt` | 「AI 写提交信息」用哪个模型、哪档思考、附加提示 |
 
 ## 开发

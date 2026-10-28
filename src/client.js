@@ -15015,6 +15015,12 @@ window.__ModuleLoader__.load({
          window over the log instead of a page that replaced it. */
       '.git4idea-commit-layer{position:absolute;inset:0;z-index:55;display:flex;align-items:center;justify-content:center;padding:18px;background:transparent}',
       '.git4idea-commit-layer-card{display:flex;flex-direction:column;width:min(940px,94%);height:min(640px,94%);overflow:hidden;border-radius:var(--dsw-radius-md,12px);border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1,var(--dsw-alias-bg-layer-2));box-shadow:var(--dsw-elevation-prominent,0 18px 48px rgba(0,0,0,.45))}',
+      /* Frame-wide commit dialog (m02090): the composer's 提交 verb raises this
+         over the whole conversation instead of switching to the sidebar tab.
+         Fixed on purpose — it is mounted in shell.overlay, OUTSIDE the dock
+         containers whose contain:layout would capture an absolute box. */
+      '.git4idea-commit-overlay{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--dsw-alias-bg-scrim,rgba(0,0,0,.32));-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family,system-ui,sans-serif);font-size:13px;line-height:1.5;font-weight:600}',
+      '.git4idea-commit-overlay .git4idea-commit-layer-card{width:min(1100px,94vw);height:min(720px,88vh)}',
       '.git4idea-commit-layer-head{display:flex;align-items:center;gap:8px;padding:5px 8px;flex:none;border-bottom:1px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-secondary)}',
       '.git4idea-commit-layer-title{font-weight:600;color:var(--dsw-alias-label-primary)}',
       '.git4idea-commit-layer-body{flex:1;min-height:0;display:flex;overflow:hidden}',
@@ -15878,6 +15884,236 @@ window.__ModuleLoader__.load({
        itself instead of waiting for a trip to the start page. */
     let defaultSeatOpened = false
 
+    /* ---- the commit dialog on the conversation page (m02090) ----
+       The composer's 提交 verb used to open the right-sidebar seat and then ask
+       for a SECOND click on that tab's own 提交 button. It now raises this card
+       straight over the conversation: the panel's change list, diff and message
+       box, lifted into the frame-wide `shell.overlay` slot. A composer lives in
+       a dock container with `contain: layout`, so a viewport-anchored overlay
+       CANNOT be mounted there (invariant 13) — the slot is the only honest way
+       for a pill to cover the whole frame. The store is module-level because the
+       pill (composer) and the host (shell.overlay) are separate React roots. */
+    const commitDialog = {
+      entry: null,
+      hosted: false,
+      listeners: new Set(),
+      set(entry) {
+        this.entry = entry
+        for (const listener of Array.from(this.listeners)) {
+          try { listener() } catch (error) { void error }
+        }
+      },
+      subscribe(listener) {
+        this.listeners.add(listener)
+        return () => { this.listeners.delete(listener) }
+      },
+    }
+
+    /* Mounted once by the overlay slot, it renders nothing until a composer
+       raises it. The body is keyed by repository, so no summary, ticked file or
+       diff survives from the previous dialog. */
+    function CommitDialogHost(props) {
+      const [entry, setEntry] = useState(commitDialog.entry)
+      useEffect(() => {
+        const sync = () => setEntry(commitDialog.entry)
+        sync()
+        const off = commitDialog.subscribe(sync)
+        commitDialog.hosted = true
+        return () => {
+          commitDialog.hosted = false
+          off()
+        }
+      }, [])
+      if (entry === null) return null
+      return E(CommitDialogBody, {
+        key: entry.sessionId + '|' + entry.repoRoot,
+        entry: entry,
+        t: props.t,
+        onClose: () => commitDialog.set(null),
+      })
+    }
+
+    /* The card is the panel's commit layer, rebuilt without the panel: every
+       mutation runs its own route call and reloads the summary, so the overlay
+       never depends on a mounted Git tab. */
+    function CommitDialogBody(props) {
+      const t = props.t
+      const entry = props.entry
+      const [summary, setSummary] = useState(null)
+      const [busy, setBusy] = useState(false)
+      const [error, setError] = useState('')
+      const [patch, setPatch] = useState('')
+      const [patchLoading, setPatchLoading] = useState(false)
+      const [groupBy, setGroupBy] = useState('flat')
+      const [foldedDirs, setFoldedDirs] = useState({})
+      const [rowMenu, setRowMenu] = useState(null)
+      const [discardAsk, setDiscardAsk] = useState(null)
+      const anchorRef = useRef(null)
+      const diffToken = useRef(0)
+      const selection = EMPTY_SELECTION
+      const base = { cwd: entry.cwd, repoRoot: entry.repoRoot }
+      const messageOf = (caught) => (caught !== null && caught !== undefined && typeof caught.message === 'string' && caught.message !== ''
+        ? caught.message
+        : String(caught))
+      const loadSummary = async () => {
+        try {
+          const data = await request('summary', Object.assign({}, base, { ignored: false, stats: true }))
+          setSummary(data)
+          return data
+        } catch (caught) {
+          setError(messageOf(caught))
+          return null
+        }
+      }
+      useEffect(() => { void loadSummary() }, [])
+      /* One mutation at a time: staging, discarding and committing all reload
+         the same summary, so overlapping calls would race their results. */
+      const call = async (method, payload) => {
+        setBusy(true)
+        setError('')
+        try {
+          await request(method, Object.assign({}, base, payload))
+          await loadSummary()
+          return true
+        } catch (caught) {
+          setError(messageOf(caught))
+          return false
+        } finally {
+          setBusy(false)
+        }
+      }
+      const openDiff = async (item, group) => {
+        const token = diffToken.current + 1
+        diffToken.current = token
+        setPatchLoading(true)
+        setPatch('')
+        try {
+          const data = await request('diff', Object.assign({}, base, {
+            path: item.path,
+            staged: group === 'staged',
+            untracked: group === 'untracked',
+          }))
+          if (diffToken.current === token) setPatch(typeof data.patch === 'string' ? data.patch : '')
+        } catch (caught) {
+          if (diffToken.current === token) setError(messageOf(caught))
+        } finally {
+          if (diffToken.current === token) setPatchLoading(false)
+        }
+      }
+      /* A landed commit closes the card and tells every branch readout to
+         refresh; a rejected one keeps the box filled with the error above it.
+         ChangesPanel has already cleared its draft by the time this returns. */
+      const commit = (message, amend, push, paths) => {
+        void (async () => {
+          setBusy(true)
+          setError('')
+          try {
+            await request('commit', Object.assign({}, base, {
+              message: message,
+              amend: amend === true,
+              push: push === true,
+              confirm: push === true,
+              paths: paths,
+            }))
+            try { notifyBranchSwitched(entry.sessionId, entry.repoRoot) } catch (caught) { void caught }
+            props.onClose()
+          } catch (caught) {
+            setError(messageOf(caught))
+            setBusy(false)
+          }
+        })()
+      }
+      useEffect(() => {
+        const onKey = (event) => {
+          if (event.key !== 'Escape') return
+          if (rowMenu !== null) { setRowMenu(null); return }
+          if (discardAsk !== null) { setDiscardAsk(null); return }
+          props.onClose()
+        }
+        document.addEventListener('keydown', onKey)
+        return () => document.removeEventListener('keydown', onKey)
+      }, [rowMenu, discardAsk, props.onClose])
+      const stagedPaths = () => (summary === null ? [] : summary.changes.staged.map((item) => item.path))
+      const rowMenuItems = rowMenu === null ? [] : [
+        rowMenu.group === 'staged'
+          ? { id: 'unstage', icon: 'minus', label: t('action.unstage'), run: () => { void call('unstage', { paths: [rowMenu.item.path] }) } }
+          : { id: 'stage', icon: 'plus', label: t('action.stage'), run: () => { void call('stage', { paths: [rowMenu.item.path] }) } },
+        { id: 'diff', icon: 'diff', label: t('action.showDiff'), run: () => { void openDiff(rowMenu.item, rowMenu.group) } },
+        null,
+        {
+          id: 'discard', icon: 'undo', danger: true, label: t('action.discard'),
+          run: () => setDiscardAsk({ item: rowMenu.item, group: rowMenu.group }),
+        },
+      ]
+      return E('div', {
+        className: 'git4idea-commit-overlay',
+        'data-git4idea-commit-dialog': '',
+        onMouseDown: (event) => { if (event.target === event.currentTarget) props.onClose() },
+      },
+        E('div', { className: 'git4idea-commit-layer-card', 'data-git4idea-commit-card': '' },
+          E('div', { className: 'git4idea-commit-layer-head' },
+            E(Icon, { name: 'commit', size: 13 }),
+            E('span', { className: 'git4idea-commit-layer-title' }, t('changes.title')),
+            E('span', { className: 'git4idea-topbar-spacer' }),
+            E('button', {
+              type: 'button', className: 'git4idea-icon-btn', title: t('confirm.cancel'),
+              onClick: () => props.onClose(),
+            }, E(Icon, { name: 'close', size: 12 }))),
+          error === '' ? null : E('div', { className: 'git4idea-banner' },
+            E('span', { className: 'git4idea-banner-text' }, error),
+            E('button', { type: 'button', className: 'git4idea-link', onClick: () => setError('') }, t('error.dismiss'))),
+          E('div', { className: 'git4idea-commit-layer-body' },
+            E('div', { className: 'git4idea-commit-layer-left' },
+              E(ChangesPanel, {
+                t: t, summary: summary, busy: busy, compact: false, hideHeader: true,
+                groupBy: groupBy, sortKey: 'git', onGroupBy: setGroupBy,
+                foldedDirs: foldedDirs, onFoldedDirs: setFoldedDirs,
+                request: request, cwd: entry.cwd, sessionId: entry.sessionId,
+                commitSettings: readCommitSettings(), base: base,
+                onCommit: commit,
+                onStage: (item) => { void call('stage', { paths: [item.path] }) },
+                onUnstage: (item) => { void call('unstage', { paths: [item.path] }) },
+                onStageAll: (entries) => { void call('stage', { paths: entries.map((item) => item.path) }) },
+                onUnstageAll: () => { void call('unstage', { paths: stagedPaths() }) },
+                onDiscard: (item, group) => setDiscardAsk({ item: item, group: group }),
+                onDiff: (item, group) => { void openDiff(item, group) },
+                onChangeMenu: (event, item, group) => setRowMenu({ item: item, group: group, x: event.clientX, y: event.clientY }),
+                /* This card's rows are not a multi-select surface: the panel owns
+                   the keyboard/drag model, and the checkbox is the commit pick. */
+                selection: selection,
+                onSelectionChange: () => undefined,
+                anchorRef: anchorRef,
+              })),
+            E('div', { className: 'git4idea-commit-layer-right' },
+              patch === '' && patchLoading === false
+                ? E('div', { className: 'git4idea-empty' }, t('pane.diff'))
+                : E(DiffBody, { patch: patch, loading: patchLoading, t: t })))),
+        discardAsk === null ? null : E(ConfirmDialog, {
+          key: 'discard',
+          t: t,
+          title: t('confirm.title'),
+          text: discardAsk.group === 'untracked'
+            ? fill(t('discard.untracked.confirm'), { path: discardAsk.item.path })
+            : fill(t('discard.confirm'), { path: discardAsk.item.path }),
+          okLabel: t('confirm.ok'), cancelLabel: t('confirm.cancel'),
+          onCancel: () => setDiscardAsk(null),
+          onConfirm: () => {
+            const item = discardAsk.item
+            const group = discardAsk.group
+            setDiscardAsk(null)
+            void call('discard', { paths: [item.path], confirm: true, untracked: group === 'untracked' })
+          },
+        }),
+        rowMenu === null ? null : E(ContextMenu, {
+          key: 'row-menu',
+          anchor: { x: rowMenu.x, y: rowMenu.y },
+          boundsWidth: typeof window === 'undefined' ? 0 : window.innerWidth,
+          boundsHeight: typeof window === 'undefined' ? 0 : window.innerHeight,
+          items: rowMenuItems,
+          onClose: () => setRowMenu(null),
+        }))
+    }
+
     function ComposerGitStatus(props) {
       const ctx = props.ctx
       const t = props.t
@@ -16115,8 +16351,6 @@ window.__ModuleLoader__.load({
           setError(caught instanceof Error ? caught.message : String(caught))
         } finally { setCsBusy('') }
       }
-      /* A commit needs a message, so the popover hands over to the panel's
-         commit layer instead of growing a second message box. */
       const openPanelSeat = () => {
         try {
           const sidebarRight = ctx.get('sidebarRight')
@@ -16125,6 +16359,20 @@ window.__ModuleLoader__.load({
             setMenu(null)
           }
         } catch (caught) { void caught }
+      }
+      /* 提交 raises the message card HERE (m02090). It used to open the sidebar
+         seat, which then needed a second click on the tab's own 提交 button —
+         two surfaces and two clicks for one verb. The frame-wide overlay is
+         mounted by this module's shell.overlay seat; a host without that slot
+         falls back to the seat so the verb never dies silently. */
+      const openCommitDialog = () => {
+        if (repoRoot === null) { openPanelSeat(); return }
+        if (commitDialog.hosted === true) {
+          commitDialog.set({ sessionId: sessionId, cwd: cwd, repoRoot: repoRoot })
+          setMenu(null)
+          return
+        }
+        openPanelSeat()
       }
       /* Create-and-switch in one step (m02016): the dialog's confirm runs
          `git checkout -b` — the same verb the panel's dialog uses — so the new
@@ -16405,7 +16653,7 @@ window.__ModuleLoader__.load({
                  (m01737 #6) — they read as verbs on the branch list below them,
                  not as a footer. */
               E('div', { className: 'git4idea-cs-actions' },
-                E('button', { type: 'button', className: 'git4idea-cs-action', title: t('changes.commit'), onClick: openPanelSeat },
+                E('button', { type: 'button', className: 'git4idea-cs-action', title: t('changes.commit'), onClick: openCommitDialog },
                   E(Icon, { name: 'commit', size: 12 }), E('span', null, t('changes.commit'))),
                 E('button', {
                   type: 'button', className: 'git4idea-cs-action', title: t('toolbar.push'),
@@ -16896,6 +17144,27 @@ window.__ModuleLoader__.load({
             try { offPill() } catch (error) { void error }
           }
         }, 'dsh-git4idea: composer dock pill')
+      })
+
+      /* ---- frame-wide commit dialog seat (m02090) ---- */
+      /* `shell.overlay` is the host's frame-wide layer (ui-chat registers its
+         quota notice there). The composer pill cannot host a viewport dialog
+         itself — its dock container has contain:layout — so the card rides this
+         seat and is opened through the module store above. Optional on purpose:
+         a host without the slot keeps the sidebar fallback. */
+      ctx.inject(['slots'], (overlayCtx) => {
+        const overlaySlots = overlayCtx.get('slots')
+        if (overlaySlots === undefined || overlaySlots === null || typeof overlaySlots.inject !== 'function') return
+        overlayCtx.effect(() => {
+          const offOverlay = overlaySlots.inject('shell.overlay', () => overlaySlots.register(
+            { name: 'shell.overlay', id: 'dsh-git4idea:commit', locale: LOCALE_NS },
+            (overlayProps) => E(CommitDialogHost, Object.assign({}, overlayProps, { t: t, ctx: ctx })),
+          ))
+          return () => {
+            commitDialog.set(null)
+            try { offOverlay() } catch (error) { void error }
+          }
+        }, 'dsh-git4idea: commit dialog overlay')
       })
 
       /* ---- session-switch prewarm ---- */

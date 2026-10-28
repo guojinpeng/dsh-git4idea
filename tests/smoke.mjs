@@ -1863,6 +1863,30 @@ test('the popover new branch is a modal that creates and checks out (m02016)', (
   assert.match(client, /if \(newBranchOpen === true\) \{\n              return E\('div'/, 'the dialog returns before the tree renders')
 })
 
+test('the composer commit verb raises the dialog on the conversation page (m02090)', () => {
+  // 提交 used to open the right-sidebar seat and then need a SECOND click on
+  // that tab's own 提交 button. The verb now raises a card straight over the
+  // conversation through the host's frame-wide overlay slot.
+  assert.match(client, /const commitDialog = \{/, 'the module store carries the open request between roots')
+  assert.match(client, /inject\('shell\.overlay'/, 'the card rides the frame-wide overlay slot')
+  assert.match(client, /name: 'shell\.overlay', id: 'dsh-git4idea:commit'/, 'the overlay seat is this plugin\'s')
+  // The composer is inside a dock container with contain:layout, so the card
+  // must be fixed AND mounted outside that container.
+  assert.match(client, /\.git4idea-commit-overlay\{position:fixed;inset:0;z-index:80/, 'the overlay is viewport-fixed')
+  assert.match(client, /title: t\('changes\.commit'\), onClick: openCommitDialog/, 'the popover commit verb raises the dialog directly')
+  assert.doesNotMatch(client, /title: t\('changes\.commit'\), onClick: openPanelSeat/, 'no seat detour is left on the commit verb')
+  // One dialog, its own routes: it must not depend on a mounted Git tab.
+  assert.match(client, /await request\('commit', Object\.assign\(\{\}, base, \{/, 'the card runs the commit route itself')
+  assert.match(client, /void call\('discard', \{ paths: \[item\.path\], confirm: true, untracked: group === 'untracked' \}\)/, 'discard keeps the panel confirmation copy and confirm flag')
+  assert.match(client, /E\(ChangesPanel, \{[\s\S]{0,500}?base: base,/, 'the card reuses the panel change list')
+  // Cancel paths: Escape, the close button, the scrim, and Close after commit.
+  assert.match(client, /if \(event\.key !== 'Escape'\) return/, 'Escape closes the card first')
+  assert.match(client, /commitDialog\.set\(null\)/, 'closing drops the request')
+  // A host without the slot keeps one working path: the old seat.
+  assert.match(client, /if \(repoRoot === null\) \{ openPanelSeat\(\); return \}/, 'a repo-less session still opens the seat')
+  assert.match(client, /if \(commitDialog\.hosted === true\) \{/, 'the seat is only a fallback when the overlay never mounted')
+})
+
 test('long branch names cap at 220px and scroll only on hover, seamlessly (v0.19.13)', () => {
   // Past the cap the label switches to a duplicated-chunk structure measured
   // after paint, and ONLY :hover starts the marquee — short names keep the
