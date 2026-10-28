@@ -15699,6 +15699,12 @@ window.__ModuleLoader__.load({
     }
 
     const COMPOSER_POLL_MS = 30000
+    /* The branch name itself has to move as soon as the user checks out in a
+       terminal or an IDE (m02856). The summary poll above is too expensive for
+       that (it scans status); `head` is two git calls, so the pill probes it
+       quickly and reloads the summary only when branch or HEAD actually
+       moved. */
+    const COMPOSER_HEAD_POLL_MS = 2500
     const COMPOSER_ERROR_TTL_MS = 6000
     /* Line counts re-run at most this often without a real change: the two
        numstat passes are the expensive step on a big dirty tree (issue #11),
@@ -16241,6 +16247,11 @@ window.__ModuleLoader__.load({
       /* Measured to place the row flyout: the popover's right edge decides
          whether it opens to the right or flips to the left of the popover. */
       const popRef = useRef(null)
+      /* Read by the fast `head` probe: it compares against the summary the
+         pill currently shows, not a private baseline, so the first probe after
+         a mount can already spot a checkout made while the page was closed. */
+      const summaryRef = useRef(null)
+      summaryRef.current = summary
 
       /* The switch flips live through the same rail-config notify walk the
          settings card and the conversation tab ride. */
@@ -16318,6 +16329,44 @@ window.__ModuleLoader__.load({
         const timer = setInterval(() => { void load() }, COMPOSER_POLL_MS)
         return () => { cancelled = true; clearInterval(timer) }
       }, [cwd, repoRoot, enabled, tick])
+
+      /* A checkout made in a terminal or an IDE fires no watcher (m02856), and
+         the summary poll is 30s by design. Probe branch + HEAD every couple of
+         seconds and reload the summary only on a real move; waking on tab focus
+         covers the moment the user is about to look at the pill. */
+      useEffect(() => {
+        if (repoRoot === null || enabled !== true) return undefined
+        let cancelled = false
+        const probe = async () => {
+          /* A hidden tab needs no updates; the wake listeners above probe the
+             moment it becomes visible again. */
+          if (document.visibilityState === 'hidden') return
+          try {
+            const state = await request('head', { cwd: cwd, repoRoot: repoRoot })
+            if (cancelled === true) return
+            const current = summaryRef.current
+            if (current === null) return
+            const sig = String(state.head) + '|' + String(state.branch)
+            const shown = String(current.head === undefined ? '' : current.head) + '|' + String(current.branch === undefined ? '' : current.branch)
+            if (sig === shown) return
+            setTick((value) => value + 1)
+            /* The popover marks HEAD on one row; while it is open, keep that
+               marker true too — a summary tick does not reload the tree. */
+            if (menu === 'branch') void loadBranches()
+          } catch (error) { void error }
+        }
+        const timer = setInterval(() => { void probe() }, COMPOSER_HEAD_POLL_MS)
+        const wake = () => { if (document.visibilityState !== 'hidden') void probe() }
+        document.addEventListener('visibilitychange', wake)
+        window.addEventListener('focus', wake)
+        void probe()
+        return () => {
+          cancelled = true
+          clearInterval(timer)
+          document.removeEventListener('visibilitychange', wake)
+          window.removeEventListener('focus', wake)
+        }
+      }, [cwd, repoRoot, enabled, menu])
 
       /* The panel picking a repo (or this pill picking one in another seat)
          lands here: follow it so both seats always show the same repository. */

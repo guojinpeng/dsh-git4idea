@@ -698,6 +698,26 @@ async function summary(payload) {
   }
 }
 
+/* A two-command probe for the composer pill's fast poll (m02856): branch and
+   HEAD hash only. `summary` is the authoritative shape but pays for a full
+   status scan; this one must stay cheap enough to run every couple of seconds
+   while the session is on screen. Read-only: deliberately not in
+   WRITE_METHODS. */
+async function headState(payload) {
+  const cwd = cwdOf(payload)
+  const root = await repoRootOf(cwd, payload)
+  const [branchOut, headOut] = await Promise.all([
+    runGit(root, ['symbolic-ref', '--short', '-q', 'HEAD']),
+    runGit(root, ['rev-parse', '-q', '--verify', 'HEAD']),
+  ])
+  /* Detached HEAD and an unborn branch both leave symbolic-ref empty; the
+     summary reports them as 'HEAD' too, so the pill's comparison keeps
+     working across a checkout to a detached commit. */
+  const branch = branchOut.code === 0 && branchOut.stdout.trim() !== '' ? branchOut.stdout.trim() : 'HEAD'
+  const head = headOut.code === 0 ? headOut.stdout.trim() : ''
+  return { repoRoot: root, branch: branch, detached: branch === 'HEAD', head: head }
+}
+
 /* The second phase of the two-phase changes (issue #11): the two numstat
    passes, concurrent, packed as [path, additions, deletions, binary] rows so
    they survive JSON. Paths are post-rename paths — exactly what `summary`
@@ -2039,6 +2059,7 @@ const METHODS = {
   'commit-efforts': commitEfforts,
   repos,
   summary,
+  head: headState,
   stats,
   branches,
   log,

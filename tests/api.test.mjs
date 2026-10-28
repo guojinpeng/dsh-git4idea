@@ -103,6 +103,48 @@ test('summary classifies staged / unstaged / untracked with diffstats', async ()
   assert.equal(body.data.head, git('rev-parse', 'HEAD').trim())
 })
 
+test('head is the two-command probe the composer pill polls (m02856)', async () => {
+  const other = mkdtempSync(join(tmpdir(), 'dsh-git4idea-head-'))
+  const run = (...args) => execFileSync('git', args, { cwd: other, encoding: 'utf8' })
+  try {
+    run('init', '-q', '-b', 'main')
+    run('config', 'core.autocrlf', 'false')
+    run('config', 'user.name', 'Check')
+    run('config', 'user.email', 'check@example.com')
+    writeFileSync(join(other, 'a.txt'), 'one\n')
+    run('add', '-A')
+    run('commit', '-q', '-m', 'first')
+    run('checkout', '-q', '-b', 'feature')
+    writeFileSync(join(other, 'b.txt'), 'bee\n')
+    run('add', '-A')
+    run('commit', '-q', '-m', 'on feature')
+
+    const probe = await call('head', { cwd: other })
+    assert.equal(probe.status, 200)
+    assert.equal(probe.body.ok, true)
+    assert.equal(probe.body.data.branch, 'feature')
+    assert.equal(probe.body.data.detached, false)
+    assert.equal(probe.body.data.head, run('rev-parse', 'HEAD').trim())
+
+    /* The pill diffs this signature: a checkout in another tool must move the
+       branch name without any host-side watcher. */
+    run('checkout', '-q', 'main')
+    const moved = await call('head', { cwd: other })
+    assert.equal(moved.body.data.branch, 'main')
+    assert.notEqual(moved.body.data.head, probe.body.data.head)
+
+    /* Detached HEAD leaves symbolic-ref empty; the probe reports 'HEAD' so the
+       client's comparison against summary keeps working. */
+    run('checkout', '-q', '--detach')
+    const detached = await call('head', { cwd: other })
+    assert.equal(detached.body.data.branch, 'HEAD')
+    assert.equal(detached.body.data.detached, true)
+    assert.equal(detached.body.data.head, run('rev-parse', 'HEAD').trim())
+  } finally {
+    rmSync(other, { recursive: true, force: true })
+  }
+})
+
 test('summary with stats: false defers the diffstats, stats delivers phase two (issue #11)', async () => {
   const deferred = await call('summary', { cwd: repo, stats: false })
   assert.equal(deferred.status, 200)

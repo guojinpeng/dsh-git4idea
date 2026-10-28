@@ -765,10 +765,11 @@ test('host half keeps the destructive-confirm guards', () => {
 })
 
 test('host half exposes the method table the client calls', () => {
-  const methods = ['summary', 'stats', 'branches', 'log', 'me', 'merge-point', 'commitDetail', 'diff', 'compare', 'repos', 'stage', 'unstage', 'discard', 'commit', 'checkout', 'branchCreate', 'branchRename', 'branch-upstream', 'branchDelete', 'merge', 'rebase', 'cherryPick', 'revert', 'reset', 'fetch', 'pull', 'push', 'stashList', 'stashPush', 'stashApply', 'stashDrop', 'tagCreate', 'tagDelete', 'tagDeleteRemote', 'pushTags', 'clone', 'gitLogs', 'remoteAdd', 'remoteRemove', 'branchDeleteRemote', 'rebaseAbort', 'stashClear', 'undoList', 'undoApply', 'version']
+  const methods = ['summary', 'head', 'stats', 'branches', 'log', 'me', 'merge-point', 'commitDetail', 'diff', 'compare', 'repos', 'stage', 'unstage', 'discard', 'commit', 'checkout', 'branchCreate', 'branchRename', 'branch-upstream', 'branchDelete', 'merge', 'rebase', 'cherryPick', 'revert', 'reset', 'fetch', 'pull', 'push', 'stashList', 'stashPush', 'stashApply', 'stashDrop', 'tagCreate', 'tagDelete', 'tagDeleteRemote', 'pushTags', 'clone', 'gitLogs', 'remoteAdd', 'remoteRemove', 'branchDeleteRemote', 'rebaseAbort', 'stashClear', 'undoList', 'undoApply', 'version']
   for (const method of methods) {
     if (method === 'merge-point') { assert.match(host, /^  'merge-point': mergePoint,$/m, 'host method missing: merge-point'); continue }
     if (method === 'branch-upstream') { assert.match(host, /^  'branch-upstream': branchUpstream,$/m, 'host method missing: branch-upstream'); continue }
+    if (method === 'head') { assert.match(host, /^  head: headState,$/m, 'host method missing: head'); continue }
     assert.match(host, new RegExp('^  ' + method + ',$', 'm'), 'host method missing: ' + method)
   }
   for (const call of client.match(/request\('([a-zA-Z]+)'/g) || []) {
@@ -1898,6 +1899,21 @@ test('the popover floats the IDEA row verbs and fetch keeps it open (m02697)', (
   // Fetch must refresh the list in place, not dismiss the chooser.
   assert.match(client, /await csCall\('fetch', \{ prune: true \}, \{ keepOpen: true \}\)/, 'fetch keeps the popover open')
   assert.match(client, /await loadBranches\(\)/, 'fetch reloads the refs it just refreshed')
+})
+
+test('an outside checkout renames the composer pill without waiting for the summary poll (m02856)', () => {
+  // The summary poll is 30s because it scans status; the pill instead probes
+  // branch + HEAD with two git calls and reloads the summary only on a move.
+  assert.match(host, /'symbolic-ref', '--short', '-q', 'HEAD'/, 'the probe asks for the branch name')
+  assert.match(host, /'rev-parse', '-q', '--verify', 'HEAD'/, 'and the HEAD hash')
+  assert.match(host, /head: headState/, 'the cheap probe is a route')
+  assert.match(client, /const COMPOSER_HEAD_POLL_MS = 2500/, 'the probe runs well inside a human click')
+  assert.match(client, /request\('head', \{ cwd: cwd, repoRoot: repoRoot \}\)/, 'the pill polls the cheap route')
+  assert.match(client, /const sig = String\(state\.head\) \+ '\|' \+ String\(state\.branch\)/, 'head and branch form the signature')
+  assert.match(client, /const shown = String\(current\.head === undefined \? '' : current\.head\)/, 'it compares against the summary on screen')
+  assert.match(client, /if \(sig === shown\) return/, 'an unchanged signature costs no request')
+  assert.match(client, /document\.addEventListener\('visibilitychange', wake\)/, 'returning to the tab probes at once')
+  assert.match(client, /if \(menu === 'branch'\) void loadBranches\(\)/, 'an open chooser reloads its HEAD marker')
 })
 
 test('the composer commit verb raises the dialog on the conversation page (m02090)', () => {
