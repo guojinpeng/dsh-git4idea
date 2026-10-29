@@ -817,8 +817,8 @@
         E('span', { className: 'git4idea-cs-item-tail' },
           entry.ahead > 0 || entry.behind > 0
             ? E('span', { className: 'git4idea-cs-item-counts' },
-              entry.ahead > 0 ? E('span', { className: 'git4idea-cs-ahead' }, '↑' + String(entry.ahead)) : null,
-              entry.behind > 0 ? E('span', { className: 'git4idea-cs-behind' }, '↓' + String(entry.behind)) : null)
+              entry.ahead > 0 ? E('span', { className: 'git4idea-cs-ahead' }, E(Icon, { name: 'push', size: 10 }), String(entry.ahead)) : null,
+              entry.behind > 0 ? E('span', { className: 'git4idea-cs-behind' }, E(Icon, { name: 'pull', size: 10 }), String(entry.behind)) : null)
             : null,
           E(Icon, { name: 'chevronRight', size: 10 })))
       const csTree = (key, label, entries, kind) => {
@@ -838,7 +838,9 @@
         const walk = (node, prefix, depth) => {
           node.folders.forEach((child, name) => {
             const path = prefix === '' ? name : prefix + '/' + name
-            const closed = csNeedle === '' && csFolded[path] === true
+            /* Closed unless opened (m00324): a fresh chooser must not dump
+               every remote's branches; a search still forces folders open. */
+            const closed = csNeedle === '' && csFolded[path] !== true
             rows.push(E('button', {
               key: key + ':dir:' + path,
               type: 'button',
@@ -883,6 +885,14 @@
         },
           E(Icon, { name: 'branch', size: 14 }),
           E(ComposerMarqueeName, { text: detached === true ? t('composer.detached') : branchName }),
+          /* The pill shows only the glyphs (m00312): the count stays in the
+             tooltip, because digits made the narrow capsule jump per commit. */
+          summary === null || summary.ahead === undefined || summary.ahead <= 0 ? null
+            : E('span', { className: 'git4idea-cs-pill-count git4idea-tone-success', 'data-tip': t('track.push') + ' ' + summary.ahead },
+              E(Icon, { name: 'push', size: 10 })),
+          summary === null || summary.behind === undefined || summary.behind <= 0 ? null
+            : E('span', { className: 'git4idea-cs-pill-count git4idea-tone-business', 'data-tip': t('track.pull') + ' ' + summary.behind },
+              E(Icon, { name: 'pull', size: 10 })),
           E(Icon, { name: 'chevron', size: 10 })) : null,
         /* The old red "×" chip sat inside the composer and read as a failed
            switch even while the switch was still running (m01737 #5). Errors

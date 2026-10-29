@@ -210,6 +210,7 @@
       const [selected, setSelected] = useState(null)
       const [files, setFiles] = useState([])
       const [filesLoading, setFilesLoading] = useState(false)
+      const [selectedPath, setSelectedPath] = useState(null)
       const [busy, setBusy] = useState(false)
       const messageOf = (caught) => (caught instanceof Error ? caught.message : String(caught))
       useEffect(() => {
@@ -319,7 +320,7 @@
                   type: 'button',
                   className: 'git4idea-push-commit' + (item.hash === selected ? ' git4idea-push-commit-on' : ''),
                   'data-tip': item.subject,
-                  onClick: () => { setSelected(item.hash) },
+                  onClick: () => { setSelected(item.hash); setSelectedPath(null) },
                 },
                 E(Icon, { name: 'commit', size: 12 }),
                 E('span', { className: 'git4idea-push-subject' }, item.subject),
@@ -337,19 +338,13 @@
                 ? E('div', { className: 'git4idea-empty' }, t('diff.loading'))
                 : files.length === 0
                   ? E('div', { className: 'git4idea-empty' }, t('detail.noFiles'))
-                  : files.map((file) => E('div', {
-                      key: file.path,
-                      className: 'git4idea-row git4idea-row-file git4idea-push-file',
-                      'data-tip': file.path + '\n' + t('preview.openFile'),
-                      tabIndex: 0,
-                      onDoubleClick: () => { openFile(file) },
-                      onKeyDown: (event) => { if (event.key === 'Enter') openFile(file) },
-                    },
-                    FileTypeGlyph({ path: file.path }),
-                    E('span', { className: 'git4idea-row-label' }, baseName(file.path)),
-                    E('span', { className: 'git4idea-row-dir' }, dirName(file.path)),
-                    file.additions > 0 ? E('span', { className: 'git4idea-stat-add' }, '+' + file.additions) : null,
-                    file.deletions > 0 ? E('span', { className: 'git4idea-stat-del' }, '-' + file.deletions) : null))))),
+                  : E(CommitFileList, {
+                      t: t,
+                      files: files,
+                      selectedPath: selectedPath,
+                      onSelect: (file) => { setSelectedPath(file.path) },
+                      onOpen: openFile,
+                    })))),
         E('div', { className: 'git4idea-push-foot' },
           E('span', { className: 'git4idea-push-footnote' }, emptyNote !== '' ? emptyNote : t('push.hint')),
           E('span', { className: 'git4idea-topbar-spacer' }),

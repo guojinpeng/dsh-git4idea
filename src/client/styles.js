@@ -25,7 +25,6 @@
       '.git4idea-root{position:relative;display:flex;flex-direction:column;height:100%;min-height:0;background:transparent;color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family,-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",Helvetica,Arial,sans-serif);font-size:13px;line-height:1.5;font-weight:400;overflow:hidden}',
       '.git4idea-topbar{display:flex;align-items:center;gap:6px;padding:4px 6px;flex:none;min-width:0;border-bottom:1px solid var(--dsw-alias-border-l2);overflow:hidden}',
       '.git4idea-topbar-spacer{flex:1;min-width:4px}',
-      '.git4idea-track{color:var(--dsw-alias-label-secondary);flex:none;font-variant-numeric:tabular-nums;white-space:nowrap}',
       '.git4idea-select-wrap{display:inline-flex;align-items:center;gap:4px;min-width:0;flex:0 1 auto;max-width:90%;color:var(--dsw-alias-label-secondary)}',
       '.git4idea-select{appearance:none;-webkit-appearance:none;background:transparent;border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-sm,8px);color:var(--dsw-alias-label-primary);font:inherit;padding:1px 6px;height:22px;max-width:min(280px,42%);min-width:0;cursor:pointer;text-overflow:ellipsis}',
       '.git4idea-select:hover{background:var(--dsw-alias-interactive-bg-hover)}',
@@ -71,13 +70,15 @@
       '.git4idea-tone-danger{color:var(--dsw-alias-state-error-primary)}',
       '.git4idea-tone-violet{color:#b083f0}',
       '.git4idea-tone-cyan{color:#59b0d6}',
+      '.git4idea-tone-business{color:var(--dsw-alias-state-business-primary,var(--dsw-alias-brand-primary))}',
       '.git4idea-icon-btn-small{width:20px;height:20px;border-radius:var(--dsw-radius-xs,4px)}',
-      /* The one way into the commit layer: a labelled button, so the action is
-         readable at any panel width, with the dirty count as a badge. */
-      '.git4idea-topbar-commit{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;flex:none;border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-sm,8px);background:transparent;color:var(--dsw-alias-label-primary);font:inherit;cursor:pointer}',
-      '.git4idea-topbar-commit:hover{background:var(--dsw-alias-interactive-bg-hover)}',
-      '.git4idea-topbar-commit-count{min-width:16px;height:16px;padding:0 4px;border-radius:999px;corner-shape:round;background:color-mix(in srgb, var(--dsw-alias-brand-primary) 22%, transparent);color:var(--dsw-alias-brand-primary);font-size:11px;line-height:16px;text-align:center}',
-      '.git4idea-root-narrow .git4idea-topbar-commit span:not(.git4idea-topbar-commit-count){display:none}',
+      /* Branch-bar verbs (m00174): icon, name and a count chip in one tight
+         button, so the row reads as "push 2 / update 1 / commit 3" like IDEA. */
+      '.git4idea-track-btn{width:auto;padding:0 5px;gap:4px}',
+      '.git4idea-track-btn>span{display:inline-flex;align-items:center;gap:3px}',
+      '.git4idea-track-num{min-width:15px;height:15px;padding:0 4px;border-radius:999px;corner-shape:round;display:inline-flex;align-items:center;justify-content:center;flex:none;background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary);font-size:10px;line-height:1;font-variant-numeric:tabular-nums}',
+      '.git4idea-track-commit{color:var(--dsw-alias-label-primary)}',
+      '.git4idea-track-label{font-size:11px;line-height:1;white-space:nowrap}',
       // A panel dragged narrower than COMPACT_MAX_WIDTH (the compact chrome) is the
       // case where 'nowrap + ellipsis' stops being readable: the overlays clamp
       // their own width, and their text wraps inside that box instead of clipping.
@@ -180,6 +181,7 @@
       '.git4idea-detail-pane .git4idea-detail-files-head{flex:none;margin-top:0}',
       '.git4idea-detail-pane .git4idea-detail-files{flex:2 1 0;min-height:0;overflow:auto}',
       '.git4idea-detail-files>.git4idea-row{flex:none}',
+      '.git4idea-detail-files>.git4idea-folder-head{flex:none}',
       '.git4idea-detail-pane .git4idea-detail-msg{flex:1 1 0;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:4px;border-top:1px solid var(--dsw-alias-border-l2);padding-top:6px}',
       /* Commit layer (m01216 #9): pending changes + message on the left, the
          host-style diff on the right. Roomy enough for a real diff, and it only
@@ -224,9 +226,11 @@
       '.git4idea-push-files-subject{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dsw-alias-label-primary)}',
       '.git4idea-push-files-count{flex:none;color:var(--dsw-alias-label-tertiary);font-size:11px}',
       '.git4idea-push-file-list{flex:1;min-height:0;overflow:auto;padding:4px}',
-      '.git4idea-push-file{cursor:pointer;border-radius:calc(var(--dsw-radius-sm,8px) - 2px);padding:3px 6px}',
-      '.git4idea-push-file:hover{background:var(--dsw-alias-interactive-bg-hover)}',
-      '.git4idea-push-file:focus-visible{outline:1px solid var(--dsw-alias-brand-primary);outline-offset:-1px}',
+      /* The tree rows now come from CommitFileList, shared with the commit
+         detail pane — the hover/focus affordance stays, scoped to this list. */
+      '.git4idea-push-file-list .git4idea-row{cursor:pointer}',
+      '.git4idea-push-file-list .git4idea-row:hover{background:var(--dsw-alias-interactive-bg-hover)}',
+      '.git4idea-push-file-list .git4idea-row:focus-visible{outline:1px solid var(--dsw-alias-brand-primary);outline-offset:-1px}',
       '.git4idea-push-foot{display:flex;align-items:center;gap:8px;flex:none;padding:6px 8px;border-top:1px solid var(--dsw-alias-border-l2)}',
       '.git4idea-push-footnote{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dsw-alias-label-tertiary);font-size:11px}',
       '.git4idea-commit-layer-head{display:flex;align-items:center;gap:8px;padding:5px 8px;flex:none;border-bottom:1px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-secondary)}',
@@ -322,12 +326,6 @@
       '.git4idea-row-sub{color:var(--dsw-alias-label-tertiary);font-size:11px;flex:none;max-width:45%;overflow:hidden;text-overflow:ellipsis}',
       '.git4idea-row-dir{margin-left:auto;opacity:.75}',
       '.git4idea-badge{font-size:10px;padding:0 5px;border-radius:999px;corner-shape:round;background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary);flex:none}',
-      /* Ahead/behind colours + size (user request): pending pushes read green,
-         pending pulls read blue — the same semantics in the tree rows and the
-         top bar. 12px/600 keeps the counts legible at a glance. */
-      '.git4idea-badge-ahead,.git4idea-track-ahead{color:var(--dsw-alias-state-success-primary);font-size:12px}',
-      '.git4idea-badge-behind,.git4idea-track-behind{color:var(--dsw-alias-state-business-primary,var(--dsw-alias-brand-primary));font-size:12px}',
-      '.git4idea-badge.git4idea-badge-ahead,.git4idea-badge.git4idea-badge-behind{padding:0 6px}',
       '.git4idea-badge-muted{opacity:.8}',
       '.git4idea-badge-worktree{padding:0 3px;display:inline-flex;align-items:center;height:14px}',
       /* position:relative: the marquee box (rubber-band selection) paints
@@ -631,6 +629,8 @@
       '.git4idea-cs-mrun:hover .git4idea-cs-run{animation:git4idea-cs-marquee var(--git4idea-cs-marquee-dur,10s) linear infinite}',
       '@keyframes git4idea-cs-marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}',
       '.git4idea-cs-pill svg{flex:none}',
+      '.git4idea-cs-pill-count{display:inline-flex;align-items:center;gap:1px;flex:none;font-size:11px;line-height:1;font-variant-numeric:tabular-nums}',
+      '.git4idea-cs-ahead,.git4idea-cs-behind{display:inline-flex;align-items:center;gap:2px;flex:none;line-height:1}',
       '.git4idea-cs-ahead{color:var(--dsw-alias-state-success-primary)}',
       '.git4idea-cs-behind{color:var(--dsw-alias-state-business-primary)}',
       // .git4idea-cs-menu opens upward (the composer sits at the bottom of the UI). The surface

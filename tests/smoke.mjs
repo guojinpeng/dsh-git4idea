@@ -2019,7 +2019,12 @@ test('the push dialog previews its commits and the file card floats (m02986)', (
   assert.match(client, /const commit = data === null \? null : \(data\.commits\.find\(\(item\) => item\.hash === selected\) \|\| null\)/,
     'a hash that left the list degrades to "pick a commit" instead of throwing (m05303)')
   assert.match(client, /fileDialog\.set\(\{\n          hash: commit\.hash,/, 'a file double click floats the diff card')
-  assert.match(client, /onDoubleClick: \(\) => \{ openFile\(file\) \}/)
+  // The push dialog renders the SAME file list as the commit detail pane
+  // (CommitFileList, m02986 follow-up): the old flat row dropped the capped
+  // path class, so a long path starved the name and clipped the stat.
+  assert.match(client, /function CommitFileList\(props\)/, 'one renderer serves both lists')
+  assert.equal((client.match(/E\(CommitFileList, \{/g) || []).length, 2, 'commit detail and push dialog both mount it')
+  assert.match(client, /onOpen: openFile,/, 'a file double click floats the diff card')
   assert.match(client, /const canPush = data !== null && data\.detached === false && data\.remotes\.length > 0 && data\.commits\.length > 0 && busy === false/)
   assert.match(client, /request\('push', Object\.assign\(\{\}, base, \{\n            confirm: true,\n            setUpstream: data\.upstream === null,/, 'the first push sets the upstream')
 

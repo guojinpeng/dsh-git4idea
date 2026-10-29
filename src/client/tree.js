@@ -12,12 +12,10 @@
       const tone = starred ? 'warn' : kind === 'tag' ? 'warn' : kind === 'remote' ? 'violet' : kind === 'head' ? 'success' : 'accent'
       const glyph = kind === 'tag' ? 'tag' : kind === 'remote' ? 'fetch' : kind === 'head' ? 'star' : 'branch'
       const where = entry.upstream === null || entry.upstream === undefined ? entry.name : entry.name + ' → ' + entry.upstream
-      // A single click only SELECTS (now with Shift/Ctrl+click multi-select —
-      // the modifiers are resolved one level up in BranchTree): checking a
-      // branch out is a real change of working tree, and a stray click in a
-      // long list must not do that (reported on v0.3.7). Since v0.19.3 a
-      // double-click BROWSES that branch's commit history (checkout moved into
-      // the right-click menu), right-click has the whole menu.
+      // A single click SELECTS the branch and browses its commit history
+      // (m00356); Shift/Ctrl+click only extends the selection, so a range is
+      // never interrupted. Checkout stays in the right-click menu: it rewrites
+      // the working tree, which a stray click must not do.
       return E('div', {
         className: 'git4idea-row git4idea-row-' + kind + (props.selected === true ? ' git4idea-row-selected' : ''),
         style: { paddingLeft: (BRANCH_INDENT_BASE + (props.depth === undefined ? 0 : props.depth) * BRANCH_INDENT_STEP) + 'px' },
@@ -26,7 +24,6 @@
         'data-mkey': props.selKey,
         'data-tip': where + ' · ' + t('branches.pickHint'),
         onClick: (event) => props.onPick(event, entry, props.selKey),
-        onDoubleClick: () => { if (props.onBrowse !== undefined) props.onBrowse(entry) },
         onContextMenu: (event) => { event.preventDefault(); props.onMenu(event, entry) },
       },
         E('span', { className: 'git4idea-row-icon git4idea-tone-' + tone + (starred === true ? ' git4idea-star-filled' : '') }, E(Icon, { name: glyph, size: 12 })),
@@ -42,8 +39,10 @@
           className: 'git4idea-badge git4idea-badge-muted git4idea-badge-worktree',
           'data-tip': t('branches.worktree') + ': ' + entry.worktree,
         }, E(Icon, { name: 'folder', size: 10 })),
-        entry.ahead > 0 ? E('span', { className: 'git4idea-badge git4idea-badge-ahead' }, '↑' + entry.ahead) : null,
-        entry.behind > 0 ? E('span', { className: 'git4idea-badge git4idea-badge-behind' }, '↓' + entry.behind) : null)
+        // Same green push / blue pull glyphs as the panel bars (m00246): the
+        // bare ↑12 told only half the story and read as a badge, not a count.
+        entry.ahead > 0 ? E('span', { className: 'git4idea-cs-ahead' }, E(Icon, { name: 'push', size: 10 }), String(entry.ahead)) : null,
+        entry.behind > 0 ? E('span', { className: 'git4idea-cs-behind' }, E(Icon, { name: 'pull', size: 10 }), String(entry.behind)) : null)
     }
 
     function BranchTree(props) {
@@ -199,7 +198,10 @@
         }
         pickAnchor.current = selKey
         setPicks(new Set([selKey]))
-      }, [picks])
+        /* The plain click also browses that branch (m00356): its commit list
+           replaces the history, so one click triggers the action. */
+        if (props.onBrowse !== undefined) props.onBrowse(entry)
+      }, [picks, props.onBrowse])
       const branchRow = (entry, label, depth) => E(BranchRow, {
         key: 'row:' + branchSelKeyOf(entry), entry: entry, label: label, depth: depth, t: t,
         selKey: branchSelKeyOf(entry),
@@ -362,7 +364,6 @@
             className: 'git4idea-section-head git4idea-section-head-static git4idea-head-branch',
             'data-tip': headEntry.name + ' · ' + t('branches.headHint'),
             onClick: (event) => { event.stopPropagation(); handlePick(event, headEntry, branchSelKeyOf(headEntry)) },
-            onDoubleClick: () => { if (props.onBrowse !== undefined) props.onBrowse(headEntry) },
             onContextMenu: (event) => { event.preventDefault(); onRowMenu(event, headEntry) },
           }, t('branches.head')),
           favorites.length === 0 ? null : section('favorites', t('branches.favorites'), locals.filter((entry) => favorites.indexOf(entry.name) >= 0), (entry) => entry),

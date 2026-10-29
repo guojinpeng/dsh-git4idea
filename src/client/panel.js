@@ -1482,45 +1482,48 @@
           },
             E('span', { className: 'git4idea-repo-name' }, branches.branch),
             E(Icon, { name: 'chevron', size: 12 }))),
-        /* Push and pull sit right of the branch name (m01216): the rail is left
-           for branch-tree actions only, and the undo menu is gone. */
-        E('button', {
-          type: 'button', className: 'git4idea-icon-btn git4idea-icon-btn-small',
+        /* Push, pull and commit sit right of the branch name (m00174): each
+           appears only while it has work to do, in IDEA's order — green push
+           with the ahead count, blue pull with the behind count, white commit
+           with the dirty count. */
+        summary === null || summary.ahead === undefined || summary.ahead <= 0 ? null : E('button', {
+          type: 'button', className: 'git4idea-icon-btn git4idea-icon-btn-small git4idea-track-btn',
           'data-tip': t('toolbar.push'),
           'aria-disabled': remoteReady !== true || blocked === true ? 'true' : 'false',
           onClick: () => {
             if (remoteReady !== true || blocked === true) return
             openPushDialog()
           },
-        }, E(Icon, { name: 'push', size: 14 })),
-        E('button', {
-          type: 'button', className: 'git4idea-icon-btn git4idea-icon-btn-small',
+        }, E('span', { className: 'git4idea-tone-success' },
+          E(Icon, { name: 'push', size: 11 }),
+          E('span', { className: 'git4idea-track-label' }, t('track.push')),
+          E('span', { className: 'git4idea-track-num' }, String(summary.ahead)))),
+        summary === null || summary.behind === undefined || summary.behind <= 0 ? null : E('button', {
+          type: 'button', className: 'git4idea-icon-btn git4idea-icon-btn-small git4idea-track-btn',
           'data-tip': t('toolbar.pull'),
-          'aria-disabled': remoteReady !== true || summary === null || summary.upstream === null || blocked === true ? 'true' : 'false',
+          'aria-disabled': remoteReady !== true || blocked === true ? 'true' : 'false',
           onClick: () => {
-            if (remoteReady !== true || summary === null || summary.upstream === null || blocked === true) return
+            if (remoteReady !== true || blocked === true) return
             void run('pull', { mode: 'ff-only' })
           },
-        }, E(Icon, { name: 'pull', size: 14 })),
-        summary === null || summary.upstream === null ? null : E('span', { className: 'git4idea-track' },
-          summary.ahead > 0 ? E('span', { className: 'git4idea-track-ahead' }, '↑' + summary.ahead) : null,
-          summary.behind > 0 ? E('span', { className: 'git4idea-track-behind' }, (summary.ahead > 0 ? ' ' : '') + '↓' + summary.behind) : null),
-        operation === null ? null : E('span', { className: 'git4idea-opchip', 'data-tip': t('operation.hint') }, t('operation.' + operation)),
-        E('span', { className: 'git4idea-topbar-spacer' }),
-        /* The commit button raises the frame commit dialog (m04920); the panel's
-           own layer could not fix the height of its diff half. */
-        E('button', {
-          type: 'button', className: 'git4idea-topbar-commit',
+        }, E('span', { className: 'git4idea-tone-business' },
+          E(Icon, { name: 'pull', size: 11 }),
+          E('span', { className: 'git4idea-track-label' }, t('track.pull')),
+          E('span', { className: 'git4idea-track-num' }, String(summary.behind)))),
+        dirty <= 0 ? null : E('button', {
+          type: 'button', className: 'git4idea-icon-btn git4idea-icon-btn-small git4idea-track-btn',
           'data-tip': t('changes.commit'),
           onClick: () => {
             if (repoRoot === null) return
             const scopeObject = scope || {}
             commitDialog.set({ sessionId: scopeObject.sessionId, cwd: cwd, repoRoot: repoRoot })
           },
-        },
-          E(Icon, { name: 'commit', size: 13 }),
-          E('span', null, t('changes.commit')),
-          dirty > 0 ? E('span', { className: 'git4idea-topbar-commit-count' }, String(dirty)) : null))
+        }, E('span', { className: 'git4idea-track-commit' },
+          E(Icon, { name: 'commit', size: 12 }),
+          E('span', { className: 'git4idea-track-label' }, t('track.commit')),
+          E('span', { className: 'git4idea-track-num' }, String(dirty)))),
+        operation === null ? null : E('span', { className: 'git4idea-opchip', 'data-tip': t('operation.hint') }, t('operation.' + operation)),
+        E('span', { className: 'git4idea-topbar-spacer' }))
 
       /* The log never leaves the middle column any more: the picked commit
          renders beside it (m01216), so the list stays put while the detail loads. */
@@ -2371,9 +2374,12 @@
           + (compact ? ' git4idea-root-narrow' : '')
           + (paneDragging === null ? '' : ' git4idea-pane-dragging' + (paneByWidth ? '-v' : '-h')),
         ref: hostRef,
-      }, topBar,
+      },
         E(Workbench, {
           t: t, base: base, request: request,
+          /* The tab strip sits above the branch row (m00174), so the branch
+             bar travels with the workbench and paints under the tabs. */
+          topBar: topBar,
           branch: summary === null ? '' : summary.branch,
           selectedHash: selectedHash,
           branches: branches, repoRoot: repoRoot,

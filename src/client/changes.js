@@ -765,10 +765,8 @@
         'data-lane': String(props.row.lane),
         className: 'git4idea-commit' + (props.selected === true ? ' git4idea-commit-selected' : ''),
         /* Modifier handling lives in HistoryList (it owns the rendered row
-           order the Shift-range walks); a plain click only selects and the
-           DOUBLE-click opens the detail (v0.18.3, same model as the tree). */
+           order the Shift-range walks); a plain click opens the detail (m00356). */
         onClick: (event) => props.onRowClick(event, commit),
-        onDoubleClick: () => props.onOpenDetail(commit),
         onContextMenu: (event) => { event.preventDefault(); props.onMenu(event, commit) },
       },
         /* Column order (m01737 #4, mirroring the IDE log): graph, message,
@@ -996,10 +994,9 @@
       }, [props.mergeAnchor, rows.length, props.busy])
       /* Multi-select gestures (issue #13): the rendered row order is what the
          Shift-range walks, and the range is computed over the FILTERED rows —
-         the same list the eye sees. A plain click only SELECTS (single-replace,
-         like the branch tree); it must NOT open the detail view — that killed
-         any multi-select mid-flight and is now the DOUBLE-click's job (user
-         request, v0.18.3). The stale-callback risk is nil: rows change identity
+         the same list the eye sees. A plain click selects and opens the detail
+         (m00356); Shift/Ctrl clicks only extend the set, so a range is never
+         interrupted. The stale-callback risk is nil: rows change identity
          with the filters, and every row re-renders whenever its commit
          reference changes. */
       const handleRowClick = (event, commit) => {
@@ -1038,13 +1035,11 @@
           return
         }
         pickAnchor.current = commit.hash
-        /* Plain click only SELECTS (single-replace, the changes list's
-           model): the detail view moved to DOUBLE-click. v0.18.3 updated the
-           comment but left props.onSelect(commit) on this path, so single
-           clicks kept yanking the pane away (user report) — the call is gone
-           for real now; row highlight comes from the picked set, Enter is the
-           keyboard twin of the double-click. */
+        /* Plain click selects AND opens the detail (m00356): a single click
+           triggers, as the IDE log does. Shift/Ctrl still only extend the
+           picked set, so a drag or range is never interrupted mid-flight. */
         setPicks((previous) => previous.size === 1 && previous.has(commit.hash) === true ? previous : new Set([commit.hash]))
+        props.onSelect(commit)
       }
       /* Ctrl+A selects the whole filtered list; everything else (Ctrl+C, Esc)
          belongs to the Panel-level handler that owns the picked set. */
@@ -1211,11 +1206,76 @@
             commit: row.commit, row: row, t: t,
             selected: props.selectedHash === row.commit.hash
               || (props.pickedHashes !== undefined && props.pickedHashes.has(row.commit.hash) === true),
-            onRowClick: handleRowClick, onOpenDetail: props.onSelect, onMenu: props.onMenu, openMenuAt: props.openMenuAt,
+            onRowClick: handleRowClick, onMenu: props.onMenu, openMenuAt: props.openMenuAt,
           })),
           winEnd < rows.length ? E('div', { key: 'pad-bottom', style: { height: String((rows.length - winEnd) * HISTORY_ROW_H) + 'px' } }) : null,
           order === 'desc' ? loadMoreButton : null),
         E(MarqueeBox, { box: historyMarquee.box }))
+    }
+
+    /* One changed-file list for the commit detail pane AND the push dialog
+       (m02986 follow-up): folders first, files indented under them — the IDE
+       commit tree. The push dialog used a flat row without the capped path
+       class, so a long path squeezed the file name to zero width and clipped
+       the stat. Two renderers cannot drift back apart when there is one. */
+    function CommitFileList(props) {
+      const t = props.t
+      const files = Array.isArray(props.files) ? props.files : []
+      const byPath = (a, b) => a.path.localeCompare(b.path)
+      const [folded, setFolded] = useState({})
+      const forest = useMemo(() => buildDirForest(files, 'commitFiles'), [files])
+      const toggle = (id) => setFolded((previous) => Object.assign({}, previous, { [id]: previous[id] !== true }))
+      const rows = []
+      const fileRow = (file, depth) => {
+        rows.push(E('div', {
+          key: 'file:' + file.path,
+          className: 'git4idea-row git4idea-row-file' + (props.selectedPath === file.path ? ' git4idea-row-selected' : ''),
+          style: { paddingLeft: (8 + depth * 12) + 'px' },
+          'data-tip': file.path,
+          tabIndex: 0,
+          /* Same click model as everywhere else: click selects, double-click
+             (or Enter) opens the diff. */
+          onClick: props.onSelect === undefined ? undefined : () => props.onSelect(file),
+          onDoubleClick: props.onOpen === undefined ? undefined : () => props.onOpen(file),
+          onKeyDown: (event) => { if (event.key === 'Enter' && props.onOpen !== undefined) props.onOpen(file) },
+          onContextMenu: props.onMenu === undefined ? undefined : (event) => { event.preventDefault(); props.onMenu(event, file) },
+        },
+          FileTypeGlyph({ path: file.path }),
+          E('span', { className: 'git4idea-row-label' }, baseName(file.path)),
+          file.additions > 0 ? E('span', { className: 'git4idea-stat-add' }, '+' + file.additions) : null,
+          file.deletions > 0 ? E('span', { className: 'git4idea-stat-del' }, '-' + file.deletions) : null))
+      }
+      const folderRow = (id, label, count, depth) => {
+        const open = folded[id] !== true
+        rows.push(E('button', {
+          key: 'folder:' + id,
+          type: 'button',
+          className: 'git4idea-folder-head',
+          style: { paddingLeft: (4 + depth * 12) + 'px' },
+          onClick: () => { toggle(id) },
+        },
+          E('span', { className: 'git4idea-chevron' + (open ? ' git4idea-chevron-open' : '') }, E(Icon, { name: 'chevron', size: 10 })),
+          E('span', { className: 'git4idea-row-icon git4idea-tone-accent' }, E(Icon, { name: 'folder', size: 10 })),
+          E('span', { className: 'git4idea-folder-name' }, label),
+          E('span', { className: 'git4idea-count' }, String(count))))
+        return open
+      }
+      /* Subfolders first, then the folder's own files — the IDE tree order.
+         node.path carries the FULL path, so the label is only the chain this
+         node adds below its parent (compressed chains stay one row). */
+      const walk = (node, depth, parentLen) => {
+        const open = folderRow('commitFiles|' + node.path.join('/'), node.path.slice(parentLen).join('/'), forest.countOf(node), depth)
+        if (open !== true) return
+        for (const child of forest.sortedChildren(node)) walk(child, depth + 1, node.path.length)
+        for (const file of node.files.slice().sort(byPath)) fileRow(file, depth + 1)
+      }
+      if (forest.rootFiles.length > 0) {
+        if (folderRow('commitFiles|/', t('changes.rootDir'), forest.rootFiles.length, 0) === true) {
+          for (const file of forest.rootFiles.slice().sort(byPath)) fileRow(file, 1)
+        }
+      }
+      for (const node of forest.roots) walk(node, 0, 0)
+      return rows
     }
 
     function CommitDetail(props) {
@@ -1228,21 +1288,14 @@
         ? null
         : detail.files.length === 0
           ? E('div', { className: 'git4idea-empty' }, t('detail.noFiles'))
-          : detail.files.map((file) => E('div', {
-              key: file.path,
-              className: 'git4idea-row git4idea-row-file' + (props.selectedPath === file.path ? ' git4idea-row-selected' : ''),
-              'data-tip': file.path,
-              /* Same click model as everywhere else (v0.18.3): plain click only
-                 selects, DOUBLE-click opens the diff. */
-              onClick: () => props.onSelectFile(file),
-              onDoubleClick: () => props.onOpenFile(file),
-              onContextMenu: props.onFileMenu === undefined ? undefined : (event) => { event.preventDefault(); props.onFileMenu(event, file) },
-            },
-              FileTypeGlyph({ path: file.path }),
-              E('span', { className: 'git4idea-row-label' }, baseName(file.path)),
-              E('span', { className: 'git4idea-row-sub git4idea-row-dir' }, dirName(file.path)),
-              file.additions > 0 ? E('span', { className: 'git4idea-stat-add' }, '+' + file.additions) : null,
-              file.deletions > 0 ? E('span', { className: 'git4idea-stat-del' }, '-' + file.deletions) : null))
+          : E(CommitFileList, {
+              t: t,
+              files: detail.files,
+              selectedPath: props.selectedPath,
+              onSelect: props.onSelectFile,
+              onOpen: props.onOpenFile,
+              onMenu: props.onFileMenu,
+            })
       if (detail === null || detail === undefined) return E('div', { className: 'git4idea-empty git4idea-detail-empty' }, t('detail.pick'))
       if (props.pane === true) {
         return E('div', { className: 'git4idea-detail git4idea-detail-pane' },

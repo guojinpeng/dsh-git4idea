@@ -321,6 +321,9 @@ function Workbench(props) {
         'data-active': tab === 'worktree' ? 'true' : 'false',
         onClick: () => setTab('worktree'),
       }, t('tab.worktree'))),
+    /* The branch bar rides below the tab strip (m00174); the panel hands it in
+       so the two rows keep one React owner. */
+    props.topBar === undefined ? null : props.topBar,
     /* The log tab is the whole Git view (tree, history, commit detail): the
        panel passes that body as children, so the tabs sit above every column
        instead of above the detail pane alone. Every pane stays mounted and the

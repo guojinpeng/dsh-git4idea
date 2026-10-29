@@ -399,6 +399,9 @@ window.__ModuleLoader__.load({
       'toolbar.checkoutPicked': '签出选中的分支',
       'toolbar.deletePicked': '删除选中的 {n} 个引用',
       'toolbar.push': '推送(Push)',
+      'track.push': '推送',
+      'track.pull': '更新',
+      'track.commit': '提交',
       'toolbar.tree': '分支栏',
       'rail.more': '更多操作',
       'composer.branchHint': '切换分支',
@@ -771,6 +774,9 @@ window.__ModuleLoader__.load({
       'toolbar.checkoutPicked': 'Check out the picked branch',
       'toolbar.deletePicked': 'Delete {n} picked ref(s)',
       'toolbar.push': 'Push',
+      'track.push': 'Push',
+      'track.pull': 'Pull',
+      'track.commit': 'Commit',
       'toolbar.tree': 'Branch pane',
       'rail.more': 'More actions',
       'composer.branchHint': 'Switch branch',
@@ -3914,12 +3920,10 @@ window.__ModuleLoader__.load({
       const tone = starred ? 'warn' : kind === 'tag' ? 'warn' : kind === 'remote' ? 'violet' : kind === 'head' ? 'success' : 'accent'
       const glyph = kind === 'tag' ? 'tag' : kind === 'remote' ? 'fetch' : kind === 'head' ? 'star' : 'branch'
       const where = entry.upstream === null || entry.upstream === undefined ? entry.name : entry.name + ' → ' + entry.upstream
-      // A single click only SELECTS (now with Shift/Ctrl+click multi-select —
-      // the modifiers are resolved one level up in BranchTree): checking a
-      // branch out is a real change of working tree, and a stray click in a
-      // long list must not do that (reported on v0.3.7). Since v0.19.3 a
-      // double-click BROWSES that branch's commit history (checkout moved into
-      // the right-click menu), right-click has the whole menu.
+      // A single click SELECTS the branch and browses its commit history
+      // (m00356); Shift/Ctrl+click only extends the selection, so a range is
+      // never interrupted. Checkout stays in the right-click menu: it rewrites
+      // the working tree, which a stray click must not do.
       return E('div', {
         className: 'git4idea-row git4idea-row-' + kind + (props.selected === true ? ' git4idea-row-selected' : ''),
         style: { paddingLeft: (BRANCH_INDENT_BASE + (props.depth === undefined ? 0 : props.depth) * BRANCH_INDENT_STEP) + 'px' },
@@ -3928,7 +3932,6 @@ window.__ModuleLoader__.load({
         'data-mkey': props.selKey,
         'data-tip': where + ' · ' + t('branches.pickHint'),
         onClick: (event) => props.onPick(event, entry, props.selKey),
-        onDoubleClick: () => { if (props.onBrowse !== undefined) props.onBrowse(entry) },
         onContextMenu: (event) => { event.preventDefault(); props.onMenu(event, entry) },
       },
         E('span', { className: 'git4idea-row-icon git4idea-tone-' + tone + (starred === true ? ' git4idea-star-filled' : '') }, E(Icon, { name: glyph, size: 12 })),
@@ -3944,8 +3947,10 @@ window.__ModuleLoader__.load({
           className: 'git4idea-badge git4idea-badge-muted git4idea-badge-worktree',
           'data-tip': t('branches.worktree') + ': ' + entry.worktree,
         }, E(Icon, { name: 'folder', size: 10 })),
-        entry.ahead > 0 ? E('span', { className: 'git4idea-badge git4idea-badge-ahead' }, '↑' + entry.ahead) : null,
-        entry.behind > 0 ? E('span', { className: 'git4idea-badge git4idea-badge-behind' }, '↓' + entry.behind) : null)
+        // Same green push / blue pull glyphs as the panel bars (m00246): the
+        // bare ↑12 told only half the story and read as a badge, not a count.
+        entry.ahead > 0 ? E('span', { className: 'git4idea-cs-ahead' }, E(Icon, { name: 'push', size: 10 }), String(entry.ahead)) : null,
+        entry.behind > 0 ? E('span', { className: 'git4idea-cs-behind' }, E(Icon, { name: 'pull', size: 10 }), String(entry.behind)) : null)
     }
 
     function BranchTree(props) {
@@ -4101,7 +4106,10 @@ window.__ModuleLoader__.load({
         }
         pickAnchor.current = selKey
         setPicks(new Set([selKey]))
-      }, [picks])
+        /* The plain click also browses that branch (m00356): its commit list
+           replaces the history, so one click triggers the action. */
+        if (props.onBrowse !== undefined) props.onBrowse(entry)
+      }, [picks, props.onBrowse])
       const branchRow = (entry, label, depth) => E(BranchRow, {
         key: 'row:' + branchSelKeyOf(entry), entry: entry, label: label, depth: depth, t: t,
         selKey: branchSelKeyOf(entry),
@@ -4264,7 +4272,6 @@ window.__ModuleLoader__.load({
             className: 'git4idea-section-head git4idea-section-head-static git4idea-head-branch',
             'data-tip': headEntry.name + ' · ' + t('branches.headHint'),
             onClick: (event) => { event.stopPropagation(); handlePick(event, headEntry, branchSelKeyOf(headEntry)) },
-            onDoubleClick: () => { if (props.onBrowse !== undefined) props.onBrowse(headEntry) },
             onContextMenu: (event) => { event.preventDefault(); onRowMenu(event, headEntry) },
           }, t('branches.head')),
           favorites.length === 0 ? null : section('favorites', t('branches.favorites'), locals.filter((entry) => favorites.indexOf(entry.name) >= 0), (entry) => entry),
@@ -5041,10 +5048,8 @@ window.__ModuleLoader__.load({
         'data-lane': String(props.row.lane),
         className: 'git4idea-commit' + (props.selected === true ? ' git4idea-commit-selected' : ''),
         /* Modifier handling lives in HistoryList (it owns the rendered row
-           order the Shift-range walks); a plain click only selects and the
-           DOUBLE-click opens the detail (v0.18.3, same model as the tree). */
+           order the Shift-range walks); a plain click opens the detail (m00356). */
         onClick: (event) => props.onRowClick(event, commit),
-        onDoubleClick: () => props.onOpenDetail(commit),
         onContextMenu: (event) => { event.preventDefault(); props.onMenu(event, commit) },
       },
         /* Column order (m01737 #4, mirroring the IDE log): graph, message,
@@ -5272,10 +5277,9 @@ window.__ModuleLoader__.load({
       }, [props.mergeAnchor, rows.length, props.busy])
       /* Multi-select gestures (issue #13): the rendered row order is what the
          Shift-range walks, and the range is computed over the FILTERED rows —
-         the same list the eye sees. A plain click only SELECTS (single-replace,
-         like the branch tree); it must NOT open the detail view — that killed
-         any multi-select mid-flight and is now the DOUBLE-click's job (user
-         request, v0.18.3). The stale-callback risk is nil: rows change identity
+         the same list the eye sees. A plain click selects and opens the detail
+         (m00356); Shift/Ctrl clicks only extend the set, so a range is never
+         interrupted. The stale-callback risk is nil: rows change identity
          with the filters, and every row re-renders whenever its commit
          reference changes. */
       const handleRowClick = (event, commit) => {
@@ -5314,13 +5318,11 @@ window.__ModuleLoader__.load({
           return
         }
         pickAnchor.current = commit.hash
-        /* Plain click only SELECTS (single-replace, the changes list's
-           model): the detail view moved to DOUBLE-click. v0.18.3 updated the
-           comment but left props.onSelect(commit) on this path, so single
-           clicks kept yanking the pane away (user report) — the call is gone
-           for real now; row highlight comes from the picked set, Enter is the
-           keyboard twin of the double-click. */
+        /* Plain click selects AND opens the detail (m00356): a single click
+           triggers, as the IDE log does. Shift/Ctrl still only extend the
+           picked set, so a drag or range is never interrupted mid-flight. */
         setPicks((previous) => previous.size === 1 && previous.has(commit.hash) === true ? previous : new Set([commit.hash]))
+        props.onSelect(commit)
       }
       /* Ctrl+A selects the whole filtered list; everything else (Ctrl+C, Esc)
          belongs to the Panel-level handler that owns the picked set. */
@@ -5487,11 +5489,76 @@ window.__ModuleLoader__.load({
             commit: row.commit, row: row, t: t,
             selected: props.selectedHash === row.commit.hash
               || (props.pickedHashes !== undefined && props.pickedHashes.has(row.commit.hash) === true),
-            onRowClick: handleRowClick, onOpenDetail: props.onSelect, onMenu: props.onMenu, openMenuAt: props.openMenuAt,
+            onRowClick: handleRowClick, onMenu: props.onMenu, openMenuAt: props.openMenuAt,
           })),
           winEnd < rows.length ? E('div', { key: 'pad-bottom', style: { height: String((rows.length - winEnd) * HISTORY_ROW_H) + 'px' } }) : null,
           order === 'desc' ? loadMoreButton : null),
         E(MarqueeBox, { box: historyMarquee.box }))
+    }
+
+    /* One changed-file list for the commit detail pane AND the push dialog
+       (m02986 follow-up): folders first, files indented under them — the IDE
+       commit tree. The push dialog used a flat row without the capped path
+       class, so a long path squeezed the file name to zero width and clipped
+       the stat. Two renderers cannot drift back apart when there is one. */
+    function CommitFileList(props) {
+      const t = props.t
+      const files = Array.isArray(props.files) ? props.files : []
+      const byPath = (a, b) => a.path.localeCompare(b.path)
+      const [folded, setFolded] = useState({})
+      const forest = useMemo(() => buildDirForest(files, 'commitFiles'), [files])
+      const toggle = (id) => setFolded((previous) => Object.assign({}, previous, { [id]: previous[id] !== true }))
+      const rows = []
+      const fileRow = (file, depth) => {
+        rows.push(E('div', {
+          key: 'file:' + file.path,
+          className: 'git4idea-row git4idea-row-file' + (props.selectedPath === file.path ? ' git4idea-row-selected' : ''),
+          style: { paddingLeft: (8 + depth * 12) + 'px' },
+          'data-tip': file.path,
+          tabIndex: 0,
+          /* Same click model as everywhere else: click selects, double-click
+             (or Enter) opens the diff. */
+          onClick: props.onSelect === undefined ? undefined : () => props.onSelect(file),
+          onDoubleClick: props.onOpen === undefined ? undefined : () => props.onOpen(file),
+          onKeyDown: (event) => { if (event.key === 'Enter' && props.onOpen !== undefined) props.onOpen(file) },
+          onContextMenu: props.onMenu === undefined ? undefined : (event) => { event.preventDefault(); props.onMenu(event, file) },
+        },
+          FileTypeGlyph({ path: file.path }),
+          E('span', { className: 'git4idea-row-label' }, baseName(file.path)),
+          file.additions > 0 ? E('span', { className: 'git4idea-stat-add' }, '+' + file.additions) : null,
+          file.deletions > 0 ? E('span', { className: 'git4idea-stat-del' }, '-' + file.deletions) : null))
+      }
+      const folderRow = (id, label, count, depth) => {
+        const open = folded[id] !== true
+        rows.push(E('button', {
+          key: 'folder:' + id,
+          type: 'button',
+          className: 'git4idea-folder-head',
+          style: { paddingLeft: (4 + depth * 12) + 'px' },
+          onClick: () => { toggle(id) },
+        },
+          E('span', { className: 'git4idea-chevron' + (open ? ' git4idea-chevron-open' : '') }, E(Icon, { name: 'chevron', size: 10 })),
+          E('span', { className: 'git4idea-row-icon git4idea-tone-accent' }, E(Icon, { name: 'folder', size: 10 })),
+          E('span', { className: 'git4idea-folder-name' }, label),
+          E('span', { className: 'git4idea-count' }, String(count))))
+        return open
+      }
+      /* Subfolders first, then the folder's own files — the IDE tree order.
+         node.path carries the FULL path, so the label is only the chain this
+         node adds below its parent (compressed chains stay one row). */
+      const walk = (node, depth, parentLen) => {
+        const open = folderRow('commitFiles|' + node.path.join('/'), node.path.slice(parentLen).join('/'), forest.countOf(node), depth)
+        if (open !== true) return
+        for (const child of forest.sortedChildren(node)) walk(child, depth + 1, node.path.length)
+        for (const file of node.files.slice().sort(byPath)) fileRow(file, depth + 1)
+      }
+      if (forest.rootFiles.length > 0) {
+        if (folderRow('commitFiles|/', t('changes.rootDir'), forest.rootFiles.length, 0) === true) {
+          for (const file of forest.rootFiles.slice().sort(byPath)) fileRow(file, 1)
+        }
+      }
+      for (const node of forest.roots) walk(node, 0, 0)
+      return rows
     }
 
     function CommitDetail(props) {
@@ -5504,21 +5571,14 @@ window.__ModuleLoader__.load({
         ? null
         : detail.files.length === 0
           ? E('div', { className: 'git4idea-empty' }, t('detail.noFiles'))
-          : detail.files.map((file) => E('div', {
-              key: file.path,
-              className: 'git4idea-row git4idea-row-file' + (props.selectedPath === file.path ? ' git4idea-row-selected' : ''),
-              'data-tip': file.path,
-              /* Same click model as everywhere else (v0.18.3): plain click only
-                 selects, DOUBLE-click opens the diff. */
-              onClick: () => props.onSelectFile(file),
-              onDoubleClick: () => props.onOpenFile(file),
-              onContextMenu: props.onFileMenu === undefined ? undefined : (event) => { event.preventDefault(); props.onFileMenu(event, file) },
-            },
-              FileTypeGlyph({ path: file.path }),
-              E('span', { className: 'git4idea-row-label' }, baseName(file.path)),
-              E('span', { className: 'git4idea-row-sub git4idea-row-dir' }, dirName(file.path)),
-              file.additions > 0 ? E('span', { className: 'git4idea-stat-add' }, '+' + file.additions) : null,
-              file.deletions > 0 ? E('span', { className: 'git4idea-stat-del' }, '-' + file.deletions) : null))
+          : E(CommitFileList, {
+              t: t,
+              files: detail.files,
+              selectedPath: props.selectedPath,
+              onSelect: props.onSelectFile,
+              onOpen: props.onOpenFile,
+              onMenu: props.onFileMenu,
+            })
       if (detail === null || detail === undefined) return E('div', { className: 'git4idea-empty git4idea-detail-empty' }, t('detail.pick'))
       if (props.pane === true) {
         return E('div', { className: 'git4idea-detail git4idea-detail-pane' },
@@ -5867,6 +5927,9 @@ function Workbench(props) {
         'data-active': tab === 'worktree' ? 'true' : 'false',
         onClick: () => setTab('worktree'),
       }, t('tab.worktree'))),
+    /* The branch bar rides below the tab strip (m00174); the panel hands it in
+       so the two rows keep one React owner. */
+    props.topBar === undefined ? null : props.topBar,
     /* The log tab is the whole Git view (tree, history, commit detail): the
        panel passes that body as children, so the tabs sit above every column
        instead of above the detail pane alone. Every pane stays mounted and the
@@ -7373,45 +7436,48 @@ function Workbench(props) {
           },
             E('span', { className: 'git4idea-repo-name' }, branches.branch),
             E(Icon, { name: 'chevron', size: 12 }))),
-        /* Push and pull sit right of the branch name (m01216): the rail is left
-           for branch-tree actions only, and the undo menu is gone. */
-        E('button', {
-          type: 'button', className: 'git4idea-icon-btn git4idea-icon-btn-small',
+        /* Push, pull and commit sit right of the branch name (m00174): each
+           appears only while it has work to do, in IDEA's order — green push
+           with the ahead count, blue pull with the behind count, white commit
+           with the dirty count. */
+        summary === null || summary.ahead === undefined || summary.ahead <= 0 ? null : E('button', {
+          type: 'button', className: 'git4idea-icon-btn git4idea-icon-btn-small git4idea-track-btn',
           'data-tip': t('toolbar.push'),
           'aria-disabled': remoteReady !== true || blocked === true ? 'true' : 'false',
           onClick: () => {
             if (remoteReady !== true || blocked === true) return
             openPushDialog()
           },
-        }, E(Icon, { name: 'push', size: 14 })),
-        E('button', {
-          type: 'button', className: 'git4idea-icon-btn git4idea-icon-btn-small',
+        }, E('span', { className: 'git4idea-tone-success' },
+          E(Icon, { name: 'push', size: 11 }),
+          E('span', { className: 'git4idea-track-label' }, t('track.push')),
+          E('span', { className: 'git4idea-track-num' }, String(summary.ahead)))),
+        summary === null || summary.behind === undefined || summary.behind <= 0 ? null : E('button', {
+          type: 'button', className: 'git4idea-icon-btn git4idea-icon-btn-small git4idea-track-btn',
           'data-tip': t('toolbar.pull'),
-          'aria-disabled': remoteReady !== true || summary === null || summary.upstream === null || blocked === true ? 'true' : 'false',
+          'aria-disabled': remoteReady !== true || blocked === true ? 'true' : 'false',
           onClick: () => {
-            if (remoteReady !== true || summary === null || summary.upstream === null || blocked === true) return
+            if (remoteReady !== true || blocked === true) return
             void run('pull', { mode: 'ff-only' })
           },
-        }, E(Icon, { name: 'pull', size: 14 })),
-        summary === null || summary.upstream === null ? null : E('span', { className: 'git4idea-track' },
-          summary.ahead > 0 ? E('span', { className: 'git4idea-track-ahead' }, '↑' + summary.ahead) : null,
-          summary.behind > 0 ? E('span', { className: 'git4idea-track-behind' }, (summary.ahead > 0 ? ' ' : '') + '↓' + summary.behind) : null),
-        operation === null ? null : E('span', { className: 'git4idea-opchip', 'data-tip': t('operation.hint') }, t('operation.' + operation)),
-        E('span', { className: 'git4idea-topbar-spacer' }),
-        /* The commit button raises the frame commit dialog (m04920); the panel's
-           own layer could not fix the height of its diff half. */
-        E('button', {
-          type: 'button', className: 'git4idea-topbar-commit',
+        }, E('span', { className: 'git4idea-tone-business' },
+          E(Icon, { name: 'pull', size: 11 }),
+          E('span', { className: 'git4idea-track-label' }, t('track.pull')),
+          E('span', { className: 'git4idea-track-num' }, String(summary.behind)))),
+        dirty <= 0 ? null : E('button', {
+          type: 'button', className: 'git4idea-icon-btn git4idea-icon-btn-small git4idea-track-btn',
           'data-tip': t('changes.commit'),
           onClick: () => {
             if (repoRoot === null) return
             const scopeObject = scope || {}
             commitDialog.set({ sessionId: scopeObject.sessionId, cwd: cwd, repoRoot: repoRoot })
           },
-        },
-          E(Icon, { name: 'commit', size: 13 }),
-          E('span', null, t('changes.commit')),
-          dirty > 0 ? E('span', { className: 'git4idea-topbar-commit-count' }, String(dirty)) : null))
+        }, E('span', { className: 'git4idea-track-commit' },
+          E(Icon, { name: 'commit', size: 12 }),
+          E('span', { className: 'git4idea-track-label' }, t('track.commit')),
+          E('span', { className: 'git4idea-track-num' }, String(dirty)))),
+        operation === null ? null : E('span', { className: 'git4idea-opchip', 'data-tip': t('operation.hint') }, t('operation.' + operation)),
+        E('span', { className: 'git4idea-topbar-spacer' }))
 
       /* The log never leaves the middle column any more: the picked commit
          renders beside it (m01216), so the list stays put while the detail loads. */
@@ -8262,9 +8328,12 @@ function Workbench(props) {
           + (compact ? ' git4idea-root-narrow' : '')
           + (paneDragging === null ? '' : ' git4idea-pane-dragging' + (paneByWidth ? '-v' : '-h')),
         ref: hostRef,
-      }, topBar,
+      },
         E(Workbench, {
           t: t, base: base, request: request,
+          /* The tab strip sits above the branch row (m00174), so the branch
+             bar travels with the workbench and paints under the tabs. */
+          topBar: topBar,
           branch: summary === null ? '' : summary.branch,
           selectedHash: selectedHash,
           branches: branches, repoRoot: repoRoot,
@@ -8309,7 +8378,6 @@ function Workbench(props) {
       '.git4idea-root{position:relative;display:flex;flex-direction:column;height:100%;min-height:0;background:transparent;color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family,-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",Helvetica,Arial,sans-serif);font-size:13px;line-height:1.5;font-weight:400;overflow:hidden}',
       '.git4idea-topbar{display:flex;align-items:center;gap:6px;padding:4px 6px;flex:none;min-width:0;border-bottom:1px solid var(--dsw-alias-border-l2);overflow:hidden}',
       '.git4idea-topbar-spacer{flex:1;min-width:4px}',
-      '.git4idea-track{color:var(--dsw-alias-label-secondary);flex:none;font-variant-numeric:tabular-nums;white-space:nowrap}',
       '.git4idea-select-wrap{display:inline-flex;align-items:center;gap:4px;min-width:0;flex:0 1 auto;max-width:90%;color:var(--dsw-alias-label-secondary)}',
       '.git4idea-select{appearance:none;-webkit-appearance:none;background:transparent;border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-sm,8px);color:var(--dsw-alias-label-primary);font:inherit;padding:1px 6px;height:22px;max-width:min(280px,42%);min-width:0;cursor:pointer;text-overflow:ellipsis}',
       '.git4idea-select:hover{background:var(--dsw-alias-interactive-bg-hover)}',
@@ -8355,13 +8423,15 @@ function Workbench(props) {
       '.git4idea-tone-danger{color:var(--dsw-alias-state-error-primary)}',
       '.git4idea-tone-violet{color:#b083f0}',
       '.git4idea-tone-cyan{color:#59b0d6}',
+      '.git4idea-tone-business{color:var(--dsw-alias-state-business-primary,var(--dsw-alias-brand-primary))}',
       '.git4idea-icon-btn-small{width:20px;height:20px;border-radius:var(--dsw-radius-xs,4px)}',
-      /* The one way into the commit layer: a labelled button, so the action is
-         readable at any panel width, with the dirty count as a badge. */
-      '.git4idea-topbar-commit{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;flex:none;border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-sm,8px);background:transparent;color:var(--dsw-alias-label-primary);font:inherit;cursor:pointer}',
-      '.git4idea-topbar-commit:hover{background:var(--dsw-alias-interactive-bg-hover)}',
-      '.git4idea-topbar-commit-count{min-width:16px;height:16px;padding:0 4px;border-radius:999px;corner-shape:round;background:color-mix(in srgb, var(--dsw-alias-brand-primary) 22%, transparent);color:var(--dsw-alias-brand-primary);font-size:11px;line-height:16px;text-align:center}',
-      '.git4idea-root-narrow .git4idea-topbar-commit span:not(.git4idea-topbar-commit-count){display:none}',
+      /* Branch-bar verbs (m00174): icon, name and a count chip in one tight
+         button, so the row reads as "push 2 / update 1 / commit 3" like IDEA. */
+      '.git4idea-track-btn{width:auto;padding:0 5px;gap:4px}',
+      '.git4idea-track-btn>span{display:inline-flex;align-items:center;gap:3px}',
+      '.git4idea-track-num{min-width:15px;height:15px;padding:0 4px;border-radius:999px;corner-shape:round;display:inline-flex;align-items:center;justify-content:center;flex:none;background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary);font-size:10px;line-height:1;font-variant-numeric:tabular-nums}',
+      '.git4idea-track-commit{color:var(--dsw-alias-label-primary)}',
+      '.git4idea-track-label{font-size:11px;line-height:1;white-space:nowrap}',
       // A panel dragged narrower than COMPACT_MAX_WIDTH (the compact chrome) is the
       // case where 'nowrap + ellipsis' stops being readable: the overlays clamp
       // their own width, and their text wraps inside that box instead of clipping.
@@ -8464,6 +8534,7 @@ function Workbench(props) {
       '.git4idea-detail-pane .git4idea-detail-files-head{flex:none;margin-top:0}',
       '.git4idea-detail-pane .git4idea-detail-files{flex:2 1 0;min-height:0;overflow:auto}',
       '.git4idea-detail-files>.git4idea-row{flex:none}',
+      '.git4idea-detail-files>.git4idea-folder-head{flex:none}',
       '.git4idea-detail-pane .git4idea-detail-msg{flex:1 1 0;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:4px;border-top:1px solid var(--dsw-alias-border-l2);padding-top:6px}',
       /* Commit layer (m01216 #9): pending changes + message on the left, the
          host-style diff on the right. Roomy enough for a real diff, and it only
@@ -8508,9 +8579,11 @@ function Workbench(props) {
       '.git4idea-push-files-subject{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dsw-alias-label-primary)}',
       '.git4idea-push-files-count{flex:none;color:var(--dsw-alias-label-tertiary);font-size:11px}',
       '.git4idea-push-file-list{flex:1;min-height:0;overflow:auto;padding:4px}',
-      '.git4idea-push-file{cursor:pointer;border-radius:calc(var(--dsw-radius-sm,8px) - 2px);padding:3px 6px}',
-      '.git4idea-push-file:hover{background:var(--dsw-alias-interactive-bg-hover)}',
-      '.git4idea-push-file:focus-visible{outline:1px solid var(--dsw-alias-brand-primary);outline-offset:-1px}',
+      /* The tree rows now come from CommitFileList, shared with the commit
+         detail pane — the hover/focus affordance stays, scoped to this list. */
+      '.git4idea-push-file-list .git4idea-row{cursor:pointer}',
+      '.git4idea-push-file-list .git4idea-row:hover{background:var(--dsw-alias-interactive-bg-hover)}',
+      '.git4idea-push-file-list .git4idea-row:focus-visible{outline:1px solid var(--dsw-alias-brand-primary);outline-offset:-1px}',
       '.git4idea-push-foot{display:flex;align-items:center;gap:8px;flex:none;padding:6px 8px;border-top:1px solid var(--dsw-alias-border-l2)}',
       '.git4idea-push-footnote{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dsw-alias-label-tertiary);font-size:11px}',
       '.git4idea-commit-layer-head{display:flex;align-items:center;gap:8px;padding:5px 8px;flex:none;border-bottom:1px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-secondary)}',
@@ -8606,12 +8679,6 @@ function Workbench(props) {
       '.git4idea-row-sub{color:var(--dsw-alias-label-tertiary);font-size:11px;flex:none;max-width:45%;overflow:hidden;text-overflow:ellipsis}',
       '.git4idea-row-dir{margin-left:auto;opacity:.75}',
       '.git4idea-badge{font-size:10px;padding:0 5px;border-radius:999px;corner-shape:round;background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary);flex:none}',
-      /* Ahead/behind colours + size (user request): pending pushes read green,
-         pending pulls read blue — the same semantics in the tree rows and the
-         top bar. 12px/600 keeps the counts legible at a glance. */
-      '.git4idea-badge-ahead,.git4idea-track-ahead{color:var(--dsw-alias-state-success-primary);font-size:12px}',
-      '.git4idea-badge-behind,.git4idea-track-behind{color:var(--dsw-alias-state-business-primary,var(--dsw-alias-brand-primary));font-size:12px}',
-      '.git4idea-badge.git4idea-badge-ahead,.git4idea-badge.git4idea-badge-behind{padding:0 6px}',
       '.git4idea-badge-muted{opacity:.8}',
       '.git4idea-badge-worktree{padding:0 3px;display:inline-flex;align-items:center;height:14px}',
       /* position:relative: the marquee box (rubber-band selection) paints
@@ -8915,6 +8982,8 @@ function Workbench(props) {
       '.git4idea-cs-mrun:hover .git4idea-cs-run{animation:git4idea-cs-marquee var(--git4idea-cs-marquee-dur,10s) linear infinite}',
       '@keyframes git4idea-cs-marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}',
       '.git4idea-cs-pill svg{flex:none}',
+      '.git4idea-cs-pill-count{display:inline-flex;align-items:center;gap:1px;flex:none;font-size:11px;line-height:1;font-variant-numeric:tabular-nums}',
+      '.git4idea-cs-ahead,.git4idea-cs-behind{display:inline-flex;align-items:center;gap:2px;flex:none;line-height:1}',
       '.git4idea-cs-ahead{color:var(--dsw-alias-state-success-primary)}',
       '.git4idea-cs-behind{color:var(--dsw-alias-state-business-primary)}',
       // .git4idea-cs-menu opens upward (the composer sits at the bottom of the UI). The surface
@@ -10134,8 +10203,8 @@ function Workbench(props) {
         E('span', { className: 'git4idea-cs-item-tail' },
           entry.ahead > 0 || entry.behind > 0
             ? E('span', { className: 'git4idea-cs-item-counts' },
-              entry.ahead > 0 ? E('span', { className: 'git4idea-cs-ahead' }, '↑' + String(entry.ahead)) : null,
-              entry.behind > 0 ? E('span', { className: 'git4idea-cs-behind' }, '↓' + String(entry.behind)) : null)
+              entry.ahead > 0 ? E('span', { className: 'git4idea-cs-ahead' }, E(Icon, { name: 'push', size: 10 }), String(entry.ahead)) : null,
+              entry.behind > 0 ? E('span', { className: 'git4idea-cs-behind' }, E(Icon, { name: 'pull', size: 10 }), String(entry.behind)) : null)
             : null,
           E(Icon, { name: 'chevronRight', size: 10 })))
       const csTree = (key, label, entries, kind) => {
@@ -10155,7 +10224,9 @@ function Workbench(props) {
         const walk = (node, prefix, depth) => {
           node.folders.forEach((child, name) => {
             const path = prefix === '' ? name : prefix + '/' + name
-            const closed = csNeedle === '' && csFolded[path] === true
+            /* Closed unless opened (m00324): a fresh chooser must not dump
+               every remote's branches; a search still forces folders open. */
+            const closed = csNeedle === '' && csFolded[path] !== true
             rows.push(E('button', {
               key: key + ':dir:' + path,
               type: 'button',
@@ -10200,6 +10271,14 @@ function Workbench(props) {
         },
           E(Icon, { name: 'branch', size: 14 }),
           E(ComposerMarqueeName, { text: detached === true ? t('composer.detached') : branchName }),
+          /* The pill shows only the glyphs (m00312): the count stays in the
+             tooltip, because digits made the narrow capsule jump per commit. */
+          summary === null || summary.ahead === undefined || summary.ahead <= 0 ? null
+            : E('span', { className: 'git4idea-cs-pill-count git4idea-tone-success', 'data-tip': t('track.push') + ' ' + summary.ahead },
+              E(Icon, { name: 'push', size: 10 })),
+          summary === null || summary.behind === undefined || summary.behind <= 0 ? null
+            : E('span', { className: 'git4idea-cs-pill-count git4idea-tone-business', 'data-tip': t('track.pull') + ' ' + summary.behind },
+              E(Icon, { name: 'pull', size: 10 })),
           E(Icon, { name: 'chevron', size: 10 })) : null,
         /* The old red "×" chip sat inside the composer and read as a failed
            switch even while the switch was still running (m01737 #5). Errors
@@ -10682,6 +10761,7 @@ function Workbench(props) {
       const [selected, setSelected] = useState(null)
       const [files, setFiles] = useState([])
       const [filesLoading, setFilesLoading] = useState(false)
+      const [selectedPath, setSelectedPath] = useState(null)
       const [busy, setBusy] = useState(false)
       const messageOf = (caught) => (caught instanceof Error ? caught.message : String(caught))
       useEffect(() => {
@@ -10791,7 +10871,7 @@ function Workbench(props) {
                   type: 'button',
                   className: 'git4idea-push-commit' + (item.hash === selected ? ' git4idea-push-commit-on' : ''),
                   'data-tip': item.subject,
-                  onClick: () => { setSelected(item.hash) },
+                  onClick: () => { setSelected(item.hash); setSelectedPath(null) },
                 },
                 E(Icon, { name: 'commit', size: 12 }),
                 E('span', { className: 'git4idea-push-subject' }, item.subject),
@@ -10809,19 +10889,13 @@ function Workbench(props) {
                 ? E('div', { className: 'git4idea-empty' }, t('diff.loading'))
                 : files.length === 0
                   ? E('div', { className: 'git4idea-empty' }, t('detail.noFiles'))
-                  : files.map((file) => E('div', {
-                      key: file.path,
-                      className: 'git4idea-row git4idea-row-file git4idea-push-file',
-                      'data-tip': file.path + '\n' + t('preview.openFile'),
-                      tabIndex: 0,
-                      onDoubleClick: () => { openFile(file) },
-                      onKeyDown: (event) => { if (event.key === 'Enter') openFile(file) },
-                    },
-                    FileTypeGlyph({ path: file.path }),
-                    E('span', { className: 'git4idea-row-label' }, baseName(file.path)),
-                    E('span', { className: 'git4idea-row-dir' }, dirName(file.path)),
-                    file.additions > 0 ? E('span', { className: 'git4idea-stat-add' }, '+' + file.additions) : null,
-                    file.deletions > 0 ? E('span', { className: 'git4idea-stat-del' }, '-' + file.deletions) : null))))),
+                  : E(CommitFileList, {
+                      t: t,
+                      files: files,
+                      selectedPath: selectedPath,
+                      onSelect: (file) => { setSelectedPath(file.path) },
+                      onOpen: openFile,
+                    })))),
         E('div', { className: 'git4idea-push-foot' },
           E('span', { className: 'git4idea-push-footnote' }, emptyNote !== '' ? emptyNote : t('push.hint')),
           E('span', { className: 'git4idea-topbar-spacer' }),
