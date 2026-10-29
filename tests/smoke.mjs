@@ -7,7 +7,7 @@
  */
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { readFileSync, existsSync } from 'node:fs'
+import { readFileSync, existsSync, readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 
@@ -18,7 +18,20 @@ const exists = (name) => existsSync(join(root, name))
 
 const pkg = JSON.parse(read('package.json'))
 const manifest = JSON.parse(read('dsh.plugin.json'))
-const host = read('src/index.js')
+/** Every host module, concatenated: the entry plus src/server/** (m01807 split). */
+const hostTree = () => {
+  const parts = [read('src/index.js')]
+  const walk = (dir) => {
+    for (const entry of readdirSync(join(root, dir), { withFileTypes: true })) {
+      const rel = dir + '/' + entry.name
+      if (entry.isDirectory()) walk(rel)
+      else if (entry.name.endsWith('.js')) parts.push(read(rel))
+    }
+  }
+  for (const dir of ['src/server/core', 'src/server/services', 'src/server/controller']) walk(dir)
+  return parts.join('\n')
+}
+const host = hostTree()
 const client = read('src/client.js')
 const patch = read('cordis.patch.yml')
 
@@ -644,7 +657,11 @@ test('the rc.2 surface contract: theme-owned menu material on its own layer', ()
   assert.match(cssRule('.git4idea-menu-wrap'), /max-width:calc\(100% - 8px\)/)
   assert.match(client, /className: 'git4idea-menu-scroll'/)
   assert.match(client, /'data-menu-material': 'translucent'/)
-  assert.doesNotMatch(client, /createPortal/, 'overlays must stay inside .git4idea-root')
+  // Panel-internal overlays still stay inside .git4idea-root. The one portal is
+  // the notification stack (m05304): it sits in the frame's overlayLayer, whose
+  // z-index:20 stacking context painted it behind the composer.
+  assert.equal((client.match(/ReactDOM\.createPortal\(/g) || []).length, 1, 'only the toast stack leaves its slot')
+  assert.match(client, /ReactDOM\.createPortal\(stack, document\.body\)/)
 })
 
 test('the rc.2 surface contract: elevation instead of border plus shadow', () => {
@@ -752,7 +769,7 @@ test('host half is an ESM cordis plugin with argv-only git calls', () => {
   assert.match(host, /spawn\(gitBinary\(\), args, \{ cwd/)
   assert.doesNotMatch(host, /(^|[^.\w])exec\(/m, 'no shell exec')
   assert.doesNotMatch(host, /execSync\(|shell:\s*true/, 'no shell exec / shell:true')
-  assert.doesNotMatch(host, /from '(?!node:)/, 'host half may only import node: builtins')
+  assert.doesNotMatch(host, /from '(?!node:|\.\/)/, 'host half may only import node: builtins and its own modules')
 })
 
 test('host half keeps the destructive-confirm guards', () => {
@@ -903,7 +920,7 @@ test('the dock actions are wired on the native seat only', () => {
 
 test('the shipped dictionaries come from locale/*.json (m04501)', () => {
   // m04501 pulled both dictionaries out of client.js into locale/{zh,en}.json and
-  // put ONE tool in charge: utils/i18n.js reads the JSON and rewrites the two
+  // put ONE tool in charge: src/utils/i18n.js reads the JSON and rewrites the two
   // embedded blocks. The bundle cannot require a JSON file at runtime (see
   // @deepseek-ai/dsh-client-modules: a client bundle resolves only frozen
   // platform modules), so the copy is generated — never hand-edited. Equality is
@@ -926,14 +943,40 @@ test('the shipped dictionaries come from locale/*.json (m04501)', () => {
   assert.doesNotMatch(client, /\/\* locale: [a-z-]+ \*\//, 'the per-language inline dictionaries are gone')
   assert.match(client, /tag\.split\('-'\)\[0\] === 'zh' \? ZH : EN/, 'only zh resolves to zh; every other tag falls back to en')
   assert.match(client, /localeService\.register\(LOCALE_NS, \{ zh: ZH, en: EN \}\)/, 'both dictionaries publish under the plugin namespace')
-  const tool = read('utils/i18n.js')
+  const tool = read('src/utils/i18n.js')
   assert.match(tool, /export function sync\(/, 'the extractor owns the embedded blocks')
   assert.match(tool, /export function translate\(messages, key, params\)/, 'one translator resolves {name} placeholders')
   assert.match(tool, /export const SUPPORTED_LOCALES = \['en', 'zh'\]/, 'the shipped language list lives in one place')
   const pkg = JSON.parse(read('package.json'))
-  assert.equal(pkg.scripts['i18n'], 'node utils/i18n.js sync')
-  assert.equal(pkg.scripts['i18n:check'], 'node utils/i18n.js check')
-  assert.ok(pkg.files.includes('utils'), 'the extractor ships with the bundle')
+  assert.equal(pkg.scripts['i18n'], 'node src/utils/i18n.js sync')
+  assert.equal(pkg.scripts['i18n:check'], 'node src/utils/i18n.js check')
+  assert.ok(pkg.files.includes('src'), 'the extractor ships with the bundle (src is the code root)')
+})
+
+test('the client half is fragments plus one generated bundle (m05309)', () => {
+  // m05309 split the 10k-line src/client.js into ordered fragments so the client
+  // code reads by concern. The DSH client loader gives a plugin ONE module factory
+  // that resolves only frozen platform modules — fragments cannot import each
+  // other — so src/client.js stays the loaded file and the builder concatenates
+  // the fragments byte-for-byte. Equality keeps "edited a fragment" and "edited
+  // the bundle" from drifting apart.
+  const names = readdirSync(join(root, 'src', 'client')).filter((name) => name.endsWith('.js')).sort()
+  assert.deepEqual(names, [
+    '00-head.js', '10-locale.js', '20-core.js', '30-diff.js', '35-tree.js', '40-changes.js',
+    '50-panel.js', '60-styles.js', '70-composer.js', '80-dialogs.js', '85-preview.js', '90-app.js',
+  ], 'the fragment order is the file-name order')
+  const joined = names.map((name) => read('src/client/' + name)).join('')
+  assert.equal(joined, client, 'src/client.js must equal the concatenated fragments')
+  assert.match(client, /window\.__ModuleLoader__\.load\(\{/, 'the bundle keeps ONE module wrapper')
+  assert.equal((joined.match(/window\.__ModuleLoader__\.load\(\{/g) || []).length, 1, 'the wrapper lives in exactly one fragment')
+  const tool = read('src/utils/build-client.js')
+  assert.match(tool, /export function buildClient\(/, 'one builder owns the bundle')
+  assert.match(tool, /export const FRAGMENT_DIR = join\(ROOT, 'src', 'client'\)/)
+  assert.equal(pkg.scripts['build:client'], 'node src/utils/build-client.js')
+  assert.equal(pkg.scripts['build:check'], 'node src/utils/build-client.js --check')
+  const i18n = read('src/utils/i18n.js')
+  assert.match(i18n, /const LOCALE_FRAGMENT = join\(ROOT, 'src', 'client', '10-locale\.js'\)/, 'sync writes the locale fragment')
+  assert.match(i18n, /buildClient\(\)/, 'sync rebuilds the bundle, so the host never loads a stale copy')
 })
 
 test('the repo ships one README and no upstream bookkeeping', () => {
@@ -1017,9 +1060,9 @@ function paneCore() {
 
 test('pane sizes are stored per surface under one versioned key', () => {
   assert.match(client, /const PANES_KEY = 'dsh-git4idea\.panes\.v1'/)
-  assert.match(client, /localStorage\.getItem\(PANES_KEY\)/, 'reads must go through the versioned key')
-  assert.match(client, /localStorage\.setItem\(PANES_KEY, JSON\.stringify\(normalizePanes\(config\)\)\)/,
-    'writes must be normalised too, and wrapped in try/catch')
+  assert.match(client, /readStored\(PANES_KEY\)/, 'reads must go through the versioned key')
+  assert.match(client, /writeStored\(PANES_KEY, JSON\.stringify\(normalizePanes\(config\)\)\)/,
+    'writes must be normalised too')
 
   const core = paneCore()
   // Six buckets: the bottom workbench and the right sidebar must never share a
@@ -1189,7 +1232,7 @@ test('the settings surface is code defaults only (m04492)', () => {
   assert.match(client, /function readRailConfig\(\)/, 'the panel still reads its local rail order')
   assert.match(client, /function writeRailConfig\(config\)/, 'the panel still writes its local rail order')
   // The three former settings fall back to constants.
-  assert.match(client, /function readCommitSettings\(\) \{\n\s+return \{ model: '', reasoning: '', prompt: '' \}/, 'AI commit settings are the defaults')
+  assert.doesNotMatch(client, /readCommitSettings/, 'the AI commit settings shim is gone with the picker')
   assert.match(client, /function conversationImmersiveEnabled\(\) \{\n\s+return true/, 'the immersive default is a constant')
   assert.match(client, /function composerStatusEnabled\(\) \{\n\s+return true/, 'the composer pill default is a constant')
 })
@@ -1205,10 +1248,10 @@ test('the ai commit message keeps the model honest and the input bounded', async
   //  3. the user's own instructions are DATA in the user message, never the system
   //     prompt, and they are capped;
   //  4. the reply is cleaned of the wrappers models habitually add.
-  const start = host.indexOf('const COMMIT_MAX_PROMPT_CHARS')
-  const end = host.indexOf('const METHODS = {')
-  assert.ok(start >= 0 && end > start, 'the ai commit block must keep its bounds')
-  const block = host.slice(start, end)
+  const aiSource = read('src/server/services/ai.js')
+  const start = aiSource.indexOf('const COMMIT_MAX_PROMPT_CHARS')
+  assert.ok(start >= 0, 'the ai commit block must keep its bounds')
+  const block = aiSource.slice(start).replace(/^export /gm, '')
   const api = new Function(block + '\nreturn { collectCommitStream, commitInputOf, commitMessagesOf, cleanupCommitMessage, COMMIT_MAX_PROMPT_CHARS, COMMIT_TOTAL_BYTES, COMMIT_FILE_BYTES, COMMIT_FILE_LINES, COMMIT_MAX_FILES }')()
 
   // 1 — the finish is reported, whichever way the adapter failed.
@@ -1437,6 +1480,50 @@ test('the AI commit message carries the picked repository (multi-repo workspace)
   assert.match(pane, /base: base,/, 'Panel hands the repo identity down to ChangesPanel')
 })
 
+test('the commit box is the IDEA layout and the language picker replaces the quota hint (m01807)', () => {
+  const objectAt = (marker, name) => {
+    const start = client.indexOf(marker)
+    let depth = 0
+    for (let index = client.indexOf('{', start); index < client.length; index += 1) {
+      if (client[index] === '{') depth += 1
+      else if (client[index] === '}') {
+        depth -= 1
+        if (depth === 0) return new Function(client.slice(start, index + 1) + '\nreturn ' + name)()
+      }
+    }
+    throw new Error(marker + ' has no closing brace')
+  }
+  const dicts = { zh: objectAt('const ZH = {', 'ZH'), en: objectAt('const EN = {', 'EN') }
+  // 1. The message box is a fixed third of the left column, not a growing
+  //    textarea: two thirds of the column stay with the change list.
+  assert.match(cssRule('.git4idea-commit-layer-left .git4idea-commit-box'), /flex:0 0 33%/, 'the message box keeps one third')
+  assert.match(cssRule('.git4idea-commit-layer-left .git4idea-textarea'), /flex:1 1 auto/, 'the textarea fills that third')
+  assert.match(cssRule('.git4idea-commit-layer-left .git4idea-textarea'), /overflow-y:auto/, 'a long message scrolls inside the box')
+  assert.doesNotMatch(client, /messageRef/, 'the auto-grow effect is gone with the growing textarea')
+  // 2. Both commit buttons sit at the left edge.
+  assert.match(cssRule('.git4idea-commit-actions'), /justify-content:flex-start/, 'the commit buttons start at the left edge')
+  // 3. The shortcut hint is gone from the placeholder in every dictionary.
+  assert.equal(dicts.zh['changes.commitPlaceholder'], '提交信息', 'the Chinese placeholder carries no shortcut hint')
+  assert.equal(dicts.en['changes.commitPlaceholder'], 'Commit message', 'the English placeholder carries no shortcut hint')
+  // 4. The quota hint became a language picker: two options, default read from
+  //    the display locale, and the AI call carries the choice.
+  assert.doesNotMatch(client, /changes\.aiQuota/, 'the quota hint is deleted')
+  assert.match(client, /function defaultCommitLanguage\(\)/, 'the default follows the display locale')
+  assert.match(client, /let seenLocaleTag = 'en'/, 'the translator records the live tag')
+  assert.match(client, /seenLocaleTag = tag/, 'every translate call refreshes the tag')
+  assert.match(client, /E\('option', \{ value: 'zh' \}, t\('changes\.langZh'\)\)/, 'the picker offers Chinese')
+  assert.match(client, /E\('option', \{ value: 'en' \}, t\('changes\.langEn'\)\)/, 'the picker offers English')
+  assert.equal((client.match(/\blangSelect\b/g) || []).length, 3, 'one picker, drawn in both the compact and the full commit row')
+  for (const key of ['changes.language', 'changes.langZh', 'changes.langEn']) {
+    assert.ok(key in dicts.zh, key + ' exists in zh')
+    assert.ok(key in dicts.en, key + ' exists in en')
+  }
+  // 5. The one-sided diff crash: a run of additions or deletions only left the
+  //    deferred highlight empty, and both row renderers read spans.* anyway.
+  assert.match(client, /const spans = props\.spans === undefined \|\| props\.spans === null \? \{\} : props\.spans/,
+    'the split and unified rows default to no spans')
+})
+
 test('split + wrap rows share one source, and the preview carries a render boundary (issue #16)', () => {
   // The wrapped branch iterated hunkRows (per line: N dels + M adds + context)
   // but indexed into splitRows' output (paired runs: max(dels, adds) per run).
@@ -1447,12 +1534,23 @@ test('split + wrap rows share one source, and the preview carries a render bound
   // list it indexes, chosen by split; and a class-based RenderBoundary keeps
   // a future throw to one explanatory line instead of a blank pane.
   assert.ok(client.includes('split === true && wrap !== true'), 'the split/wrap branch must exist')
-  assert.match(client, /const rows = split === true \? paired : hunkRows\(hunk\)/,
-    'the wrapped branch derives its row list from the same switch it renders with')
-  const tail = client.slice(client.indexOf('const rows = split === true ? paired : hunkRows(hunk)'), client.indexOf('E(UnifiedLine, { key: at, row: row'))
-  assert.ok(tail.length > 0, 'the derived-rows block must sit before the unified row render')
-  assert.match(tail, /rows\.map\(\(row, at\) => split === true/, 'the mapped list is the derived one')
-  assert.doesNotMatch(tail, /paired\[at\]/, 'paired is never indexed by a foreign index again')
+  // m05306: every hunk builds one row list at the section level, chosen by
+  // split, and both the unified and the split renderer consume that list.
+  assert.match(client, /rows: split === true \? splitRows\(hunk\) : hunkRows\(hunk\)/,
+    'a hunk derives its row list from the same switch it renders with')
+  const tail = client.slice(client.indexOf('rows: split === true ? splitRows(hunk) : hunkRows(hunk)'), client.indexOf('E(UnifiedLine, { key: at, row: row'))
+  assert.ok(tail.length > 0, 'the derived-sections block must sit before the unified row render')
+  assert.match(tail, /rowWindow\(sections, shownRows\)\.map\(/, 'the mapped list comes from the window')
+  assert.match(tail, /section\.rows\.map\(\(row, at\) => split === true/, 'each section maps its own rows')
+  assert.doesNotMatch(client, /paired\[at\]/, 'no row list is indexed by a foreign index')
+  // m05306: a huge diff paints a first window and grows on scroll instead of
+  // blocking the main thread with the full row set.
+  assert.match(client, /const LINEDIFF_CHUNK_ROWS = 200/, 'the window step is 200 rows (m01807)')
+  assert.match(client, /const LINEDIFF_HIGHLIGHT_MAX = 1500/, 'very large diffs skip the colour pass')
+  assert.match(client, /function rowWindow\(sections, limit\)/, 'one windowing helper feeds both views')
+  assert.match(client, /onNeedMore: growRows/, 'the split columns ask for more rows')
+  assert.match(client, /node\.scrollTop \+ node\.clientHeight >= node\.scrollHeight - LINEDIFF_CHUNK_ROWS \* 2/,
+    'the scroll trigger grows the window near the bottom')
 
   // The pairing claim behind the fix, proven on the real functions: one del +
   // one add compresses to a single split row while hunkRows keeps two lines.
@@ -1482,6 +1580,16 @@ test('split + wrap rows share one source, and the preview carries a render bound
   assert.match(client, /E\(RenderBoundary, \{ message: t\('preview\.boundary'\) \}, E\(LineDiff, \{/,
     'the preview body renders LineDiff inside the boundary with a localized fallback')
   assert.match(cssRule('.git4idea-preview-boundary'), /var\(--dsw-alias-label-secondary\)/, 'the fallback line stays quiet, not alarm-red')
+
+  // m05305: a big diff felt stuck while scrolling. The card now paints plain
+  // rows first and the Shiki pass lands one task later, and the full-viewport
+  // backdrop blur (a re-sample per scroll frame) is gone from the scrim.
+  assert.doesNotMatch(client, /cut\.maps/, 'no hunk is highlighted inside render')
+  assert.match(client, /setHighlight\(\{ cut: cut, maps: cut\.hunks\.map/, 'the highlight pass is deferred one task')
+  assert.match(client, /const maps = highlight !== null && highlight\.cut === cut \? highlight\.maps : \[\]/,
+    'rows read the deferred maps, and default to none')
+  assert.match(client, /const set = highlights\[section\.position\]/, 'the split columns tolerate a hunk with no maps yet')
+  assert.doesNotMatch(cssRule('.git4idea-commit-overlay'), /backdrop-filter/, 'the scrim does not blur the whole viewport')
 })
 
 test('the remote branch tree folds by path like the local one (v0.19.9)', () => {
@@ -1513,7 +1621,6 @@ test('the remote branch tree folds by path like the local one (v0.19.9)', () => 
   // (%(refname:short) of refs/remotes/<remote>/HEAD collapses that way); the
   // host drops it before it ever becomes a row — otherwise it pollutes the
   // tree AND defeats the single-remote prefix strip above.
-  const host = read('src/index.js')
   assert.match(host, /\/\^refs\\\/remotes\\\/\[\^\/\]\+\\\/HEAD\$\/\.test\(parts\[0\]\) === false\) remote\.push\(entry\)/,
     'the host filters <remote>/HEAD before listing remote branches')
 })
@@ -1749,7 +1856,7 @@ test('long branch names cap at 220px and scroll only on hover, seamlessly (v0.19
 })
 
 
-test('panel model picker rides the official model directories (v0.21.0, issue #19)', () => {
+test('the AI commit message rides the session model route (v0.22.1, item 1)', () => {
   // Host: a blank session (no model route yet) no longer fails the panel
   // button — the first served provider/model becomes the route, the response
   // names it, and a served-empty catalog still refuses with a next step.
@@ -1758,44 +1865,20 @@ test('panel model picker rides the official model directories (v0.21.0, issue #1
   assert.match(host, /source: 'fallback'/, 'the fallback route names itself')
   assert.match(host, /'no-models'/, 'an empty catalog refuses with a next step')
   assert.doesNotMatch(host, /this session has no model route yet/, 'the old no-route text is gone')
-  // Client: the picker binds to the official modelDirectories resolver —
-  // soft-injected at apply time into a module ref (a bare ctx property read
-  // throws "without inject" on a real host: cordis gates EVERY property read
-  // behind an inject declaration), resolves the SESSION directory, subscribes,
-  // loads on mount, and every choice goes through directory.select — the same
-  // state the composer pill and /model write, so the three can never disagree.
-  // An older host (or a session with no binding) hides the picker instead of
-  // throwing.
-  assert.match(client, /function ModelRoutePicker\(/, 'the picker component exists')
-  assert.equal((client.match(/E\(ModelRoutePicker, \{ sessionId: props\.sessionId, t: t \}\)/g) || []).length, 2, 'both composer variants mount the picker')
-  assert.match(client, /ctx\.inject\(\['modelDirectories'\], \(mdCtx\) => \{/, 'the resolver arrives through a declared inject')
-  assert.match(client, /let modelDirectoriesRef = null/, 'the resolver ref starts hidden')
-  assert.match(client, /modelDirectorySubs\.add\(bump\)/, 'mounted pickers re-render when the inject lands')
-  assert.match(client, /const resolver = modelDirectoriesRef/, 'the picker reads the injected ref')
-  assert.match(client, /resolver\.directoryFor\(sessionId\)/, 'the picker resolves the session directory')
-  assert.match(client, /dir\.store\.subscribe\(\(\) => setState\(dir\.store\.getSnapshot\(\)\)\)/, 'the picker subscribes on dir.store after snapshotting')
-  assert.match(client, /directory\.load\(\)\.catch/, 'the catalog loads on mount without throwing')
-  assert.match(client, /void directory\.select\(selection\)/, 'choices go through directory.select')
-  assert.match(client, /ok !== true \|\| directory === null\) return null/, 'an unreachable service hides the picker')
-  // Two-level menu: model rows choose provider/model (effort rides the
-  // official default), effort rows keep the current route and follow the
-  // official effortChoices rule (a 'follow default' row exists exactly when
-  // the model has no provider default).
-  assert.match(client, /choose\(\{ provider: group\.id, model: model\.id \}\)/, 'model rows choose provider/model only')
-  assert.match(client, /choose\(\{ provider: current\.provider, model: current\.model, reasoningEffort: level\.effort \}\)/, 'effort rows keep the current route')
-  assert.match(client, /reasoning\.defaultEffort === undefined \? \[\{ key: 'provider-default', effort: undefined/, "a 'follow default' row exists only without a provider default")
-  assert.match(client, /setPane\('model'\)/, 'the menu drills into models')
-  assert.match(client, /setPane\('effort'\)/, 'the menu drills into reasoning')
-  // Outside close rides pointerdown in capture phase (the v0.19.2 lesson:
-  // the change list captures pointerdown for the rubber band).
-  assert.match(client, /document\.addEventListener\('pointerdown', close, true\)/, 'outside close is a capturing pointerdown')
-  // CSS: the menu reuses the pill menu card (.git4idea-cs-menu) and the trigger
-  // carries the picker-specific chrome.
-  assert.match(cssRule('.git4idea-mrp-trigger'), /max-width:220px/, 'the trigger cap exists')
-  assert.match(cssRule('.git4idea-mrp-menu'), /max-width:300px/, 'the menu narrows to the panel')
-  assert.match(cssRule('.git4idea-mrp-error'), /word-break:break-word/, 'errors wrap instead of overflowing')
-  // Dictionary: the six picker keys exist in every gate (21 × 6).
-  assert.equal((client.match(/'modelRoute\.[\w.]+':/g) || []).length, 12, 'the six picker keys exist in both dictionaries')
+  // Client: the plugin draws no model selector of its own (m05301). The
+  // composer's official selector is the only place a model is chosen, so the
+  // AI-write button sends no model, effort or prompt and the host route follows
+  // the SESSION. Every piece of the old picker is gone: the component, its
+  // model-directories inject, its CSS and its dictionary keys.
+  assert.doesNotMatch(client, /ModelRoutePicker/, 'the hand-drawn picker is deleted')
+  assert.doesNotMatch(client, /modelDirectoriesRef/, 'the model-directories inject is deleted')
+  assert.doesNotMatch(client, /git4idea-mrp/, 'the picker CSS is deleted')
+  assert.doesNotMatch(client, /modelRoute\./, 'the picker dictionary keys are deleted')
+  assert.doesNotMatch(client, /readCommitSettings/, 'the empty settings shim is deleted')
+  assert.match(client, /props\.request\('commit-message', Object\.assign\(\s*\{\},\s*props\.base === undefined \? \{ cwd: props\.cwd \} : props\.base,\s*\{ sessionId: props\.sessionId, language: commitLang \},/, 'the message rides the session route only; the language is the only extra')
+  assert.doesNotMatch(client, /model: settings\.model/, 'no model travels from the panel')
+  assert.doesNotMatch(client, /'commit-models'/, 'the dead catalog fetch is deleted')
+  assert.doesNotMatch(client, /'commit-efforts'/, 'the dead efforts fetch is deleted')
 })
 
 
@@ -1870,6 +1953,8 @@ test('the push dialog previews its commits and the file card floats (m02986)', (
   assert.match(client, /setSelected\(normalized\.commits\.length === 0 \? null : normalized\.commits\[0\]\.hash\)/, 'the newest commit opens selected')
   assert.match(client, /request\('commitDetail', Object\.assign\(\{\}, base, \{ hash: selected \}\)\)/)
   assert.match(client, /const openFile = \(file\) => \{/)
+  assert.match(client, /const commit = data === null \? null : \(data\.commits\.find\(\(item\) => item\.hash === selected\) \|\| null\)/,
+    'a hash that left the list degrades to "pick a commit" instead of throwing (m05303)')
   assert.match(client, /fileDialog\.set\(\{\n          hash: commit\.hash,/, 'a file double click floats the diff card')
   assert.match(client, /onDoubleClick: \(\) => \{ openFile\(file\) \}/)
   assert.match(client, /const canPush = data !== null && data\.detached === false && data\.remotes\.length > 0 && data\.commits\.length > 0 && busy === false/)
@@ -1879,17 +1964,18 @@ test('the push dialog previews its commits and the file card floats (m02986)', (
   assert.equal((client.match(/run: \(\) => openPushDialog\(\)/g) || []).length, 3, 'palette and both menus share one verb')
   assert.match(client, /if \(remoteReady !== true \|\| blocked === true\) return\n            openPushDialog\(\)/, 'the toolbar button runs the same verb')
   assert.match(client, /const openPushDialog = useCallback\(\(\) => \{/, 'the panel keeps one helper')
-  assert.match(client, /const \[pushOpen, setPushOpen\] = useState\(null\)/, 'the panel raises the push card in its own root (m03471)')
-  assert.match(client, /pushOpen === null \? null : E\(PushDialogBody, \{/, 'the card is plain panel state, so it cannot flash')
-  assert.match(client, /git4idea-commit-overlay-inline/, 'the in-panel card anchors to the panel root')
+  assert.match(client, /pushDialog\.set\(\{ cwd: cwd, repoRoot: repoRoot, sessionId: scopeObject\.sessionId \}\)/,
+    'the panel raises the same frame push card as the composer pill (m04920)')
+  assert.doesNotMatch(client, /const \[pushOpen, setPushOpen\] = useState\(null\)/, 'the panel keeps no second push surface')
+  assert.doesNotMatch(client, /git4idea-commit-overlay-inline/, 'the in-panel overlay variant is gone')
   assert.doesNotMatch(client, /setDialog\(\{ kind: 'push' \}\)/, 'no native confirm path is left for push')
 
   // Commit + push is two steps now: commit, close, then push. Both dialogs and
   // the composer pill follow the same order.
   const panelCommit = client.slice(client.indexOf("const result = await run('commit'"), client.indexOf("const result = await run('commit'") + 900)
   assert.match(panelCommit, /run\('commit', \{ message: message, amend: amend, paths: paths \}\)/, 'the commit run no longer pushes')
-  assert.ok(panelCommit.indexOf('setCommitOpen(false)') < panelCommit.indexOf('if (push === true) openPushDialog()'),
-    'the commit dialog closes before the push dialog opens')
+  assert.ok(panelCommit.indexOf("run('commit'") < panelCommit.indexOf('if (push === true) openPushDialog()'),
+    'the commit runs before the push dialog opens')
   assert.match(panelCommit, /(?:toastCenter\.push|pushToast)\(\{ text: t\('toast.committed'\)/, 'the commit result lands in the notifications')
   assert.match(client, /if \(push === true\) pushDialog\.set\(\{ cwd: entry\.cwd, repoRoot: entry\.repoRoot, sessionId: entry\.sessionId \}\)/)
   assert.match(client, /if \(overlaySeatReady === true\) \{[^}]*pushDialog\.set\(\{ sessionId: sessionId, cwd: cwd, repoRoot: repoRoot \}\)/,

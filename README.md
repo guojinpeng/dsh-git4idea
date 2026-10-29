@@ -44,24 +44,26 @@ dsh plugin --profile desktop add dsh-git4idea
 
 ## 文案（i18n）
 
-面板文案只有一个来源：`locale/zh.json` 与 `locale/en.json` 的 `messages`。客户端 bundle 在运行时不读文件（DSH 的客户端半只解析冻结的平台模块），所以这两份 JSON 会被内联进 `src/client.js` 的 `ZH` / `EN` 块。
+面板文案只有一个来源：`locale/zh.json` 与 `locale/en.json` 的 `messages`。客户端 bundle 在运行时不读文件（DSH 的客户端半只解析冻结的平台模块），所以这两份 JSON 会被内联进 `src/client/10-locale.js` 的 `ZH` / `EN` 块，再由构建脚本合成 `src/client.js`。
 
 改文案只改 JSON，然后同步内联副本：
 
 ```bash
-npm run i18n        # 用 locale/*.json 重写 client.js 里的内联块
+npm run i18n        # 用 locale/*.json 重写内联块，并重建 client.js
 npm run i18n:check  # 只校验内联块与 JSON 是否一致（不写文件）
 ```
 
-`utils/i18n.js` 是唯一的工具：读取语言文件、解析 `{name}` 占位、生成内联块。语种只有 `zh` 与 `en`，其它标签（`zh-CN`、`zh-TW` 之外的 `ja`、`de` 等）回落到 `en`。
+`src/utils/i18n.js` 是唯一的工具：读取语言文件、解析 `{name}` 占位、生成内联块。`src/utils/build-client.js` 只做一件事：按文件名顺序拼接 `src/client/*.js`，得到宿主加载的 `src/client.js`。语种只有 `zh` 与 `en`，其它标签（`zh-CN`、`zh-TW` 之外的 `ja`、`de` 等）回落到 `en`。
 
 ## 开发
 
-无构建：`src/index.js` 是宿主半（只 import `node:` 内置模块，git 调用永远是 argv 数组），`src/client.js` 是客户端半（单文件，保持 `window.__ModuleLoader__.load` 包装，只 require `react`）。
+`src/index.js` 是宿主半（只 import `node:` 内置模块，git 调用永远是 argv 数组）。客户端半拆成 `src/client/*.js` 片段（`00-head` … `90-app`，按文件名顺序拼接），由 `npm run build:client` 合成单文件 `src/client.js`。DSH 客户端一个插件只有一个模块工厂，片段之间没有 import，所以拼接结果必须与手写单文件一致；宿主仍只加载 `src/client.js`。
 
 ```bash
-npm test          # smoke + api + graph + repos
-npm run i18n      # 改完 locale/*.json 后同步 client.js 的内联块
+npm test            # smoke + api + graph + repos
+npm run build:client  # 改完 src/client/*.js 后重建 src/client.js
+npm run build:check   # 只校验 src/client.js 与片段是否一致
+npm run i18n          # 改完 locale/*.json 后同步内联块并重建
 npm run i18n:check
 ```
 

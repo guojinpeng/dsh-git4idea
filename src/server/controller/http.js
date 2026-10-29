@@ -1,0 +1,108 @@
+/**
+ * dsh-git4idea — controller / http (host half, plain JavaScript).
+ */
+
+import { logError } from './../core/home.js'
+import { PanelError, badRequest, messageOf } from './../core/errors.js'
+import { withRepoLock, WRITE_METHODS, lockKeyOf } from './../core/locks.js'
+import { METHODS } from './methods.js'
+
+
+export const ROUTE_PREFIX = '/dsh-git4idea/api'
+
+
+/* ============================== http plumbing ============================== */
+
+export function headerOf(req, name) {
+  const value = req.headers[name]
+  if (Array.isArray(value)) return value[0]
+  return value
+}
+
+
+/** Loopback authority, or a same-origin browser request (desktop shell / remote UI). */
+export function isTrusted(req) {
+  const host = headerOf(req, 'host')
+  if (host === undefined || host === '') return false
+  const hostname = host.replace(/^\[/, '').replace(/\]:\d+$/, '').replace(/:\d+$/, '')
+  if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1' || hostname === '0.0.0.0') return true
+  if (/^127\./.test(hostname)) return true
+  const site = headerOf(req, 'sec-fetch-site')
+  return site === 'same-origin' || site === 'same-site'
+}
+
+
+export function sendJson(res, status, body) {
+  const text = JSON.stringify(body)
+  res.writeHead(status, {
+    'content-type': 'application/json; charset=utf-8',
+    'cache-control': 'no-store',
+    'content-length': Buffer.byteLength(text),
+  })
+  res.end(text)
+}
+
+
+export function readJsonBody(req, limit = 1 << 20) {
+  return new Promise((resolve, reject) => {
+    const chunks = []
+    let size = 0
+    req.on('data', (chunk) => {
+      size += chunk.length
+      if (size > limit) {
+        reject(new PanelError('too-large', 'request body is too large', 413))
+        req.destroy()
+        return
+      }
+      chunks.push(chunk)
+    })
+    req.on('end', () => {
+      const raw = Buffer.concat(chunks).toString('utf8')
+      if (raw.trim() === '') { resolve({}); return }
+      try {
+        const parsed = JSON.parse(raw)
+        resolve(parsed !== null && typeof parsed === 'object' ? parsed : {})
+      } catch {
+        reject(badRequest('request body must be JSON'))
+      }
+    })
+    req.on('error', (error) => { reject(new PanelError('transport', messageOf(error), 500)) })
+  })
+}
+
+
+export async function handle(req, res) {
+  if (!isTrusted(req)) {
+    sendJson(res, 403, { ok: false, error: { code: 'forbidden', message: 'forbidden' } })
+    return
+  }
+  if (req.method !== 'POST') {
+    sendJson(res, 405, { ok: false, error: { code: 'method-error', message: 'POST required' } })
+    return
+  }
+  const pathname = new URL(req.url === undefined ? '/' : req.url, 'http://dsh.internal').pathname
+  const method = pathname.startsWith(ROUTE_PREFIX + '/') ? pathname.slice(ROUTE_PREFIX.length + 1) : ''
+  const handler = Object.prototype.hasOwnProperty.call(METHODS, method) ? METHODS[method] : undefined
+  if (handler === undefined || method.includes('/')) {
+    sendJson(res, 404, { ok: false, error: { code: 'not-found', message: 'unknown method "' + method + '"' } })
+    return
+  }
+  try {
+    const payload = await readJsonBody(req)
+    const data = WRITE_METHODS.has(method)
+      ? await withRepoLock(lockKeyOf(payload), () => handler(payload))
+      : await handler(payload)
+    sendJson(res, 200, { ok: true, data: data })
+  } catch (error) {
+    if (error instanceof PanelError) {
+      /* A rejected argument is the caller's mistake, not a fault to hunt; only
+         a server-side status earns a line in the error log. */
+      if (error.status >= 500) logError('api:' + method, error)
+      sendJson(res, error.status, { ok: false, error: { code: error.code, message: error.message } })
+      return
+    }
+    logError('api:' + method, error)
+    const message = messageOf(error)
+    sendJson(res, 500, { ok: false, error: { code: 'internal', message } })
+  }
+}

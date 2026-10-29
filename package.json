@@ -16,7 +16,8 @@
     "./client": "./src/client.js",
     "./package.json": "./package.json",
     "./locale/*.json": "./locale/*.json",
-    "./utils/i18n.js": "./utils/i18n.js"
+    "./src/utils/i18n.js": "./src/utils/i18n.js",
+    "./src/utils/build-client.js": "./src/utils/build-client.js"
   },
   "engines": {
     "node": ">=18",
@@ -39,9 +40,7 @@
   "files": [
     "icon.svg",
     "locale",
-    "utils",
-    "src/index.js",
-    "src/client.js",
+    "src",
     "cordis.patch.yml",
     "dsh.plugin.json",
     "README.md",
@@ -50,8 +49,10 @@
   ],
   "scripts": {
     "test": "node --test tests/smoke.mjs tests/api.test.mjs tests/graph.test.mjs tests/repos.test.mjs",
-    "i18n": "node utils/i18n.js sync",
-    "i18n:check": "node utils/i18n.js check",
+    "build:client": "node src/utils/build-client.js",
+    "build:check": "node src/utils/build-client.js --check",
+    "i18n": "node src/utils/i18n.js sync",
+    "i18n:check": "node src/utils/i18n.js check",
     "version": "node -e \"const fs=require('fs');const m=JSON.parse(fs.readFileSync('dsh.plugin.json','utf8'));const v=JSON.parse(fs.readFileSync('package.json','utf8')).version;m.version=v;fs.writeFileSync('dsh.plugin.json',JSON.stringify(m,null,2)+'\\n')\" && git add dsh.plugin.json"
   },
   "keywords": [

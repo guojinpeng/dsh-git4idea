@@ -21,6 +21,11 @@ window.__ModuleLoader__.load({
   id: 'dsh-git4idea',
   factory: (require) => {
     const React = require('react')
+    /* The frame's overlay slot lives inside .overlayLayer (z-index 20, a stacking
+       context), so a child can never paint above the page's own layers. The
+       notification stack escapes through a portal to document.body. */
+    let ReactDOM = null
+    try { ReactDOM = require('react-dom') } catch (error) { void ReactDOM }
     const E = React.createElement
     const Fragment = React.Fragment
     const useState = React.useState
@@ -57,6 +62,46 @@ window.__ModuleLoader__.load({
        the host half registered at its upstream path. An origin-absolute base
        would escape the mount and 404 behind any strict proxy. */
     const API_BASE = 'dsh-git4idea/api'
+
+    /* ---- panel settings home (m04919) ----
+       The host keeps the panel's settings in <home>/.dsh/guojinpeng/
+       dsh-git4idea/config/settings.json, not in browser storage: a new browser,
+       an update and a second machine then show the same rail, pane sizes,
+       starred branches and last repository. The file is read ONCE, before the
+       factory returns, with a synchronous request: the first paint already has
+       the real values, so no seat flashes a default size and no star pops in
+       late. A missing file, an unauthenticated proxy or a blocked browser all
+       fall back to defaults — the panel keeps working, it just forgets. */
+    const panelSettings = new Map()
+    let panelSettingsLoaded = false
+    function loadPanelSettings() {
+      if (panelSettingsLoaded === true) return
+      panelSettingsLoaded = true
+      if (typeof XMLHttpRequest !== 'function') return
+      try {
+        const xhr = new XMLHttpRequest()
+        xhr.open('POST', API_BASE + '/config-get', false)
+        xhr.setRequestHeader('content-type', 'application/json')
+        xhr.send('{}')
+        const body = JSON.parse(xhr.responseText)
+        if (body === null || typeof body !== 'object' || body.ok !== true) return
+        const data = body.data
+        if (data === null || typeof data !== 'object') return
+        const state = data.state
+        if (state === null || typeof state !== 'object') return
+        for (const key of Object.keys(state)) {
+          if (typeof state[key] === 'string') panelSettings.set(key, state[key])
+        }
+      } catch (error) { void error }
+    }
+    function readStored(key) {
+      const value = panelSettings.get(key)
+      return typeof value === 'string' ? value : null
+    }
+    function writeStored(key, value) {
+      panelSettings.set(key, value)
+      void request('config-set', { key: key, value: value }).catch(() => undefined)
+    }
     /* The bundle's package name: the key the Plugins page uses for a bundle's own
        page and its `plugins.bundle.config` slot. */
     /* The namespace this plugin's dictionaries are published under in the DSH
@@ -124,7 +169,7 @@ window.__ModuleLoader__.load({
     /* ============================== i18n ============================== */
 
     /* i18n:generated:zh — locale/zh.json is the source of truth;
-       regenerate with `node utils/i18n.js sync`. */
+       regenerate with `node src/utils/i18n.js sync`. */
     const ZH = {
       'title': 'Git',
       'description': 'IDE 级 Git 面板:分支树 / 提交图谱 / 变更与提交',
@@ -163,9 +208,10 @@ window.__ModuleLoader__.load({
       'changes.untracked': '未跟踪',
       'changes.conflicted': '冲突',
       'changes.empty': '没有未提交的变更',
-      'changes.commitPlaceholder': '提交信息(Ctrl+Enter 提交)',
+      'changes.commitPlaceholder': '提交信息',
       'changes.commit': '提交',
-      'changes.amend': '修补',
+      'changes.amend': '修正',
+      'changes.diffHint': '选择左侧文件以预览差异',
       'changes.stageAll': '全部暂存',
       'selection.count': '已选 {n} 项',
       'selection.copied': '已复制 {n} 项',
@@ -336,12 +382,6 @@ window.__ModuleLoader__.load({
       'rail.more': '更多操作',
       'composer.branchHint': '切换分支',
       'composer.detached': 'HEAD(游离)',
-      'modelRoute.pick': '选择模型',
-      'modelRoute.trigger': 'AI 提交信息模型',
-      'modelRoute.modelRow': '模型',
-      'modelRoute.effortRow': '思考',
-      'modelRoute.effortDefault': '跟随默认',
-      'modelRoute.empty': '暂无可用模型',
       'composer.inWorktree': '已被其他工作树签出',
       'composer.busy': 'Git 操作进行中…',
       'preview.openFile': '打开文件预览',
@@ -358,9 +398,12 @@ window.__ModuleLoader__.load({
       'preview.title': 'Git 预览',
       'preview.hint': '点击文件或提交的「显示差异」,差异会在侧边栏这里打开。',
       'preview.boundary': '预览渲染出错——请重载页面,或反馈这个问题。',
+      'toast.dialogFailed': '弹窗渲染出错,已关闭,请重试。',
       'changes.aiWrite': 'AI 写提交信息',
       'changes.aiBusy': '正在生成…',
-      'changes.aiQuota': '会消耗你的额度',
+      'changes.language': '生成语言',
+      'changes.langZh': '中文',
+      'changes.langEn': 'English',
       'changes.aiOverwriteTitle': '覆盖当前草稿?',
       'changes.aiOverwriteText': 'AI 生成的内容会替换你已经输入的提交信息(可以撤销)。',
       'changes.aiUndo': '撤销,恢复我的草稿',
@@ -443,7 +486,7 @@ window.__ModuleLoader__.load({
     /* /i18n:generated:zh */
 
     /* i18n:generated:en — locale/en.json is the source of truth;
-       regenerate with `node utils/i18n.js sync`. */
+       regenerate with `node src/utils/i18n.js sync`. */
     const EN = {
       'title': 'Git',
       'description': 'IDE-grade Git panel: branch tree / commit graph / changes',
@@ -482,9 +525,10 @@ window.__ModuleLoader__.load({
       'changes.untracked': 'Untracked',
       'changes.conflicted': 'Conflicts',
       'changes.empty': 'No pending changes',
-      'changes.commitPlaceholder': 'Commit message (Ctrl+Enter)',
+      'changes.commitPlaceholder': 'Commit message',
       'changes.commit': 'Commit',
       'changes.amend': 'Amend',
+      'changes.diffHint': 'Select a file to preview its diff',
       'changes.stageAll': 'Stage all',
       'selection.count': '{n} selected',
       'selection.copied': 'Copied {n} item(s)',
@@ -537,7 +581,7 @@ window.__ModuleLoader__.load({
       'action.rebaseCurrentOnto': 'Rebase current branch onto this',
       'action.compare': 'Compare with current branch',
       'action.update': 'Update (fetch)',
-      'action.updateBranch': '更新',
+      'action.updateBranch': 'Update branch',
       'action.push': 'Push',
       'action.newTag': 'New tag...',
       'action.cherryPick': 'Cherry-pick',
@@ -655,12 +699,6 @@ window.__ModuleLoader__.load({
       'rail.more': 'More actions',
       'composer.branchHint': 'Switch branch',
       'composer.detached': 'HEAD (detached)',
-      'modelRoute.pick': 'Pick a model',
-      'modelRoute.trigger': 'AI commit message model',
-      'modelRoute.modelRow': 'Model',
-      'modelRoute.effortRow': 'Reasoning',
-      'modelRoute.effortDefault': 'Follow default',
-      'modelRoute.empty': 'No models available',
       'composer.inWorktree': 'Checked out in another worktree',
       'composer.busy': 'Git operation in progress…',
       'preview.openFile': 'Open in the file preview',
@@ -677,9 +715,12 @@ window.__ModuleLoader__.load({
       'preview.title': 'Git Preview',
       'preview.hint': 'Click “Show diff” on a file or commit — the diff opens here in the sidebar.',
       'preview.boundary': 'The preview failed to render — reload the page, or report an issue.',
+      'toast.dialogFailed': 'The dialog failed to render. Close and retry.',
       'changes.aiWrite': 'Write with AI',
       'changes.aiBusy': 'Writing…',
-      'changes.aiQuota': 'Uses your own quota',
+      'changes.language': 'Message language',
+      'changes.langZh': '中文',
+      'changes.langEn': 'English',
       'changes.aiOverwriteTitle': 'Replace the current draft?',
       'changes.aiOverwriteText': 'The AI text will replace the commit message you typed (you can undo it).',
       'changes.aiUndo': 'Undo, bring my draft back',
@@ -751,8 +792,8 @@ window.__ModuleLoader__.load({
       'push.hint': 'Double-click a file to see its change',
       'toast.committed': 'Committed',
       'toast.pushed': 'Pushed {n} commits to {target}',
-      'toast.branchUpdated': '已更新 {name}',
-      'toast.branchPushed': '已推送 {name}',
+      'toast.branchUpdated': 'Updated {name}',
+      'toast.branchPushed': 'Pushed {name}',
       'delete.confirm': 'Delete branch {name}? A toast will offer to bring it back (git still refuses unmerged branches).',
       'discard.confirm': 'Discard changes in {path}? The working-tree content is overwritten — a toast will offer to bring it back.',
       'resetHard.confirm': 'Hard reset to {hash}? Uncommitted changes are lost.',
@@ -763,7 +804,7 @@ window.__ModuleLoader__.load({
 
 
     /* Two languages ship (m04501): locale/zh.json and locale/en.json own the
-       copy, utils/i18n.js resolves the tag at authoring time and the generated
+       copy, src/utils/i18n.js resolves the tag at authoring time and the generated
        blocks above carry the result into the bundle. Any zh-* tag reads the
        Chinese table; everything else reads English, which is key-complete by
        design, so an unsupported language never shows a raw key. */
@@ -802,11 +843,20 @@ window.__ModuleLoader__.load({
        it was picked for, so a language switch costs one string compare per
        string. Falling back to EN — which is kept key-complete on purpose —
        means an unsupported language shows English, never a raw key. */
+    /* m05308: the language the last translated string came from. The commit
+       message language defaults to the DSH display language, and the panel
+       already asks the translator for a string on every paint. */
+    let seenLocaleTag = 'en'
+    function defaultCommitLanguage() {
+      return String(seenLocaleTag === null || seenLocaleTag === undefined ? '' : seenLocaleTag).toLowerCase().indexOf('zh') === 0 ? 'zh' : 'en'
+    }
+
     function translatorOf(ctx) {
       let cachedTag = null
       let cachedDict = null
       return (key) => {
         const tag = activeLocaleOf(ctx)
+        seenLocaleTag = tag
         if (tag !== cachedTag) { cachedTag = tag; cachedDict = dictionaryFor(tag) }
         if (hasOwnKey(cachedDict, key)) return cachedDict[key]
         return hasOwnKey(EN, key) ? EN[key] : key
@@ -949,6 +999,31 @@ window.__ModuleLoader__.load({
         throw failure
       }
       return body.data
+    }
+
+    /* Every failure the panel cannot fix itself is copied to the host's error
+       log (m04918), so a user report can be read from one file instead of a
+       console that is already gone. Best effort: a failed report is dropped. */
+    function reportClientError(scope, error) {
+      try {
+        const message = error instanceof Error ? error.message : String(error)
+        const stack = error instanceof Error && typeof error.stack === 'string' ? error.stack : ''
+        void request('client-error', { scope: scope, message: message, stack: stack }).catch(() => undefined)
+      } catch (_) { /* reporting must never throw */ }
+    }
+    /* Window-level faults (a throw outside React, an unhandled promise) reach
+       the same file. The listeners attach once per page load. */
+    let clientErrorHooked = false
+    function installClientErrorHook() {
+      if (clientErrorHooked === true) return
+      clientErrorHooked = true
+      window.addEventListener('error', (event) => {
+        const error = event.error === undefined || event.error === null ? event.message : event.error
+        reportClientError('window', error)
+      })
+      window.addEventListener('unhandledrejection', (event) => {
+        reportClientError('promise', event.reason)
+      })
     }
 
     /* ============================== first-paint cache ============================== */
@@ -1197,14 +1272,14 @@ window.__ModuleLoader__.load({
 
     /* ---- tree UI state (v0.13.1): the session-scoped seats remount on every
        session switch, and component state died with them — branch sections
-       snapped back to defaults and folders re-folded. One localStorage home,
+       snapped back to defaults and folders re-folded. One settings file home,
        GLOBAL by design: which sections you keep folded is a habit, not a
        property of the repository. ---- */
     const TREE_KEY = 'dsh-git4idea.tree.v1'
 
     function readTreeState() {
       try {
-        const raw = window.localStorage.getItem(TREE_KEY)
+        const raw = readStored(TREE_KEY)
         if (raw === null || raw === '') return null
         const parsed = JSON.parse(raw)
         return parsed !== null && typeof parsed === 'object' ? parsed : null
@@ -1213,7 +1288,7 @@ window.__ModuleLoader__.load({
     }
 
     function writeTreeState(state) {
-      try { window.localStorage.setItem(TREE_KEY, JSON.stringify(state)) } catch (error) { void error }
+      writeStored(TREE_KEY, JSON.stringify(state))
     }
 
     function treeSectionDefaults() {
@@ -1227,51 +1302,9 @@ window.__ModuleLoader__.load({
       return Object.assign(treeSectionDefaults(), sections)
     }
 
-    /* ---- ai commit pickers (issue #7): the model catalog and per-model
-       reasoning efforts, served by the host's commit-models / commit-efforts
-       routes. Cached for a short window so the settings card can mount twice
-       without asking twice; a failed or empty lookup degrades the row to its
-       plain text field (the hand-typed value keeps working: routing accepts
-       unlisted ids), never to an error. ---- */
-    const PICKER_TTL_MS = 30_000
-    let commitCatalogCache = null
-    let commitCatalogFlight = null
-    const commitEffortsCache = new Map()
-
-    function pickerProvidersOf(catalog) {
-      if (catalog === null || typeof catalog !== 'object' || !Array.isArray(catalog.providers)) return null
-      return catalog.providers
-    }
-
-    async function fetchCommitCatalog() {
-      if (commitCatalogCache !== null && Date.now() - commitCatalogCache.at < PICKER_TTL_MS) {
-        return pickerProvidersOf(commitCatalogCache.value)
-      }
-      if (commitCatalogFlight !== null) return commitCatalogFlight
-      commitCatalogFlight = request('commit-models', {})
-        .then(
-          (value) => {
-            commitCatalogCache = { at: Date.now(), value: value }
-            return pickerProvidersOf(value)
-          },
-          () => null,
-        )
-      commitCatalogFlight.then(() => { commitCatalogFlight = null }, () => { commitCatalogFlight = null })
-      return commitCatalogFlight
-      return commitCatalogFlight
-    }
-
-    async function fetchCommitEfforts(model) {
-      const hit = commitEffortsCache.get(model)
-      if (hit !== undefined && Date.now() - hit.at < PICKER_TTL_MS) return hit.value
-      const value = await request('commit-efforts', { model: model })
-      commitEffortsCache.set(model, { at: Date.now(), value: value })
-      return value
-    }
-
     function readRememberedRepo(sessionId) {
       try {
-        const raw = window.localStorage.getItem(REPO_KEY)
+        const raw = readStored(REPO_KEY)
         if (raw === null || raw === '') return undefined
         const parsed = JSON.parse(raw)
         if (parsed === null || typeof parsed !== 'object') return undefined
@@ -1283,11 +1316,11 @@ window.__ModuleLoader__.load({
 
     function rememberRepo(sessionId, repoPath) {
       try {
-        const raw = window.localStorage.getItem(REPO_KEY)
+        const raw = readStored(REPO_KEY)
         const parsed = raw === null || raw === '' ? {} : JSON.parse(raw)
         const next = parsed !== null && typeof parsed === 'object' ? parsed : {}
         next[sessionId] = repoPath
-        window.localStorage.setItem(REPO_KEY, JSON.stringify(next))
+        writeStored(REPO_KEY, JSON.stringify(next))
       } catch (error) { void error }
     }
 
@@ -1295,7 +1328,7 @@ window.__ModuleLoader__.load({
 
     function readFavorites(repoPath) {
       try {
-        const raw = window.localStorage.getItem(FAV_KEY)
+        const raw = readStored(FAV_KEY)
         if (raw === null || raw === '') return []
         const parsed = JSON.parse(raw)
         if (parsed === null || typeof parsed !== 'object') return []
@@ -1309,11 +1342,11 @@ window.__ModuleLoader__.load({
       const current = readFavorites(repoPath)
       const next = current.indexOf(branch) >= 0 ? current.filter((entry) => entry !== branch) : current.concat([branch])
       try {
-        const raw = window.localStorage.getItem(FAV_KEY)
+        const raw = readStored(FAV_KEY)
         const parsed = raw === null || raw === '' ? {} : JSON.parse(raw)
         const all = parsed !== null && typeof parsed === 'object' ? parsed : {}
         all[repoPath] = next
-        window.localStorage.setItem(FAV_KEY, JSON.stringify(all))
+        writeStored(FAV_KEY, JSON.stringify(all))
       } catch (error) { void error }
       return next
     }
@@ -1363,11 +1396,6 @@ window.__ModuleLoader__.load({
        carried comes from the constants below, and the rail's own arrangement
        stays where the panel editor has always kept it. */
 
-    /* The AI commit message follows the session's own route. */
-    function readCommitSettings() {
-      return { model: '', reasoning: '', prompt: '' }
-    }
-
     /* The conversation view fills the whole height — its only placement. */
     function conversationImmersiveEnabled() {
       return true
@@ -1375,7 +1403,7 @@ window.__ModuleLoader__.load({
 
     function readRailConfig() {
       try {
-        const raw = window.localStorage.getItem(RAIL_KEY)
+        const raw = readStored(RAIL_KEY)
         if (raw === null || raw === '') return normalizeRail(null)
         return normalizeRail(JSON.parse(raw))
       } catch (error) { void error }
@@ -1383,7 +1411,7 @@ window.__ModuleLoader__.load({
     }
 
     function writeRailConfig(config) {
-      try { window.localStorage.setItem(RAIL_KEY, JSON.stringify(config)) } catch (error) { void error }
+      writeStored(RAIL_KEY, JSON.stringify(config))
     }
 
     /* ============================== pane sizes ============================== */
@@ -1599,7 +1627,7 @@ window.__ModuleLoader__.load({
 
     function readPanes() {
       try {
-        const raw = window.localStorage.getItem(PANES_KEY)
+        const raw = readStored(PANES_KEY)
         if (raw === null || raw === '') return normalizePanes(null)
         return normalizePanes(JSON.parse(raw))
       } catch (error) { void error }
@@ -1607,7 +1635,7 @@ window.__ModuleLoader__.load({
     }
 
     function writePanes(config) {
-      try { window.localStorage.setItem(PANES_KEY, JSON.stringify(normalizePanes(config))) } catch (error) { void error }
+      writeStored(PANES_KEY, JSON.stringify(normalizePanes(config)))
     }
 
     /* ============================== dock actions ============================== */
@@ -2512,6 +2540,25 @@ window.__ModuleLoader__.load({
 
     /* The hunks to draw, cut at LINEDIFF_MAX_LINES lines in total. */
     const LINEDIFF_MAX_LINES = 5000
+    /* m05306: a 5000-line diff mounted every row in one commit, which froze
+       the page for seconds. The body now draws LINEDIFF_CHUNK_ROWS rows and
+       appends the next chunk when the reader nears the bottom. Very large
+       diffs also skip the Shiki pass: the colours are not worth a second
+       freeze on a WASM grammar walking 5000 lines. */
+    const LINEDIFF_CHUNK_ROWS = 200
+    const LINEDIFF_HIGHLIGHT_MAX = 1500
+    /* The first `limit` rows of the whole file, keeping each hunk's index so
+       the deferred highlight maps still line up (they are indexed by hunk). */
+    function rowWindow(sections, limit) {
+      const out = []
+      let left = limit
+      sections.forEach((section, position) => {
+        if (left <= 0) return
+        out.push({ position: position, header: section.header, rows: section.rows.slice(0, left) })
+        left -= section.rows.length
+      })
+      return out
+    }
     function renderedHunks(hunks) {
       let budget = LINEDIFF_MAX_LINES
       const kept = []
@@ -2551,12 +2598,12 @@ window.__ModuleLoader__.load({
       return { old: hunkSideSpans(rows, 'old', highlighter), new: hunkSideSpans(rows, 'new', highlighter) }
     }
 
-    /* split/wrap preferences are habits, not tab state — one localStorage
+    /* split/wrap preferences are habits, not tab state — one settings file
        home, the same policy as the tree folds. */
     const LINEDIFF_KEY = 'dsh-git4idea.linediff.v1'
     function readLineDiffPrefs() {
       try {
-        const raw = window.localStorage.getItem(LINEDIFF_KEY)
+        const raw = readStored(LINEDIFF_KEY)
         const parsed = raw === null ? null : JSON.parse(raw)
         return parsed !== null && typeof parsed === 'object'
           ? { split: parsed.split === true, wrap: parsed.wrap === true }
@@ -2565,7 +2612,7 @@ window.__ModuleLoader__.load({
       return { split: false, wrap: false }
     }
     function writeLineDiffPrefs(prefs) {
-      try { window.localStorage.setItem(LINEDIFF_KEY, JSON.stringify(prefs)) } catch (error) { void error }
+      writeStored(LINEDIFF_KEY, JSON.stringify(prefs))
     }
 
     /* The seed blocks the official review uses, resolved once. Every consumer
@@ -2587,7 +2634,11 @@ window.__ModuleLoader__.load({
     /* The unified row: old number, new number, sign, text (FileDiff's .line). */
     function UnifiedLine(props) {
       const row = props.row
-      const spans = props.spans
+      /* m05308: the colours land one task after the rows, so the first frame
+         has no maps at all. Reading spans.new then closed the card with
+         "Cannot read properties of undefined (reading 'new')" — the one-sided
+         diff the owner could never open. Empty maps mean plain text. */
+      const spans = props.spans === undefined || props.spans === null ? {} : props.spans
       return E('div', { className: 'git4idea-lf-line git4idea-lf-' + row.kind, 'data-diff-line': row.kind },
         E('span', { className: 'git4idea-lf-number' }, row.old === undefined ? '' : String(row.old)),
         E('span', { className: 'git4idea-lf-number' }, row.new === undefined ? '' : String(row.new)),
@@ -2606,7 +2657,11 @@ window.__ModuleLoader__.load({
     /* The wrapped split row: two cells, each its own number + text. */
     function SplitLine(props) {
       const row = props.row
-      const spans = props.spans
+      /* m05306: the highlight pass lands one task after the rows, so `spans`
+         is undefined on the first frame. Reading spans.old at 2627 threw
+         "Cannot read properties of undefined (reading 'old')" and closed the
+         card in split mode. Empty maps mean plain text, never a crash. */
+      const spans = props.spans === undefined || props.spans === null ? {} : props.spans
       const kind = row.left !== undefined && row.left.kind === 'del' ? 'del' : row.right !== undefined && row.right.kind === 'add' ? 'add' : 'context'
       return E('div', { className: 'git4idea-lf-splitLine', 'data-diff-line': kind },
         E('span', { className: 'git4idea-lf-cell ' + (row.left === undefined ? 'git4idea-lf-empty' : 'git4idea-lf-' + row.left.kind) },
@@ -2620,24 +2675,27 @@ window.__ModuleLoader__.load({
     /* The no-wrap split: two columns that scroll together (FileDiff's
        SplitColumns). The sync mirrors the source's offset-record loop. */
     function SplitColumns(props) {
-      const hunks = props.hunks
+      const sections = props.sections
       const highlights = props.highlights
-      const paired = useMemo(() => hunks.map((hunk) => ({ header: hunkHeader(hunk), rows: splitRows(hunk) })), [hunks])
       const leftRef = useRef(null)
       const rightRef = useRef(null)
       const offsets = useRef({ left: { x: 0, y: 0 }, right: { x: 0, y: 0 } })
       const follow = (side) => (event) => {
+        const node = event.currentTarget
         const peer = side === 'left' ? rightRef : leftRef
         const other = peer.current
-        if (other === null) return
-        for (const axis of ['scrollLeft', 'scrollTop']) {
-          const value = event.currentTarget[axis]
-          const key = axis === 'scrollLeft' ? 'x' : 'y'
-          if (offsets.current[side][key] === value) continue
-          offsets.current[side][key] = value
-          other[axis] = value
-          offsets.current[side === 'left' ? 'right' : 'left'][key] = other[axis]
+        if (other !== null) {
+          for (const axis of ['scrollLeft', 'scrollTop']) {
+            const value = node[axis]
+            const key = axis === 'scrollLeft' ? 'x' : 'y'
+            if (offsets.current[side][key] === value) continue
+            offsets.current[side][key] = value
+            other[axis] = value
+            offsets.current[side === 'left' ? 'right' : 'left'][key] = other[axis]
+          }
         }
+        /* m05306: scroll loading in split mode — either column grows both. */
+        if (typeof props.onNeedMore === 'function' && node.scrollTop + node.clientHeight >= node.scrollHeight - LINEDIFF_CHUNK_ROWS * 2) props.onNeedMore()
       }
       return E('div', { className: 'git4idea-lf-columns' },
         ['left', 'right'].map((side) => E('div', {
@@ -2646,11 +2704,14 @@ window.__ModuleLoader__.load({
           'data-diff-side': side,
           ref: side === 'left' ? leftRef : rightRef,
           onScroll: follow(side),
-        }, paired.map((hunk, position) => E('section', { key: position, className: 'git4idea-lf-hunk' },
-          E('div', { className: 'git4idea-lf-hunkHeader', 'data-diff-hunk-header': '' }, hunk.header),
-          hunk.rows.map((row, at) => {
+        }, rowWindow(sections, props.shown).map((section) => E('section', { key: section.position, className: 'git4idea-lf-hunk' },
+          E('div', { className: 'git4idea-lf-hunkHeader', 'data-diff-hunk-header': '' }, section.header),
+          section.rows.map((row, at) => {
             const cell = row[side]
-            const spans = cell === undefined ? undefined : highlights[position][side === 'left' ? 'old' : 'new']
+            /* m05305: the colours arrive one task after the rows, so a hunk can
+               still have no highlight set here. */
+            const set = highlights[section.position]
+            const spans = cell === undefined || set === undefined ? undefined : set[side === 'left' ? 'old' : 'new']
             return E('div', {
               key: at,
               className: 'git4idea-lf-sideLine ' + (cell === undefined ? 'git4idea-lf-empty' : 'git4idea-lf-' + cell.kind),
@@ -2694,9 +2755,16 @@ window.__ModuleLoader__.load({
       }
       componentDidCatch(error) {
         try { console.error('[dsh-git4idea] preview render failed:', error) } catch (_) { /* diagnostics must never rethrow */ }
+        reportClientError('preview', error)
+        if (typeof this.props.onError === 'function') {
+          try { this.props.onError(error) } catch (_) { /* the report must never rethrow */ }
+        }
       }
       render() {
         if (this.state.failed === true) {
+          /* m04914: a card that guards a whole dialog reports through a toast
+             instead of drawing a bar at the top of the page. */
+          if (this.props.silent === true) return null
           return E('div', { className: 'git4idea-preview-boundary' },
             E('span', { className: 'git4idea-preview-boundary-text' }, this.props.message),
             this.props.onClose === undefined ? null : E('button', {
@@ -2723,15 +2791,48 @@ window.__ModuleLoader__.load({
       const language = useMemo(() => (languageForPathSeed === null || file === undefined || file.path === '') ? undefined : languageForPathSeed(file.path), [file])
       const highlighter = useCodeHighlighterSeed === null ? undefined : useCodeHighlighterSeed(language)
       const cut = useMemo(() => {
-        if (file === undefined) return { hunks: [], truncated: false, maps: [] }
-        const result = renderedHunks(file.hunks)
-        return { hunks: result.hunks, truncated: result.truncated, maps: result.hunks.map((hunk) => hunkHighlights(hunk, highlighter)) }
-      }, [file, highlighter])
+        if (file === undefined) return { hunks: [], truncated: false }
+        return renderedHunks(file.hunks)
+      }, [file])
       const hasAdditions = file !== undefined && file.hunks.some((hunk) => hunk.lines.some((line) => line.indexOf('+') === 0))
       const hasDeletions = file !== undefined && file.hunks.some((hunk) => hunk.lines.some((line) => line.indexOf('-') === 0))
       const oneSided = hasAdditions !== hasDeletions
       const split = prefs.split === true && oneSided !== true
       const wrap = prefs.wrap === true
+      /* m05306: every kept hunk's rows, built once per file/view, so the
+         window draw below never rebuilds the whole diff on each scroll step. */
+      const sections = useMemo(() => cut.hunks.map((hunk) => ({
+        header: hunkHeader(hunk),
+        rows: split === true ? splitRows(hunk) : hunkRows(hunk),
+      })), [cut, split])
+      const totalRows = useMemo(() => sections.reduce((sum, section) => sum + section.rows.length, 0), [sections])
+      const heavy = totalRows > LINEDIFF_HIGHLIGHT_MAX
+      /* m05305: Shiki tokenises the kept hunks SYNCHRONOUSLY — up to
+         LINEDIFF_MAX_LINES lines through a WASM grammar. Doing that inside the
+         render froze the card before its first paint. The rows now paint as
+         plain text, and the colours land one task later. m05306: a huge diff
+         keeps the plain text; tokenising it would freeze the page again. */
+      const [highlight, setHighlight] = useState(null)
+      useEffect(() => {
+        if (file === undefined || heavy === true) {
+          setHighlight(null)
+          return undefined
+        }
+        let alive = true
+        const timer = setTimeout(() => {
+          if (alive !== true) return
+          setHighlight({ cut: cut, maps: cut.hunks.map((hunk) => hunkHighlights(hunk, highlighter)) })
+        }, 0)
+        return () => { alive = false; clearTimeout(timer) }
+      }, [cut, file, highlighter, heavy])
+      const maps = highlight !== null && highlight.cut === cut ? highlight.maps : []
+      /* m05306: scroll loading. The window grows chunk by chunk; a new file
+         starts again from the first chunk. */
+      const [shownRows, setShownRows] = useState(LINEDIFF_CHUNK_ROWS)
+      useEffect(() => { setShownRows(LINEDIFF_CHUNK_ROWS) }, [file, split])
+      const growRows = useCallback(() => {
+        setShownRows((limit) => (limit >= totalRows ? limit : limit + LINEDIFF_CHUNK_ROWS))
+      }, [totalRows])
       if (props.loading === true) return E('div', { className: 'git4idea-lf-root' }, E('p', { className: 'git4idea-lf-status', role: 'status' }, t('diff.loading')))
       if (file === undefined) return E('div', { className: 'git4idea-lf-root' }, E('p', { className: 'git4idea-lf-status' }, t('diff.empty')))
       /* header: selector + counts + tools (ReviewTab anatomy) */
@@ -2804,28 +2905,30 @@ window.__ModuleLoader__.load({
           )),
         file.binary === true
           ? E('p', { className: 'git4idea-lf-status' }, t('diff.binary'))
-          : E('div', { className: 'git4idea-lf-body', 'data-review-view': split === true ? 'split' : 'unified', 'data-review-wrap': wrap === true ? '' : undefined },
+          : E('div', {
+              className: 'git4idea-lf-body',
+              'data-review-view': split === true ? 'split' : 'unified',
+              'data-review-wrap': wrap === true ? '' : undefined,
+              /* m05306: the split columns own their scrollers and grow
+                 themselves; every other mode scrolls here. */
+              onScroll: split === true && wrap !== true ? undefined : (event) => {
+                const node = event.currentTarget
+                if (node.scrollTop + node.clientHeight >= node.scrollHeight - LINEDIFF_CHUNK_ROWS * 2) growRows()
+              },
+            },
               file.created === true ? E('p', { className: 'git4idea-lf-note' }, t('lf.created')) : null,
               file.removed === true ? E('p', { className: 'git4idea-lf-note' }, t('lf.removedFile')) : null,
               cut.truncated === true ? E('p', { className: 'git4idea-lf-note' }, fill(t('lf.truncated'), { count: String(LINEDIFF_MAX_LINES) })) : null,
               split === true && wrap !== true
-                ? E(SplitColumns, { hunks: cut.hunks, highlights: cut.maps })
-                : cut.hunks.map((hunk, position) => {
-                    const paired = split === true ? splitRows(hunk) : null
-                    // The wrapped branch must iterate the SAME row list it indexes
-                    // (issue #16): splitRows pairs del/add runs, so its length is
-                    // max(dels, adds) per run — strictly less than hunkRows'
-                    // per-line count whenever anything pairs. Indexing paired with
-                    // hunkRows' indices handed SplitLine an undefined row and took
-                    // the whole panel down (no boundary above it). Each paired
-                    // entry is already { left, right } — exactly SplitLine's shape.
-                    const rows = split === true ? paired : hunkRows(hunk)
-                    return E('section', { key: position, className: 'git4idea-lf-hunk' },
-                      E('div', { className: 'git4idea-lf-hunkHeader', 'data-diff-hunk-header': '' }, hunkHeader(hunk)),
-                      rows.map((row, at) => split === true
-                        ? E(SplitLine, { key: at, row: row, spans: cut.maps[position] })
-                        : E(UnifiedLine, { key: at, row: row, spans: cut.maps[position] })))
-                  })))
+                ? E(SplitColumns, { sections: sections, highlights: maps, shown: shownRows, onNeedMore: growRows })
+                : rowWindow(sections, shownRows).map((section) => E('section', { key: section.position, className: 'git4idea-lf-hunk' },
+                    E('div', { className: 'git4idea-lf-hunkHeader', 'data-diff-hunk-header': '' }, section.header),
+                    /* The wrapped branch iterates the SAME row list it indexes
+                       (issue #16); SplitLine still receives the hunk's maps so
+                       the deferred colours line up. */
+                    section.rows.map((row, at) => split === true
+                      ? E(SplitLine, { key: at, row: row, spans: maps[section.position] })
+                      : E(UnifiedLine, { key: at, row: row, spans: maps[section.position] }))))))
     }
 
     /* The leading glyph of a change row (v0.14): the host's FileTypeIcon —
@@ -3165,7 +3268,13 @@ window.__ModuleLoader__.load({
            against the wrapper, whose width IS the parent card), so the seam is
            zero no matter how wide the submenu actually renders. */
         const flip = bounds > 0 && position.left + cardRect.width + 220 > bounds - 4
-        setSub({ items: item.items, flip: flip, top: Math.max(0, itemRect.top - cardRect.top - 4) })
+        /* m04915: the folded branch list needs more rows than the parent card
+           allows. The submenu takes its own height budget from the viewport
+           instead of inheriting the parent's 320px cap, so a long branch list
+           shows in one go and only then scrolls. */
+        const height = props.boundsHeight === undefined || props.boundsHeight <= 0 ? window.innerHeight : props.boundsHeight
+        const room = Math.max(180, Math.min(440, height - itemRect.top - 16))
+        setSub({ items: item.items, flip: flip, top: Math.max(0, itemRect.top - cardRect.top - 4), maxHeight: room })
       }
       const renderItem = (item, index, inSub) => {
         if (item === null) return E('div', { key: 'sep-' + index, className: 'git4idea-menu-sep' })
@@ -3206,7 +3315,7 @@ window.__ModuleLoader__.load({
         E('div', { className: 'git4idea-menu', ref: cardRef, 'data-menu-material': 'translucent' },
           E('div', { className: 'git4idea-menu-scroll' },
             props.items.map((item, index) => renderItem(item, index, false)))),
-        sub === null ? null : E('div', { className: 'git4idea-menu git4idea-menu-sub', 'data-menu-material': 'translucent', style: sub.flip === true ? { right: '100%', top: sub.top + 'px' } : { left: '100%', top: sub.top + 'px' } },
+        sub === null ? null : E('div', { className: 'git4idea-menu git4idea-menu-sub', 'data-menu-material': 'translucent', style: Object.assign({ maxHeight: sub.maxHeight === undefined ? undefined : sub.maxHeight + 'px' }, sub.flip === true ? { right: '100%', top: sub.top + 'px' } : { left: '100%', top: sub.top + 'px' }) },
           E('div', { className: 'git4idea-menu-scroll' },
             sub.items.map((item, index) => renderItem(item, index, true)))))
     }
@@ -3320,7 +3429,17 @@ window.__ModuleLoader__.load({
         sync()
         return toastCenter.subscribe(sync)
       }, [])
-      return E(ToastStack, { t: props.t, toasts: items })
+      const stack = E(ToastStack, { t: props.t, toasts: items })
+      /* m05304: body, not the seat. Every shell.overlay child sits in the frame's
+         overlayLayer, which is z-index:20 and therefore its own stacking context:
+         a toast there painted BELOW the composer and the page chrome, so the
+         bottom-right notice "stopped appearing". The portal puts the stack on
+         document.body, above every app layer. A host without react-dom keeps the
+         in-place render. */
+      if (typeof document !== 'undefined' && ReactDOM !== null && typeof ReactDOM.createPortal === 'function') {
+        return ReactDOM.createPortal(stack, document.body)
+      }
+      return stack
     }
 
     function PromptDialog(props) {
@@ -4041,11 +4160,11 @@ window.__ModuleLoader__.load({
     function ChangesPanel(props) {
       const t = props.t
       const summary = props.summary
-      /* The panel-side model picker (issue #19) rides the official model
-         directories, soft-injected into a module ref at apply time — see
-         ModelRoutePicker for why a bare ctx property read cannot work. */
       const [message, setMessage] = useState('')
       const [amend, setAmend] = useState(false)
+      /* m05308: the AI message language. It follows the DSH display language
+         until the user picks one in the select box. */
+      const [commitLang, setCommitLang] = useState(defaultCommitLanguage)
       const [collapsed, setCollapsed] = useState(() => {
         const stored = readTreeState()
         return stored !== null && typeof stored === 'object' && stored.changesCollapsed === true
@@ -4139,7 +4258,10 @@ window.__ModuleLoader__.load({
            the diff moved to DOUBLE-click — a stray click mid-multi-select must
            not yank the pane away (v0.18.3). */
         setSelection((previous) => previous.size === 1 && previous.has(key) === true ? previous : new Set([key]))
-      }, [setSelection, anchorRef, props.onDiff])
+        /* m05307: the commit dialog previews the click's file in its right
+           pane; every other host of this panel passes no onSelect. */
+        if (typeof props.onSelect === 'function') props.onSelect(item, group)
+      }, [setSelection, anchorRef, props.onDiff, props.onSelect])
       /* Rubber-band selection now comes from the shared useRubberBand hook
          (see its comment): the fixed row heights + the prefix-sum offsets
          still turn a pixel span back into row keys without any DOM rows —
@@ -4196,19 +4318,16 @@ window.__ModuleLoader__.load({
         setAiBusy(true)
         setAiNote(null)
         try {
-          const settings = props.commitSettings === undefined ? { model: '', reasoning: '', prompt: '' } : props.commitSettings
-          /* `base` carries the picked repository ({ cwd, repoRoot }) exactly like
+          /* m05301: the message rides the session's own model route. The host
+             picks the provider and model (commitRouteOf), so this button sends
+             no model, effort or prompt of its own.
+             `base` carries the picked repository ({ cwd, repoRoot }) exactly like
              every other request: without it the host resolves the repository from
              the session cwd, which need not be one (several sibling repos). */
           const data = await props.request('commit-message', Object.assign(
             {},
             props.base === undefined ? { cwd: props.cwd } : props.base,
-            {
-              sessionId: props.sessionId,
-              model: settings.model,
-              reasoningEffort: settings.reasoning,
-              prompt: settings.prompt,
-            },
+            { sessionId: props.sessionId, language: commitLang },
           ))
           setAiUndo(message === '' ? null : message)
           setMessage(typeof data.message === 'string' ? data.message : '')
@@ -4383,6 +4502,15 @@ window.__ModuleLoader__.load({
         onConfirm: () => { void aiRun() },
         onCancel: () => setAiAsk(false),
       })
+      /* m05308: the quota hint became the message-language picker. The AI
+         message is written in this language, whatever the display language is. */
+      const langSelect = E('select', {
+        className: 'git4idea-select git4idea-commit-lang', value: commitLang,
+        'aria-label': t('changes.language'), 'data-tip': t('changes.language'),
+        onChange: (event) => setCommitLang(event.target.value),
+      },
+        E('option', { value: 'zh' }, t('changes.langZh')),
+        E('option', { value: 'en' }, t('changes.langEn')))
       const composer = props.compact === true
         ? E('div', { className: 'git4idea-commit-box git4idea-commit-box-compact' },
             E('input', {
@@ -4396,17 +4524,19 @@ window.__ModuleLoader__.load({
             E('button', {
               type: 'button', className: 'git4idea-btn git4idea-btn-small git4idea-btn-ai',
               disabled: aiBusy === true || props.busy === true,
-              'data-tip': t('changes.aiQuota'),
               onClick: () => { if (message.trim() === '') void aiRun(); else setAiAsk(true) },
             }, aiBusy === true ? t('changes.aiBusy') : t('changes.aiWrite')),
-            E(ModelRoutePicker, { sessionId: props.sessionId, t: t }),
             E('button', {
               type: 'button', className: 'git4idea-btn git4idea-btn-primary git4idea-btn-small',
               disabled: message.trim() === '' || props.busy === true || pickedNow === 0,
               onClick: () => { submit(false) },
             }, t('changes.commit')),
-            E('span', { className: 'git4idea-commit-ai-hint git4idea-commit-ai-hint-block' }, t('changes.aiQuota')))
+            langSelect)
         : E('div', { className: 'git4idea-commit-box' },
+            /* m05307: the IDEA commit dialog keeps 修正 above the message box. */
+            E('label', { className: 'git4idea-check git4idea-commit-amend' },
+              E('input', { type: 'checkbox', checked: amend, onChange: (event) => setAmend(event.target.checked) }),
+              E('span', null, t('changes.amend'))),
             E('textarea', {
               className: 'git4idea-textarea', value: message, spellCheck: false,
               placeholder: t('changes.commitPlaceholder'),
@@ -4421,17 +4551,13 @@ window.__ModuleLoader__.load({
                 disabled: aiBusy === true || props.busy === true,
                 onClick: () => { if (message.trim() === '') void aiRun(); else setAiAsk(true) },
               }, aiBusy === true ? t('changes.aiBusy') : t('changes.aiWrite')),
-              E(ModelRoutePicker, { sessionId: props.sessionId, t: t }),
-              E('span', { className: 'git4idea-commit-ai-hint' }, t('changes.aiQuota')),
+              langSelect,
               aiUndo === null ? null : E('button', {
                 type: 'button', className: 'git4idea-link',
                 onClick: () => { setMessage(aiUndo); setAiUndo(null); setAiNote(null) },
               }, t('changes.aiUndo'))),
             aiNote === null ? null : E('div', { className: 'git4idea-commit-ai-note', 'data-ai-note': '' }, aiNote),
             E('div', { className: 'git4idea-commit-actions' },
-              E('label', { className: 'git4idea-check' },
-                E('input', { type: 'checkbox', checked: amend, onChange: (event) => setAmend(event.target.checked) }),
-                E('span', null, t('changes.amend'))),
               E('button', {
                 type: 'button', className: 'git4idea-btn git4idea-btn-primary',
                 disabled: message.trim() === '' || props.busy === true || pickedNow === 0,
@@ -6017,16 +6143,15 @@ window.__ModuleLoader__.load({
         void openDiff({ path: seed.path, staged: seed.staged === true, untracked: seed.untracked === true ? true : undefined })
       }, [previewDiff, openDiff])
 
-      /* Push is a dialog now (m02986), and m03471 moved it INTO the panel: the
-         Git tab is already on screen, so the card is plain panel state. The
-         frame overlay version flashed when its host mounted late, and a second
-         click fell through to the native confirm. The composer pill keeps the
-         overlay store - it can be the only seat on screen. */
-      const [pushOpen, setPushOpen] = useState(null)
+      /* m04920: the Git tab raises the SAME frame dialogs as the composer pill.
+         The panel used to draw its own inline push card and commit layer, so the
+         two surfaces drifted apart: the layer kept a right-hand diff that could
+         not fit the card, and a file card opened from the panel could not cover
+         the inline card. */
       const openPushDialog = useCallback(() => {
         const scopeObject = scope || {}
         if (repoRoot === null) return
-        setPushOpen({ cwd: cwd, repoRoot: repoRoot, sessionId: scopeObject.sessionId })
+        pushDialog.set({ cwd: cwd, repoRoot: repoRoot, sessionId: scopeObject.sessionId })
       }, [cwd, repoRoot, scope])
 
 
@@ -6708,10 +6833,6 @@ window.__ModuleLoader__.load({
         })))
       }, [openMenuAt, branches, checkout])
 
-      /* The commit layer (m01216): the changes column is gone, so pending
-         changes, the message and the buttons live in one overlay over the log. */
-      const [commitOpen, setCommitOpen] = useState(false)
-
       const topBar = E('div', { className: 'git4idea-topbar' },
         E(RepoSelect, {
           t: t, repos: repoOptions, value: repoRoot,
@@ -6753,12 +6874,16 @@ window.__ModuleLoader__.load({
         operation === null ? null : E('span', { className: 'git4idea-opchip', 'data-tip': t('operation.hint') }, t('operation.' + operation)),
         E('span', { className: 'git4idea-topbar-spacer' }),
         busy ? E('span', { className: 'git4idea-busy' }, t('status.busy')) : null,
-        /* The commit button opens the commit layer (m01216); the old always-on
-           changes column is gone, so this is the only way in. */
+        /* The commit button raises the frame commit dialog (m04920); the panel's
+           own layer could not fix the height of its diff half. */
         E('button', {
           type: 'button', className: 'git4idea-topbar-commit',
           'data-tip': t('changes.commit'),
-          onClick: () => setCommitOpen(true),
+          onClick: () => {
+            if (repoRoot === null) return
+            const scopeObject = scope || {}
+            commitDialog.set({ sessionId: scopeObject.sessionId, cwd: cwd, repoRoot: repoRoot })
+          },
         },
           E(Icon, { name: 'commit', size: 13 }),
           E('span', null, t('changes.commit')),
@@ -7053,7 +7178,6 @@ window.__ModuleLoader__.load({
           { id: 'mm-git-output', icon: 'commit', tone: 'secondary', label: t('more.gitOutput'), run: () => { void openGitOutput() } },
         ])
       }
-      const commitSettings = readCommitSettings()
       /* One panel spec, two hosts: the compact chrome renders it inline, the
          commit layer renders it as the left half of the overlay (m01216). The
          only difference between the two is where a file click sends its diff. */
@@ -7062,7 +7186,7 @@ window.__ModuleLoader__.load({
         groupBy: groupBy, sortKey: sortKey, onGroupBy: setGroupBy,
         foldedDirs: foldedDirs, onFoldedDirs: setFoldedDirs,
         onMoreMenu: moreMenu,
-        request: request, cwd: cwd, sessionId: sessionId, commitSettings: commitSettings, base: base,
+        request: request, cwd: cwd, sessionId: sessionId, base: base,
         showIgnored: showIgnored,
         onToggleIgnored: () => setShowIgnored((value) => !value),
         // Commit and push are two steps now (m02986): the commit lands, the
@@ -7076,7 +7200,6 @@ window.__ModuleLoader__.load({
             /* Only a landed commit closes the layer; a rejected one keeps the
                message on screen while the failure surfaces as a notification. */
             if (result === undefined) return
-            setCommitOpen(false)
             pushToast({ text: t('toast.committed'), tone: 'ok', icon: 'check' })
             if (push === true) openPushDialog()
           })()
@@ -7102,29 +7225,6 @@ window.__ModuleLoader__.load({
       const changesPane = renderChanges((item, group) => {
         showDiff({ path: item.path, staged: group === 'staged', untracked: group === 'untracked' })
       })
-
-      /* The commit layer (m01216): pending changes over the message on the
-         left, the picked file's diff on the right — the same panel the narrow
-         chrome uses, so staging and the AI message keep working inside it. */
-      const commitLayer = commitOpen === false ? null : E('div', { className: 'git4idea-commit-layer', 'data-git4idea-commit-layer': '' },
-        E('div', { className: 'git4idea-commit-layer-card', 'data-git4idea-commit-card': '' },
-        E('div', { className: 'git4idea-commit-layer-head' },
-          E(Icon, { name: 'commit', size: 13 }),
-          E('span', { className: 'git4idea-commit-layer-title' }, t('changes.title')),
-          E('span', { className: 'git4idea-topbar-spacer' }),
-          E('button', {
-            type: 'button', className: 'git4idea-icon-btn', 'data-tip': t('confirm.cancel'),
-            onClick: () => setCommitOpen(false),
-          }, E(Icon, { name: 'close', size: 12 }))),
-        E('div', { className: 'git4idea-commit-layer-body' },
-          E('div', { className: 'git4idea-commit-layer-left' }, renderChanges((item, group) => {
-            setDiffContext({ kind: 'worktree', staged: group === 'staged' })
-            void openDiff({ path: item.path, staged: group === 'staged', untracked: group === 'untracked' })
-          })),
-          E('div', { className: 'git4idea-commit-layer-right' },
-            patch === '' && patchLoading === false
-              ? E('div', { className: 'git4idea-empty' }, t('pane.diff'))
-              : E(DiffBody, { patch: patch, loading: patchLoading, t: t })))))
 
       /* --- Rail acts on the branch-tree selection (v0.18.5) -------------------
          The tree reports its picks up; the rail resolves them back to live
@@ -7631,15 +7731,6 @@ window.__ModuleLoader__.load({
         E('div', { className: 'git4idea-shell' },
           columns === true && repoRoot !== null ? renderRail(true) : null,
           body),
-        commitLayer,
-        pushOpen === null ? null : E(PushDialogBody, {
-          key: 'git4idea-panel-push',
-          entry: pushOpen,
-          t: t,
-          ctx: props.ctx,
-          inline: true,
-          onClose: () => { setPushOpen(null) },
-        }),
         gitOutput === null ? null : E(GitOutputDrawer, {
           t: t, entries: gitOutput,
           onRefresh: () => { void openGitOutput() },
@@ -7771,6 +7862,11 @@ window.__ModuleLoader__.load({
       '.git4idea-settings-text-label{color:var(--dsw-alias-label-secondary);font-weight:400}',
       '.git4idea-settings-input{width:100%;box-sizing:border-box;font:inherit}',
       '.git4idea-commit-ai{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px}',
+      '.git4idea-commit-lang{flex:none;height:22px;max-width:none;font-size:11px}',
+      /* m05308: the IDEA split — the change list takes two thirds of the left
+         column and the message box one third, at a fixed height. */
+      '.git4idea-commit-layer-left .git4idea-commit-box{flex:0 0 33%;min-height:0;overflow:hidden}',
+      '.git4idea-commit-layer-left .git4idea-textarea{flex:1 1 auto;min-height:0;overflow-y:auto;resize:none}',
       '.git4idea-commit-ai-hint{color:var(--dsw-alias-label-tertiary);font-size:11px}',
       '.git4idea-commit-ai-hint-block{flex:1 0 100%;font-size:11px}',
       '.git4idea-commit-ai-note{color:var(--dsw-alias-state-warn-primary,var(--dsw-alias-brand-primary));font-size:11px;margin-bottom:4px;word-break:break-word}',
@@ -7843,16 +7939,18 @@ window.__ModuleLoader__.load({
       /* Floating card (m01737 #2): the layer is only a centring scrim; the card
          itself carries the IDE's window chrome, so the commit dialog reads as a
          window over the log instead of a page that replaced it. */
-      '.git4idea-commit-layer{position:absolute;inset:0;z-index:55;display:flex;align-items:center;justify-content:center;padding:18px;background:transparent}',
       '.git4idea-commit-layer-card{display:flex;flex-direction:column;width:min(940px,94%);height:min(640px,94%);overflow:hidden;border-radius:var(--dsw-radius-md,12px);border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1,var(--dsw-alias-bg-layer-2));box-shadow:var(--dsw-elevation-prominent,0 18px 48px rgba(0,0,0,.45))}',
       /* Frame-wide commit dialog (m02090): the composer's 提交 verb raises this
          over the whole conversation instead of switching to the sidebar tab.
          Fixed on purpose — it is mounted in shell.overlay, OUTSIDE the dock
          containers whose contain:layout would capture an absolute box. */
-      '.git4idea-commit-overlay{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--dsw-alias-bg-scrim,rgba(0,0,0,.32));-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family,system-ui,sans-serif);font-size:13px;line-height:1.5;font-weight:600}',
-      '.git4idea-commit-overlay .git4idea-commit-layer-card{width:min(1100px,94vw);height:min(720px,88vh)}',
-      '.git4idea-commit-overlay-inline{position:absolute;z-index:57;padding:16px}',
-      '.git4idea-commit-overlay-inline .git4idea-push-card{width:min(1100px,94%);height:min(720px,88%)}',
+      /* No backdrop-filter here (m05305): a 2px blur over the whole viewport
+         re-samples everything behind the scrim on every scroll frame, which made
+         the diff card feel stuck. A denser scrim alone costs nothing. */
+      '.git4idea-commit-overlay{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--dsw-alias-bg-scrim,rgba(0,0,0,.42));color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family,system-ui,sans-serif);font-size:13px;line-height:1.5;font-weight:600}',
+      /* m05307: the card carries the change list AND the file diff, so it takes
+         the same footprint as the file card; the pane split is 40/60. */
+      '.git4idea-commit-overlay .git4idea-commit-layer-card{width:min(1180px,94vw);height:min(760px,90vh)}',
       /* Single-file diff dialog (m02986): the commit card's right pane, lifted
          into its own window. The preview root already owns the head/body split. */
       '.git4idea-file-card{display:flex;flex-direction:column;width:min(1100px,94vw);height:min(720px,88vh);overflow:hidden;border-radius:var(--dsw-radius-md,12px);border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1,var(--dsw-alias-bg-layer-2));box-shadow:var(--dsw-elevation-prominent,0 18px 48px rgba(0,0,0,.45))}',
@@ -7886,11 +7984,8 @@ window.__ModuleLoader__.load({
       '.git4idea-commit-layer-head{display:flex;align-items:center;gap:8px;padding:5px 8px;flex:none;border-bottom:1px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-secondary)}',
       '.git4idea-commit-layer-title{font-weight:600;color:var(--dsw-alias-label-primary)}',
       '.git4idea-commit-layer-body{flex:1;min-height:0;display:flex;overflow:hidden}',
-      '.git4idea-commit-layer-left{flex:2 1 0;min-width:0;display:flex;flex-direction:column;border-right:1px solid var(--dsw-alias-border-l2)}',
-      '.git4idea-commit-layer-right{flex:1 1 0;min-width:0;display:flex;flex-direction:column;overflow:hidden}',
-      '.git4idea-root-narrow .git4idea-commit-layer-body{flex-direction:column}',
-      '.git4idea-root-narrow .git4idea-commit-layer-left{flex:1 1 0;border-right:0;border-bottom:1px solid var(--dsw-alias-border-l2)}',
-      '.git4idea-root-narrow .git4idea-commit-layer-right{flex:1 1 0}',
+      '.git4idea-commit-layer-left{flex:0 0 40%;min-width:0;display:flex;flex-direction:column;border-right:1px solid var(--dsw-alias-border-l2)}',
+      '.git4idea-commit-layer-right{flex:1 1 60%;min-width:0;display:flex;flex-direction:column;overflow:hidden}',
       '.git4idea-compact-bar{display:flex;align-items:center;gap:6px;padding:4px 6px;flex:none}',
       '.git4idea-compact-tree{max-height:42%;flex:none;border-bottom:1px solid var(--dsw-alias-border-l2)}',
       // A divider: an 8px hit area (a fingertip needs it) painted as a 1px hairline
@@ -8085,10 +8180,10 @@ window.__ModuleLoader__.load({
       '.git4idea-mini:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
       '.git4idea-commit-box{flex:none;padding:6px;display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--dsw-alias-border-l2)}',
       '.git4idea-commit-box-compact{flex-direction:row;align-items:center;gap:6px;padding:4px 6px;flex-wrap:wrap}',
-      '.git4idea-textarea{width:100%;box-sizing:border-box;min-height:50px;resize:vertical;padding:5px 6px;border-radius:var(--dsw-radius-sm,8px);border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);font:inherit;outline:none}',
+      '.git4idea-textarea{width:100%;box-sizing:border-box;min-height:50px;resize:none;overflow-y:auto;padding:5px 6px;border-radius:var(--dsw-radius-sm,8px);border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);font:inherit;outline:none}',
       '.git4idea-textarea::placeholder{color:var(--dsw-alias-label-tertiary)}',
       '.git4idea-textarea:focus{border-color:var(--dsw-alias-state-business-primary,var(--dsw-alias-brand-primary))}',
-      '.git4idea-commit-actions{display:flex;align-items:center;gap:8px}',
+      '.git4idea-commit-actions{display:flex;align-items:center;justify-content:flex-start;gap:8px}',
       '.git4idea-check{display:inline-flex;align-items:center;gap:4px;color:var(--dsw-alias-label-secondary);cursor:pointer}',
       '.git4idea-btn{padding:3px 10px;border-radius:var(--dsw-radius-sm,8px);border:1px solid var(--dsw-alias-border-l2);background:transparent;color:var(--dsw-alias-label-primary);font:inherit;font-weight:500;cursor:pointer;flex:none}',
       '.git4idea-btn:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover)}',
@@ -8154,7 +8249,7 @@ window.__ModuleLoader__.load({
          left when the panel runs out of room (see ContextMenu.openSub). */
       '.git4idea-menu-wrap{position:absolute;z-index:70;width:max-content;max-width:calc(100% - 8px)}',
       '.git4idea-menu{box-sizing:border-box;min-width:200px;max-height:min(320px,calc(100% - 8px));padding:4px;border:0;border-radius:var(--dsw-radius-md,12px);background:transparent;box-shadow:var(--dsw-elevation-prominent,0 10px 28px rgba(0,0,0,.35));--dsw-elevation-stroke-color:var(--dsw-alias-border-l1);isolation:isolate;display:flex;flex-direction:column}',
-      '.git4idea-menu-sub{position:absolute;min-width:180px;max-width:300px;z-index:71}',
+      '.git4idea-menu-sub{position:absolute;min-width:180px;max-width:320px;z-index:71}',
       '.git4idea-menu::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;background:var(--dsw-specific-menu,var(--dsw-alias-bg-layer-2,var(--dsw-alias-bg-layer-1)));-webkit-backdrop-filter:var(--dsw-menu-backdrop-filter,blur(14px) saturate(1.2));backdrop-filter:var(--dsw-menu-backdrop-filter,blur(14px) saturate(1.2));pointer-events:none}',
       '.git4idea-menu-scroll{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;display:flex;flex-direction:column}',
       '.git4idea-menu-item{display:flex;align-items:center;gap:8px;padding:4px 8px;border:none;background:transparent;color:var(--dsw-alias-label-primary);font:inherit;font-weight:500;text-align:left;border-radius:var(--dsw-radius-sm,8px);cursor:pointer;white-space:nowrap;overflow:hidden}',
@@ -8198,8 +8293,11 @@ window.__ModuleLoader__.load({
          the left edge of the header. */
       '.git4idea-preview-head{display:flex;align-items:center;gap:8px;flex:none;padding:8px 12px;border-bottom:1px solid var(--dsw-alias-border-l2,var(--dsw-alias-border-l1));font-weight:600;overflow:hidden;white-space:nowrap}',
       '.git4idea-preview-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
-      '.git4idea-preview-body{flex:1;min-height:0;overflow:auto;padding:8px 12px;display:flex;flex-direction:column}',
-      '.git4idea-preview-body .git4idea-diff-host,.git4idea-preview-body .git4idea-diff{flex:1;min-height:0}',
+      /* m04921: the body never scrolls; the diff inside it does. A scrolling
+         body pushed the diff's own horizontal bar below the fold, so the bar
+         was only reachable after scrolling to the last line. */
+      '.git4idea-preview-body{flex:1;min-height:0;overflow:hidden;padding:8px 12px;display:flex;flex-direction:column}',
+      '.git4idea-preview-body .git4idea-diff-host,.git4idea-preview-body .git4idea-diff,.git4idea-preview-body .git4idea-lf-root{flex:1;min-height:0}',
       '.git4idea-preview-actions{display:flex;align-items:center;gap:4px;flex:none}',
       '.git4idea-preview-btn{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;padding:0;border:none;border-radius:var(--dsw-radius-sm,8px);background:transparent;color:var(--dsw-alias-label-secondary);cursor:pointer}',
       '.git4idea-preview-btn:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
@@ -8212,9 +8310,9 @@ window.__ModuleLoader__.load({
       '.git4idea-lf-status{display:flex;gap:12px;align-items:center;margin:0;padding:16px;font-size:13px;color:var(--dsw-alias-label-secondary)}',
       '.git4idea-preview-boundary{display:flex;align-items:center;justify-content:center;margin:0;padding:24px 16px;font-size:13px;color:var(--dsw-alias-label-secondary);text-align:center}',
       '.git4idea-lf-body{display:flex;flex:1 1 auto;flex-direction:column;min-height:0;overflow:auto;padding:8px 0 16px;font:var(--dsw-font-markdown-code-block)}',
-      '.git4idea-lf-columns{display:grid;flex:1 1 auto;grid-template-columns:minmax(0,1fr) minmax(0,1fr);min-height:0}',
+      '.git4idea-lf-columns{display:grid;flex:1 1 auto;grid-template-columns:minmax(0,1fr) minmax(0,1fr);min-height:0;overflow:hidden}',
       '.git4idea-lf-column,.git4idea-lf-body[data-review-view=unified]:not([data-review-wrap]){display:grid;grid-template-columns:minmax(max-content,100%);align-content:start}',
-      '.git4idea-lf-column{min-width:0;overflow-x:scroll;overscroll-behavior:none}',
+      '.git4idea-lf-column{min-width:0;min-height:0;overflow:auto;overscroll-behavior:none}',
       '.git4idea-lf-column + .git4idea-lf-column{border-left:0.5px solid var(--dsw-alias-border-l3)}',
       '.git4idea-lf-sideLine{display:grid;grid-template-columns:3.5em max-content;box-sizing:border-box;min-width:100%;width:max-content;min-height:22px;line-height:22px;white-space:pre}',
       '.git4idea-lf-note{margin:0;padding:4px 16px 8px;font:var(--dsw-font-xs-13,var(--dsw-font-markdown-code-block));color:var(--dsw-alias-label-tertiary)}',
@@ -8343,22 +8441,6 @@ window.__ModuleLoader__.load({
       '.git4idea-cs-action{display:flex;align-items:center;gap:6px;width:100%;height:24px;padding:0 8px;flex:none;border:none;border-radius:var(--dsw-radius-sm,8px);background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;font-size:12px;font-weight:600;text-align:left;cursor:pointer}',
       '.git4idea-cs-action:hover:not([aria-disabled="true"]){background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
       '.git4idea-cs-action[aria-disabled="true"]{opacity:.4;cursor:default}',
-      /* ---- ModelRoutePicker (issue #19) ---- */
-      '.git4idea-mrp-root{position:relative;display:inline-flex;flex:none;min-width:0}',
-      '.git4idea-mrp-trigger{display:inline-flex;align-items:center;gap:4px;min-width:0;max-width:220px;font-size:11px;line-height:16px}',
-      '.git4idea-mrp-trigger[data-open=true]{color:var(--dsw-alias-brand-primary)}',
-      '.git4idea-mrp-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
-      '.git4idea-mrp-effort{flex:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dsw-alias-label-tertiary);font-size:10px}',
-      '.git4idea-mrp-menu{max-width:300px}',
-      '.git4idea-mrp-row .git4idea-cs-item-name{display:none}',
-      '.git4idea-mrp-row-label{flex:none}',
-      '.git4idea-mrp-row-value{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-left:auto;color:var(--dsw-alias-label-tertiary)}',
-      '.git4idea-mrp-row-arrow{flex:none;display:inline-flex;color:var(--dsw-alias-label-tertiary)}',
-      '.git4idea-mrp-back{color:var(--dsw-alias-label-tertiary)}',
-      '.git4idea-mrp-group{padding:6px 10px 2px;color:var(--dsw-alias-label-tertiary);font-size:10px;line-height:14px}',
-      '.git4idea-mrp-empty{padding:10px;color:var(--dsw-alias-label-tertiary);font-size:12px}',
-      '.git4idea-mrp-error{padding:6px 10px;margin-bottom:2px;border-radius:var(--dsw-radius-sm,8px);background:rgba(220,38,38,.12);color:var(--dsw-alias-state-error-primary);font-size:11px;line-height:16px;word-break:break-word}',
-      'body[data-ds-dark-theme] .git4idea-mrp-error{background:rgba(248,113,113,.16)}',
     ].concat(LANE_TRACE_RULES).join('\n')
 
     /* ============================== plugin ============================== */
@@ -8569,179 +8651,6 @@ window.__ModuleLoader__.load({
           E('span', { className: 'git4idea-cs-chunk', 'aria-hidden': 'true' }, text)))
     }
 
-    /* ---- ModelRoutePicker (issue #19) ------------------------------------
-       The panel-side model + reasoning picker, bound to the SAME session model
-       route the composer's own selector writes: the host's ui-model-selection
-       plugin exposes the modelDirectories resolver, and directoryFor(sessionId)
-       hands out the session-scoped directory whose select() IS
-       sessions.selectModel — so this picker, the composer pill and the /model
-       command can never disagree. The VIEW is hand-drawn (ModelSelect is not
-       exported from the official package); the DATA and the selection semantics
-       are official end to end. The resolver arrives through a soft inject into
-       a module-level ref (a bare `ctx.modelDirectories` read throws "without
-       inject" on a real host — cordis gates EVERY property read behind an
-       inject declaration); until it lands, and on any older host, the picker
-       hides itself instead of throwing, and the AI-write button still works
-       through the host's served-models fallback. */
-    let modelDirectoriesRef = null
-    const modelDirectorySubs = new Set()
-    function ModelRoutePicker(props) {
-      const t = props.t
-      const sessionId = typeof props.sessionId === 'string' && props.sessionId !== '' ? props.sessionId : 'default'
-      const [injectVersion, setInjectVersion] = useState(0)
-      const [directory, setDirectory] = useState(null)
-      const [state, setState] = useState(null)
-      const [open, setOpen] = useState(false)
-      const [pane, setPane] = useState('root')
-      const rootRef = useRef(null)
-      /* The soft inject may land AFTER first paint (apply runs once, this slot
-         mounts per session view): re-render when the module ref refills. */
-      useEffect(() => {
-        const bump = () => setInjectVersion((v) => v + 1)
-        modelDirectorySubs.add(bump)
-        return () => modelDirectorySubs.delete(bump)
-      }, [])
-      const resolver = modelDirectoriesRef
-      const ok = resolver !== undefined && resolver !== null && typeof resolver.directoryFor === 'function'
-      /* Resolve the session-scoped directory once per session; subscribe AFTER
-         taking the snapshot so a change that lands between the two is not lost. */
-      useEffect(() => {
-        if (ok !== true) return undefined
-        let dir = null
-        try { dir = resolver.directoryFor(sessionId) } catch (error) { void error }
-        if (dir === null || dir === undefined) return undefined
-        setState(dir.store.getSnapshot())
-        setDirectory(dir)
-        /* Snapshot and subscription live on dir.store (uSES-safe); load()/
-           select() hang directly off the directory. */
-        return dir.store.subscribe(() => setState(dir.store.getSnapshot()))
-      }, [ok, resolver, sessionId, injectVersion])
-      /* The catalog loads on mount; failures surface through the store and the
-         menu shows them. A rejected load must not unmount or disable anything. */
-      useEffect(() => {
-        if (directory === null) return undefined
-        directory.load().catch(() => {})
-        return undefined
-      }, [directory])
-      /* Outside close. pointerdown + capture: the change list captures
-         pointerdown for the rubber band, so a plain mousedown listener can
-         miss the very click that opened another menu (v0.19.2 lesson). */
-      useEffect(() => {
-        if (open !== true) return undefined
-        const close = (event) => {
-          const root = rootRef.current
-          if (root !== null && root.contains(event.target) === true) return
-          setOpen(false)
-          setPane('root')
-        }
-        document.addEventListener('pointerdown', close, true)
-        return () => document.removeEventListener('pointerdown', close, true)
-      }, [open])
-      if (ok !== true || directory === null) return null
-      const s = state === null ? directory.getSnapshot() : state
-      const current = s === null || s.current === undefined ? null : s.current
-      const busy = s !== null && s.pending !== null && s.pending !== undefined
-      const groups = s === null || s.groups === undefined ? [] : s.groups
-      /* The current route's reasoning table, looked up through the SAME
-         directory groups the menu renders (official effectiveEffort rule). */
-      let routeGroup = null
-      let routeModel = null
-      if (current !== null) {
-        routeGroup = groups.filter((row) => row.id === current.provider)[0] || null
-        routeModel = routeGroup === null ? null : routeGroup.models.filter((row) => row.id === current.model)[0] || null
-      }
-      const reasoning = routeModel === null || routeModel.reasoning === undefined ? undefined : routeModel.reasoning
-      const effectiveEffort = current === null ? undefined : current.reasoningEffort !== undefined ? current.reasoningEffort : reasoning === undefined ? undefined : reasoning.defaultEffort
-      const effortName = (effort) => {
-        if (reasoning !== undefined) {
-          const hit = reasoning.efforts.filter((row) => row.id === effort)[0]
-          if (hit !== undefined) return hit.name
-        }
-        return effort === undefined ? t('modelRoute.effortDefault') : effort
-      }
-      const effortLabel = current === null ? '' : reasoning === undefined
-        ? (current.reasoningEffort === undefined ? '' : current.reasoningEffort)
-        : (effectiveEffort === undefined ? t('modelRoute.effortDefault') : effortName(effectiveEffort))
-      const modelName = current === null ? '' : routeModel === null ? current.model : routeModel.name
-      const effortChoices = reasoning === undefined ? [] : ([
-        ...(reasoning.defaultEffort === undefined ? [{ key: 'provider-default', effort: undefined, label: t('modelRoute.effortDefault') }] : []),
-        ...reasoning.efforts.map((row) => ({ key: row.id, effort: row.id, label: row.name })),
-      ])
-      const closeMenu = () => { setOpen(false); setPane('root') }
-      const choose = (selection) => {
-        void directory.select(selection).then((result) => {
-          if (result !== undefined && result !== null && result.ok !== true) return
-          closeMenu()
-        }).catch(() => {})
-      }
-      const triggerTitle = t('modelRoute.trigger') + (current === null ? '' : ' · ' + current.provider + '/' + current.model + (effortLabel === '' ? '' : ' · ' + effortLabel))
-      return E('div', { className: 'git4idea-mrp-root', ref: rootRef },
-        E('button', {
-          type: 'button',
-          className: 'git4idea-btn git4idea-btn-small git4idea-mrp-trigger',
-          'data-open': open === true ? 'true' : undefined,
-          'data-tip': triggerTitle,
-          onClick: () => { setOpen(!open); setPane('root') },
-        },
-          E(Icon, { name: 'settings', size: 11 }),
-          E('span', { className: 'git4idea-mrp-label' }, current === null ? t('modelRoute.pick') : modelName),
-          effortLabel === '' ? null : E('span', { className: 'git4idea-mrp-effort' }, effortLabel),
-          E(Icon, { name: 'chevron', size: 9 })),
-        open !== true ? null : E('div', { className: 'git4idea-cs-menu git4idea-mrp-menu', role: 'menu' },
-          s !== null && typeof s.error === 'string' && s.error !== ''
-            ? E('div', { className: 'git4idea-mrp-error', role: 'status' }, s.error)
-            : null,
-          pane === 'root'
-            ? [
-              E('button', {
-                type: 'button', key: 'model', className: 'git4idea-cs-item git4idea-mrp-row', disabled: busy === true,
-                onClick: () => setPane('model'),
-              },
-                E('span', { className: 'git4idea-mrp-row-label' }, t('modelRoute.modelRow')),
-                E('span', { className: 'git4idea-mrp-row-value' }, current === null ? t('modelRoute.pick') : modelName),
-                E('span', { className: 'git4idea-mrp-row-arrow' }, E(Icon, { name: 'chevron', size: 9 }))),
-              E('button', {
-                type: 'button', key: 'effort', className: 'git4idea-cs-item git4idea-mrp-row', disabled: busy === true || current === null || effortChoices.length === 0,
-                onClick: () => setPane('effort'),
-              },
-                E('span', { className: 'git4idea-mrp-row-label' }, t('modelRoute.effortRow')),
-                E('span', { className: 'git4idea-mrp-row-value' }, effortChoices.length === 0 ? '' : (effortLabel === '' ? t('modelRoute.effortDefault') : effortLabel)),
-                E('span', { className: 'git4idea-mrp-row-arrow' }, E(Icon, { name: 'chevron', size: 9 }))),
-            ]
-            : [
-              E('button', {
-                type: 'button', key: 'back', className: 'git4idea-cs-item git4idea-mrp-back', disabled: busy === true,
-                onClick: () => setPane('root'),
-              }, '‹ ' + (pane === 'model' ? t('modelRoute.modelRow') : t('modelRoute.effortRow'))),
-            ],
-          pane === 'model' && groups.length === 0
-            ? E('div', { className: 'git4idea-mrp-empty' }, t('modelRoute.empty'))
-            : null,
-          pane === 'model' && groups.map((group) => E(Fragment, { key: group.id },
-            E('div', { className: 'git4idea-mrp-group' }, group.name === undefined || group.name === null || group.name === '' ? group.id : group.name),
-            group.models.map((model) => {
-              const selected = current !== null && current.provider === group.id && current.model === model.id
-              return E('button', {
-                type: 'button', key: model.id, className: 'git4idea-cs-item', 'data-current': selected === true ? 'true' : undefined,
-                disabled: busy === true,
-                'data-tip': group.id + '/' + model.id,
-                onClick: () => choose({ provider: group.id, model: model.id }),
-              },
-                E('span', { className: 'git4idea-cs-item-name' }, model.name === undefined || model.name === null ? model.id : model.name),
-                E('span', { className: 'git4idea-cs-item-note' }, selected === true ? E(Icon, { name: 'check', size: 11 }) : null))
-            }))),
-          pane === 'effort' && current !== null && effortChoices.map((level) => {
-            const selected = effectiveEffort === level.effort
-            return E('button', {
-              type: 'button', key: level.key, className: 'git4idea-cs-item', 'data-current': selected === true ? 'true' : undefined,
-              disabled: busy === true,
-              onClick: () => choose({ provider: current.provider, model: current.model, reasoningEffort: level.effort }),
-            },
-              E('span', { className: 'git4idea-cs-item-name' }, level.label),
-              E('span', { className: 'git4idea-cs-item-note' }, selected === true ? E(Icon, { name: 'check', size: 11 }) : null))
-          })))
-    }
-
     /* ---- the commit dialog on the conversation page (m02090) ----
        The composer's 提交 verb used to open the right-sidebar seat and then ask
        for a SECOND click on that tab's own 提交 button. It now raises this card
@@ -8888,13 +8797,16 @@ window.__ModuleLoader__.load({
       }, [])
       /* A throw inside either card used to unmount the overlay slot for the rest
          of the page load — the card vanished once and never came back (m04102).
-         The boundary keeps the failure local and offers the same close the card
-         has, so the next click starts from a clean mount. */
+         The boundary keeps the failure local, closes the card and reports it in
+         the corner toast (m04914). The old fallback bar sat at the top of the
+         page, far from the click, and read as a broken page. */
       const guard = (key, onClose, child) => E(RenderBoundary, {
         key: key,
-        message: props.t('preview.boundary'),
-        onClose: onClose,
-        closeLabel: props.t('confirm.cancel'),
+        silent: true,
+        onError: () => {
+          toastCenter.push({ text: props.t('toast.dialogFailed'), tone: 'error', icon: 'close' })
+          onClose()
+        },
       }, child)
       return E(Fragment, null,
         entry === null ? null : guard('commit|' + entry.sessionId + '|' + entry.repoRoot, () => commitDialog.set(null), E(CommitDialogBody, {
@@ -8922,15 +8834,15 @@ window.__ModuleLoader__.load({
       const [summary, setSummary] = useState(null)
       const [busy, setBusy] = useState(false)
       const [error, setError] = useState('')
-      const [patch, setPatch] = useState('')
-      const [patchLoading, setPatchLoading] = useState(false)
       const [groupBy, setGroupBy] = useState('flat')
       const [foldedDirs, setFoldedDirs] = useState({})
       const [rowMenu, setRowMenu] = useState(null)
       const [discardAsk, setDiscardAsk] = useState(null)
       const anchorRef = useRef(null)
-      const diffToken = useRef(0)
-      const selection = EMPTY_SELECTION
+      /* m05307: the row click selects (and previews in the right pane); the
+         checkbox still decides what the commit carries. */
+      const [selection, setSelection] = useState(() => new Set())
+      const [picked, setPicked] = useState(null)
       const base = { cwd: entry.cwd, repoRoot: entry.repoRoot }
       const messageOf = (caught) => (caught !== null && caught !== undefined && typeof caught.message === 'string' && caught.message !== ''
         ? caught.message
@@ -8962,23 +8874,18 @@ window.__ModuleLoader__.load({
           setBusy(false)
         }
       }
-      const openDiff = async (item, group) => {
-        const token = diffToken.current + 1
-        diffToken.current = token
-        setPatchLoading(true)
-        setPatch('')
-        try {
-          const data = await request('diff', Object.assign({}, base, {
-            path: item.path,
-            staged: group === 'staged',
-            untracked: group === 'untracked',
-          }))
-          if (diffToken.current === token) setPatch(typeof data.patch === 'string' ? data.patch : '')
-        } catch (caught) {
-          if (diffToken.current === token) setError(messageOf(caught))
-        } finally {
-          if (diffToken.current === token) setPatchLoading(false)
-        }
+      /* m04916: the menu entry and the double click open the file card above
+         this dialog. m05307: a plain row click previews the patch in this
+         card's right pane, split 40/60 with the change list. */
+      const openDiff = (item, group) => {
+        fileDialog.set({
+          path: item.path,
+          staged: group === 'staged',
+          untracked: group === 'untracked' ? true : undefined,
+          cwd: entry.cwd,
+          repoRoot: entry.repoRoot,
+          sessionId: entry.sessionId,
+        })
       }
       /* A landed commit closes the card and tells every branch readout to
          refresh; a rejected one keeps the box filled with the error above it.
@@ -9051,25 +8958,39 @@ window.__ModuleLoader__.load({
                 groupBy: groupBy, sortKey: 'git', onGroupBy: setGroupBy,
                 foldedDirs: foldedDirs, onFoldedDirs: setFoldedDirs,
                 request: request, cwd: entry.cwd, sessionId: entry.sessionId,
-                commitSettings: readCommitSettings(), base: base,
+                base: base,
                 onCommit: commit,
                 onStage: (item) => { void call('stage', { paths: [item.path] }) },
                 onUnstage: (item) => { void call('unstage', { paths: [item.path] }) },
                 onStageAll: (entries) => { void call('stage', { paths: entries.map((item) => item.path) }) },
                 onUnstageAll: () => { void call('unstage', { paths: stagedPaths() }) },
                 onDiscard: (item, group) => setDiscardAsk({ item: item, group: group }),
-                onDiff: (item, group) => { void openDiff(item, group) },
+                onDiff: (item, group) => { openDiff(item, group) },
                 onChangeMenu: (event, item, group) => setRowMenu({ item: item, group: group, x: event.clientX, y: event.clientY }),
-                /* This card's rows are not a multi-select surface: the panel owns
-                   the keyboard/drag model, and the checkbox is the commit pick. */
+                /* The checkbox is the commit pick; the row click only
+                   selects, and feeds the right-hand preview (m05307). */
                 selection: selection,
-                onSelectionChange: () => undefined,
+                onSelectionChange: setSelection,
+                onSelect: (item, group) => setPicked({ item: item, group: group }),
                 anchorRef: anchorRef,
               })),
             E('div', { className: 'git4idea-commit-layer-right' },
-              patch === '' && patchLoading === false
-                ? E('div', { className: 'git4idea-empty' }, t('pane.diff'))
-                : E(DiffBody, { patch: patch, loading: patchLoading, t: t })))),
+              picked === null
+                ? E('div', { className: 'git4idea-preview-root' },
+                    E('div', { className: 'git4idea-preview-body' },
+                      E('div', { className: 'git4idea-empty' }, t('changes.diffHint'))))
+                : E(DiffPreview, {
+                    key: picked.group + ':' + picked.item.path,
+                    seed: {
+                      path: picked.item.path,
+                      staged: picked.group === 'staged',
+                      untracked: picked.group === 'untracked' ? true : undefined,
+                      cwd: entry.cwd,
+                      repoRoot: entry.repoRoot,
+                      sessionId: entry.sessionId,
+                    },
+                    t: t,
+                  })))),
         discardAsk === null ? null : E(ConfirmDialog, {
           key: 'discard',
           t: t,
@@ -9750,7 +9671,6 @@ window.__ModuleLoader__.load({
             const sections = [].concat(
               csTree('local', t('branches.local'), csEntries(branchList.local), 'local') || [],
               csTree('remote', t('branches.remote'), csEntries(branchList.remote), 'remote') || [],
-              csTree('tags', t('branches.tags'), csEntries(branchList.tags), 'tags') || [],
             )
             return E('div', { ref: popRef, className: 'git4idea-cs-menu git4idea-cs-branches', 'data-cordis-panel': '' },
               E('div', { className: 'git4idea-cs-search' },
@@ -10088,15 +10008,17 @@ window.__ModuleLoader__.load({
       return E('div', { className: 'git4idea-preview-root' },
         E('div', { className: 'git4idea-preview-head' },
           E('span', { className: 'git4idea-preview-title', 'data-tip': title }, title === '' ? t('preview.title') : title),
-          seed === null ? null : E('div', { className: 'git4idea-preview-actions' },
-            E('button', { type: 'button', className: 'git4idea-preview-btn', 'aria-label': t('diff.copy'), 'data-tip': t('diff.copy'), onClick: copyPatch },
+          /* m04913: the close button rides the action row, so the × sits on the
+             same line as copy/refresh at the far right of the head. */
+          E('div', { className: 'git4idea-preview-actions' },
+            seed === null ? null : E('button', { type: 'button', className: 'git4idea-preview-btn', 'aria-label': t('diff.copy'), 'data-tip': t('diff.copy'), onClick: copyPatch },
               E(Icon, { name: copied === true ? 'check' : 'copy', size: 13 })),
-            E('button', { type: 'button', className: 'git4idea-preview-btn', 'aria-label': t('toolbar.refresh'), 'data-tip': t('toolbar.refresh'), onClick: () => { setRefreshTick((n) => n + 1) } },
-              E(Icon, { name: 'refresh', size: 13 })))),
-          props.onClose === undefined ? null : E('button', {
-            type: 'button', className: 'git4idea-preview-btn', 'aria-label': t('toast.close'), 'data-tip': t('toast.close'),
-            onClick: props.onClose,
-          }, E(Icon, { name: 'close', size: 13 })),
+            seed === null ? null : E('button', { type: 'button', className: 'git4idea-preview-btn', 'aria-label': t('toolbar.refresh'), 'data-tip': t('toolbar.refresh'), onClick: () => { setRefreshTick((n) => n + 1) } },
+              E(Icon, { name: 'refresh', size: 13 })),
+            props.onClose === undefined ? null : E('button', {
+              type: 'button', className: 'git4idea-preview-btn', 'aria-label': t('toast.close'), 'data-tip': t('toast.close'),
+              onClick: props.onClose,
+            }, E(Icon, { name: 'close', size: 13 })))),
         seed === null
           ? E('div', { className: 'git4idea-preview-body' }, E('div', { className: 'git4idea-empty' }, t('preview.hint')))
           : state.error !== null
@@ -10237,7 +10159,7 @@ window.__ModuleLoader__.load({
         void (async () => {
           try {
             const detail = await request('commitDetail', Object.assign({}, base, { hash: selected }))
-            if (alive === true) setFiles(detail.files)
+            if (alive === true) setFiles(Array.isArray(detail.files) ? detail.files : [])
           } catch (caught) {
             if (alive === true) { setFiles([]); setError(messageOf(caught)) }
           } finally {
@@ -10252,7 +10174,11 @@ window.__ModuleLoader__.load({
         document.addEventListener('keydown', onKey)
         return () => { document.removeEventListener('keydown', onKey) }
       }, [])
-      const commit = data === null ? null : data.commits.find((item) => item.hash === selected)
+      /* m05303: `find` returns undefined for a hash that left the list (the
+         branch moved between two previews). The card guards on null, so
+         undefined fell through and the header read commit.shortHash — the
+         boundary then closed the whole push dialog (the reported flash). */
+      const commit = data === null ? null : (data.commits.find((item) => item.hash === selected) || null)
       const openFile = (file) => {
         if (commit === null) return
         fileDialog.set({
@@ -10295,7 +10221,7 @@ window.__ModuleLoader__.load({
               ? t('push.none')
               : ''
       return E('div', {
-        className: 'git4idea-commit-overlay' + (props.inline === true ? ' git4idea-commit-overlay-inline' : ''),
+        className: 'git4idea-commit-overlay',
         'data-git4idea-push-dialog': '',
         onMouseDown: (event) => { if (event.target === event.currentTarget) props.onClose() },
       }, E('div', { className: 'git4idea-push-card' },
@@ -10362,6 +10288,7 @@ window.__ModuleLoader__.load({
 
     function apply(ctx) {
       installTipLayer()
+      installClientErrorHook()
       const style = document.createElement('style')
       style.setAttribute('data-dsh-git4idea', '')
       style.textContent = CSS
@@ -10597,21 +10524,11 @@ window.__ModuleLoader__.load({
         }, 'dsh-git4idea: session-switch prewarm')
       })
 
-      /* ---- panel model picker: the official directories resolver ---- */
-      /* ui-model-selection exposes the resolver as a CONTEXT PROPERTY, and
-         cordis refuses bare property reads ("cannot get property … without
-         inject") — the only legal consumer path is a declared inject. Soft:
-         an older host without the service never fires this callback, the ref
-         stays null and the picker hides itself (the AI-write button keeps its
-         served-models fallback). Subscribers re-render the mounted pickers. */
-      ctx.inject(['modelDirectories'], (mdCtx) => {
-        const md = mdCtx.get('modelDirectories')
-        if (md === undefined || md === null || typeof md.directoryFor !== 'function') return
-        modelDirectoriesRef = md
-        for (const notify of modelDirectorySubs) { try { notify() } catch (error) { void error } }
-      })
-
     }
+
+    /* Synchronous by design: see loadPanelSettings. It runs before the host can
+       mount any seat, so every readStored call below sees the saved value. */
+    loadPanelSettings()
 
     return { name: 'dsh-git4idea', inject: [], apply }
   },
