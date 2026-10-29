@@ -1822,7 +1822,7 @@ test('the popover floats the IDEA row verbs and fetch keeps it open (m02697)', (
 test('a local branch row also updates, pushes and renames that branch (m03873)', () => {
   // Update/push/rename act on the SELECTED ref, while the chooser's own
   // commit and push stay about the checked-out branch.
-  assert.match(client, /id: 'update', icon: 'fetch', label: t\('action\.updateBranch'\)/, 'the row offers update')
+  assert.match(client, /id: 'update', icon: 'pull', label: t\('action\.updateBranch'\)/, 'the row offers update')
   assert.match(client, /id: 'push', icon: 'push', label: t\('action\.push'\)/, 'the row offers push')
   assert.match(client, /id: 'rename', icon: 'file', label: t\('action\.rename'\)/, 'the row offers rename')
   assert.equal((client.match(/^ +local \? \{$/gm) || []).length, 3, 'all three are local-row verbs only')
@@ -1960,7 +1960,7 @@ test('upstream management: bind, drop and create-tracking from menus (v0.20.0, i
   assert.match(client, /id: 'createTracking'/, 'remote rows offer create-local-branch')
   // The submenu is built at click time (branches.remote), never at render
   // time — the useCallback deps must not grow a later-defined binding.
-  assert.match(client, /run: \(event\) => openMenuAt\(event, branches\.remote\.map/, 'the remote picker is built inside run() at click time')
+  assert.match(client, /run: \(event\) => openMenuAt\(event, withoutIcons\(branches\.remote\.map/, 'the remote picker is built inside run() at click time')
   assert.match(client, /active: entry\.upstream === remoteEntry\.name/, 'the current upstream is marked active in the submenu')
   // More menu carries the same verbs for the CURRENT branch.
   assert.match(client, /id: 'br-upstream'/, 'the more menu can set the current branch upstream')
@@ -1973,8 +1973,8 @@ test('upstream management: bind, drop and create-tracking from menus (v0.20.0, i
   // The tree shows the binding inline, muted and capped.
   assert.match(client, /className: 'git4idea-row-upstream'/, 'local rows show the upstream inline')
   assert.match(cssRule('.git4idea-row-upstream'), /max-width:180px/, 'the inline target is capped so it cannot starve the label')
-  // Dictionary: 21 gates for all six new keys (key-set equality test pins parity).
-  for (const key of ['action.setUpstream', 'action.unsetUpstream', 'action.createLocalBranch', 'prompt.createTracking', 'more.setUpstreamHead', 'more.unsetUpstreamHead']) {
+  // Dictionary: 21 gates for all five new keys (key-set equality test pins parity).
+  for (const key of ['action.setUpstream', 'action.unsetUpstream', 'prompt.createTracking', 'more.setUpstreamHead', 'more.unsetUpstreamHead']) {
     assert.equal((client.match(new RegExp("'" + key.replace(/\./g, '\\.') + "':", 'g')) || []).length, 2, 'both dictionaries carry ' + key)
   }
 })

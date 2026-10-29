@@ -698,7 +698,7 @@
           },
           {
             id: 'newBranch', icon: 'branchCreate', tone: 'success',
-            label: t(kind === 'remote' ? 'action.createLocalBranch' : 'action.newBranchFrom'),
+            label: t('action.newBranchFrom'),
             run: () => {
               setCsMenu(null)
               openBranchPrompt({
@@ -735,7 +735,7 @@
              not on HEAD; rename needs a local branch to move. The checked-out
              row keeps working too — pull/push then mean what they say on it. */
           local ? {
-            id: 'update', icon: 'fetch', label: t('action.updateBranch'),
+            id: 'update', icon: 'pull', label: t('action.updateBranch'),
             disabled: csBusy !== '',
             run: () => { setCsMenu(null); void updateBranch(entry) },
           } : null,
@@ -788,9 +788,8 @@
         className: 'git4idea-cs-sub-item',
         'data-tone': item.danger === true ? 'danger' : (item.tone === undefined ? 'secondary' : item.tone),
         'aria-disabled': item.disabled === true ? 'true' : 'false',
-        'data-tip': csMenu.entry.name,
         onClick: () => { if (item.disabled !== true) item.run() },
-      }, E(Icon, { name: item.icon, size: 12 }), E('span', { className: 'git4idea-cs-sub-label' }, item.label)))))
+      }, E('span', { className: 'git4idea-cs-sub-label' }, item.label)))))
       const csNeedle = branchFilter.trim().toLowerCase()
       const csEntries = (list) => (Array.isArray(list) ? list : []).filter((entry) => csNeedle === ''
         || String(entry.name).toLowerCase().indexOf(csNeedle) >= 0)
@@ -805,7 +804,6 @@
         'data-menu': csMenu !== null && csMenu.entry === entry ? 'true' : 'false',
         disabled: entry.worktree !== null || checkingOut !== '',
         style: { paddingLeft: String(6 + depth * 12) + 'px' },
-        'data-tip': entry.worktree !== null ? t('composer.inWorktree') : (checkingOut !== '' ? t('composer.busy') : entry.name),
         onClick: (event) => { openCsMenu(entry, kind, event) },
       },
         E(Icon, { name: kind === 'tags' ? 'tag' : 'branch', size: 11 }),

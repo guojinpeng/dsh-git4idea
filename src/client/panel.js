@@ -1104,13 +1104,13 @@
           const locals = picked.filter((item) => item.kind === 'local' && item.entry.head !== true)
           const remotes = picked.filter((item) => item.kind === 'remote')
           const tags = picked.filter((item) => item.kind === 'tag')
-          openMenuAt(event, [
+          openMenuAt(event, withoutIcons([
             { id: 'copyNames', icon: 'tag', tone: 'secondary', label: fill(t('menu.copyNamesN'), { n: picked.length }), run: () => copyValues(picked.map((item) => item.name)) },
             null,
             locals.length > 0 ? { id: 'deleteLocal', icon: 'trash', tone: 'danger', danger: true, label: fill(t('menu.deleteLocalN'), { n: locals.length }), run: () => setDialog({ kind: 'deleteRefs', locals: locals.map((item) => item.name), remotes: [], tags: [] }) } : null,
             remotes.length > 0 ? { id: 'deleteRemote', icon: 'trash', tone: 'danger', danger: true, label: fill(t('menu.deleteRemoteN'), { n: remotes.length }), run: () => setDialog({ kind: 'deleteRefs', locals: [], remotes: remotes.map((item) => { const slash = item.name.indexOf('/'); return { remote: slash >= 0 ? item.name.slice(0, slash) : item.name, branch: slash >= 0 ? item.name.slice(slash + 1) : item.name } }), tags: [] }) } : null,
             tags.length > 0 ? { id: 'deleteTags', icon: 'trash', tone: 'danger', danger: true, label: fill(t('menu.deleteTagsN'), { n: tags.length }), run: () => setDialog({ kind: 'deleteRefs', locals: [], remotes: [], tags: tags.map((item) => item.name) }) } : null,
-          ].filter((item) => item !== null))
+          ].filter((item) => item !== null)))
           return
         }
         const items = [
@@ -1127,19 +1127,19 @@
              render time, so branchMenu's useCallback deps stay untouched
              (remoteBranches is defined AFTER this callback; a render-time
              reference would be the classic hooks TDZ trap). */
-          isLocal ? { id: 'setUpstream', icon: 'fetch', tone: 'cyan', label: t('action.setUpstream'), disabled: branches === null || branches.remote.length === 0, reason: reason, run: (event) => openMenuAt(event, branches.remote.map((remoteEntry) => ({
+          isLocal ? { id: 'setUpstream', icon: 'fetch', tone: 'cyan', label: t('action.setUpstream'), disabled: branches === null || branches.remote.length === 0, reason: reason, run: (event) => openMenuAt(event, withoutIcons(branches.remote.map((remoteEntry) => ({
             id: 'upstream:' + remoteEntry.name,
             icon: 'fetch', tone: 'cyan',
             label: remoteEntry.name,
             active: entry.upstream === remoteEntry.name,
             run: () => { void run('branch-upstream', { branch: entry.name, upstream: remoteEntry.name }) },
-          }))) } : null,
+          })))) } : null,
           isLocal && entry.upstream !== null && entry.upstream !== undefined ? { id: 'unsetUpstream', icon: 'undo', tone: 'secondary', label: t('action.unsetUpstream'), run: () => { void run('branch-upstream', { branch: entry.name, unset: true }) } } : null,
           /* Remote rows get the tracking form: the local branch is created
              FROM the remote ref with --track in one step (issue #18 item 5),
              replacing the plain "new branch from" which could not bind. */
           entry.remote === true
-            ? { id: 'createTracking', icon: 'branchCreate', tone: 'success', label: t('action.createLocalBranch'), run: () => setDialog({ kind: 'createTracking', from: entry.name, name: entry.name.slice(entry.name.indexOf('/') + 1) }) }
+            ? { id: 'createTracking', icon: 'branchCreate', tone: 'success', label: t('action.newBranchFrom'), run: () => setDialog({ kind: 'createTracking', from: entry.name, name: entry.name.slice(entry.name.indexOf('/') + 1) }) }
             : { id: 'newBranch', icon: 'plus', tone: 'success', label: t('action.newBranchFrom'), run: () => setDialog({ kind: 'newBranch', from: entry.name }) },
           isLocal ? { id: 'rename', icon: 'file', tone: 'primary', label: t('action.rename'), run: () => setDialog({ kind: 'renameBranch', from: entry.name }) } : null,
           isLocal ? { id: 'delete', icon: 'trash', tone: 'danger', label: t('action.delete'), danger: true, disabled: entry.head === true, reason: reason, run: () => setDialog({ kind: 'deleteBranch', name: entry.name }) } : null,
@@ -1159,7 +1159,7 @@
           { id: 'update', icon: 'fetch', tone: 'cyan', label: t('action.update'), run: () => { void run('fetch', { prune: true }) } },
           { id: 'push', icon: 'push', tone: 'success', label: t('action.push'), disabled: blocked, reason: t('operation.hint'), run: () => openPushDialog() },
         ].filter((item) => item !== null)
-        openMenuAt(event, items)
+        openMenuAt(event, withoutIcons(items))
       }, [branches, checkout, run, t, compareWith, toggleFavoriteBranch, openMenuAt, favorites, blocked, sendGitSummaryToChat, repoLabel, copyValues])
 
       const commitMenu = useCallback((event, commit) => {
@@ -2395,5 +2395,12 @@
       try {
         void navigator.clipboard.writeText(text)
       } catch (error) { void error }
+    }
+
+    /* The branch context menu is text-only (user request): IDEA's glyph column
+       is noise there, so the rows carry labels only. Submenu rows are flattened
+       the same way before they reach the shared ContextMenu. */
+    function withoutIcons(items) {
+      return items.map((item) => (item === null ? null : Object.assign({}, item, { icon: undefined })))
     }
 

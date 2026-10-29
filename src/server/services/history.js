@@ -133,8 +133,21 @@ export async function commitDetail(payload) {
   const metaOut = await git(root, ['show', '-s', '--format=' + metaFormat, hash])
   const parts = metaOut.trim().split(FIELD_SEP)
   const parents = parts[2] === undefined || parts[2].trim() === '' ? [] : parts[2].trim().split(' ')
-  const numstatOut = await git(root, ['show', '--numstat', '-z', '--format=', '-m', '--first-parent', hash])
+  /* Branches that CONTAIN the commit — IDEA's "in N branches" line. The two
+     queries are independent, so they run together. for-each-ref sorts by
+     refname, which already puts local heads before remote ones. */
+  const [numstatOut, branchOut] = await Promise.all([
+    git(root, ['show', '--numstat', '-z', '--format=', '-m', '--first-parent', hash]),
+    runGit(root, ['for-each-ref', '--contains', hash, '--format=%(refname)', 'refs/heads', 'refs/remotes']),
+  ])
   const files = parseNumstat(numstatOut)
+  const branches = (branchOut.code === 0 ? branchOut.stdout.split('\n') : [])
+    .map((name) => name.trim())
+    .filter((name) => name.startsWith('refs/heads/') || name.startsWith('refs/remotes/'))
+    /* origin/HEAD is a symbolic pointer at the remote's default branch, not a
+       branch of its own: it would duplicate that branch in the list. */
+    .filter((name) => name.endsWith('/HEAD') === false)
+    .map((name) => name.replace(/^refs\/heads\//, '').replace(/^refs\/remotes\//, ''))
   return {
     hash: parts[0],
     shortHash: parts[1],
@@ -145,6 +158,7 @@ export async function commitDetail(payload) {
     subject: parts[6],
     body: parts[7] === undefined ? '' : parts[7],
     refs: parts[8] === undefined || parts[8].trim() === '' ? [] : parts[8].split(',').map((ref) => ref.trim()).filter((ref) => ref !== ''),
+    branches,
     files,
   }
 }

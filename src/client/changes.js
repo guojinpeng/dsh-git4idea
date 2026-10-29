@@ -546,12 +546,28 @@
       return { name: value, kind: value.indexOf('/') >= 0 ? 'remote' : 'local' }
     }
 
-    /* Display form of a decoration: a HEAD decoration names the branch it points
-       at, so the badge says "HEAD → main" — where HEAD sits must be readable at
-       a glance (GitLens-style), not only inferable from the hollow dot. */
-    function refLabel(decoration) {
-      if (decoration.kind !== 'head') return decoration.name
-      return decoration.name === 'HEAD' ? 'HEAD' : 'HEAD → ' + decoration.name
+    /* Decorations for display in the log row and the commit detail: "HEAD -> main"
+       names TWO refs (HEAD and the branch), so it becomes two badges. Branches
+       come before tags; the order is stable within a kind. */
+    function refDecorations(refs) {
+      const list = Array.isArray(refs) ? refs : []
+      const out = []
+      for (const raw of list) {
+        const value = String(raw)
+        if (value.indexOf('HEAD -> ') === 0) {
+          out.push({ name: 'HEAD', kind: 'head' })
+          const branch = value.slice(8)
+          out.push({ name: branch, kind: branch.indexOf('/') >= 0 ? 'remote' : 'local' })
+        } else if (value === 'HEAD') {
+          out.push({ name: 'HEAD', kind: 'head' })
+        } else if (value.indexOf('tag: ') === 0) {
+          out.push({ name: value.slice(5), kind: 'tag' })
+        } else {
+          out.push({ name: value, kind: value.indexOf('/') >= 0 ? 'remote' : 'local' })
+        }
+      }
+      const order = { head: 0, local: 1, remote: 2, tag: 3 }
+      return out.sort((a, b) => order[a.kind] - order[b.kind])
     }
 
     /* ---- list windowing (issue #11 follow-up: hundreds of rows stay smooth) ----
@@ -721,43 +737,14 @@
 
     /* One history row, memoised on its data (commit + graph row + selection):
        filter keystrokes re-render the list shell without touching unchanged
-       rows, and the +N overflow badge opens the hidden refs in a menu instead
-       of hiding them behind a bare count. */
-    const REF_ICONS = { head: 'star', local: 'branch', remote: 'fetch', tag: 'tag' }
-    const REF_TONES = { head: 'success', local: 'accent', remote: 'violet', tag: 'warn' }
+       rows. Refs show as IDEA-style tag icons after the subject; their names
+       live in the hover tooltip, so the subject keeps the room. */
+    const MAX_ROW_REFS = 4
     const CommitRow = memo(function CommitRow(props) {
       const commit = props.commit
-      const decorations = (Array.isArray(commit.refs) ? commit.refs : []).map(refInfo)
-      /* Remote folding (GitLens-style dedupe): a remote whose short name
-         (origin/main → main) matches a LOCAL or HEAD badge on the same commit
-         stops taking a badge of its own — the local badge's title gains a
-         "⇅ origin/main" line and the overflow menu still lists it. Nothing is
-         lost, the row just stops saying "main" and "origin/main" twice. */
-      const localNames = new Set(decorations.filter((d) => d.kind === 'local' || d.kind === 'head').map((d) => d.name))
-      const foldedBy = new Map()
-      const kept = []
-      for (const decoration of decorations) {
-        if (decoration.kind === 'remote') {
-          const slash = decoration.name.indexOf('/')
-          const short = slash >= 0 ? decoration.name.slice(slash + 1) : decoration.name
-          if (localNames.has(short) === true) {
-            if (foldedBy.has(short) === false) foldedBy.set(short, [])
-            foldedBy.get(short).push(decoration.name)
-            continue
-          }
-        }
-        kept.push(decoration)
-      }
-      const folded = []
-      for (const list of foldedBy.values()) folded.push(...list)
-      const shown = kept.slice(0, 3)
-      const hidden = kept.length - shown.length
-      const badgeTitle = (decoration) => {
-        const label = refLabel(decoration)
-        if (decoration.kind !== 'local' && decoration.kind !== 'head') return label
-        const folds = foldedBy.get(decoration.name)
-        return folds === undefined ? label : label + '\n⇅ ' + folds.join(', ')
-      }
+      const refs = refDecorations(commit.refs)
+      const shownRefs = refs.slice(0, MAX_ROW_REFS)
+      const hiddenRefs = refs.length - shownRefs.length
       return E('div', {
         /* data-lane feeds the hover highlight: the scroll container copies the
            hovered row's lane into data-hover-lane, and generated CSS dims every
@@ -770,36 +757,24 @@
         onContextMenu: (event) => { event.preventDefault(); props.onMenu(event, commit) },
       },
         /* Column order (m01737 #4, mirroring the IDE log): graph, message,
-           ref chips, author, then the absolute timestamp. The relative "4d"
+           ref icons, author, then the absolute timestamp. The relative "4d"
            column is gone — it made every row read differently by the hour. */
         E(GraphCell, { row: props.row, height: 26 }),
         E('span', { className: 'git4idea-commit-subject', 'data-tip': commit.subject }, commit.subject),
-        shown.map((decoration, index) => E('span', {
-          key: decoration.kind + ':' + decoration.name + ':' + index,
-          className: 'git4idea-ref git4idea-ref-' + decoration.kind,
-          'data-tip': badgeTitle(decoration),
-        }, refLabel(decoration))),
-        hidden > 0 || folded.length > 0 ? E('span', {
-          className: 'git4idea-ref git4idea-ref-more',
-          'data-tip': kept.slice(3).map(refLabel).concat(folded.map((name) => '⇅ ' + name)).join('\n'),
-          onClick: (event) => {
-            event.stopPropagation()
-            if (props.openMenuAt === undefined) return
-            const entries = kept.slice(3).map((decoration, at) => ({
-              id: 'ref:' + at,
-              icon: REF_ICONS[decoration.kind] === undefined ? 'branch' : REF_ICONS[decoration.kind],
-              tone: REF_TONES[decoration.kind] === undefined ? 'secondary' : REF_TONES[decoration.kind],
-              label: refLabel(decoration),
-              run: () => { copyText(refLabel(decoration)) },
-            })).concat(folded.map((name, at) => ({
-              id: 'fold:' + at,
-              icon: 'fetch', tone: 'violet',
-              label: '⇅ ' + name,
-              run: () => { copyText(name) },
-            })))
-            props.openMenuAt(event, entries)
-          },
-        }, '+' + String(hidden + folded.length)) : null,
+        refs.length === 0 ? null : E('span', {
+          className: 'git4idea-ref-stack',
+          /* One tooltip for the whole cluster, names top-to-bottom in the same
+             order the detail pane lists them. The icons are inert (m00717): a
+             click bubbles to the row and opens the commit like anywhere else. */
+          'data-tip': refs.map((decoration) => decoration.name).join('\n'),
+        },
+          /* Reversed on purpose: later icons paint on top, so HEAD sits on the
+             right and reads as "where the branch is". */
+          shownRefs.slice().reverse().map((decoration, index) => E('span', {
+            key: decoration.kind + ':' + decoration.name + ':' + index,
+            className: 'git4idea-ref-icon git4idea-ref-' + decoration.kind,
+          }, E(Icon, { name: 'tagOutline', size: 14 }))),
+          hiddenRefs > 0 ? E('span', { className: 'git4idea-ref-count' }, '+' + String(hiddenRefs)) : null),
         E('span', { className: 'git4idea-commit-fill' }),
         E('span', { className: 'git4idea-commit-author', 'data-tip': commit.author }, commit.author),
         E('span', { className: 'git4idea-commit-date' }, shortDate(commit.date)))
@@ -1281,6 +1256,10 @@
     function CommitDetail(props) {
       const t = props.t
       const detail = props.detail
+      /* IDEA's "in N branches" (m00717) starts collapsed. The flag is keyed by
+         commit hash, so picking another commit collapses it again without an
+         effect (hooks run before the empty-state return below). */
+      const [expandedHash, setExpandedHash] = useState(null)
       /* The right column (m01216): changed files on top (2/3 of the height), the
          commit message below (1/3). The parent folder rides in its own column so
          two files called index.js are told apart without a tooltip. */
@@ -1297,6 +1276,34 @@
               onMenu: props.onFileMenu,
             })
       if (detail === null || detail === undefined) return E('div', { className: 'git4idea-empty git4idea-detail-empty' }, t('detail.pick'))
+      /* The refs the row shows as icons, spelled out in IDEA's order: one tag
+         icon and one name per ref, HEAD first, tags last. */
+      const refBadges = refDecorations(detail.refs).map((decoration, index) => E('span', {
+        key: decoration.kind + ':' + decoration.name + ':' + index,
+        className: 'git4idea-detail-ref',
+      },
+        E('span', { className: 'git4idea-ref-icon git4idea-ref-' + decoration.kind }, E(Icon, { name: 'tagOutline', size: 14 })),
+        E('span', { className: 'git4idea-detail-ref-name' }, decoration.name)))
+      const refBlock = refBadges.length === 0 ? null : E('div', { className: 'git4idea-detail-refs' }, refBadges)
+      /* Branches that contain the commit, as the host reports them: local heads
+         first, then remotes, origin/HEAD dropped. Collapsed shows the first
+         three names inline, expanded lists every one on its own line. */
+      const branches = Array.isArray(detail.branches) ? detail.branches : []
+      const expanded = expandedHash === detail.hash
+      const branchBlock = branches.length === 0 ? null : E('div', { className: 'git4idea-detail-branches' },
+        E('div', { className: 'git4idea-detail-branches-line' },
+          E('span', { className: 'git4idea-detail-branches-label' }, fill(t('detail.branches'), { n: branches.length })),
+          expanded
+            ? null
+            : E('span', { className: 'git4idea-detail-branches-names' }, branches.slice(0, 3).join(', ') + (branches.length > 3 ? ', …' : '')),
+          E('button', {
+            type: 'button',
+            className: 'git4idea-link',
+            onClick: () => { setExpandedHash(expanded ? null : detail.hash) },
+          }, expanded ? t('detail.hide') : t('detail.showAll'))),
+        expanded
+          ? E('div', { className: 'git4idea-detail-branches-list' }, branches.map((name) => E('div', { key: name, className: 'git4idea-detail-branch' }, name)))
+          : null)
       if (props.pane === true) {
         return E('div', { className: 'git4idea-detail git4idea-detail-pane' },
           E('div', { className: 'git4idea-detail-files-head' }, t('detail.files') + ' · ' + String(detail.files.length)),
@@ -1307,7 +1314,9 @@
               E('span', { className: 'git4idea-detail-author' }, detail.author),
               E('span', { className: 'git4idea-detail-date' }, shortDate(detail.date))),
             E('div', { className: 'git4idea-detail-subject' }, detail.subject),
-            detail.body === undefined || detail.body.trim() === '' ? null : E('pre', { className: 'git4idea-detail-body' }, detail.body.trim())))
+            detail.body === undefined || detail.body.trim() === '' ? null : E('pre', { className: 'git4idea-detail-body' }, detail.body.trim()),
+            refBlock,
+            branchBlock))
       }
       return E('div', { className: 'git4idea-detail' },
         E('div', { className: 'git4idea-detail-head' },
@@ -1317,6 +1326,8 @@
           E('span', { className: 'git4idea-detail-date' }, shortDate(detail.date))),
         E('div', { className: 'git4idea-detail-subject' }, detail.subject),
         detail.body === undefined || detail.body.trim() === '' ? null : E('pre', { className: 'git4idea-detail-body' }, detail.body.trim()),
+        refBlock,
+        branchBlock,
         E('div', { className: 'git4idea-detail-files-head' }, t('detail.files') + ' · ' + String(detail.files.length)),
         E('div', { className: 'git4idea-detail-files' }, fileRows))
     }

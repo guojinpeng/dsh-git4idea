@@ -1006,114 +1006,226 @@
 
     /* ============================== commit graph ============================== */
 
+    /* IDEA's log layout ("plan A"), ported from the permanent-graph sources:
+       - every commit gets a layout index from a DFS that starts at the branch
+         heads ordered by branch importance (origin/master, remote branch,
+         master, local branch, tag, current branch, HEAD). The DFS walks first
+         parents first and bumps the index at each chain end, so the most
+         important branch ends up leftmost even when a newer merge commit was
+         loaded first.
+       - the columns of a row are the RANKS of the elements visible in it: the
+         commit node plus every edge that CROSSES the row (child above, parent
+         below). Elements sort with GraphElementComparatorByLayoutIndex, so a
+         wire lands between the columns its ends demand and the columns compact
+         as soon as a wire dies.
+       - an edge between adjacent rows is not a row element: its end column is
+         the node of the neighbour row (PrintElementGeneratorImpl's end
+         position function). Only a long edge is ranked on its own.
+       Every row then draws the halves of the lines that touch its centre; two
+       halves meet on the row border at the midpoint of their ranks, so one
+       straight diagonal continues into the next row (IDEA's cell painter).
+       The log is a WINDOW: a parent that was never loaded contributes no edge,
+       the lane simply ends at its commit. */
     function buildRows(commits) {
-      /* The log is a WINDOW: the oldest visible commits usually have parents
-         that were never loaded. A parent outside the window must not park its
-         hash on a lane — the lane would stay occupied for the rest of the
-         page (the hash can never be consumed), every later branch tip would
-         claim yet another fresh lane, and the drawing degenerated into a
-         bundle of independent parallel lines that pushed the subjects out of
-         the panel. So the pass first learns which hashes are actually on the
-         board, and an edge to anything else simply ends at its commit. */
-      const present = new Set()
-      for (const commit of commits) present.add(commit.hash)
-      const lanes = []
-      /* The current branch keeps the LEFTMOST column whenever it is on the
-         board: pre-seeding its hash makes that commit claim lane 0 when its
-         row arrives, so HEAD's line never drifts to the right of a side
-         branch (the rest of the lanes fill newest-first, see below). */
-      const headCommit = commits.find((commit) => Array.isArray(commit.refs) && commit.refs.some((ref) => String(ref).indexOf('HEAD') >= 0))
-      if (headCommit !== undefined) lanes.push(headCommit.hash)
-      const rows = []
+      const indexOf = new Map()
+      commits.forEach((commit, index) => indexOf.set(commit.hash, index))
+
+      /* The current branch comes from the HEAD decoration, and it ranks behind
+         every other ref class in IDEA's branch layout. */
+      let currentBranch = null
       for (const commit of commits) {
-        const before = lanes.slice()
-        let lane = lanes.indexOf(commit.hash)
-        if (lane === -1) {
-          lane = lanes.indexOf(null)
-          if (lane === -1) { lanes.push(null); lane = lanes.length - 1 }
+        const refs = Array.isArray(commit.refs) ? commit.refs : []
+        for (const ref of refs) {
+          const name = String(ref)
+          if (name.indexOf('HEAD -> ') === 0) currentBranch = name.slice(8)
         }
-        const parents = Array.isArray(commit.parents) ? commit.parents : []
-        const parentLanes = []
-        /* A commit whose parent already sits on ANOTHER lane merges into it:
-           its own lane ends here and the edge is drawn across. Until v0.4.1 the
-           first parent was parked on the commit's own lane unconditionally, so
-           a branch that merged back into a lane to its left kept a stub of its
-           own colour running on above the junction — a fork that never
-           happened. Only a parent that is not on the board yet inherits the
-           lane, and (v0.5.4) only a parent that is on the board at all: a
-           parent past the loaded window ends the lane at this row instead of
-           holding it for a commit that will never arrive. */
-        if (parents.length > 0) {
-          const first = lanes.indexOf(parents[0])
-          if (first !== -1 && first !== lane) {
-            lanes[lane] = null
-            parentLanes.push(first)
-          } else if (present.has(parents[0])) {
-            lanes[lane] = parents[0]
-          } else {
-            lanes[lane] = null
-          }
-        } else {
-          lanes[lane] = null
-        }
-        for (let index = 1; index < parents.length; index += 1) {
-          const parent = parents[index]
-          if (!present.has(parent)) continue
-          let slot = lanes.indexOf(parent)
-          if (slot === -1) {
-            slot = lanes.indexOf(null)
-            if (slot === -1) { lanes.push(parent); slot = lanes.length - 1 }
-            else lanes[slot] = parent
-          }
-          parentLanes.push(slot)
-        }
-        rows.push({ commit, lane, parentLanes, before: before, after: lanes.slice(), width: 1 })
       }
-      let laneCount = 1
-      for (const row of rows) laneCount = Math.max(laneCount, row.before.length, row.after.length)
-      for (const row of rows) row.width = laneCount
+
+      /* GitRefManager.getBranchLayoutComparator's classes: lower lays out
+         further left. */
+      const refPower = (token) => {
+        const name = String(token)
+        if (name === 'HEAD') return 6
+        if (name.indexOf('tag: ') === 0) return 4
+        const remote = name.indexOf('origin/') === 0
+        const short = remote ? name.slice(7) : name
+        if (short === 'master' || short === 'main') return remote ? 0 : 2
+        if (remote) return 1
+        if (currentBranch !== null && name === currentBranch) return 5
+        return 3
+      }
+      const headRank = (commit) => {
+        const refs = Array.isArray(commit.refs) ? commit.refs : []
+        let power = 7
+        let name = ''
+        for (const ref of refs) {
+          const token = String(ref)
+          /* 'HEAD -> X' decorates the CURRENT BRANCH, not the HEAD symref. */
+          const value = token.indexOf('HEAD -> ') === 0 ? 5 : refPower(token)
+          if (value < power) { power = value; name = token }
+        }
+        return { power: power, name: name }
+      }
+      const compareHeads = (a, b) => {
+        const first = headRank(commits[a])
+        const second = headRank(commits[b])
+        if (first.power !== second.power) return first.power - second.power
+        if (first.name === second.name) return 0
+        return first.name < second.name ? -1 : 1
+      }
+
+      const edges = []
+      const downEdges = commits.map(() => [])
+      const upEdges = commits.map(() => [])
+      commits.forEach((commit, u) => {
+        const parents = Array.isArray(commit.parents) ? commit.parents : []
+        for (const parent of parents) {
+          if (!indexOf.has(parent)) continue
+          const d = indexOf.get(parent)
+          if (d <= u) continue
+          const edge = { u: u, d: d, color: 0 }
+          edges.push(edge)
+          downEdges[u].push(edge)
+          upEdges[d].push(edge)
+        }
+      })
+      edges.forEach((edge, index) => { edge.id = index })
+
+      /* Heads are the branch tips plus every commit with no child in the
+         window; IDEA walks them in branch-importance order. */
+      const heads = []
+      commits.forEach((commit, index) => {
+        const refs = Array.isArray(commit.refs) ? commit.refs : []
+        if (refs.length > 0 || upEdges[index].length === 0) heads.push(index)
+      })
+      heads.sort(compareHeads)
+
+      const layoutIndex = new Array(commits.length).fill(0)
+      let currentLayoutIndex = 1
+      for (const head of heads) {
+        if (layoutIndex[head] !== 0) continue
+        const stack = [head]
+        while (stack.length > 0) {
+          const node = stack[stack.length - 1]
+          const firstVisit = layoutIndex[node] === 0
+          if (firstVisit) layoutIndex[node] = currentLayoutIndex
+          let child = -1
+          for (const edge of downEdges[node]) {
+            if (layoutIndex[edge.d] === 0) { child = edge.d; break }
+          }
+          if (child === -1) {
+            if (firstVisit) currentLayoutIndex += 1
+            stack.pop()
+          } else {
+            stack.push(child)
+          }
+        }
+      }
+
+      const compare2 = (edge, node) => {
+        const top = Math.max(layoutIndex[edge.u], layoutIndex[edge.d])
+        return top !== layoutIndex[node] ? top - layoutIndex[node] : edge.u - node
+      }
+      /* GraphElementComparatorByLayoutIndex: an edge is ordered against a node
+         (or against the other edge's other end) by the larger layout index. */
+      const compareElements = (a, b) => {
+        const first = a.edge
+        const second = b.edge
+        if (first !== undefined && second !== undefined) {
+          if (first.u === second.u) {
+            return first.d < second.d ? -compare2(second, first.d) : compare2(first, second.d)
+          }
+          return first.u < second.u ? compare2(first, second.u) : -compare2(second, first.u)
+        }
+        if (first !== undefined) return compare2(first, b.node)
+        if (second !== undefined) return -compare2(second, a.node)
+        return 0
+      }
+
+      const nodePos = new Array(commits.length).fill(0)
+      const edgePos = commits.map(() => new Array(edges.length).fill(-1))
+      let columnCount = 1
+      for (let row = 0; row < commits.length; row += 1) {
+        const elements = [{ node: row }]
+        for (const edge of edges) {
+          if (edge.u < row && row < edge.d) elements.push({ edge: edge })
+        }
+        elements.sort(compareElements)
+        for (let position = 0; position < elements.length; position += 1) {
+          const element = elements[position]
+          if (element.edge !== undefined) edgePos[row][element.edge.id] = position
+          else nodePos[row] = position
+        }
+        columnCount = Math.max(columnCount, elements.length)
+      }
+      /* IDEA paints an edge in the colour of its up (child) commit. */
+      for (const edge of edges) edge.color = nodePos[edge.u]
+
+      const rows = []
+      for (let row = 0; row < commits.length; row += 1) {
+        const top = []
+        const bottom = []
+        const node = nodePos[row]
+        const crossing = []
+        for (const edge of edges) {
+          if (edge.u < row && row < edge.d) crossing.push(edge)
+        }
+        for (const edge of upEdges[row]) {
+          const above = row - 1 === edge.u ? nodePos[row - 1] : edgePos[row - 1][edge.id]
+          top.push({ wire: edge.id, from: (above + node) / 2, to: node, color: edge.color })
+        }
+        for (const edge of crossing) {
+          const here = edgePos[row][edge.id]
+          const above = row - 1 === edge.u ? nodePos[row - 1] : edgePos[row - 1][edge.id]
+          const below = row + 1 === edge.d ? nodePos[row + 1] : edgePos[row + 1][edge.id]
+          top.push({ wire: edge.id, from: (above + here) / 2, to: here, color: edge.color })
+          bottom.push({ wire: edge.id, from: here, to: (here + below) / 2, color: edge.color })
+        }
+        for (const edge of downEdges[row]) {
+          const below = row + 1 === edge.d ? nodePos[row + 1] : edgePos[row + 1][edge.id]
+          bottom.push({ wire: edge.id, from: node, to: (node + below) / 2, color: edge.color })
+        }
+        rows.push({ commit: commits[row], lane: node, top: top, bottom: bottom, width: columnCount })
+      }
       return rows
     }
 
-    /* One SVG per row, but the geometry is chosen so that rows stack into ONE
-       continuous graph: a lane segment always covers the full row box (0..height)
-       whenever the lane exists above and below, and only rounds off to the row
-       centre where the lane genuinely starts (a branch tip) or ends (a root).
-       v0.1.7 started every non-own lane at 0 and every own lane at height/2, which
-       left a visible gap between two consecutive commits on the same lane. */
-    /* Vertical lane segments for one row. A lane that this row OPENS through an
-       edge curve (it was empty above, and the curve lands at the row bottom) must
-       NOT also get a vertical segment from the row centre: the two overlapped and
-       left a floating hook where the line visibly started in mid-air — reported
-       twice by the user as "断开的线/无端点的分叉". The curve alone carries the
-       connection, and the next row's segment starts at its top edge. */
-    function laneSegments(row, height) {
-      const middle = height / 2
-      const depth = Math.max(row.before.length, row.after.length)
+    /* Coordinate half-segments of one row: a top piece enters the node centre
+       from the row border, a bottom piece leaves it for the border. Both ends
+       are ranks; the border end is the midpoint of the two ranks, so the next
+       row's half continues the same straight line (IDEA's SimpleGraphCellPainter
+       paints one full segment from a node centre to the next node centre and
+       clips it to the cell). */
+    function edgeSegments(row, x, middle, height) {
       const segments = []
-      for (let lane = 0; lane < depth; lane += 1) {
-        const above = lane < row.before.length ? row.before[lane] : null
-        const below = lane < row.after.length ? row.after[lane] : null
-        const hasTop = above !== null && above !== undefined
-        const hasBottom = below !== null && below !== undefined
-        if (hasTop === false && hasBottom === false) continue
-        if (hasTop === false && row.parentLanes.indexOf(lane) >= 0) continue
-        const y1 = hasTop ? 0 : middle
-        const y2 = hasBottom ? height : middle
-        if (y1 === y2) continue
-        segments.push({ lane: lane, y1: y1, y2: y2 })
+      const top = Array.isArray(row.top) ? row.top : []
+      const bottom = Array.isArray(row.bottom) ? row.bottom : []
+      for (let index = 0; index < top.length; index += 1) {
+        const piece = top[index]
+        segments.push({
+          key: 'top-' + String(index) + '-' + String(piece.wire),
+          wire: piece.wire, color: piece.color, lane: piece.to,
+          x1: x(piece.from), y1: 0, x2: x(piece.to), y2: middle,
+        })
+      }
+      for (let index = 0; index < bottom.length; index += 1) {
+        const piece = bottom[index]
+        segments.push({
+          key: 'bottom-' + String(index) + '-' + String(piece.wire),
+          wire: piece.wire, color: piece.color, lane: piece.from,
+          x1: x(piece.from), y1: middle, x2: x(piece.to), y2: height,
+        })
       }
       return segments
     }
 
+
     /* Memoised: rows come from a useMemo, so a row object is referentially
        stable across re-renders unless the commit list actually changed — the
        26px graph cells then skip re-rendering on every filter keystroke. */
-    /* IDEA paints no curves: a lane is a vertical stem, and a branch edge
-       leaves the node at the row centre and reaches the parent lane at the row
-       bottom as a straight diagonal (SimpleGraphCellPainter.kt). The next
-       row's stem then starts at its own top edge, so consecutive rows read as
-       one continuous wiring — the elbow look of the IDE log. */
+    /* IDEA paints no curves: a lane is a vertical stem, and a branch edge is a
+       straight diagonal from the child node to the parent node one row below.
+       The node always paints last, so it covers the wire ends. */
     const GraphCell = memo(function GraphCell(props) {
       const row = props.row
       const height = props.height
@@ -1128,21 +1240,12 @@
          and the subject column keeps its room. */
       const x = (lane) => 8 + Math.min(lane, GRAPH_MAX_LANES - 1) * laneWidth
       const color = (lane) => LANE_COLORS[lane % LANE_COLORS.length]
-      for (const segment of laneSegments(row, height)) {
+      for (const segment of edgeSegments(row, x, middle, height)) {
         children.push(E('line', {
-          key: 'lane-' + segment.lane,
+          key: segment.key,
           'data-lane': String(segment.lane),
-          x1: x(segment.lane), y1: segment.y1, x2: x(segment.lane), y2: segment.y2,
-          stroke: color(segment.lane), strokeWidth: stem, strokeLinecap: 'round',
-        }))
-      }
-      for (const parentLane of row.parentLanes) {
-        if (parentLane === row.lane) continue
-        children.push(E('line', {
-          key: 'edge-' + parentLane,
-          'data-lane': String(parentLane),
-          x1: x(row.lane), y1: middle, x2: x(parentLane), y2: height,
-          stroke: color(parentLane), strokeWidth: stem, strokeLinecap: 'round',
+          x1: segment.x1, y1: segment.y1, x2: segment.x2, y2: segment.y2,
+          stroke: color(segment.color), strokeWidth: stem, strokeLinecap: 'round',
         }))
       }
       const isHead = Array.isArray(row.commit.refs) && row.commit.refs.some((ref) => String(ref).indexOf('HEAD') >= 0)

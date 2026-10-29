@@ -1,17 +1,16 @@
 /**
- * dsh-git4idea — commit-graph layout test (the client's branch lane algorithm).
+ * dsh-git4idea — commit-graph layout test (IDEA "plan A").
  *
- * The graph is drawn per row, but the lanes are decided by a single pass in
- * `buildRows`: a lane is a slot that carries one pending commit downwards
- * until that commit's own row consumes it. That makes the layout checkable
- * without a browser — the function is pure and depends on nothing but its
- * argument, so it is lifted straight out of the client half and driven here.
+ * IDEA does not stamp lanes newest-first. It builds a global layout index from
+ * a DFS over the branch heads, ordered by branch importance, and then ranks the
+ * elements VISIBLE IN EACH ROW (the commit node plus the edges that cross the
+ * row) with GraphElementComparatorByLayoutIndex. A column is therefore a dense
+ * per-row rank, and it compacts as soon as a wire dies.
  *
- * The invariant that matters is "no ghost lane": whatever a row leaves on a
- * lane must be the commit that lane is holding, so the commit has to show up
- * later on THAT lane. v0.4.1 fixed the case where a branch merging back into a
- * lane to its left parked its first parent on its own lane anyway, leaving a
- * stub of a fork that never happened.
+ * The port lives in buildRows + edgeSegments, both pure and closed over
+ * nothing, so they are lifted straight out of the client half and driven here.
+ * The reference is IntelliJ's log on the repo the user compared: lanes
+ * 0,0,1,2,3,1,1,2,4,4,... for the merge head, master and its trunk.
  */
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -22,11 +21,11 @@ import { dirname, join } from 'node:path'
 const here = dirname(fileURLToPath(import.meta.url))
 const source = readFileSync(join(here, '..', 'src', 'client.js'), 'utf8')
 
-/** Lift `buildRows` out of the client half (it closes over nothing). */
-function liftedBuildRows() {
-  const marker = 'function buildRows(commits) {'
+/** Lift a factory-level function out of the client half (it closes over nothing). */
+function liftedFunction(functionName) {
+  const marker = 'function ' + functionName + '('
   const start = source.indexOf(marker)
-  assert.ok(start >= 0, 'buildRows is gone from the client half')
+  assert.ok(start >= 0, functionName + ' is gone from the client half')
   let depth = 0
   let end = -1
   for (let index = source.indexOf('{', start); index < source.length; index += 1) {
@@ -37,11 +36,14 @@ function liftedBuildRows() {
       if (depth === 0) { end = index + 1; break }
     }
   }
-  assert.ok(end > start, 'buildRows has unbalanced braces')
-  return new Function(source.slice(start, end) + '; return buildRows;')()
+  assert.ok(end > start, functionName + ' has unbalanced braces')
+  return new Function(source.slice(start, end) + '; return ' + functionName + ';')()
 }
 
-const buildRows = liftedBuildRows()
+const buildRows = liftedFunction('buildRows')
+const edgeSegments = liftedFunction('edgeSegments')
+const laneX = (lane) => 8 + lane * 16
+const segmentsOf = (row) => edgeSegments(row, laneX, 13, 26)
 
 /**
  * v0.5.4 near-miss: GraphCell was taught to read GRAPH_MAX_LANES but the
@@ -71,7 +73,6 @@ function assertIdentifiersDeclared(functionName) {
     .replace(/\/\/[^\n]*/g, ' ')
     .replace(/'(?:[^'\\]|\\.)*'/g, "''")
     .replace(/"(?:[^"\\]|\\.)*"/g, '""')
-    .replace(/`(?:[^`\\]|\\.)*`/g, '\'\'')
   const names = new Set()
   for (const match of body.matchAll(/\b([A-Z][A-Z0-9_]{3,})\b/g)) names.add(match[1])
   for (const name of names) {
@@ -85,182 +86,161 @@ function assertIdentifiersDeclared(functionName) {
 test('every module-level constant GraphCell reads is actually declared', () => {
   assertIdentifiersDeclared('GraphCell')
 })
-const commit = (hash, parents) => ({ hash, parents, subject: hash, refs: [] })
 
-/** Whatever a lane carries out of a row must be fulfilled by that lane later. */
-function assertNoGhostLanes(rows) {
-  for (let index = 0; index < rows.length; index += 1) {
-    const after = rows[index].after
-    for (let lane = 0; lane < after.length; lane += 1) {
-      const hash = after[lane]
-      if (hash === null || hash === undefined) continue
-      const at = rows.findIndex((row, later) => later > index && row.commit.hash === hash)
-      if (at === -1) continue // the parent is past this page's edge
-      assert.equal(
-        rows[at].lane, lane,
-        'lane ' + lane + ' carries ' + hash + ' out of row ' + index + ', but ' + hash + ' lands on lane ' + rows[at].lane,
-      )
-    }
-  }
-}
+const commit = (hash, parents, refs) => ({ hash, parents, refs: refs === undefined ? [] : refs, subject: hash })
 
-test('a branch merging into a lane to its left ends its own lane', () => {
-  // m is a merge: first parent c continues the trunk, second parent x opens
-  // lane 1. x's own parent d is ALREADY on lane 0, so lane 1 must end at x
-  // instead of carrying d — that leftover is the stub the user reported.
-  const rows = buildRows([
-    commit('m', ['c', 'x']),
-    commit('c', ['d']),
-    commit('x', ['d']),
-    commit('d', []),
-  ])
-  assert.deepEqual(rows[2].parentLanes, [0], 'the merge edge points at the lane d already occupies')
-  assert.equal(rows[2].after[1], null, 'lane 1 must end at x, not carry d onwards')
-  assert.equal(rows[2].after[0], 'd', 'lane 0 keeps carrying d')
-  assertNoGhostLanes(rows)
-})
-
-test('a straight line keeps its lane', () => {
+test('a straight line stays on column 0 and draws no stray wire', () => {
   const rows = buildRows([
     commit('a', ['b']),
     commit('b', ['c']),
     commit('c', []),
   ])
   assert.deepEqual(rows.map((row) => row.lane), [0, 0, 0])
-  assert.equal(rows[0].after[0], 'b')
-  assert.equal(rows[1].after[0], 'c')
-  assert.equal(rows[2].after[0], null, 'a root commit leaves its lane empty')
-  assertNoGhostLanes(rows)
+  assert.deepEqual(rows[0].top, [], 'the tip has nothing above it')
+  assert.deepEqual(rows[2].bottom, [], 'a root commit has nothing below it')
+  assert.equal(rows[0].bottom.length, 1, 'one edge leaves the tip')
+  assert.deepEqual([rows[0].bottom[0].from, rows[0].bottom[0].to], [0, 0], 'adjacent parents ride the same column')
 })
 
-test('a merge opens a lane for the second parent and closes it when it returns', () => {
+/* IDEA ranks a merge so the side branch opens a NEW column to the RIGHT of the
+   trunk, then closes it: the exact shape of the report. */
+test('a merge opens a column right of the trunk and closes it again', () => {
   const rows = buildRows([
     commit('m', ['a', 'b']),
     commit('a', ['base']),
     commit('b', ['base']),
     commit('base', []),
   ])
-  assert.deepEqual(rows[0].parentLanes, [1])
-  assert.equal(rows[0].after[1], 'b')
-  assert.equal(rows[2].after[1], null, 'the side lane closes when b merges back')
-  assert.deepEqual(rows[2].parentLanes, [0])
-  assertNoGhostLanes(rows)
+  assert.deepEqual(rows.map((row) => row.lane), [0, 0, 1, 0], 'm and a on column 0, b on column 1, base back on 0')
+  const opened = rows[0].bottom.find((piece) => piece.to !== 0)
+  assert.ok(opened !== undefined, 'the second parent opens a diagonal')
+  assert.equal(opened.from, 0, 'it starts at the merge node on column 0')
+  assert.equal(opened.to, 0.5, 'its half ends on the border halfway to column 1')
+  const landing = rows[1].top.find((piece) => piece.from === 0.5)
+  assert.ok(landing !== undefined, 'column 1 continues in the next row from the same border x')
 })
 
-test('a parent already on the board is never parked twice', () => {
+/* The real regression: master (origin/master) is laid out LEFT of the current
+   branch even when the merge commit that names HEAD was loaded first. */
+test('branch importance decides the column, not load order', () => {
   const rows = buildRows([
-    commit('tip', ['left', 'right']),
-    commit('left', ['shared']),
-    commit('right', ['shared']),
-    commit('shared', ['root']),
-    commit('root', []),
+    commit('mergeTip', ['side', 'master'], ['HEAD -> merge/20261020']),
+    commit('master', ['base'], ['origin/master', 'master']),
+    commit('side', ['base'], ['origin/merge/20261020']),
+    commit('base', []),
   ])
-  assertNoGhostLanes(rows)
-  for (const row of rows) {
-    const live = row.after.filter((value) => value !== null && value !== undefined)
-    assert.equal(new Set(live).size, live.length, 'one lane per pending commit at row ' + row.commit.hash)
+  assert.equal(rows[0].lane, 0, 'HEAD keeps the leftmost visible column')
+  assert.equal(rows[1].lane, 0, 'master stays on column 0 under HEAD')
+  assert.equal(rows[2].lane, 1, 'the merge side branch moves to column 1')
+  assert.equal(rows[3].lane, 0, 'the shared base returns to the trunk column')
+})
+
+test('a wire passing several rows keeps one column in every crossed row', () => {
+  const rows = buildRows([
+    commit('tip', ['side', 'trunk'], ['HEAD -> main']),
+    commit('side', ['trunk'], ['origin/side']),
+    commit('trunk', ['base'], ['origin/master']),
+    commit('base', []),
+  ])
+  const trunkEdge = rows[0].bottom.find((piece) => piece.from === 0 && piece.to === 0)
+  assert.ok(trunkEdge !== undefined, 'the first parent leaves on column 0')
+  for (let row = 1; row < 3; row += 1) {
+    const wire = rows[row].top.find((piece) => piece.to === rows[row].lane)
+    assert.ok(wire !== undefined, 'the trunk enters the node centre in row ' + row)
   }
 })
 
-/* v0.5.4 — the log is a window, and parents past its edge used to park their
-   hash on a lane forever: the lane could never be consumed, every later branch
-   tip claimed a fresh lane, and the graph turned into a bundle of independent
-   parallel lines with dangling edges. An out-of-window parent now ends its
-   lane at the commit instead. */
-test('a parent beyond the loaded window ends its lane instead of parking a ghost', () => {
-  const rows = buildRows([commit('a', ['ghost'])])
-  assert.equal(rows[0].after[0], null, 'the lane must end at the commit, not carry a hash that can never arrive')
-  assert.deepEqual(rows[0].parentLanes, [], 'no edge can land on an unloaded parent')
-  assertNoGhostLanes(rows)
-})
-
-test('commits after an out-of-window parent reuse the freed lane', () => {
+/* IDEA colours an edge with the UP (child) commit's column; the node keeps its
+   own. A merge edge therefore never repaints the trunk it joins. */
+test('an edge takes the child colour, the node keeps its own', () => {
   const rows = buildRows([
-    commit('a', ['ghost1']),
-    commit('b', ['ghost2']),
-    commit('c', ['b']),
+    commit('m', ['a', 'b'], ['HEAD -> main']),
+    commit('a', ['base']),
+    commit('b', ['base']),
+    commit('base', []),
   ])
-  assert.deepEqual(rows.map((row) => row.lane), [0, 0, 0], 'freed lanes stay reusable, the graph stays narrow')
-  assert.equal(rows[2].after[0], 'b', 'an in-window parent still keeps its lane alive')
-  assertNoGhostLanes(rows)
+  const side = rows[0].bottom.find((piece) => piece.to !== 0)
+  assert.equal(side.color, rows[0].lane, 'the merge edge carries the child column colour')
+  const trunk = rows[1].top.find((piece) => piece.to === rows[1].lane && piece.from === piece.to)
+  assert.equal(trunk.color, 0, 'the trunk wire keeps the colour it was opened with')
 })
 
-test('an out-of-window second parent opens no extra lane', () => {
+/* IDEA paints one straight line from a node centre to the next node centre and
+   clips it to the cell, so each row draws one half: the halves meet on the row
+   border at the midpoint of the two columns and share one slope. */
+test('the two halves of a lane change are one straight line across the border', () => {
+  const rows = buildRows([
+    commit('m', ['a', 'b']),
+    commit('a', ['base']),
+    commit('b', ['base']),
+    commit('base', []),
+  ])
+  const bottom = segmentsOf(rows[0]).find((segment) => segment.y1 === 13 && segment.x2 !== laneX(0))
+  assert.ok(bottom !== undefined, 'the diagonal leaves the merge node')
+  const top = segmentsOf(rows[1]).find((segment) => segment.y1 === 0 && segment.x1 === bottom.x2)
+  assert.ok(top !== undefined, 'the next row continues from the same border x')
+  assert.equal(
+    (bottom.x2 - bottom.x1) / (bottom.y2 - bottom.y1),
+    (top.x2 - top.x1) / (top.y2 - top.y1),
+    'both halves share one slope',
+  )
+})
+
+test('every bottom piece meets the next row top piece at the border', () => {
+  const rows = buildRows([
+    commit('tip', ['a', 'b'], ['HEAD -> main']),
+    commit('a', ['c']),
+    commit('b', ['c'], ['origin/b']),
+    commit('c', ['d']),
+    commit('d', []),
+  ])
+  for (let row = 0; row + 1 < rows.length; row += 1) {
+    for (const piece of rows[row].bottom) {
+      const next = rows[row + 1].top.filter((candidate) => candidate.wire === piece.wire)
+      if (next.length === 0) continue // the wire ends at the node one row below
+      assert.equal(next[0].from, piece.to, 'wire ' + piece.wire + ' meets at the border between rows ' + row + ' and ' + (row + 1))
+      assert.equal(next[0].color, piece.color, 'a wire keeps its colour across the border')
+    }
+  }
+})
+
+/* The log is a WINDOW: a parent that was never loaded contributes no edge, and
+   the column simply ends at its commit instead of parking a ghost. */
+test('a parent beyond the loaded window ends its column', () => {
+  const rows = buildRows([commit('a', ['ghost'])])
+  assert.equal(rows[0].lane, 0)
+  assert.deepEqual(rows[0].bottom, [], 'no edge can land on an unloaded parent')
+  assert.deepEqual(rows[0].top, [], 'nothing above the first row')
+})
+
+test('a merge whose second parent is unloaded opens no extra column', () => {
   const rows = buildRows([
     commit('m', ['ghost', 'a']),
     commit('a', []),
   ])
-  /* The ghost parent contributes nothing: no lane is opened for it and no
-     edge points at it. The loaded second parent inherits the lane m was on,
-     so its edge simply continues down the same column. */
-  assert.equal(rows[0].after.length, 1, 'the ghost must not open a second lane')
-  assert.deepEqual(rows[0].parentLanes, [0], 'the only edge points at the loaded parent, on the same lane')
-  assert.deepEqual(rows[1].lane, 0, 'a consumes the lane on its own row')
-  assertNoGhostLanes(rows)
+  assert.equal(rows[0].width, 1, 'the ghost must not widen the graph')
+  assert.equal(rows[0].bottom.length, 1, 'only the loaded parent gets an edge')
+  assert.deepEqual([rows[0].bottom[0].from, rows[0].bottom[0].to], [0, 0])
+  assert.equal(rows[1].lane, 0)
 })
 
-/** Lift any factory-level function out of the client half (see buildRows above). */
-function liftedFunction(functionName) {
-  const marker = 'function ' + functionName + '('
-  const start = source.indexOf(marker)
-  assert.ok(start >= 0, functionName + ' is gone from the client half')
-  let depth = 0
-  let end = -1
-  for (let index = source.indexOf('{', start); index < source.length; index += 1) {
-    const char = source[index]
-    if (char === '{') depth += 1
-    else if (char === '}') {
-      depth -= 1
-      if (depth === 0) { end = index + 1; break }
-    }
-  }
-  assert.ok(end > start, functionName + ' has unbalanced braces')
-  return new Function(source.slice(start, end) + '; return ' + functionName + ';')()
-}
-
-const laneSegments = liftedFunction('laneSegments')
-
-/* v0.5.5 — the user reported the line "断开了" and a "无端点的多余分叉" twice.
-   The cause was not the lane algorithm but the drawing: a lane OPENED by an edge
-   curve in the same row was painted twice — the curve landed at the row bottom
-   while a vertical segment was also started at the row centre, leaving a
-   floating hook above the new line. The opened lane must be carried by the
-   curve alone; the next row's segment starts at its top edge. */
-test('a lane opened by an edge in the same row draws no vertical stub', () => {
+test('a side branch that merges back compacts the freed column', () => {
   const rows = buildRows([
     commit('m', ['a', 'b']),
     commit('a', ['base']),
-    commit('b', ['base']),
-    commit('base', []),
+    commit('b', ['base'], ['origin/b']),
+    commit('base', ['root']),
+    commit('root', []),
   ])
-  const opened = laneSegments(rows[0], 26)
-  assert.deepEqual(opened.filter((segment) => segment.lane === 1), [], 'lane 1 is opened by the merge edge — the curve alone must draw it')
-  assert.ok(opened.some((segment) => segment.lane === 0), 'the trunk still draws through the merge row')
-  // The lane's own commit row DOES draw it, and it merges back into the trunk
-  // there, so it rounds off at the row centre — where b's dot sits.
-  const own = laneSegments(rows[2], 26)
-  assert.ok(own.some((segment) => segment.lane === 1 && segment.y1 === 0 && segment.y2 === 13), 'b draws its lane down to its own dot')
-  // A lane that merely passes through spans the whole row box.
-  const through = laneSegments(rows[1], 26)
-  assert.ok(through.some((segment) => segment.lane === 0 && segment.y1 === 0 && segment.y2 === 26), 'the trunk spans the full row box')
-})
-
-/* Lanes fill newest-first, and the CURRENT branch owns column 0 whenever it is
-   on the board — a side branch created later must not push HEAD's line to the
-   right (the ordering rule the user asked about). */
-test('the current branch keeps the leftmost lane', () => {
-  const headFirst = buildRows([
-    Object.assign(commit('head', ['base']), { refs: ['HEAD -> main'] }),
-    commit('side', ['base']),
-    commit('base', []),
-  ])
-  assert.equal(headFirst[0].lane, 0)
-  const headLater = buildRows([
-    Object.assign(commit('side', ['base']), { refs: ['origin/side'] }),
-    Object.assign(commit('head', ['base']), { refs: ['HEAD -> main'] }),
-    commit('base', []),
-  ])
-  assert.equal(headLater[0].lane, 1, 'a newer side commit takes the next free lane')
-  assert.equal(headLater[1].lane, 0, 'the current branch still gets column 0')
-  assertNoGhostLanes(headLater)
+  assert.equal(rows[1].lane, 1, 'the merge side branch opens column 1')
+  assert.equal(rows[2].lane, 0, "origin/b wins the trunk column because it outranks the unnamed head")
+  assert.equal(rows[3].lane, 0, 'base returns to the trunk column')
+  assert.equal(rows[3].width, 2, 'no ghost column survives the merge-back')
+  assert.equal(rows[4].lane, 0, 'the trunk continues on column 0')
+  for (const row of rows) {
+    for (const piece of row.top.concat(row.bottom)) {
+      assert.ok(piece.from >= 0 && piece.to >= 0, 'a column is never negative')
+      assert.ok(piece.from <= row.width && piece.to <= row.width, 'a column stays inside the row width')
+    }
+  }
 })

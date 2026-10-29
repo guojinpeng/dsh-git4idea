@@ -251,7 +251,6 @@ window.__ModuleLoader__.load({
       'action.newBranchFrom': '从该分支新建分支...',
       'action.setUpstream': '设置上游…',
       'action.unsetUpstream': '取消上游',
-      'action.createLocalBranch': '创建本地分支…',
       'action.newBranchHere': '在此新建分支...',
       'action.rename': '重命名...',
       'action.delete': '删除',
@@ -259,7 +258,7 @@ window.__ModuleLoader__.load({
       'action.mergeInto': '将 ‘{from}’ 合并到 ‘{to}’ 中',
       'action.rebaseCurrentOnto': '将当前分支变基到此',
       'action.compare': '与当前分支比较',
-      'action.update': '更新(Fetch)',
+      'action.update': '提取(Fetch)',
       'action.updateBranch': '更新',
       'action.push': '推送',
       'action.newTag': '新建标签...',
@@ -288,6 +287,9 @@ window.__ModuleLoader__.load({
       'detail.pick': '选择一个提交',
       'detail.back': '返回历史',
       'detail.noFiles': '没有文件变更',
+      'detail.branches': '在 {n} 个分支中:',
+      'detail.showAll': '全部显示',
+      'detail.hide': '隐藏',
       'diff.empty': '没有可显示的文本差异',
       'pane.diff': '差异视图',
       'pane.resize': '拖动调整{name}尺寸,双击复位,方向键微调',
@@ -302,7 +304,7 @@ window.__ModuleLoader__.load({
       'more.sort': '查看和排序',
       'more.commitGroup': '提交',
       'more.changesGroup': '更改',
-      'more.pullpushGroup': '拉取，推送',
+      'more.pullpushGroup': '更新，推送',
       'more.branchGroup': '分支',
       'more.remoteGroup': '远程',
       'more.stashGroup': '存储',
@@ -317,13 +319,13 @@ window.__ModuleLoader__.load({
       'more.commitAllSign': '全部提交(已签收)...',
       'prompt.commitMessage': '提交信息',
       'more.discardAll': '放弃所有更改...',
-      'more.sync': '同步(拉取并推送)',
+      'more.sync': '同步(更新并推送)',
       'more.syncRebase': '同步(变基并推送)',
-      'more.pullRebase': '拉取(变基)',
-      'more.pullFrom': '从远程拉取',
+      'more.pullRebase': '更新(变基)',
+      'more.pullFrom': '从远程更新',
       'more.pushForce': '推送(强制)...',
       'more.pushTo': '推送到远程',
-      'more.fetchAll': '从所有远程抓取',
+      'more.fetchAll': '从所有远程提取',
       'more.deleteRemoteBranch': '删除远程分支...',
       'more.publish': '发布分支...',
       'more.setUpstreamHead': '设置当前分支上游…',
@@ -391,10 +393,10 @@ window.__ModuleLoader__.load({
       'clone.run': '克隆',
       'prompt.deleteTag': '要删除的标签名',
       'toolbar.newBranch': '新建分支',
-      'toolbar.fetch': '抓取(Fetch)',
-      'toolbar.pull': '拉取(Pull)',
-      'toolbar.pullPicked': '拉取选中的 {n} 个分支',
-      'toolbar.fetchPicked': '抓取选中的 {n} 个引用',
+      'toolbar.fetch': '提取(Fetch)',
+      'toolbar.pull': '更新(Pull)',
+      'toolbar.pullPicked': '更新选中的 {n} 个分支',
+      'toolbar.fetchPicked': '提取选中的 {n} 个引用',
       'toolbar.pushPicked': '推送选中的 {n} 个分支',
       'toolbar.checkoutPicked': '签出选中的分支',
       'toolbar.deletePicked': '删除选中的 {n} 个引用',
@@ -518,8 +520,8 @@ window.__ModuleLoader__.load({
       'toast.tagDeletedRemote': '已删除远程标签 {name}',
       'toast.tagsPushed': '已推送标签到远程',
       'toast.pushDone': '已推送',
-      'toast.pullDone': '拉取完成',
-      'toast.fetchDone': '已从远程获取',
+      'toast.pullDone': '更新完成',
+      'toast.fetchDone': '已从远程提取',
       'toast.merged': '已合并 {name}',
       'toast.mergedConflict': '合并停在冲突上,请解决冲突后继续',
       'toast.rebased': '已变基到 {onto}',
@@ -626,7 +628,6 @@ window.__ModuleLoader__.load({
       'action.newBranchFrom': 'New branch from here...',
       'action.setUpstream': 'Set Upstream…',
       'action.unsetUpstream': 'Unset Upstream',
-      'action.createLocalBranch': 'Create Local Branch…',
       'action.newBranchHere': 'New branch here...',
       'action.rename': 'Rename...',
       'action.delete': 'Delete',
@@ -634,7 +635,7 @@ window.__ModuleLoader__.load({
       'action.mergeInto': 'Merge ‘{from}’ into ‘{to}’',
       'action.rebaseCurrentOnto': 'Rebase current branch onto this',
       'action.compare': 'Compare with current branch',
-      'action.update': 'Update (fetch)',
+      'action.update': 'Fetch',
       'action.updateBranch': 'Update branch',
       'action.push': 'Push',
       'action.newTag': 'New tag...',
@@ -663,6 +664,9 @@ window.__ModuleLoader__.load({
       'detail.pick': 'Select a commit',
       'detail.back': 'Back to history',
       'detail.noFiles': 'No file changes',
+      'detail.branches': 'In {n} branches:',
+      'detail.showAll': 'Show all',
+      'detail.hide': 'Hide',
       'diff.empty': 'No textual diff to show',
       'pane.diff': 'diff view',
       'pane.resize': 'Drag to resize {name}: double-click resets, arrow keys nudge',
@@ -1971,114 +1975,226 @@ window.__ModuleLoader__.load({
 
     /* ============================== commit graph ============================== */
 
+    /* IDEA's log layout ("plan A"), ported from the permanent-graph sources:
+       - every commit gets a layout index from a DFS that starts at the branch
+         heads ordered by branch importance (origin/master, remote branch,
+         master, local branch, tag, current branch, HEAD). The DFS walks first
+         parents first and bumps the index at each chain end, so the most
+         important branch ends up leftmost even when a newer merge commit was
+         loaded first.
+       - the columns of a row are the RANKS of the elements visible in it: the
+         commit node plus every edge that CROSSES the row (child above, parent
+         below). Elements sort with GraphElementComparatorByLayoutIndex, so a
+         wire lands between the columns its ends demand and the columns compact
+         as soon as a wire dies.
+       - an edge between adjacent rows is not a row element: its end column is
+         the node of the neighbour row (PrintElementGeneratorImpl's end
+         position function). Only a long edge is ranked on its own.
+       Every row then draws the halves of the lines that touch its centre; two
+       halves meet on the row border at the midpoint of their ranks, so one
+       straight diagonal continues into the next row (IDEA's cell painter).
+       The log is a WINDOW: a parent that was never loaded contributes no edge,
+       the lane simply ends at its commit. */
     function buildRows(commits) {
-      /* The log is a WINDOW: the oldest visible commits usually have parents
-         that were never loaded. A parent outside the window must not park its
-         hash on a lane — the lane would stay occupied for the rest of the
-         page (the hash can never be consumed), every later branch tip would
-         claim yet another fresh lane, and the drawing degenerated into a
-         bundle of independent parallel lines that pushed the subjects out of
-         the panel. So the pass first learns which hashes are actually on the
-         board, and an edge to anything else simply ends at its commit. */
-      const present = new Set()
-      for (const commit of commits) present.add(commit.hash)
-      const lanes = []
-      /* The current branch keeps the LEFTMOST column whenever it is on the
-         board: pre-seeding its hash makes that commit claim lane 0 when its
-         row arrives, so HEAD's line never drifts to the right of a side
-         branch (the rest of the lanes fill newest-first, see below). */
-      const headCommit = commits.find((commit) => Array.isArray(commit.refs) && commit.refs.some((ref) => String(ref).indexOf('HEAD') >= 0))
-      if (headCommit !== undefined) lanes.push(headCommit.hash)
-      const rows = []
+      const indexOf = new Map()
+      commits.forEach((commit, index) => indexOf.set(commit.hash, index))
+
+      /* The current branch comes from the HEAD decoration, and it ranks behind
+         every other ref class in IDEA's branch layout. */
+      let currentBranch = null
       for (const commit of commits) {
-        const before = lanes.slice()
-        let lane = lanes.indexOf(commit.hash)
-        if (lane === -1) {
-          lane = lanes.indexOf(null)
-          if (lane === -1) { lanes.push(null); lane = lanes.length - 1 }
+        const refs = Array.isArray(commit.refs) ? commit.refs : []
+        for (const ref of refs) {
+          const name = String(ref)
+          if (name.indexOf('HEAD -> ') === 0) currentBranch = name.slice(8)
         }
-        const parents = Array.isArray(commit.parents) ? commit.parents : []
-        const parentLanes = []
-        /* A commit whose parent already sits on ANOTHER lane merges into it:
-           its own lane ends here and the edge is drawn across. Until v0.4.1 the
-           first parent was parked on the commit's own lane unconditionally, so
-           a branch that merged back into a lane to its left kept a stub of its
-           own colour running on above the junction — a fork that never
-           happened. Only a parent that is not on the board yet inherits the
-           lane, and (v0.5.4) only a parent that is on the board at all: a
-           parent past the loaded window ends the lane at this row instead of
-           holding it for a commit that will never arrive. */
-        if (parents.length > 0) {
-          const first = lanes.indexOf(parents[0])
-          if (first !== -1 && first !== lane) {
-            lanes[lane] = null
-            parentLanes.push(first)
-          } else if (present.has(parents[0])) {
-            lanes[lane] = parents[0]
-          } else {
-            lanes[lane] = null
-          }
-        } else {
-          lanes[lane] = null
-        }
-        for (let index = 1; index < parents.length; index += 1) {
-          const parent = parents[index]
-          if (!present.has(parent)) continue
-          let slot = lanes.indexOf(parent)
-          if (slot === -1) {
-            slot = lanes.indexOf(null)
-            if (slot === -1) { lanes.push(parent); slot = lanes.length - 1 }
-            else lanes[slot] = parent
-          }
-          parentLanes.push(slot)
-        }
-        rows.push({ commit, lane, parentLanes, before: before, after: lanes.slice(), width: 1 })
       }
-      let laneCount = 1
-      for (const row of rows) laneCount = Math.max(laneCount, row.before.length, row.after.length)
-      for (const row of rows) row.width = laneCount
+
+      /* GitRefManager.getBranchLayoutComparator's classes: lower lays out
+         further left. */
+      const refPower = (token) => {
+        const name = String(token)
+        if (name === 'HEAD') return 6
+        if (name.indexOf('tag: ') === 0) return 4
+        const remote = name.indexOf('origin/') === 0
+        const short = remote ? name.slice(7) : name
+        if (short === 'master' || short === 'main') return remote ? 0 : 2
+        if (remote) return 1
+        if (currentBranch !== null && name === currentBranch) return 5
+        return 3
+      }
+      const headRank = (commit) => {
+        const refs = Array.isArray(commit.refs) ? commit.refs : []
+        let power = 7
+        let name = ''
+        for (const ref of refs) {
+          const token = String(ref)
+          /* 'HEAD -> X' decorates the CURRENT BRANCH, not the HEAD symref. */
+          const value = token.indexOf('HEAD -> ') === 0 ? 5 : refPower(token)
+          if (value < power) { power = value; name = token }
+        }
+        return { power: power, name: name }
+      }
+      const compareHeads = (a, b) => {
+        const first = headRank(commits[a])
+        const second = headRank(commits[b])
+        if (first.power !== second.power) return first.power - second.power
+        if (first.name === second.name) return 0
+        return first.name < second.name ? -1 : 1
+      }
+
+      const edges = []
+      const downEdges = commits.map(() => [])
+      const upEdges = commits.map(() => [])
+      commits.forEach((commit, u) => {
+        const parents = Array.isArray(commit.parents) ? commit.parents : []
+        for (const parent of parents) {
+          if (!indexOf.has(parent)) continue
+          const d = indexOf.get(parent)
+          if (d <= u) continue
+          const edge = { u: u, d: d, color: 0 }
+          edges.push(edge)
+          downEdges[u].push(edge)
+          upEdges[d].push(edge)
+        }
+      })
+      edges.forEach((edge, index) => { edge.id = index })
+
+      /* Heads are the branch tips plus every commit with no child in the
+         window; IDEA walks them in branch-importance order. */
+      const heads = []
+      commits.forEach((commit, index) => {
+        const refs = Array.isArray(commit.refs) ? commit.refs : []
+        if (refs.length > 0 || upEdges[index].length === 0) heads.push(index)
+      })
+      heads.sort(compareHeads)
+
+      const layoutIndex = new Array(commits.length).fill(0)
+      let currentLayoutIndex = 1
+      for (const head of heads) {
+        if (layoutIndex[head] !== 0) continue
+        const stack = [head]
+        while (stack.length > 0) {
+          const node = stack[stack.length - 1]
+          const firstVisit = layoutIndex[node] === 0
+          if (firstVisit) layoutIndex[node] = currentLayoutIndex
+          let child = -1
+          for (const edge of downEdges[node]) {
+            if (layoutIndex[edge.d] === 0) { child = edge.d; break }
+          }
+          if (child === -1) {
+            if (firstVisit) currentLayoutIndex += 1
+            stack.pop()
+          } else {
+            stack.push(child)
+          }
+        }
+      }
+
+      const compare2 = (edge, node) => {
+        const top = Math.max(layoutIndex[edge.u], layoutIndex[edge.d])
+        return top !== layoutIndex[node] ? top - layoutIndex[node] : edge.u - node
+      }
+      /* GraphElementComparatorByLayoutIndex: an edge is ordered against a node
+         (or against the other edge's other end) by the larger layout index. */
+      const compareElements = (a, b) => {
+        const first = a.edge
+        const second = b.edge
+        if (first !== undefined && second !== undefined) {
+          if (first.u === second.u) {
+            return first.d < second.d ? -compare2(second, first.d) : compare2(first, second.d)
+          }
+          return first.u < second.u ? compare2(first, second.u) : -compare2(second, first.u)
+        }
+        if (first !== undefined) return compare2(first, b.node)
+        if (second !== undefined) return -compare2(second, a.node)
+        return 0
+      }
+
+      const nodePos = new Array(commits.length).fill(0)
+      const edgePos = commits.map(() => new Array(edges.length).fill(-1))
+      let columnCount = 1
+      for (let row = 0; row < commits.length; row += 1) {
+        const elements = [{ node: row }]
+        for (const edge of edges) {
+          if (edge.u < row && row < edge.d) elements.push({ edge: edge })
+        }
+        elements.sort(compareElements)
+        for (let position = 0; position < elements.length; position += 1) {
+          const element = elements[position]
+          if (element.edge !== undefined) edgePos[row][element.edge.id] = position
+          else nodePos[row] = position
+        }
+        columnCount = Math.max(columnCount, elements.length)
+      }
+      /* IDEA paints an edge in the colour of its up (child) commit. */
+      for (const edge of edges) edge.color = nodePos[edge.u]
+
+      const rows = []
+      for (let row = 0; row < commits.length; row += 1) {
+        const top = []
+        const bottom = []
+        const node = nodePos[row]
+        const crossing = []
+        for (const edge of edges) {
+          if (edge.u < row && row < edge.d) crossing.push(edge)
+        }
+        for (const edge of upEdges[row]) {
+          const above = row - 1 === edge.u ? nodePos[row - 1] : edgePos[row - 1][edge.id]
+          top.push({ wire: edge.id, from: (above + node) / 2, to: node, color: edge.color })
+        }
+        for (const edge of crossing) {
+          const here = edgePos[row][edge.id]
+          const above = row - 1 === edge.u ? nodePos[row - 1] : edgePos[row - 1][edge.id]
+          const below = row + 1 === edge.d ? nodePos[row + 1] : edgePos[row + 1][edge.id]
+          top.push({ wire: edge.id, from: (above + here) / 2, to: here, color: edge.color })
+          bottom.push({ wire: edge.id, from: here, to: (here + below) / 2, color: edge.color })
+        }
+        for (const edge of downEdges[row]) {
+          const below = row + 1 === edge.d ? nodePos[row + 1] : edgePos[row + 1][edge.id]
+          bottom.push({ wire: edge.id, from: node, to: (node + below) / 2, color: edge.color })
+        }
+        rows.push({ commit: commits[row], lane: node, top: top, bottom: bottom, width: columnCount })
+      }
       return rows
     }
 
-    /* One SVG per row, but the geometry is chosen so that rows stack into ONE
-       continuous graph: a lane segment always covers the full row box (0..height)
-       whenever the lane exists above and below, and only rounds off to the row
-       centre where the lane genuinely starts (a branch tip) or ends (a root).
-       v0.1.7 started every non-own lane at 0 and every own lane at height/2, which
-       left a visible gap between two consecutive commits on the same lane. */
-    /* Vertical lane segments for one row. A lane that this row OPENS through an
-       edge curve (it was empty above, and the curve lands at the row bottom) must
-       NOT also get a vertical segment from the row centre: the two overlapped and
-       left a floating hook where the line visibly started in mid-air — reported
-       twice by the user as "断开的线/无端点的分叉". The curve alone carries the
-       connection, and the next row's segment starts at its top edge. */
-    function laneSegments(row, height) {
-      const middle = height / 2
-      const depth = Math.max(row.before.length, row.after.length)
+    /* Coordinate half-segments of one row: a top piece enters the node centre
+       from the row border, a bottom piece leaves it for the border. Both ends
+       are ranks; the border end is the midpoint of the two ranks, so the next
+       row's half continues the same straight line (IDEA's SimpleGraphCellPainter
+       paints one full segment from a node centre to the next node centre and
+       clips it to the cell). */
+    function edgeSegments(row, x, middle, height) {
       const segments = []
-      for (let lane = 0; lane < depth; lane += 1) {
-        const above = lane < row.before.length ? row.before[lane] : null
-        const below = lane < row.after.length ? row.after[lane] : null
-        const hasTop = above !== null && above !== undefined
-        const hasBottom = below !== null && below !== undefined
-        if (hasTop === false && hasBottom === false) continue
-        if (hasTop === false && row.parentLanes.indexOf(lane) >= 0) continue
-        const y1 = hasTop ? 0 : middle
-        const y2 = hasBottom ? height : middle
-        if (y1 === y2) continue
-        segments.push({ lane: lane, y1: y1, y2: y2 })
+      const top = Array.isArray(row.top) ? row.top : []
+      const bottom = Array.isArray(row.bottom) ? row.bottom : []
+      for (let index = 0; index < top.length; index += 1) {
+        const piece = top[index]
+        segments.push({
+          key: 'top-' + String(index) + '-' + String(piece.wire),
+          wire: piece.wire, color: piece.color, lane: piece.to,
+          x1: x(piece.from), y1: 0, x2: x(piece.to), y2: middle,
+        })
+      }
+      for (let index = 0; index < bottom.length; index += 1) {
+        const piece = bottom[index]
+        segments.push({
+          key: 'bottom-' + String(index) + '-' + String(piece.wire),
+          wire: piece.wire, color: piece.color, lane: piece.from,
+          x1: x(piece.from), y1: middle, x2: x(piece.to), y2: height,
+        })
       }
       return segments
     }
 
+
     /* Memoised: rows come from a useMemo, so a row object is referentially
        stable across re-renders unless the commit list actually changed — the
        26px graph cells then skip re-rendering on every filter keystroke. */
-    /* IDEA paints no curves: a lane is a vertical stem, and a branch edge
-       leaves the node at the row centre and reaches the parent lane at the row
-       bottom as a straight diagonal (SimpleGraphCellPainter.kt). The next
-       row's stem then starts at its own top edge, so consecutive rows read as
-       one continuous wiring — the elbow look of the IDE log. */
+    /* IDEA paints no curves: a lane is a vertical stem, and a branch edge is a
+       straight diagonal from the child node to the parent node one row below.
+       The node always paints last, so it covers the wire ends. */
     const GraphCell = memo(function GraphCell(props) {
       const row = props.row
       const height = props.height
@@ -2093,21 +2209,12 @@ window.__ModuleLoader__.load({
          and the subject column keeps its room. */
       const x = (lane) => 8 + Math.min(lane, GRAPH_MAX_LANES - 1) * laneWidth
       const color = (lane) => LANE_COLORS[lane % LANE_COLORS.length]
-      for (const segment of laneSegments(row, height)) {
+      for (const segment of edgeSegments(row, x, middle, height)) {
         children.push(E('line', {
-          key: 'lane-' + segment.lane,
+          key: segment.key,
           'data-lane': String(segment.lane),
-          x1: x(segment.lane), y1: segment.y1, x2: x(segment.lane), y2: segment.y2,
-          stroke: color(segment.lane), strokeWidth: stem, strokeLinecap: 'round',
-        }))
-      }
-      for (const parentLane of row.parentLanes) {
-        if (parentLane === row.lane) continue
-        children.push(E('line', {
-          key: 'edge-' + parentLane,
-          'data-lane': String(parentLane),
-          x1: x(row.lane), y1: middle, x2: x(parentLane), y2: height,
-          stroke: color(parentLane), strokeWidth: stem, strokeLinecap: 'round',
+          x1: segment.x1, y1: segment.y1, x2: segment.x2, y2: segment.y2,
+          stroke: color(segment.color), strokeWidth: stem, strokeLinecap: 'round',
         }))
       }
       const isHead = Array.isArray(row.commit.refs) && row.commit.refs.some((ref) => String(ref).indexOf('HEAD') >= 0)
@@ -3280,6 +3387,12 @@ window.__ModuleLoader__.load({
       tag: [
         {"d":"M6.36812 4.9736C6.62969 4.77016 6.67681 4.39319 6.47337 4.13163C6.26992 3.87006 5.89296 3.82294 5.63139 4.02638L0.522461 7.99999L5.63139 11.9736C5.89296 12.177 6.26992 12.1299 6.47337 11.8684C6.67681 11.6068 6.62969 11.2298 6.36812 11.0264L2.47705 7.99999L6.36812 4.9736Z","f":1},
         {"d":"M9.63139 4.9736C9.36983 4.77016 9.3227 4.39319 9.52615 4.13163C9.72959 3.87006 10.1066 3.82294 10.3681 4.02638L15.4771 7.99999L10.3681 11.9736C10.1066 12.177 9.72959 12.1299 9.52615 11.8684C9.3227 11.6068 9.36983 11.2298 9.63139 11.0264L13.5225 7.99999L9.63139 4.9736Z","f":1},
+      ],
+      /* The IDEA label glyph (TagPainter.kt): a 16-unit tag outline, used for
+         ref badges in the log row and the commit detail. */
+      tagOutline: [
+        {"d":"M13.4495 7.5001L7.01028 13.9394C6.81502 14.1347 6.49843 14.1347 6.30317 13.9394L2.06053 9.69679C1.86527 9.50152 1.86527 9.18494 2.06053 8.98968L8.49978 2.55035C8.61106 2.43907 8.76824 2.38667 8.92404 2.40893L12.6363 2.93926C12.8563 2.97069 13.0292 3.14354 13.0606 3.36352L13.5909 7.07584C13.6132 7.23163 13.5608 7.38882 13.4495 7.5001Z","sw":1},
+        {"circle":[10.5,5.5,1],"f":1},
       ],
       settings: [
         {"d":"M3.22655 4.36961C2.92233 4.76924 2.66735 5.20781 2.47037 5.67626L3.30992 7.0943C3.6406 7.65283 3.6406 8.34718 3.30992 8.9057L2.47037 10.3237C2.66736 10.7922 2.92233 11.2308 3.22656 11.6304L4.87261 11.6124C5.52165 11.6053 6.12297 11.9524 6.44133 12.5181L7.24899 13.953C7.49593 13.984 7.74792 14 8.00408 14C8.2602 14 8.51214 13.984 8.75904 13.9531L9.56671 12.5181C9.88507 11.9524 10.4864 11.6053 11.1354 11.6124L12.7816 11.6304C13.0858 11.2308 13.3408 10.7923 13.5377 10.3239L12.6981 8.9057C12.3674 8.34718 12.3674 7.65283 12.6981 7.0943L13.5377 5.67613C13.3408 5.20773 13.0858 4.76921 12.7816 4.36961L11.1354 4.38764C10.4864 4.39475 9.88507 4.04758 9.56671 3.48194L8.75904 2.04693C8.51214 2.01599 8.2602 2 8.00408 2C7.74792 2 7.49594 2.016 7.24899 2.04695L6.44133 3.48194C6.12297 4.04758 5.52165 4.39475 4.87261 4.38764L3.22655 4.36961ZM10.655 8.00001C10.655 9.46412 9.46811 10.651 8.004 10.651C6.5399 10.651 5.353 9.46412 5.353 8.00001C5.353 6.53591 6.5399 5.34902 8.004 5.34902C9.46811 5.34902 10.655 6.53591 10.655 8.00001ZM4.88356 3.3877C5.16752 3.39081 5.4306 3.23892 5.56988 2.99146L6.43817 1.44875C6.54914 1.25159 6.7401 1.1101 6.96387 1.07676C7.30327 1.0262 7.65062 1 8.00408 1C8.3575 1 8.7048 1.02619 9.04414 1.07674C9.26792 1.11007 9.45889 1.25157 9.56986 1.44873L10.4382 2.99146C10.5774 3.23892 10.8405 3.39081 11.1245 3.3877L12.8938 3.36832C13.1196 3.36585 13.3372 3.46012 13.4781 3.63661C13.9099 4.17766 14.2632 4.78416 14.5207 5.43884C14.6034 5.6491 14.5763 5.88489 14.4612 6.07931L13.5586 7.60376C13.4139 7.84811 13.4139 8.15189 13.5586 8.39625L14.4612 9.92069C14.5763 10.1151 14.6034 10.3509 14.5207 10.5612C14.2632 11.2158 13.9099 11.8223 13.4781 12.3634C13.3372 12.5399 13.1196 12.6342 12.8938 12.6317L11.1245 12.6123C10.8405 12.6092 10.5774 12.7611 10.4382 13.0085L9.56986 14.5513C9.45889 14.7484 9.26792 14.8899 9.04414 14.9233C8.7048 14.9738 8.3575 15 8.00408 15C7.65062 15 7.30327 14.9738 6.96387 14.9232C6.7401 14.8899 6.54914 14.7484 6.43817 14.5512L5.56988 13.0085C5.4306 12.7611 5.16752 12.6092 4.88356 12.6123L3.1144 12.6317C2.8886 12.6342 2.67096 12.5399 2.5301 12.3634C2.09822 11.8223 1.74489 11.2158 1.48738 10.561C1.40469 10.3508 1.43184 10.115 1.54695 9.92057L2.44942 8.39625C2.5941 8.15189 2.5941 7.84811 2.44942 7.60376L1.54695 6.07944C1.43184 5.88502 1.40469 5.64924 1.48738 5.43898C1.74489 4.78425 2.09822 4.1777 2.53009 3.63661C2.67096 3.46012 2.8886 3.36585 3.1144 3.36832L4.88356 3.3877ZM9.655 8.00001C9.655 8.91183 8.91582 9.65101 8.004 9.65101C7.09218 9.65101 6.353 8.91183 6.353 8.00001C6.353 7.08819 7.09218 6.34902 8.004 6.34902C8.91582 6.34902 9.655 7.08819 9.655 8.00001Z","f":1,"eo":1},
@@ -4829,12 +4942,28 @@ window.__ModuleLoader__.load({
       return { name: value, kind: value.indexOf('/') >= 0 ? 'remote' : 'local' }
     }
 
-    /* Display form of a decoration: a HEAD decoration names the branch it points
-       at, so the badge says "HEAD → main" — where HEAD sits must be readable at
-       a glance (GitLens-style), not only inferable from the hollow dot. */
-    function refLabel(decoration) {
-      if (decoration.kind !== 'head') return decoration.name
-      return decoration.name === 'HEAD' ? 'HEAD' : 'HEAD → ' + decoration.name
+    /* Decorations for display in the log row and the commit detail: "HEAD -> main"
+       names TWO refs (HEAD and the branch), so it becomes two badges. Branches
+       come before tags; the order is stable within a kind. */
+    function refDecorations(refs) {
+      const list = Array.isArray(refs) ? refs : []
+      const out = []
+      for (const raw of list) {
+        const value = String(raw)
+        if (value.indexOf('HEAD -> ') === 0) {
+          out.push({ name: 'HEAD', kind: 'head' })
+          const branch = value.slice(8)
+          out.push({ name: branch, kind: branch.indexOf('/') >= 0 ? 'remote' : 'local' })
+        } else if (value === 'HEAD') {
+          out.push({ name: 'HEAD', kind: 'head' })
+        } else if (value.indexOf('tag: ') === 0) {
+          out.push({ name: value.slice(5), kind: 'tag' })
+        } else {
+          out.push({ name: value, kind: value.indexOf('/') >= 0 ? 'remote' : 'local' })
+        }
+      }
+      const order = { head: 0, local: 1, remote: 2, tag: 3 }
+      return out.sort((a, b) => order[a.kind] - order[b.kind])
     }
 
     /* ---- list windowing (issue #11 follow-up: hundreds of rows stay smooth) ----
@@ -5004,43 +5133,14 @@ window.__ModuleLoader__.load({
 
     /* One history row, memoised on its data (commit + graph row + selection):
        filter keystrokes re-render the list shell without touching unchanged
-       rows, and the +N overflow badge opens the hidden refs in a menu instead
-       of hiding them behind a bare count. */
-    const REF_ICONS = { head: 'star', local: 'branch', remote: 'fetch', tag: 'tag' }
-    const REF_TONES = { head: 'success', local: 'accent', remote: 'violet', tag: 'warn' }
+       rows. Refs show as IDEA-style tag icons after the subject; their names
+       live in the hover tooltip, so the subject keeps the room. */
+    const MAX_ROW_REFS = 4
     const CommitRow = memo(function CommitRow(props) {
       const commit = props.commit
-      const decorations = (Array.isArray(commit.refs) ? commit.refs : []).map(refInfo)
-      /* Remote folding (GitLens-style dedupe): a remote whose short name
-         (origin/main → main) matches a LOCAL or HEAD badge on the same commit
-         stops taking a badge of its own — the local badge's title gains a
-         "⇅ origin/main" line and the overflow menu still lists it. Nothing is
-         lost, the row just stops saying "main" and "origin/main" twice. */
-      const localNames = new Set(decorations.filter((d) => d.kind === 'local' || d.kind === 'head').map((d) => d.name))
-      const foldedBy = new Map()
-      const kept = []
-      for (const decoration of decorations) {
-        if (decoration.kind === 'remote') {
-          const slash = decoration.name.indexOf('/')
-          const short = slash >= 0 ? decoration.name.slice(slash + 1) : decoration.name
-          if (localNames.has(short) === true) {
-            if (foldedBy.has(short) === false) foldedBy.set(short, [])
-            foldedBy.get(short).push(decoration.name)
-            continue
-          }
-        }
-        kept.push(decoration)
-      }
-      const folded = []
-      for (const list of foldedBy.values()) folded.push(...list)
-      const shown = kept.slice(0, 3)
-      const hidden = kept.length - shown.length
-      const badgeTitle = (decoration) => {
-        const label = refLabel(decoration)
-        if (decoration.kind !== 'local' && decoration.kind !== 'head') return label
-        const folds = foldedBy.get(decoration.name)
-        return folds === undefined ? label : label + '\n⇅ ' + folds.join(', ')
-      }
+      const refs = refDecorations(commit.refs)
+      const shownRefs = refs.slice(0, MAX_ROW_REFS)
+      const hiddenRefs = refs.length - shownRefs.length
       return E('div', {
         /* data-lane feeds the hover highlight: the scroll container copies the
            hovered row's lane into data-hover-lane, and generated CSS dims every
@@ -5053,36 +5153,24 @@ window.__ModuleLoader__.load({
         onContextMenu: (event) => { event.preventDefault(); props.onMenu(event, commit) },
       },
         /* Column order (m01737 #4, mirroring the IDE log): graph, message,
-           ref chips, author, then the absolute timestamp. The relative "4d"
+           ref icons, author, then the absolute timestamp. The relative "4d"
            column is gone — it made every row read differently by the hour. */
         E(GraphCell, { row: props.row, height: 26 }),
         E('span', { className: 'git4idea-commit-subject', 'data-tip': commit.subject }, commit.subject),
-        shown.map((decoration, index) => E('span', {
-          key: decoration.kind + ':' + decoration.name + ':' + index,
-          className: 'git4idea-ref git4idea-ref-' + decoration.kind,
-          'data-tip': badgeTitle(decoration),
-        }, refLabel(decoration))),
-        hidden > 0 || folded.length > 0 ? E('span', {
-          className: 'git4idea-ref git4idea-ref-more',
-          'data-tip': kept.slice(3).map(refLabel).concat(folded.map((name) => '⇅ ' + name)).join('\n'),
-          onClick: (event) => {
-            event.stopPropagation()
-            if (props.openMenuAt === undefined) return
-            const entries = kept.slice(3).map((decoration, at) => ({
-              id: 'ref:' + at,
-              icon: REF_ICONS[decoration.kind] === undefined ? 'branch' : REF_ICONS[decoration.kind],
-              tone: REF_TONES[decoration.kind] === undefined ? 'secondary' : REF_TONES[decoration.kind],
-              label: refLabel(decoration),
-              run: () => { copyText(refLabel(decoration)) },
-            })).concat(folded.map((name, at) => ({
-              id: 'fold:' + at,
-              icon: 'fetch', tone: 'violet',
-              label: '⇅ ' + name,
-              run: () => { copyText(name) },
-            })))
-            props.openMenuAt(event, entries)
-          },
-        }, '+' + String(hidden + folded.length)) : null,
+        refs.length === 0 ? null : E('span', {
+          className: 'git4idea-ref-stack',
+          /* One tooltip for the whole cluster, names top-to-bottom in the same
+             order the detail pane lists them. The icons are inert (m00717): a
+             click bubbles to the row and opens the commit like anywhere else. */
+          'data-tip': refs.map((decoration) => decoration.name).join('\n'),
+        },
+          /* Reversed on purpose: later icons paint on top, so HEAD sits on the
+             right and reads as "where the branch is". */
+          shownRefs.slice().reverse().map((decoration, index) => E('span', {
+            key: decoration.kind + ':' + decoration.name + ':' + index,
+            className: 'git4idea-ref-icon git4idea-ref-' + decoration.kind,
+          }, E(Icon, { name: 'tagOutline', size: 14 }))),
+          hiddenRefs > 0 ? E('span', { className: 'git4idea-ref-count' }, '+' + String(hiddenRefs)) : null),
         E('span', { className: 'git4idea-commit-fill' }),
         E('span', { className: 'git4idea-commit-author', 'data-tip': commit.author }, commit.author),
         E('span', { className: 'git4idea-commit-date' }, shortDate(commit.date)))
@@ -5564,6 +5652,10 @@ window.__ModuleLoader__.load({
     function CommitDetail(props) {
       const t = props.t
       const detail = props.detail
+      /* IDEA's "in N branches" (m00717) starts collapsed. The flag is keyed by
+         commit hash, so picking another commit collapses it again without an
+         effect (hooks run before the empty-state return below). */
+      const [expandedHash, setExpandedHash] = useState(null)
       /* The right column (m01216): changed files on top (2/3 of the height), the
          commit message below (1/3). The parent folder rides in its own column so
          two files called index.js are told apart without a tooltip. */
@@ -5580,6 +5672,34 @@ window.__ModuleLoader__.load({
               onMenu: props.onFileMenu,
             })
       if (detail === null || detail === undefined) return E('div', { className: 'git4idea-empty git4idea-detail-empty' }, t('detail.pick'))
+      /* The refs the row shows as icons, spelled out in IDEA's order: one tag
+         icon and one name per ref, HEAD first, tags last. */
+      const refBadges = refDecorations(detail.refs).map((decoration, index) => E('span', {
+        key: decoration.kind + ':' + decoration.name + ':' + index,
+        className: 'git4idea-detail-ref',
+      },
+        E('span', { className: 'git4idea-ref-icon git4idea-ref-' + decoration.kind }, E(Icon, { name: 'tagOutline', size: 14 })),
+        E('span', { className: 'git4idea-detail-ref-name' }, decoration.name)))
+      const refBlock = refBadges.length === 0 ? null : E('div', { className: 'git4idea-detail-refs' }, refBadges)
+      /* Branches that contain the commit, as the host reports them: local heads
+         first, then remotes, origin/HEAD dropped. Collapsed shows the first
+         three names inline, expanded lists every one on its own line. */
+      const branches = Array.isArray(detail.branches) ? detail.branches : []
+      const expanded = expandedHash === detail.hash
+      const branchBlock = branches.length === 0 ? null : E('div', { className: 'git4idea-detail-branches' },
+        E('div', { className: 'git4idea-detail-branches-line' },
+          E('span', { className: 'git4idea-detail-branches-label' }, fill(t('detail.branches'), { n: branches.length })),
+          expanded
+            ? null
+            : E('span', { className: 'git4idea-detail-branches-names' }, branches.slice(0, 3).join(', ') + (branches.length > 3 ? ', …' : '')),
+          E('button', {
+            type: 'button',
+            className: 'git4idea-link',
+            onClick: () => { setExpandedHash(expanded ? null : detail.hash) },
+          }, expanded ? t('detail.hide') : t('detail.showAll'))),
+        expanded
+          ? E('div', { className: 'git4idea-detail-branches-list' }, branches.map((name) => E('div', { key: name, className: 'git4idea-detail-branch' }, name)))
+          : null)
       if (props.pane === true) {
         return E('div', { className: 'git4idea-detail git4idea-detail-pane' },
           E('div', { className: 'git4idea-detail-files-head' }, t('detail.files') + ' · ' + String(detail.files.length)),
@@ -5590,7 +5710,9 @@ window.__ModuleLoader__.load({
               E('span', { className: 'git4idea-detail-author' }, detail.author),
               E('span', { className: 'git4idea-detail-date' }, shortDate(detail.date))),
             E('div', { className: 'git4idea-detail-subject' }, detail.subject),
-            detail.body === undefined || detail.body.trim() === '' ? null : E('pre', { className: 'git4idea-detail-body' }, detail.body.trim())))
+            detail.body === undefined || detail.body.trim() === '' ? null : E('pre', { className: 'git4idea-detail-body' }, detail.body.trim()),
+            refBlock,
+            branchBlock))
       }
       return E('div', { className: 'git4idea-detail' },
         E('div', { className: 'git4idea-detail-head' },
@@ -5600,6 +5722,8 @@ window.__ModuleLoader__.load({
           E('span', { className: 'git4idea-detail-date' }, shortDate(detail.date))),
         E('div', { className: 'git4idea-detail-subject' }, detail.subject),
         detail.body === undefined || detail.body.trim() === '' ? null : E('pre', { className: 'git4idea-detail-body' }, detail.body.trim()),
+        refBlock,
+        branchBlock,
         E('div', { className: 'git4idea-detail-files-head' }, t('detail.files') + ' · ' + String(detail.files.length)),
         E('div', { className: 'git4idea-detail-files' }, fileRows))
     }
@@ -7058,13 +7182,13 @@ function Workbench(props) {
           const locals = picked.filter((item) => item.kind === 'local' && item.entry.head !== true)
           const remotes = picked.filter((item) => item.kind === 'remote')
           const tags = picked.filter((item) => item.kind === 'tag')
-          openMenuAt(event, [
+          openMenuAt(event, withoutIcons([
             { id: 'copyNames', icon: 'tag', tone: 'secondary', label: fill(t('menu.copyNamesN'), { n: picked.length }), run: () => copyValues(picked.map((item) => item.name)) },
             null,
             locals.length > 0 ? { id: 'deleteLocal', icon: 'trash', tone: 'danger', danger: true, label: fill(t('menu.deleteLocalN'), { n: locals.length }), run: () => setDialog({ kind: 'deleteRefs', locals: locals.map((item) => item.name), remotes: [], tags: [] }) } : null,
             remotes.length > 0 ? { id: 'deleteRemote', icon: 'trash', tone: 'danger', danger: true, label: fill(t('menu.deleteRemoteN'), { n: remotes.length }), run: () => setDialog({ kind: 'deleteRefs', locals: [], remotes: remotes.map((item) => { const slash = item.name.indexOf('/'); return { remote: slash >= 0 ? item.name.slice(0, slash) : item.name, branch: slash >= 0 ? item.name.slice(slash + 1) : item.name } }), tags: [] }) } : null,
             tags.length > 0 ? { id: 'deleteTags', icon: 'trash', tone: 'danger', danger: true, label: fill(t('menu.deleteTagsN'), { n: tags.length }), run: () => setDialog({ kind: 'deleteRefs', locals: [], remotes: [], tags: tags.map((item) => item.name) }) } : null,
-          ].filter((item) => item !== null))
+          ].filter((item) => item !== null)))
           return
         }
         const items = [
@@ -7081,19 +7205,19 @@ function Workbench(props) {
              render time, so branchMenu's useCallback deps stay untouched
              (remoteBranches is defined AFTER this callback; a render-time
              reference would be the classic hooks TDZ trap). */
-          isLocal ? { id: 'setUpstream', icon: 'fetch', tone: 'cyan', label: t('action.setUpstream'), disabled: branches === null || branches.remote.length === 0, reason: reason, run: (event) => openMenuAt(event, branches.remote.map((remoteEntry) => ({
+          isLocal ? { id: 'setUpstream', icon: 'fetch', tone: 'cyan', label: t('action.setUpstream'), disabled: branches === null || branches.remote.length === 0, reason: reason, run: (event) => openMenuAt(event, withoutIcons(branches.remote.map((remoteEntry) => ({
             id: 'upstream:' + remoteEntry.name,
             icon: 'fetch', tone: 'cyan',
             label: remoteEntry.name,
             active: entry.upstream === remoteEntry.name,
             run: () => { void run('branch-upstream', { branch: entry.name, upstream: remoteEntry.name }) },
-          }))) } : null,
+          })))) } : null,
           isLocal && entry.upstream !== null && entry.upstream !== undefined ? { id: 'unsetUpstream', icon: 'undo', tone: 'secondary', label: t('action.unsetUpstream'), run: () => { void run('branch-upstream', { branch: entry.name, unset: true }) } } : null,
           /* Remote rows get the tracking form: the local branch is created
              FROM the remote ref with --track in one step (issue #18 item 5),
              replacing the plain "new branch from" which could not bind. */
           entry.remote === true
-            ? { id: 'createTracking', icon: 'branchCreate', tone: 'success', label: t('action.createLocalBranch'), run: () => setDialog({ kind: 'createTracking', from: entry.name, name: entry.name.slice(entry.name.indexOf('/') + 1) }) }
+            ? { id: 'createTracking', icon: 'branchCreate', tone: 'success', label: t('action.newBranchFrom'), run: () => setDialog({ kind: 'createTracking', from: entry.name, name: entry.name.slice(entry.name.indexOf('/') + 1) }) }
             : { id: 'newBranch', icon: 'plus', tone: 'success', label: t('action.newBranchFrom'), run: () => setDialog({ kind: 'newBranch', from: entry.name }) },
           isLocal ? { id: 'rename', icon: 'file', tone: 'primary', label: t('action.rename'), run: () => setDialog({ kind: 'renameBranch', from: entry.name }) } : null,
           isLocal ? { id: 'delete', icon: 'trash', tone: 'danger', label: t('action.delete'), danger: true, disabled: entry.head === true, reason: reason, run: () => setDialog({ kind: 'deleteBranch', name: entry.name }) } : null,
@@ -7113,7 +7237,7 @@ function Workbench(props) {
           { id: 'update', icon: 'fetch', tone: 'cyan', label: t('action.update'), run: () => { void run('fetch', { prune: true }) } },
           { id: 'push', icon: 'push', tone: 'success', label: t('action.push'), disabled: blocked, reason: t('operation.hint'), run: () => openPushDialog() },
         ].filter((item) => item !== null)
-        openMenuAt(event, items)
+        openMenuAt(event, withoutIcons(items))
       }, [branches, checkout, run, t, compareWith, toggleFavoriteBranch, openMenuAt, favorites, blocked, sendGitSummaryToChat, repoLabel, copyValues])
 
       const commitMenu = useCallback((event, commit) => {
@@ -8351,6 +8475,13 @@ function Workbench(props) {
       } catch (error) { void error }
     }
 
+    /* The branch context menu is text-only (user request): IDEA's glyph column
+       is noise there, so the rows carry labels only. Submenu rows are flattened
+       the same way before they reach the shared ContextMenu. */
+    function withoutIcons(items) {
+      return items.map((item) => (item === null ? null : Object.assign({}, item, { icon: undefined })))
+    }
+
     /* ============================== styles ============================== */
     /* Tokens only (--dsw-alias-*): transparent themes and background plugins
        (dsh-any-background) keep showing through, like the host's own panels. */
@@ -8569,7 +8700,7 @@ function Workbench(props) {
       '.git4idea-push-commits{width:calc((100% - 1px)*2/5);flex:none;display:flex;flex-direction:column;overflow:auto;padding:4px;border-right:1px solid var(--dsw-alias-border-l2)}',
       '.git4idea-push-commit{display:flex;align-items:center;gap:8px;width:100%;flex:none;padding:4px 6px;border:0;border-radius:calc(var(--dsw-radius-sm,8px) - 2px);background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer}',
       '.git4idea-push-commit:hover{background:var(--dsw-alias-interactive-bg-hover)}',
-      '.git4idea-push-commit-on{background:var(--dsw-alias-interactive-bg-selected)}',
+      '.git4idea-push-commit-on{background:var(--dsw-alias-interactive-bg-hover)}',
       '.git4idea-push-commit:focus-visible{outline:1px solid var(--dsw-alias-brand-primary);outline-offset:-1px}',
       '.git4idea-push-subject{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
       '.git4idea-push-hash{flex:none;color:var(--dsw-alias-label-tertiary);font-size:11px}',
@@ -8704,12 +8835,29 @@ function Workbench(props) {
       '.git4idea-commit-author{color:var(--dsw-alias-label-secondary);flex:none;width:96px;overflow:hidden;text-overflow:ellipsis}',
       '.git4idea-commit-subject{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
       '.git4idea-commit-fill{flex:1 1 0;min-width:0}',
-      '.git4idea-ref{font-size:10px;padding:0 5px;border-radius:999px;corner-shape:round;background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary);flex:none;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
-      '.git4idea-ref-head{color:var(--dsw-alias-state-success-primary)}',
-      '.git4idea-ref-local{color:var(--dsw-alias-brand-primary)}',
-      '.git4idea-ref-remote{color:#b083f0}',
-      '.git4idea-ref-tag{color:var(--dsw-alias-state-warn-primary,var(--dsw-alias-brand-primary))}',
-      '.git4idea-ref-more{color:var(--dsw-alias-label-tertiary);cursor:pointer}',
+      /* Refs are IDEA-style tag glyphs after the subject: no pill, no name. They
+         overlap like a deck (negative margin) so four refs cost ~34px, and the
+         names live in the cluster tooltip. */
+      '.git4idea-ref-stack{display:inline-flex;align-items:center;flex:none;margin-left:6px}',
+      '.git4idea-ref-icon{display:inline-flex;flex:none}',
+      '.git4idea-ref-stack .git4idea-ref-icon{margin-left:-8px}',
+      '.git4idea-ref-stack .git4idea-ref-icon:first-child{margin-left:0}',
+      '.git4idea-ref-count{font-size:10px;color:var(--dsw-alias-label-tertiary);margin-left:3px}',
+      '.git4idea-ref-head{color:#d0c060}',
+      '.git4idea-ref-local{color:#50a060}',
+      '.git4idea-ref-remote{color:#a070d0}',
+      '.git4idea-ref-tag{color:#7d8087}',
+      '.git4idea-detail-refs{display:flex;flex-wrap:wrap;align-items:center;gap:2px 14px;padding:0 0 8px}',
+      '.git4idea-detail-ref{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--dsw-alias-label-secondary);white-space:nowrap}',
+      /* "In N branches" (m00717): one line when collapsed, one name per line
+         when expanded, the toggle inline with the label. */
+      '.git4idea-detail-branches{padding:0 0 8px;font-size:12px;color:var(--dsw-alias-label-secondary)}',
+      '.git4idea-detail-branches-line{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 4px}',
+      '.git4idea-detail-branches-label{color:var(--dsw-alias-label-secondary)}',
+      '.git4idea-detail-branches-names{color:var(--dsw-alias-label-tertiary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}',
+      '.git4idea-detail-branches .git4idea-link{margin-left:0;font-size:12px}',
+      '.git4idea-detail-branches-list{display:flex;flex-direction:column;margin-top:2px}',
+      '.git4idea-detail-branch{white-space:pre}',
       '.git4idea-filters{display:flex;align-items:center;gap:4px;padding:4px 6px;flex:none;min-width:0;overflow-x:auto;overflow-y:hidden;border-bottom:1px solid var(--dsw-alias-border-l2)}',
       '.git4idea-filter-text{flex:1 1 90px;min-width:80px;width:auto}',
       '.git4idea-filter-select{flex:none;max-width:118px;appearance:none;-webkit-appearance:none;background:transparent;border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-sm,8px);color:var(--dsw-alias-label-secondary);font:inherit;height:22px;padding:0 4px;cursor:pointer;text-overflow:ellipsis}',
@@ -8842,7 +8990,7 @@ function Workbench(props) {
       '.git4idea-wt-head{color:var(--dsw-alias-label-tertiary);font-size:calc(11px + var(--dsh-content-font-delta-secondary, 0px));border-bottom:1px solid var(--dsw-alias-border-l1,transparent)}',
       '.git4idea-wt-row{cursor:pointer;border-radius:var(--dsw-radius-sm,8px)}',
       '.git4idea-wt-row:hover{background:var(--dsw-alias-interactive-bg-hover)}',
-      '.git4idea-wt-row-active{background:var(--dsw-alias-interactive-bg-selected)}',
+      '.git4idea-wt-row-active{background:var(--dsw-alias-interactive-bg-hover)}',
       '.git4idea-wt-check{display:inline-flex;justify-content:center;color:var(--dsw-alias-state-success-primary)}',
       '.git4idea-wt-name,.git4idea-wt-branch,.git4idea-wt-path{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
       '.git4idea-wt-path{color:var(--dsw-alias-label-tertiary)}',
@@ -9011,7 +9159,7 @@ function Workbench(props) {
       '.git4idea-cs-item-note{color:var(--dsw-alias-label-tertiary);font-size:11px;flex:none}',
       '.git4idea-cs-item-counts{display:inline-flex;gap:5px;flex:none;font-variant-numeric:tabular-nums;font-size:11px}',
       '.git4idea-cs-item-tail{display:inline-flex;align-items:center;gap:6px;margin-left:auto;flex:none;color:var(--dsw-alias-label-tertiary)}',
-      '.git4idea-cs-item[data-menu=true]{background:var(--dsw-alias-interactive-bg-selected)}',
+      '.git4idea-cs-item[data-menu=true]{background:var(--dsw-alias-interactive-bg-hover)}',
       '.git4idea-cs-static{color:var(--dsw-alias-label-tertiary);cursor:default}',
       /* Branch popover (m01216 #10): the tree's search box, the fetched sections
          and the three actions, in one card above the composer. It is taller than
@@ -9044,7 +9192,7 @@ function Workbench(props) {
       '.git4idea-cs-sub-item{display:flex;align-items:center;gap:6px;width:100%;height:24px;padding:0 6px;flex:none;border:none;border-radius:var(--dsw-radius-xs,6px);background:transparent;color:var(--dsw-alias-label-primary);font:inherit;font-size:12px;line-height:24px;text-align:left;cursor:pointer}',
       '.git4idea-cs-sub-item svg{flex:none}',
       '.git4idea-cs-sub-label{flex:none;white-space:nowrap}',
-      '.git4idea-cs-sub-item:hover:not([aria-disabled="true"]){background:var(--dsw-alias-interactive-bg-selected)}',
+      '.git4idea-cs-sub-item:hover:not([aria-disabled="true"]){background:var(--dsw-alias-interactive-bg-hover)}',
       '.git4idea-cs-sub-item[data-tone="danger"]{color:var(--dsw-alias-state-error-primary)}',
       '.git4idea-cs-sub-item[aria-disabled="true"]{opacity:.4;cursor:default}',
       '.git4idea-cs-sub-sep{height:1px;margin:2px 4px;background:var(--dsw-alias-border-l2)}',
@@ -10084,7 +10232,7 @@ function Workbench(props) {
           },
           {
             id: 'newBranch', icon: 'branchCreate', tone: 'success',
-            label: t(kind === 'remote' ? 'action.createLocalBranch' : 'action.newBranchFrom'),
+            label: t('action.newBranchFrom'),
             run: () => {
               setCsMenu(null)
               openBranchPrompt({
@@ -10121,7 +10269,7 @@ function Workbench(props) {
              not on HEAD; rename needs a local branch to move. The checked-out
              row keeps working too — pull/push then mean what they say on it. */
           local ? {
-            id: 'update', icon: 'fetch', label: t('action.updateBranch'),
+            id: 'update', icon: 'pull', label: t('action.updateBranch'),
             disabled: csBusy !== '',
             run: () => { setCsMenu(null); void updateBranch(entry) },
           } : null,
@@ -10174,9 +10322,8 @@ function Workbench(props) {
         className: 'git4idea-cs-sub-item',
         'data-tone': item.danger === true ? 'danger' : (item.tone === undefined ? 'secondary' : item.tone),
         'aria-disabled': item.disabled === true ? 'true' : 'false',
-        'data-tip': csMenu.entry.name,
         onClick: () => { if (item.disabled !== true) item.run() },
-      }, E(Icon, { name: item.icon, size: 12 }), E('span', { className: 'git4idea-cs-sub-label' }, item.label)))))
+      }, E('span', { className: 'git4idea-cs-sub-label' }, item.label)))))
       const csNeedle = branchFilter.trim().toLowerCase()
       const csEntries = (list) => (Array.isArray(list) ? list : []).filter((entry) => csNeedle === ''
         || String(entry.name).toLowerCase().indexOf(csNeedle) >= 0)
@@ -10191,7 +10338,6 @@ function Workbench(props) {
         'data-menu': csMenu !== null && csMenu.entry === entry ? 'true' : 'false',
         disabled: entry.worktree !== null || checkingOut !== '',
         style: { paddingLeft: String(6 + depth * 12) + 'px' },
-        'data-tip': entry.worktree !== null ? t('composer.inWorktree') : (checkingOut !== '' ? t('composer.busy') : entry.name),
         onClick: (event) => { openCsMenu(entry, kind, event) },
       },
         E(Icon, { name: kind === 'tags' ? 'tag' : 'branch', size: 11 }),
