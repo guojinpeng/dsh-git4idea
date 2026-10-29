@@ -150,7 +150,50 @@
        fallback at all (same-origin requests are always admitted). */
     let viaRemoteChannel = false
 
+    /* ---- the "working" notice (m00761) ----
+       A long git verb answers in the one bottom-right stack, not in the page
+       layout. The notice waits 400 ms first, so a fast call never flashes it,
+       and it leaves the stack when the last busy call settles. */
+    const BUSY_TOAST_METHODS = new Set([
+      'fetch', 'pull', 'push', 'commit', 'merge', 'rebase', 'cherryPick', 'revert',
+      'reset', 'checkout', 'clone', 'stashPush', 'stashApply', 'worktreeAdd',
+      'worktreeRemove', 'branchDelete', 'tagDelete', 'tagDeleteRemote', 'pushTags',
+    ])
+    const BUSY_TOAST_DELAY_MS = 400
+    let busyToastText = ''
+    let busyToastId = null
+    let busyToastTimer = null
+    let busyToastCount = 0
+
+    function setBusyToast(text) { busyToastText = typeof text === 'string' ? text : '' }
+
+    function busyBegin() {
+      busyToastCount += 1
+      if (busyToastText === '' || busyToastTimer !== null || busyToastId !== null) return
+      busyToastTimer = setTimeout(() => {
+        busyToastTimer = null
+        busyToastId = toastCenter.push({ text: busyToastText, ttl: 0 })
+      }, BUSY_TOAST_DELAY_MS)
+    }
+
+    function busyEnd() {
+      busyToastCount = Math.max(0, busyToastCount - 1)
+      if (busyToastCount > 0) return
+      if (busyToastTimer !== null) { clearTimeout(busyToastTimer); busyToastTimer = null }
+      if (busyToastId !== null) { const id = busyToastId; busyToastId = null; toastCenter.drop(id) }
+    }
+
     async function request(method, payload) {
+      if (BUSY_TOAST_METHODS.has(method) !== true) return requestOnce(method, payload)
+      busyBegin()
+      try {
+        return await requestOnce(method, payload)
+      } finally {
+        busyEnd()
+      }
+    }
+
+    async function requestOnce(method, payload) {
       const init = {
         method: 'POST',
         headers: { 'content-type': 'application/json' },

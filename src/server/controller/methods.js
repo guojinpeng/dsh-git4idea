@@ -10,7 +10,8 @@ import { fetch, pull, push, clone } from './../services/sync.js'
 import { stashList, stashPush, stashApply, stashDrop, tagCreate, tagDelete } from './../services/stash.js'
 import { undoList, undoApply } from './../services/undo-ops.js'
 import { commitMessage } from './../services/ai.js'
-import { gitLogs, clientError, configGet, configSet } from './../services/diagnostics.js'
+import { gitLogs, clientError, configGet, configSet, consoleLog, consoleClear } from './../services/diagnostics.js'
+import { worktreeList, worktreeAdd, worktreeRemove } from './../services/worktrees.js'
 
 
 export const METHODS = {
@@ -58,6 +59,11 @@ export const METHODS = {
   pushTags,
   clone,
   gitLogs,
+  consoleLog,
+  consoleClear,
+  worktreeList,
+  worktreeAdd,
+  worktreeRemove,
   remoteAdd,
   remoteRemove,
   branchDeleteRemote,

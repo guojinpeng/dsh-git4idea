@@ -22,10 +22,9 @@
     LANE_TRACE_RULES.push('@keyframes git4idea-spin-rotate{to{transform:rotate(360deg)}}')
 
     const CSS = [
-      '.git4idea-root{position:relative;display:flex;flex-direction:column;height:100%;min-height:0;background:transparent;color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family,system-ui,sans-serif);font-size:13px;line-height:1.5;font-weight:600;overflow:hidden}',
+      '.git4idea-root{position:relative;display:flex;flex-direction:column;height:100%;min-height:0;background:transparent;color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family,-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",Helvetica,Arial,sans-serif);font-size:13px;line-height:1.5;font-weight:400;overflow:hidden}',
       '.git4idea-topbar{display:flex;align-items:center;gap:6px;padding:4px 6px;flex:none;min-width:0;border-bottom:1px solid var(--dsw-alias-border-l2);overflow:hidden}',
       '.git4idea-topbar-spacer{flex:1;min-width:4px}',
-      '.git4idea-busy{color:var(--dsw-alias-label-tertiary);flex:none;white-space:nowrap}',
       '.git4idea-track{color:var(--dsw-alias-label-secondary);flex:none;font-variant-numeric:tabular-nums;white-space:nowrap}',
       '.git4idea-select-wrap{display:inline-flex;align-items:center;gap:4px;min-width:0;flex:0 1 auto;max-width:90%;color:var(--dsw-alias-label-secondary)}',
       '.git4idea-select{appearance:none;-webkit-appearance:none;background:transparent;border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-sm,8px);color:var(--dsw-alias-label-primary);font:inherit;font-weight:500;padding:1px 6px;height:22px;max-width:min(280px,42%);min-width:0;cursor:pointer;text-overflow:ellipsis}',
@@ -49,9 +48,6 @@
       '.git4idea-icon-btn:hover:not(:disabled):not([aria-disabled="true"]){background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
       '.git4idea-icon-btn:disabled,.git4idea-icon-btn[aria-disabled="true"]{opacity:.4;cursor:default}',
       '.git4idea-icon-btn-active{background:var(--dsw-alias-interactive-bg-active,var(--dsw-alias-interactive-bg-hover));color:var(--dsw-alias-label-primary)}',
-      '.git4idea-banner{display:flex;align-items:center;gap:8px;padding:4px 8px;flex:none;color:var(--dsw-alias-state-error-primary)}',
-      '.git4idea-note{display:flex;align-items:center;gap:8px;padding:4px 8px;flex:none;color:var(--dsw-alias-label-secondary)}',
-      '.git4idea-banner-text{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}',
       '.git4idea-shell{flex:1;min-height:0;display:flex;overflow:hidden}',
       '.git4idea-rail{width:32px;flex:none;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 0;overflow:hidden;border-right:1px solid var(--dsw-alias-border-l2)}',
       '.git4idea-rail-gap{flex:1;min-height:2px}',
@@ -140,22 +136,20 @@
       '.git4idea-foldTitle{min-width:0;overflow-wrap:anywhere}',
       '.git4idea-root-narrow .git4idea-menu-item{white-space:normal}',
       '.git4idea-root-narrow .git4idea-toast-text{white-space:normal}',
-      /* m02986: the queue is frame-wide now, so the stack pins to the viewport
-         corner (inside shell.overlay) instead of the panel's own box. */
-      '.git4idea-tip{position:fixed;z-index:120;pointer-events:none;max-width:340px;padding:4px 8px;border-radius:var(--dsw-radius-sm,8px);border:1px solid var(--dsw-alias-border-l2,transparent);background:var(--dsw-alias-bg-layer-2,rgba(28,30,34,.98));box-shadow:var(--dsw-elevation-prominent,0 8px 22px rgba(0,0,0,.34));color:var(--dsw-alias-label-primary,inherit);font:500 12px/1.45 var(--dsw-font-family,system-ui,sans-serif);white-space:pre-wrap;overflow-wrap:anywhere}',
+      '.git4idea-tip{position:fixed;z-index:120;pointer-events:none;max-width:340px;padding:4px 8px;border-radius:var(--dsw-radius-sm,8px);border:1px solid var(--dsw-alias-border-l2,transparent);background:var(--dsw-alias-bg-layer-2,rgba(28,30,34,.98));box-shadow:var(--dsw-elevation-prominent,0 8px 22px rgba(0,0,0,.34));color:var(--dsw-alias-label-primary,inherit);font:500 12px/1.45 var(--dsw-font-family,-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",Helvetica,Arial,sans-serif);white-space:pre-wrap;overflow-wrap:anywhere}',
       /* the tooltip node lives on body; keep it above the toasts */
-      '.git4idea-toasts{position:fixed;right:12px;bottom:12px;display:flex;flex-direction:column;gap:6px;z-index:90;max-width:min(380px,92%);align-items:stretch}',
+      /* m00761: the stack lives on document.body, above every app layer (the
+         frame's overlay layer and the composer are stacking contexts), so no
+         page chrome can paint over a notice. */
+      '.git4idea-toasts{position:fixed;right:12px;bottom:12px;display:flex;flex-direction:column;gap:6px;z-index:2147483000;max-width:min(380px,92%);align-items:stretch}',
       '.git4idea-toast{display:flex;align-items:flex-start;gap:8px;padding:6px 8px;border-radius:var(--dsw-radius-sm,8px);background:var(--dsw-alias-bg-layer-2,var(--dsw-alias-bg-layer-1));border:0;box-shadow:var(--dsw-elevation-prominent,0 8px 22px rgba(0,0,0,.32))}',
-      '.git4idea-toast-icon{display:inline-flex;flex:none;margin-top:2px;color:var(--dsw-alias-label-secondary)}',
-      '.git4idea-toast-warn .git4idea-toast-icon{color:var(--dsw-alias-state-warn-primary,var(--dsw-alias-brand-primary))}',
-      '.git4idea-toast-ok .git4idea-toast-icon{color:var(--dsw-alias-state-success-primary)}',
-      '.git4idea-toast-error .git4idea-toast-icon{color:var(--dsw-alias-state-error-primary)}',
       /* m02407 #3: two lines while the pointer is away, the whole result while it
          is on the chip, and a pinned-open chip scrolls past min(40vh, 240px). */
       '.git4idea-toast-text{flex:1;min-width:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-wrap;overflow-wrap:anywhere;font-weight:500;cursor:pointer}',
       '.git4idea-toast:hover .git4idea-toast-text,.git4idea-toast-open .git4idea-toast-text{display:block;-webkit-line-clamp:unset;max-height:min(40vh,240px);overflow:auto}',
       '.git4idea-toast-action{border:none;background:transparent;color:var(--dsw-alias-brand-primary);font:inherit;font-weight:600;cursor:pointer;padding:0 2px;flex:none}',
       '.git4idea-toast-action:hover{text-decoration:underline}',
+      '.git4idea-toast-close{flex:none;color:var(--dsw-alias-label-tertiary);font-size:14px;line-height:1}',
       '.git4idea-opchip{flex:none;padding:0 6px;border-radius:999px;corner-shape:round;background:color-mix(in srgb, var(--dsw-alias-state-warn-primary,var(--dsw-alias-brand-primary)) 20%, transparent);color:var(--dsw-alias-state-warn-primary,var(--dsw-alias-brand-primary));font-weight:500;white-space:nowrap}',
       '.git4idea-rail-list{display:flex;flex-direction:column;gap:2px;max-height:min(50vh,300px);overflow:auto;padding:2px;border:1px solid var(--dsw-alias-hairline,var(--dsw-alias-border-l1));border-radius:var(--dsw-radius-sm,8px)}',
       '.git4idea-rail-item{display:flex;align-items:center;gap:6px;padding:2px 4px;border-radius:calc(var(--dsw-radius-sm,8px) - 2px)}',
@@ -200,7 +194,7 @@
       /* No backdrop-filter here (m05305): a 2px blur over the whole viewport
          re-samples everything behind the scrim on every scroll frame, which made
          the diff card feel stuck. A denser scrim alone costs nothing. */
-      '.git4idea-commit-overlay{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--dsw-alias-bg-scrim,rgba(0,0,0,.42));color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family,system-ui,sans-serif);font-size:13px;line-height:1.5;font-weight:600}',
+      '.git4idea-commit-overlay{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--dsw-alias-bg-scrim,rgba(0,0,0,.42));color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family,-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",Helvetica,Arial,sans-serif);font-size:13px;line-height:1.5;font-weight:400}',
       /* m05307: the card carries the change list AND the file diff, so it takes
          the same footprint as the file card; the pane split is 40/60. */
       '.git4idea-commit-overlay .git4idea-commit-layer-card{width:min(1180px,94vw);height:min(760px,90vh)}',
@@ -452,11 +446,11 @@
       '.git4idea-detail-body{margin:0;white-space:pre-wrap;color:var(--dsw-alias-label-secondary);font:inherit}',
       '.git4idea-detail-files-head{font-weight:600;margin-top:4px}',
       '.git4idea-detail-files{display:flex;flex-direction:column}',
-      '.git4idea-mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}',
+      '.git4idea-mono{font-family:var(--ds-font-family-code,"SF Mono","JetBrains Mono","Fira Code",Consolas,"Liberation Mono",Menlo,Courier,"PingFang SC","Microsoft YaHei",monospace)}',
       '.git4idea-diff-pane{flex:none;max-height:55%;display:flex;flex-direction:column;min-height:0;border-top:1px solid var(--dsw-alias-border-l2)}',
       '.git4idea-diff-head{display:flex;align-items:center;gap:8px;padding:3px 8px;color:var(--dsw-alias-label-tertiary);flex:none;min-width:0}',
       '.git4idea-diff-path{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}',
-      '.git4idea-diff{flex:1;overflow:auto;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:calc(12px + var(--dsh-code-font-delta, 0px));line-height:1.5;font-weight:500;min-height:0}',
+      '.git4idea-diff{flex:1;overflow:auto;font-family:var(--ds-font-family-code,"SF Mono","JetBrains Mono","Fira Code",Consolas,"Liberation Mono",Menlo,Courier,"PingFang SC","Microsoft YaHei",monospace);font-size:calc(12px + var(--dsh-code-font-delta, 0px));line-height:1.5;font-weight:500;min-height:0}',
       '.git4idea-diff-line{display:flex;gap:8px;padding:0 6px;white-space:pre}',
       '.git4idea-diff-gutter{width:32px;flex:none;text-align:right;color:var(--dsw-alias-label-dimmed,var(--dsw-alias-label-tertiary));user-select:none}',
       '.git4idea-diff-text{white-space:pre-wrap;word-break:break-word;flex:1;min-width:0}',
@@ -474,21 +468,39 @@
       '.git4idea-file-icon{flex:none;opacity:.95}',
       '.git4idea-overlay{position:absolute;inset:0;padding:8px;box-sizing:border-box;background:var(--dsw-alias-bg-mask-1,rgba(0,0,0,.42));-webkit-backdrop-filter:var(--dsw-mask-blur,none);backdrop-filter:var(--dsw-mask-blur,none);display:flex;align-items:center;justify-content:center;z-index:60}',
       '.git4idea-dialog{box-sizing:border-box;min-width:min(240px,100%);max-width:min(420px,94%);max-height:100%;overflow:auto;background:var(--dsw-alias-bg-layer-2,var(--dsw-alias-bg-layer-1));border:0;border-radius:var(--dsw-radius-panel,28px);padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:var(--dsw-elevation-prominent,0 12px 32px rgba(0,0,0,.35))}',
-      /* Git-output drawer (VS Code showOutput): panel-internal absolute bottom
-         sheet (invariant 13). */
-      '.git4idea-gitlog{position:absolute;left:0;right:0;bottom:0;z-index:55;height:46%;min-height:132px;display:flex;flex-direction:column;background:var(--dsw-alias-bg-layer-2,var(--dsw-alias-bg-layer-1));border-radius:var(--dsw-radius-panel,28px) var(--dsw-radius-panel,28px) 0 0;box-shadow:var(--dsw-elevation-prominent,0 -8px 28px rgba(0,0,0,.3))}',
-      '.git4idea-gitlog-head{display:flex;align-items:center;gap:4px;padding:8px 14px 6px;flex:none}',
-      '.git4idea-gitlog-title{font-weight:600}',
-      '.git4idea-gitlog-empty{padding:10px 14px;color:var(--dsw-alias-label-tertiary)}',
-      '.git4idea-gitlog-body{flex:1;min-height:0;overflow:auto;padding:0 14px 10px;font-weight:400}',
-      '.git4idea-gitlog-row{padding:6px 0;border-top:1px solid var(--dsw-alias-border-l1,transparent)}',
-      '.git4idea-gitlog-row-bad .git4idea-gitlog-code{color:var(--dsw-alias-state-danger,#e5484d);font-weight:700}',
-      '.git4idea-gitlog-meta{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}',
-      '.git4idea-gitlog-code{color:var(--dsw-alias-label-tertiary);font-variant-numeric:tabular-nums}',
-      '.git4idea-gitlog-ms{color:var(--dsw-alias-label-tertiary);font-variant-numeric:tabular-nums}',
-      '.git4idea-gitlog-at{color:var(--dsw-alias-label-tertiary);font-size:calc(11px + var(--dsh-content-font-delta-secondary, 0px))}',
-      '.git4idea-gitlog-argv{font-weight:600;word-break:break-all}',
-      '.git4idea-gitlog-pre{margin:4px 0 0;padding:6px 8px;border-radius:var(--dsw-radius-md,12px);background:var(--dsw-alias-bg-layer-3,var(--dsw-alias-bg-layer-2));overflow:auto;max-height:160px;white-space:pre-wrap;word-break:break-all;font-size:calc(11px + var(--dsh-code-font-delta, 0px))}',
+      /* IDE tool-window tabs over the detail column: log (the commit detail),
+         console (host console.log) and worktrees. */
+      '.git4idea-workbench{display:flex;flex-direction:column;flex:1;min-height:0;min-width:0}',
+      '.git4idea-tabs{display:flex;align-items:center;gap:2px;flex:none;padding:0 6px;border-bottom:1px solid var(--dsw-alias-border-l1,var(--dsw-alias-border-subtle));overflow-x:auto;scrollbar-width:none}',
+      '.git4idea-tab{flex:none;padding:6px 10px;border:0;border-bottom:2px solid transparent;background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;font-size:calc(12px + var(--dsh-content-font-delta-secondary, 0px));cursor:pointer;white-space:nowrap}',
+      '.git4idea-tab:hover{color:var(--dsw-alias-label-primary)}',
+      '.git4idea-tab[data-active="true"]{color:var(--dsw-alias-label-primary);border-bottom-color:var(--dsw-alias-brand-primary)}',
+      '.git4idea-workbench-body{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}',
+      '.git4idea-console{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}',
+      '.git4idea-console-note{padding:4px 8px;color:var(--dsw-alias-label-tertiary);font-size:calc(11px + var(--dsh-content-font-delta-secondary, 0px));flex:none}',
+      '.git4idea-console-body{flex:1;min-height:0;overflow:auto;margin:0;padding:4px 8px 10px;font-family:var(--ds-font-family-code,"SF Mono","JetBrains Mono","Fira Code",Consolas,"Liberation Mono",Menlo,Courier,"PingFang SC","Microsoft YaHei",monospace);font-size:calc(11px + var(--dsh-code-font-delta, 0px));line-height:1.5;white-space:pre-wrap;word-break:break-word;user-select:text;cursor:auto}',
+      '.git4idea-console-line{white-space:pre-wrap}',
+      '.git4idea-console-cmd{font-weight:600;color:var(--dsw-alias-label-primary);margin-top:6px}',
+      '.git4idea-console-bad{color:var(--dsw-alias-state-error-primary)}',
+      '.git4idea-worktrees{flex:1;min-height:0;display:flex}',
+      '.git4idea-wt-rail{flex:none;display:flex;flex-direction:column;gap:2px;padding:4px;border-right:1px solid var(--dsw-alias-border-l1,transparent)}',
+      '.git4idea-wt-main{flex:1;min-width:0;min-height:0;overflow:auto}',
+      '.git4idea-wt-error{padding:6px 8px;color:var(--dsw-alias-state-error-primary);white-space:pre-wrap}',
+      '.git4idea-wt-list{display:flex;flex-direction:column;padding:2px 0 8px}',
+      '.git4idea-wt-head,.git4idea-wt-row{display:grid;grid-template-columns:20px minmax(0,1.1fr) minmax(0,1fr) minmax(0,2fr);gap:8px;align-items:center;padding:4px 8px}',
+      '.git4idea-wt-head{color:var(--dsw-alias-label-tertiary);font-size:calc(11px + var(--dsh-content-font-delta-secondary, 0px));border-bottom:1px solid var(--dsw-alias-border-l1,transparent)}',
+      '.git4idea-wt-row{cursor:pointer;border-radius:var(--dsw-radius-sm,8px)}',
+      '.git4idea-wt-row:hover{background:var(--dsw-alias-interactive-bg-hover)}',
+      '.git4idea-wt-row-active{background:var(--dsw-alias-interactive-bg-selected)}',
+      '.git4idea-wt-check{display:inline-flex;justify-content:center;color:var(--dsw-alias-state-success-primary)}',
+      '.git4idea-wt-name,.git4idea-wt-branch,.git4idea-wt-path{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+      '.git4idea-wt-path{color:var(--dsw-alias-label-tertiary)}',
+      '.git4idea-wt-label{color:var(--dsw-alias-label-secondary);font-size:calc(12px + var(--dsh-content-font-delta-secondary, 0px))}',
+      '.git4idea-wt-toggle{display:flex;align-items:center;gap:6px;color:var(--dsw-alias-label-secondary)}',
+      '.git4idea-wt-pathrow{display:flex;align-items:center;gap:6px}',
+      '.git4idea-wt-pathrow .git4idea-input{flex:1;min-width:0}',
+      '.git4idea-wt-hint{color:var(--dsw-alias-label-tertiary);font-size:calc(11px + var(--dsh-content-font-delta-secondary, 0px));word-break:break-all}',
+      '.git4idea-wt-dialog .git4idea-input{width:100%;box-sizing:border-box}',
       '.git4idea-dialog-wide{min-width:min(360px,92%)}',
       '.git4idea-dialog-title{font-weight:600}',
       '.git4idea-dialog-text{color:var(--dsw-alias-label-secondary);white-space:pre-wrap}',
@@ -622,7 +634,6 @@
       '.git4idea-cs-pill svg{flex:none}',
       '.git4idea-cs-ahead{color:var(--dsw-alias-state-success-primary)}',
       '.git4idea-cs-behind{color:var(--dsw-alias-state-business-primary)}',
-      '.git4idea-cs-errorbar{flex:none;margin:0 6px 4px;padding:4px 8px;border-radius:var(--dsw-radius-sm,8px);background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-state-error-primary);font-size:11px;line-height:15px;word-break:break-word}',
       // .git4idea-cs-menu opens upward (the composer sits at the bottom of the UI). The surface
       // carries no backdrop-filter of its own: the data-cordis-panel attribute opts the popover
       // into dsh-any-background's input-surface channel (--dsw-specific-menu remapped to
@@ -668,7 +679,6 @@
          commit and push cards (z 80) since it is the transient of the two. */
       '.git4idea-prompt-overlay{z-index:81}',
       '.git4idea-prompt-card{width:min(420px,92vw)}',
-      '.git4idea-dialog-error{color:var(--dsw-alias-state-error-primary,#e5484d);font-size:12px;line-height:16px;white-space:pre-wrap;max-height:120px;overflow:auto}',
       /* Inline secondary menu (m01737 #5): one row per verb, indented under
          the branch row it belongs to. */
       /* Row flyout (m02697 #2): floats beside the chooser, anchored on the row.

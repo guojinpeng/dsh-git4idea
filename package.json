@@ -1,7 +1,6 @@
 {
-  "name": "dsh-git4idea",
-  "version": "0.22.0",
-  "description": "DSH plugin: an IDE-style Git tool window as a native panel — branch tree, commit graph, changes and commit details. | DSH 插件:IDE 风格 Git 工具窗口,以原生面板挂载——分支树 / 提交图谱 / 变更与提交 / 提交详情。",
+  "name": "@guojinpeng/dsh-git4idea",
+  "version": "0.1.0",
   "type": "module",
   "repository": {
     "type": "git",
@@ -44,8 +43,7 @@
     "cordis.patch.yml",
     "dsh.plugin.json",
     "README.md",
-    "LICENSE",
-    "THIRD_PARTY_NOTICES.md"
+    "LICENSE"
   ],
   "scripts": {
     "test": "node --test tests/smoke.mjs tests/api.test.mjs tests/graph.test.mjs tests/repos.test.mjs",

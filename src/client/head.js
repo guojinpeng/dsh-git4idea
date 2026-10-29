@@ -18,14 +18,9 @@
  * exactly like the host's own panels do.
  */
 window.__ModuleLoader__.load({
-  id: 'dsh-git4idea',
+  id: '@guojinpeng/dsh-git4idea',
   factory: (require) => {
     const React = require('react')
-    /* The frame's overlay slot lives inside .overlayLayer (z-index 20, a stacking
-       context), so a child can never paint above the page's own layers. The
-       notification stack escapes through a portal to document.body. */
-    let ReactDOM = null
-    try { ReactDOM = require('react-dom') } catch (error) { void ReactDOM }
     const E = React.createElement
     const Fragment = React.Fragment
     const useState = React.useState

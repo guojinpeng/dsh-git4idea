@@ -5,6 +5,7 @@
 import { logError } from './../core/home.js'
 import { PanelError, badRequest, messageOf } from './../core/errors.js'
 import { withRepoLock, WRITE_METHODS, lockKeyOf } from './../core/locks.js'
+import { consoleRecording } from './../core/git.js'
 import { METHODS } from './methods.js'
 
 
@@ -103,9 +104,15 @@ export async function handle(req, res) {
   }
   try {
     const payload = await readJsonBody(req)
-    const data = WRITE_METHODS.has(method)
-      ? await withRepoLock(lockKeyOf(payload), () => handler(payload))
-      : await handler(payload)
+    /* Console scope (m00541): a write runs from a button press, so its git
+       calls are what the user asked to see; a read only records when the
+       caller marks it as a visible gesture (`console: true`). */
+    const record = WRITE_METHODS.has(method) || payload.console === true
+    const data = await consoleRecording.run(record, () => (
+      WRITE_METHODS.has(method)
+        ? withRepoLock(lockKeyOf(payload), () => handler(payload))
+        : handler(payload)
+    ))
     sendJson(res, 200, { ok: true, data: data })
   } catch (error) {
     if (error instanceof PanelError) {

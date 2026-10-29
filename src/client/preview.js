@@ -207,7 +207,6 @@
       const entry = props.entry
       const base = { cwd: entry.cwd, repoRoot: entry.repoRoot }
       const [data, setData] = useState(null)
-      const [error, setError] = useState('')
       const [selected, setSelected] = useState(null)
       const [files, setFiles] = useState([])
       const [filesLoading, setFilesLoading] = useState(false)
@@ -223,7 +222,7 @@
             setData(normalized)
             setSelected(normalized.commits.length === 0 ? null : normalized.commits[0].hash)
           } catch (caught) {
-            if (alive === true) { setError(messageOf(caught)); notifyFail(caught) }
+            if (alive === true) { notifyFail(caught) }
           }
         })()
         return () => { alive = false }
@@ -238,7 +237,7 @@
             const detail = await request('commitDetail', Object.assign({}, base, { hash: selected }))
             if (alive === true) setFiles(Array.isArray(detail.files) ? detail.files : [])
           } catch (caught) {
-            if (alive === true) { setFiles([]); setError(messageOf(caught)); notifyFail(caught) }
+            if (alive === true) { setFiles([]); notifyFail(caught) }
           } finally {
             if (alive === true) setFilesLoading(false)
           }
@@ -289,7 +288,7 @@
       }
       const canPush = data !== null && data.detached === false && data.remotes.length > 0 && data.commits.length > 0 && busy === false
       const emptyNote = data === null
-        ? (error === '' ? t('status.busy') : error)
+        ? t('status.busy')
         : data.detached === true
           ? t('push.detached')
           : data.remotes.length === 0
@@ -360,6 +359,6 @@
             className: 'git4idea-btn git4idea-btn-primary',
             disabled: canPush !== true,
             onClick: () => { void runPush() },
-          }, busy === true ? t('status.busy') : t('toolbar.push')))))
+          }, t('toolbar.push')))))
     }
 

@@ -3,7 +3,8 @@
  */
 
 import { spawn } from 'node:child_process'
-import { logError } from './home.js'
+import { AsyncLocalStorage } from 'node:async_hooks'
+import { appendConsoleLog, beijingTime, logError } from './home.js'
 import { PanelError, messageOf } from './errors.js'
 
 export const MAX_OUTPUT_BYTES = 8 * 1024 * 1024
@@ -34,6 +35,48 @@ export const DEFAULT_TIMEOUT_MS = 30_000
 
 export const NETWORK_TIMEOUT_MS = 180_000
 
+/* One block per run in <plugin home>/log/console.log: the console tab reads
+   that file, so nothing depends on a process-local buffer. Long output is
+   clipped head and tail; the full text is in the ring buffer below. */
+export const CONSOLE_TEXT_MAX = 4000
+
+/* Only user gestures reach the console file: the controller opens a recording
+   scope for a write request (every write method is a button) or a read that
+   carries `console: true`. Background polls and reads that a click only
+   expands (diff, commit detail, branch list) stay out, or the file would grow
+   without bound during a session. */
+export const consoleRecording = new AsyncLocalStorage()
+
+/* The command line itself can be long (a commit message is an argument): keep
+   its head and tail too. */
+export const CONSOLE_ARGV_MAX = 1000
+
+
+function clipConsoleText(text, max) {
+  const limit = max === undefined ? CONSOLE_TEXT_MAX : max
+  const value = typeof text === 'string' ? text : ''
+  if (value.length <= limit) return value
+  return value.slice(0, limit / 2) +
+    '\n…[' + String(value.length - limit) + ' more chars]…\n' +
+    value.slice(-limit / 2)
+}
+
+
+function writeConsoleBlock(cwd, args, startedAt, code, out, err) {
+  if (consoleRecording.getStore() !== true) return
+  const failed = !(code === 0 || code === '0')
+  const status = failed ? ' [' + String(code) + ']' : ''
+  const lines = [beijingTime(new Date(startedAt)) + ': [' + String(cwd) + '] git ' + clipConsoleText(args.join(' '), CONSOLE_ARGV_MAX) + status]
+  const stdout = clipConsoleText(out).replace(/\s+$/, '')
+  /* A failed command's stderr is the reason the user pressed the button and
+     looks at the console: print it whole. Successful output is the bulk that
+     clipped. */
+  const stderr = (failed ? (typeof err === 'string' ? err : '') : clipConsoleText(err)).replace(/\s+$/, '')
+  if (stdout !== '') lines.push(stdout)
+  if (stderr !== '') lines.push(stderr)
+  appendConsoleLog(lines.join('\n'))
+}
+
 export const RECORD_SEP = '\u001e'
 
 export const FIELD_SEP = '\u001f'
@@ -61,6 +104,7 @@ export function runGit(cwd, args, options = {}) {
       child = spawn(gitBinary(), args, { cwd, windowsHide: true, env: { ...process.env, GIT_OPTIONAL_LOCKS: '0', GIT_TERMINAL_PROMPT: '0' } })
     } catch (error) {
       logError('git:start', error)
+      writeConsoleBlock(cwd, args, startedAt, 'spawn-error', '', messageOf(error))
       reject(new PanelError('git-missing', 'cannot start git: ' + messageOf(error), 500))
       return
     }
@@ -74,6 +118,7 @@ export function runGit(cwd, args, options = {}) {
       settled = true
       child.kill('SIGKILL')
       pushGitLog({ at: new Date(startedAt).toISOString(), argv: args.join(' '), code: 'timeout', ms: timeoutMs, out: '', err: 'timed out after ' + String(timeoutMs) + 'ms' })
+      writeConsoleBlock(cwd, args, startedAt, 'timeout', Buffer.concat(out).toString('utf8'), Buffer.concat(err).toString('utf8') + '\ntimed out after ' + String(timeoutMs) + 'ms')
       logError('git:timeout', 'git ' + args.join(' ') + ' timed out after ' + String(timeoutMs) + 'ms')
       reject(new PanelError('git-timeout', 'git ' + args[0] + ' timed out after ' + timeoutMs + 'ms', 504))
     }, timeoutMs)
@@ -90,6 +135,7 @@ export function runGit(cwd, args, options = {}) {
       settled = true
       clearTimeout(timer)
       logError('git:run', error)
+      writeConsoleBlock(cwd, args, startedAt, 'spawn-error', '', messageOf(error))
       reject(new PanelError('git-missing', 'cannot run git: ' + messageOf(error), 500))
     })
     child.on('close', (code, signal) => {
@@ -104,6 +150,7 @@ export function runGit(cwd, args, options = {}) {
         out: clipGitLogText(Buffer.concat(out).toString('utf8')),
         err: clipGitLogText(Buffer.concat(err).toString('utf8')),
       })
+      writeConsoleBlock(cwd, args, startedAt, code === null ? -1 : code, Buffer.concat(out).toString('utf8'), Buffer.concat(err).toString('utf8'))
       resolve({
         code: code === null ? -1 : code,
         signal: signal === null ? undefined : signal,

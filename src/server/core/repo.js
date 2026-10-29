@@ -210,11 +210,14 @@ export function parseLog(stdout) {
 export const LOG_FORMAT = '%H' + FIELD_SEP + '%h' + FIELD_SEP + '%P' + FIELD_SEP + '%an' + FIELD_SEP + '%ae' + FIELD_SEP + '%aI' + FIELD_SEP + '%s' + FIELD_SEP + '%D' + RECORD_SEP
 
 
+/* `git stash list` prints one line per entry and exits 0 even with an empty
+   stash. The reflog form (`rev-list --walk-reflogs --count refs/stash`) exits
+   128 with "ambiguous argument 'refs/stash'" on a repository that never
+   stashed — a fatal line per poll in the console for no useful data. */
 export async function stashCountOf(root) {
-  const result = await runGit(root, ['rev-list', '--walk-reflogs', '--count', 'refs/stash'])
+  const result = await runGit(root, ['stash', 'list'])
   if (result.code !== 0) return 0
-  const count = Number.parseInt(result.stdout.trim(), 10)
-  return Number.isFinite(count) ? count : 0
+  return result.stdout.split('\n').filter((line) => line.trim() !== '').length
 }
 
 
@@ -235,7 +238,7 @@ export async function worktreesOf(root) {
   for (const line of result.stdout.split('\n')) {
     if (line.startsWith('worktree ')) {
       if (current !== null) trees.push(current)
-      current = { path: line.slice('worktree '.length), branch: null, head: null, detached: false, bare: false }
+      current = { path: line.slice('worktree '.length), branch: null, head: null, detached: false, bare: false, locked: false, lockReason: '' }
       continue
     }
     if (current === null) continue
@@ -243,6 +246,10 @@ export async function worktreesOf(root) {
     else if (line.startsWith('branch ')) current.branch = line.slice('branch '.length).replace('refs/heads/', '')
     else if (line === 'detached') current.detached = true
     else if (line === 'bare') current.bare = true
+    else if (line === 'locked' || line.startsWith('locked ')) {
+      current.locked = true
+      current.lockReason = line.slice('locked '.length).trim()
+    }
   }
   if (current !== null) trees.push(current)
   return trees

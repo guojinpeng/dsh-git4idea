@@ -37,7 +37,6 @@
        quickly and reloads the summary only when branch or HEAD actually
        moved. */
     const COMPOSER_HEAD_POLL_MS = 2500
-    const COMPOSER_ERROR_TTL_MS = 6000
     /* Line counts re-run at most this often without a real change: the two
        numstat passes are the expensive step on a big dirty tree (issue #11),
        so the pill keeps its cheap stats:false poll and refreshes lines only
@@ -174,23 +173,17 @@
 
     function CenteredPrompt(props) {
       const [value, setValue] = useState(props.initialValue === undefined ? '' : props.initialValue)
-      const [error, setError] = useState('')
       const [busy, setBusy] = useState(false)
       const alive = useRef(true)
       const ref = useRef(null)
       useEffect(() => { if (ref.current !== null) ref.current.focus() }, [])
       useEffect(() => () => { alive.current = false }, [])
-      const textOf = (caught) => (caught !== null && caught !== undefined && typeof caught.message === 'string' && caught.message !== ''
-        ? caught.message
-        : String(caught))
       const ready = value.trim() !== '' && busy === false
       const submit = () => {
         if (ready !== true) return
         const name = value.trim()
         setBusy(true)
-        setError('')
         Promise.resolve(props.onSubmit(name)).catch((caught) => {
-          if (alive.current === true) setError(textOf(caught))
           notifyFail(caught)
         }).then(() => {
           if (alive.current === true) setBusy(false)
@@ -213,7 +206,6 @@
             placeholder: props.placeholder === undefined ? '' : props.placeholder,
             onChange: (event) => setValue(event.target.value), onKeyDown: onKey,
           }),
-          error === '' ? null : E('div', { className: 'git4idea-dialog-error', 'data-tip': error }, error),
           E('div', { className: 'git4idea-dialog-actions' },
             E('button', {
               type: 'button', className: 'git4idea-btn',

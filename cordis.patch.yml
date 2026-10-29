@@ -1,24 +1,3 @@
-# dsh-git4idea bundle patch.
-#
-# Installed through the official CLI —
-#
-#   dsh plugin --profile <name> add dsh-git4idea
-#
-# — the command reconciles dsh.profile.bundles against installed packages and,
-# seeing this declaration, merges THIS patch exactly like the manual mount line
-# below. No profile file edits needed.
-#
-# Manual mount equivalent (profile cordis.patch.yml):
-#
-#   - insert:
-#       - id: git4idea
-#         name: 'dsh-git4idea'
-#
-# Only the Node half loads through this row (the /dsh-git4idea/api git routes).
-# The web client half is served through exports["./client"] and mounted by the
-# browser boot graph; there it registers the Git view tab beside 对话 / 轨迹 in
-# every session. Nothing opens at startup: the right-sidebar seat is only used
-# on demand (m02407).
 - insert:
-    - id: git4idea
-      name: 'dsh-git4idea'
+    - id: guojinpeng/dsh-git4idea
+      name: '@guojinpeng/dsh-git4idea'

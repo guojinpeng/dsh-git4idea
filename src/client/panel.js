@@ -438,18 +438,10 @@
          from. sortKey 'git' keeps git's own status order. */
       const [groupBy, setGroupBy] = useState('flat')
       const [sortKey, setSortKey] = useState('git')
-      /* The Git-output drawer (VS Code showOutput): null = closed, an array =
-         the entries it currently shows. Opened on demand, refreshed by hand or
-         by reopening — it is a debugging view, not a live stream. */
-      const [gitOutput, setGitOutput] = useState(null)
-      const openGitOutput = useCallback(async () => {
-        try {
-          const data = await request('gitLogs', {})
-          setGitOutput(Array.isArray(data.entries) ? data.entries : [])
-        } catch (caught) {
-          setError(caught instanceof Error ? caught.message : String(caught))
-        }
-      }, [request])
+      /* The console tab reads the host's console.log. It refreshes only after a
+         git run (consoleTick), never on the summary poll — the file is the
+         record, and a timer would re-read it while nothing new lands. */
+      const [consoleTick, setConsoleTick] = useState(0)
 
 
       /* Phase-two merge (issue #11): fold the [path, additions, deletions,
@@ -676,8 +668,13 @@
       const runSuccessText = useCallback((method, payload) => successToastText(t, method, payload), [t])
       const run = useCallback(async (method, payload, options) => {
         const result = await guard(() => request(method, Object.assign({}, base, payload)))
+        /* A git run just happened — failed or not, the console has a new block. */
+        setConsoleTick((value) => value + 1)
         if (result === undefined) return undefined
         await refresh()
+        /* refresh itself runs git (status/log); the console gets those blocks
+           too, so the second tick keeps the tab on the newest line. */
+        setConsoleTick((value) => value + 1)
         if (options === undefined || options.quiet !== true) notifyOk(runSuccessText(method, payload))
         return result
       }, [base, runSuccessText, guard, refresh])
@@ -1510,7 +1507,6 @@
           summary.behind > 0 ? E('span', { className: 'git4idea-track-behind' }, (summary.ahead > 0 ? ' ' : '') + '↓' + summary.behind) : null),
         operation === null ? null : E('span', { className: 'git4idea-opchip', 'data-tip': t('operation.hint') }, t('operation.' + operation)),
         E('span', { className: 'git4idea-topbar-spacer' }),
-        busy ? E('span', { className: 'git4idea-busy' }, t('status.busy')) : null,
         /* The commit button raises the frame commit dialog (m04920); the panel's
            own layer could not fix the height of its diff half. */
         E('button', {
@@ -1545,7 +1541,7 @@
         request: request,
       })
 
-      const detailPane = E(CommitDetail, {
+      const commitDetail = E(CommitDetail, {
         t: t, detail: detail, selectedPath: selectedPath, pane: true,
         onBack: () => { setSelectedPath(null); setPatch(''); setDiffContext(null) },
         /* Plain click only highlights the file; the DOUBLE-click opens its
@@ -1561,6 +1557,10 @@
         },
         onFileMenu: detailFileMenu,
       })
+
+      /* The commit detail keeps its pane; the tab strip lives on the panel
+         root, above every column, so the "日志" tab is the whole Git view. */
+      const detailPane = commitDetail
 
       const diffPane = patch === '' && patchLoading === false ? null : E('div', { className: 'git4idea-diff-pane', 'data-pane': 'diff', style: paneStyle('diff'), onContextMenu: onDiffPaneContextMenu },
         E('div', { className: 'git4idea-diff-head' },
@@ -1812,7 +1812,6 @@
             { id: 'tg-push', label: t('more.pushTags'), disabled: tagCount === 0 || remoteNames.length === 0 || blocked, reason, run: () => setDialog({ kind: 'pushTags' }) },
           ] },
           null,
-          { id: 'mm-git-output', icon: 'commit', tone: 'secondary', label: t('more.gitOutput'), run: () => { void openGitOutput() } },
         ])
       }
       /* One panel spec, two hosts: the compact chrome renders it inline, the
@@ -2358,21 +2357,31 @@
       // exactly one place.
       // While a divider is being dragged the whole panel stops selecting text and
       // keeps the resize cursor, even though the pointer has left the 8px gutter.
+      /* 日志 / 控制台 / 工作树 wrap the whole view, not only the detail pane:
+         IDEA puts its tab strip above the tree and the log alike. The log tab
+         receives the current chrome (rail + shell) as children. */
+      const logBody = E(Fragment, null,
+        columns === true || repoRoot === null ? null : renderRail(false),
+        E('div', { className: 'git4idea-shell' },
+          columns === true && repoRoot !== null ? renderRail(true) : null,
+          body))
+
       return E('div', {
         className: 'git4idea-root'
           + (compact ? ' git4idea-root-narrow' : '')
           + (paneDragging === null ? '' : ' git4idea-pane-dragging' + (paneByWidth ? '-v' : '-h')),
         ref: hostRef,
       }, topBar,
-        columns === true || repoRoot === null ? null : renderRail(false),
-        E('div', { className: 'git4idea-shell' },
-          columns === true && repoRoot !== null ? renderRail(true) : null,
-          body),
-        gitOutput === null ? null : E(GitOutputDrawer, {
-          t: t, entries: gitOutput,
-          onRefresh: () => { void openGitOutput() },
-          onClose: () => setGitOutput(null),
-        }),
+        E(Workbench, {
+          t: t, base: base, request: request,
+          branch: summary === null ? '' : summary.branch,
+          selectedHash: selectedHash,
+          branches: branches, repoRoot: repoRoot,
+          consoleTick: consoleTick,
+          showTabs: repoState !== null && repoRoot !== null,
+          openMenuAt: openMenuAt,
+          notifyOk: notifyOk,
+        }, logBody),
         overlays)
     }
 

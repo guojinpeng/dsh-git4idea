@@ -22,7 +22,7 @@ import { installCommitServices } from './server/services/ai.js'
 
 export { repoScanCache, REPOS_CACHE_TTL_MS } from './server/services/workspace.js'
 
-export const name = 'dsh-git4idea'
+export const name = 'guojinpeng/dsh-git4idea'
 
 export const inject = ['webServer']
 

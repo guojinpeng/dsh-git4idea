@@ -781,139 +781,140 @@
     }
 
 
-    /* One notification in the bottom-right stack (m02407 #3). It closes itself
-       after ttl ms; a pointer on it holds that count and leaving restarts a fresh
-       five seconds. A long result folds to two lines — hovering shows the whole
-       text, a click pins it open, and an over-long one scrolls. */
-    function ToastItem(props) {
-      const item = props.item
-      const ttl = item.ttl === undefined ? 5000 : item.ttl
-      const [open, setOpen] = useState(false)
-      const [hovered, setHovered] = useState(false)
-      const left = useRef(ttl)
-      const since = useRef(0)
-      useEffect(() => {
-        if (hovered === true || ttl <= 0) return undefined
-        since.current = Date.now()
-        const timer = setTimeout(() => item.onClose(), left.current)
-        return () => {
-          clearTimeout(timer)
-          left.current = Math.max(1200, left.current - (Date.now() - since.current))
-        }
-      }, [hovered, ttl, item])
-      const leave = () => {
-        left.current = ttl
-        setHovered(false)
-      }
-      const toggle = () => setOpen((value) => value !== true)
-      return E('div', {
-        className: 'git4idea-toast' + (item.tone === undefined ? '' : ' git4idea-toast-' + item.tone)
-          + (open === true ? ' git4idea-toast-open' : ''),
-        onMouseEnter: () => setHovered(true),
-        onMouseLeave: leave,
-      },
-        E('span', { className: 'git4idea-toast-icon' }, E(Icon, { name: item.icon === undefined ? 'check' : item.icon, size: 13 })),
-        E('div', {
-          className: 'git4idea-toast-text',
-          role: 'button',
-          tabIndex: 0,
-          'aria-expanded': open === true ? 'true' : 'false',
-          onClick: toggle,
-          onKeyDown: (event) => {
-            if (event.key !== 'Enter' && event.key !== ' ') return
-            event.preventDefault()
-            toggle()
-          },
-        }, item.text),
-        item.actionLabel === undefined ? null : E('button', {
-          type: 'button', className: 'git4idea-toast-action', onClick: () => item.onAction(),
-        }, item.actionLabel),
-        E('button', {
-          type: 'button', className: 'git4idea-icon-btn git4idea-icon-btn-small',
-          'data-tip': props.t('toast.close'), onClick: () => item.onClose(),
-        }, E(Icon, { name: 'close', size: 11 })))
-    }
+    /* ---- one bottom-right notification stack (m00761) ----
+       Plain DOM on document.body, deliberately outside React and outside every
+       app layer: shell.overlay and the composer are stacking contexts, so a
+       node hosted in a slot paints UNDER the page chrome and the notice never
+       shows. The stack owns its own element, mounts on the first push, and
+       carries the highest z-index in the document.
+       An entry closes itself after ttl; a pointer holds that count and leaving
+       restarts a fresh five seconds. A long result folds to two lines — hover
+       shows the whole text, a click pins it open. */
+    const TOAST_TTL_MS = 5000
+    const TOAST_TTL_ACTION_MS = 30000
+    const TOAST_MIN_LEFT_MS = 1200
 
-    function ToastStack(props) {
-      if (props.toasts.length === 0) return null
-      return E('div', { className: 'git4idea-toasts', role: 'status', 'aria-live': 'polite' },
-        props.toasts.map((item) => E(ToastItem, { key: item.id, item: item })))
-    }
-
-    /* Hosts that carry `shell.overlay` set this once the four dialog seats are
+    /* Hosts that carry `shell.overlay` set this once the dialog seats are
        registered (m03471). It is set SYNCHRONOUSLY by the registration call, so
        an entry that is raised before React has mounted the host still lands in
-       the store and is adopted on mount. The old gate read a host-lifetime flag
-       that was only true AFTER an effect ran; a click during mount, or a host
-       that never mounted, fell through to the sidebar or the native confirm. */
+       the store and is adopted on mount. */
     let overlaySeatReady = false
 
-    /* One bottom-right stack for the whole frame (m02986). The commit, push and
-       file dialogs live in shell.overlay - outside the panel's own React root or
-       the Git tab - so the queue cannot be panel state any more. Module-level
-       exactly like commitDialog: the panel, the composer pill and the overlay
-       hosts all push into this one list, and one ToastHost renders it. */
     const toastCenter = {
       items: [],
+      nodes: new Map(),
       nextId: 0,
-      listeners: new Set(),
-      emit() {
-        for (const listener of Array.from(this.listeners)) {
-          try { listener() } catch (error) { void error }
+      closeLabel: 'Close',
+      root: null,
+      container() {
+        if (this.root !== null && this.root.isConnected === true) return this.root
+        let root = document.querySelector('[data-git4idea-toasts]')
+        if (root !== null) {
+          /* A previous instance left its element behind: start from an empty one. */
+          root.textContent = ''
+        } else {
+          root = document.createElement('div')
+          root.setAttribute('data-git4idea-toasts', '')
+          root.className = 'git4idea-toasts'
+          root.setAttribute('role', 'status')
+          root.setAttribute('aria-live', 'polite')
+          document.body.appendChild(root)
+        }
+        this.root = root
+        return root
+      },
+      arm(item) {
+        if (item.left <= 0) return
+        item.since = Date.now()
+        item.timer = setTimeout(() => {
+          item.timer = null
+          item.onClose()
+        }, item.left)
+      },
+      hold(item) {
+        if (item.timer === null) return
+        clearTimeout(item.timer)
+        item.timer = null
+        item.left = Math.max(TOAST_MIN_LEFT_MS, item.left - (Date.now() - item.since))
+      },
+      node(item) {
+        const row = document.createElement('div')
+        row.className = 'git4idea-toast' + (item.tone === undefined ? '' : ' git4idea-toast-' + item.tone)
+        const text = document.createElement('div')
+        text.className = 'git4idea-toast-text'
+        text.textContent = item.text
+        text.title = item.text
+        text.addEventListener('click', () => { row.classList.toggle('git4idea-toast-open') })
+        row.appendChild(text)
+        if (item.actionLabel !== undefined) {
+          const action = document.createElement('button')
+          action.type = 'button'
+          action.className = 'git4idea-toast-action'
+          action.textContent = item.actionLabel
+          action.addEventListener('click', () => { item.onAction() })
+          row.appendChild(action)
+        }
+        const close = document.createElement('button')
+        close.type = 'button'
+        close.className = 'git4idea-icon-btn git4idea-icon-btn-small git4idea-toast-close'
+        close.setAttribute('aria-label', this.closeLabel)
+        close.textContent = '×'
+        close.addEventListener('click', () => { item.onClose() })
+        row.appendChild(close)
+        row.addEventListener('mouseenter', () => { this.hold(item) })
+        row.addEventListener('mouseleave', () => { item.left = item.ttl; this.arm(item) })
+        return row
+      },
+      render() {
+        if (typeof document === 'undefined') return
+        const root = this.container()
+        const live = new Set(this.items.map((item) => item.id))
+        for (const [id, node] of Array.from(this.nodes)) {
+          if (live.has(id) === true) continue
+          node.remove()
+          this.nodes.delete(id)
+        }
+        for (const item of this.items) {
+          if (this.nodes.has(item.id) === true) continue
+          const node = this.node(item)
+          this.nodes.set(item.id, node)
+          root.appendChild(node)
+          this.arm(item)
         }
       },
       push(toast) {
         this.nextId += 1
         const id = 'git4idea-toast-' + String(this.nextId)
-        const ttl = toast.ttl === undefined ? (toast.actionLabel === undefined ? 5000 : 30000) : toast.ttl
-        this.items = this.items.concat([Object.assign({ id: id, ttl: ttl, onClose: () => { toastCenter.drop(id) } }, toast)])
-        this.emit()
+        const ttl = toast.ttl === undefined ? (toast.actionLabel === undefined ? TOAST_TTL_MS : TOAST_TTL_ACTION_MS) : toast.ttl
+        const item = Object.assign({ id: id, ttl: ttl, left: ttl, timer: null, since: 0, onClose: () => { toastCenter.drop(id) } }, toast)
+        this.items = this.items.concat([item])
+        this.render()
         return id
       },
       drop(id) {
-        const next = this.items.filter((item) => item.id !== id)
-        if (next.length === this.items.length) return
-        this.items = next
-        this.emit()
-      },
-      subscribe(listener) {
-        this.listeners.add(listener)
-        return () => { this.listeners.delete(listener) }
+        const gone = this.items.filter((item) => item.id === id)
+        if (gone.length === 0) return
+        for (const item of gone) {
+          if (item.timer !== null) clearTimeout(item.timer)
+        }
+        this.items = this.items.filter((item) => item.id !== id)
+        this.render()
       },
     }
 
-    /* Every user gesture answers in that one stack (m05310). The panel routes its
-       failures through notifySink already; these two helpers give every other
-       surface — the composer popover, the commit/push cards, the settings writes —
-       the same path, so no outcome stays silent. */
+    /* Every user gesture answers in that one stack (m05310): the panel routes
+       its failures through notifySink; these two helpers give every other
+       surface — the composer popover, the commit/push cards, the settings
+       writes — the same path, so no outcome stays silent. */
     function notifyOk(text) {
       if (typeof text !== 'string' || text === '') return
-      toastCenter.push({ text: text, tone: 'ok', icon: 'check' })
+      toastCenter.push({ text: text, tone: 'ok' })
     }
     function notifyFail(caught) {
       const text = caught instanceof Error && caught.message !== '' ? caught.message : String(caught)
-      toastCenter.push({ text: text, tone: 'error', icon: 'close' })
+      toastCenter.push({ text: text, tone: 'error' })
     }
 
-    function ToastHost(props) {
-      const [items, setItems] = useState(() => toastCenter.items)
-      useEffect(() => {
-        const sync = () => setItems(toastCenter.items)
-        sync()
-        return toastCenter.subscribe(sync)
-      }, [])
-      const stack = E(ToastStack, { t: props.t, toasts: items })
-      /* m05304: body, not the seat. Every shell.overlay child sits in the frame's
-         overlayLayer, which is z-index:20 and therefore its own stacking context:
-         a toast there painted BELOW the composer and the page chrome, so the
-         bottom-right notice "stopped appearing". The portal puts the stack on
-         document.body, above every app layer. A host without react-dom keeps the
-         in-place render. */
-      if (typeof document !== 'undefined' && ReactDOM !== null && typeof ReactDOM.createPortal === 'function') {
-        return ReactDOM.createPortal(stack, document.body)
-      }
-      return stack
-    }
 
     function PromptDialog(props) {
       const [value, setValue] = useState(props.initialValue === undefined ? '' : props.initialValue)
@@ -967,36 +968,6 @@
           E('div', { className: 'git4idea-dialog-actions' },
             E('button', { type: 'button', className: 'git4idea-btn', onClick: props.onCancel }, props.cancelLabel),
             E('button', { type: 'button', className: 'git4idea-btn git4idea-btn-primary', disabled: ready === false, onClick: submit }, props.okLabel))))
-    }
-
-    /* VS Code's "Git output" view (showOutput): the tail of the host's git-run
-       ring buffer, fetched through the gitLogs method. A debugging view —
-       opened on demand, refreshed by hand; newest land at the bottom and the
-       body auto-scrolls to them. Panel-internal absolute positioning (13). */
-    function GitOutputDrawer(props) {
-      const t = props.t
-      const ref = useRef(null)
-      useEffect(() => { if (ref.current !== null) ref.current.scrollTop = ref.current.scrollHeight }, [props.entries])
-      return E('div', { className: 'git4idea-gitlog' },
-        E('div', { className: 'git4idea-gitlog-head' },
-          E('span', { className: 'git4idea-gitlog-title' }, t('gitLog.title')),
-          E('span', { className: 'git4idea-topbar-spacer' }),
-          E('button', { type: 'button', className: 'git4idea-icon-btn git4idea-icon-btn-small', 'data-tip': t('toolbar.refresh'), onClick: props.onRefresh }, E(Icon, { name: 'refresh', size: 13 })),
-          E('button', { type: 'button', className: 'git4idea-icon-btn git4idea-icon-btn-small', 'data-tip': t('confirm.cancel'), onClick: props.onClose }, E(Icon, { name: 'collapse', size: 13 }))),
-        props.entries.length === 0
-          ? E('div', { className: 'git4idea-gitlog-empty' }, t('gitLog.empty'))
-          : E('div', { className: 'git4idea-gitlog-body', ref: ref },
-            props.entries.map((entry, index) => E('div', {
-              key: index,
-              className: 'git4idea-gitlog-row' + (String(entry.code) === '0' ? '' : ' git4idea-gitlog-row-bad'),
-            },
-              E('div', { className: 'git4idea-gitlog-meta' },
-                E('span', { className: 'git4idea-gitlog-code' }, String(entry.code)),
-                E('span', { className: 'git4idea-gitlog-ms' }, String(entry.ms) + 'ms'),
-                E('span', { className: 'git4idea-gitlog-at' }, String(entry.at)),
-                E('span', { className: 'git4idea-gitlog-argv' }, String(entry.argv))),
-              entry.out === '' && entry.err === '' ? null
-                : E('pre', { className: 'git4idea-gitlog-pre' }, String(entry.err) === '' ? String(entry.out) : String(entry.out) + '\n' + String(entry.err))))))
     }
 
     /* A destructive confirm: focus starts on Cancel (never on the red button), Enter

@@ -17,6 +17,7 @@ import { apply, repoScanCache, REPOS_CACHE_TTL_MS } from '../src/index.js'
 
 let repo = ''
 let route = null
+let logDir = ''
 
 const git = (...args) => execFileSync('git', args, { cwd: repo, encoding: 'utf8' })
 
@@ -48,6 +49,11 @@ before(() => {
   apply(ctx)
   assert.equal(route.kind, 'prefix')
   assert.equal(route.path, '/dsh-git4idea/api')
+
+  // Keep the console log this file's git runs write out of the user's real
+  // plugin home; the override is read at call time.
+  logDir = mkdtempSync(join(tmpdir(), 'dsh-git4idea-api-log-'))
+  process.env.DSH_GIT4IDEA_LOG_DIR = logDir
 
   repo = mkdtempSync(join(tmpdir(), 'dsh-git4idea-api-'))
   git('init', '-q', '-b', 'main')
@@ -82,6 +88,8 @@ before(() => {
 
 after(() => {
   if (repo !== '') rmSync(repo, { recursive: true, force: true })
+  delete process.env.DSH_GIT4IDEA_LOG_DIR
+  if (logDir !== '') rmSync(logDir, { recursive: true, force: true })
 })
 
 test('summary classifies staged / unstaged / untracked with diffstats', async () => {
@@ -686,6 +694,86 @@ test('only ANOTHER working tree marks a branch as occupied', async () => {
     git('branch', '-D', 'wt-branch')
     rmSync(linked, { recursive: true, force: true })
   }
+})
+
+test('consoleLog tails the console file and consoleClear empties it', async () => {
+  // The console tab reads one file the host appends to on every git run. The
+  // env override is read at call time, so a throwaway directory isolates this
+  // test from the user's real console.log.
+  const dir = mkdtempSync(join(tmpdir(), 'dsh-git4idea-console-'))
+  const saved = process.env.DSH_GIT4IDEA_LOG_DIR
+  process.env.DSH_GIT4IDEA_LOG_DIR = dir
+  try {
+    const empty = await call('consoleLog', {})
+    assert.equal(empty.status, 200)
+    assert.equal(empty.body.data.text, '')
+    assert.equal(empty.body.data.truncated, false)
+    assert.equal(empty.body.data.file, join(dir, 'console.log'))
+
+    /* A read is not a user gesture: the background summary poll must leave the
+       file untouched. */
+    await call('summary', { cwd: repo })
+    const quiet = await call('consoleLog', {})
+    assert.equal(quiet.body.data.text, '', 'a plain read stays out of the console')
+
+    await call('summary', { cwd: repo, console: true })
+    const filled = await call('consoleLog', {})
+    assert.ok(filled.body.data.text.includes('] git '), 'the command line is recorded: ' + filled.body.data.text.slice(0, 200))
+    assert.match(filled.body.data.text, /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}: \[/m,
+      'each block starts with a Beijing-time stamp and the working directory')
+
+    const cleared = await call('consoleClear', {})
+    assert.equal(cleared.status, 200)
+    assert.equal(cleared.body.data.cleared, true)
+    const after = await call('consoleLog', {})
+    assert.equal(after.body.data.text, '')
+  } finally {
+    if (saved === undefined) delete process.env.DSH_GIT4IDEA_LOG_DIR
+    else process.env.DSH_GIT4IDEA_LOG_DIR = saved
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+test('worktreeList, worktreeAdd and worktreeRemove manage linked checkouts', async () => {
+  const same = (left, right) => left.replace(/\\/g, '/').toLowerCase() === right.replace(/\\/g, '/').toLowerCase()
+
+  const list = await call('worktreeList', { cwd: repo })
+  assert.equal(list.status, 200)
+  assert.equal(list.body.data.worktrees.length, 1, 'the repository checkout is the only tree')
+  assert.equal(list.body.data.worktrees[0].current, true)
+  assert.equal(list.body.data.worktrees[0].main, true)
+
+  const dir = join(tmpdir(), 'dsh-git4idea-wt-api-' + Date.now())
+  const added = await call('worktreeAdd', { cwd: repo, path: dir, branch: 'api-wt', newBranch: true, base: 'main' })
+  assert.equal(added.status, 200)
+  assert.equal(added.body.data.created, true)
+  assert.ok(existsSync(join(dir, '.git')), 'the linked checkout exists')
+  try {
+    const two = await call('worktreeList', { cwd: repo })
+    assert.equal(two.body.data.worktrees.length, 2)
+    const row = two.body.data.worktrees.find((entry) => same(entry.path, dir))
+    assert.ok(row !== undefined, 'the new tree is listed: ' + JSON.stringify(two.body.data.worktrees))
+    assert.equal(row.branch, 'api-wt')
+    assert.equal(row.current, false)
+
+    const removed = await call('worktreeRemove', { cwd: repo, path: dir })
+    assert.equal(removed.status, 200)
+    assert.equal(removed.body.data.removed, true)
+    assert.equal(existsSync(dir), false)
+  } finally {
+    if (existsSync(dir)) git('worktree', 'remove', '--force', dir)
+    git('branch', '-D', 'api-wt')
+    rmSync(dir, { recursive: true, force: true })
+  }
+
+  // Guards: the target must be absolute, outside the repository, and not the
+  // checkout the panel is currently using.
+  const relative = await call('worktreeAdd', { cwd: repo, path: 'relative/place', branch: 'x', newBranch: true, base: 'main' })
+  assert.notEqual(relative.status, 200)
+  const inside = await call('worktreeAdd', { cwd: repo, path: join(repo, 'inside-wt'), branch: 'x', newBranch: true, base: 'main' })
+  assert.notEqual(inside.status, 200)
+  const current = await call('worktreeRemove', { cwd: repo, path: repo })
+  assert.notEqual(current.status, 200)
 })
 
 /* ============================== ai commit message (issue #6) ============================== */

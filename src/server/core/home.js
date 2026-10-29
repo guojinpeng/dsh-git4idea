@@ -2,7 +2,7 @@
  * dsh-git4idea — core / home (host half, plain JavaScript).
  */
 
-import { appendFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { appendFileSync, mkdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import path from 'node:path'
 
@@ -20,16 +20,73 @@ export const PLUGIN_LOG_DIR = path.join(PLUGIN_HOME, 'log')
 
 export const PLUGIN_LOG_FILE = path.join(PLUGIN_LOG_DIR, 'error.log')
 
+/* Every git command this plugin runs also lands here, one block per run: the
+   console tab reads this file, so the record survives a panel reload and can
+   be opened with any text editor. The environment override exists for tests
+   and is read at call time. */
+export const PLUGIN_CONSOLE_FILE = path.join(PLUGIN_LOG_DIR, 'console.log')
+
+/* Old output is rotated once, so an unbounded console.log cannot fill the
+   disk. The .1 file is kept for a manual look. */
+export const CONSOLE_LOG_MAX_BYTES = 5 * 1024 * 1024
+
+
+export function consoleLogFile() {
+  const dir = process.env.DSH_GIT4IDEA_LOG_DIR
+  if (typeof dir === 'string' && dir !== '') return path.join(dir, 'console.log')
+  return PLUGIN_CONSOLE_FILE
+}
+
+
+/* The error log follows the same override, so a test run cannot append its
+   expected failures to the user's own file. */
+export function errorLogFile() {
+  const dir = process.env.DSH_GIT4IDEA_LOG_DIR
+  if (typeof dir === 'string' && dir !== '') return path.join(dir, 'error.log')
+  return PLUGIN_LOG_FILE
+}
+
+
+export function appendConsoleLog(text) {
+  try {
+    const file = consoleLogFile()
+    mkdirSync(path.dirname(file), { recursive: true })
+    try {
+      if (statSync(file).size > CONSOLE_LOG_MAX_BYTES) {
+        const old = file + '.1'
+        rmSync(old, { force: true })
+        renameSync(file, old)
+      }
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw error
+    }
+    const body = String(text)
+    appendFileSync(file, body.endsWith('\n') ? body : body + '\n')
+  } catch (_) { /* logging must never throw */ }
+}
+
+
+/* Beijing time (UTC+8) for both logs: the owner reads them from China, and a
+   UTC stamp made "when did this fail" a mental subtraction. */
+export function beijingTime(date) {
+  const shifted = new Date((date === undefined ? new Date() : date).getTime() + 8 * 60 * 60 * 1000)
+  const pad = (value, width) => String(value).padStart(width === undefined ? 2 : width, '0')
+  return shifted.getUTCFullYear() + '-' + pad(shifted.getUTCMonth() + 1) + '-' + pad(shifted.getUTCDate()) +
+    ' ' + pad(shifted.getUTCHours()) + ':' + pad(shifted.getUTCMinutes()) + ':' + pad(shifted.getUTCSeconds()) +
+    '.' + pad(shifted.getUTCMilliseconds(), 3)
+}
+
 /* Every failure path reports here. The call never throws: a full disk or a
    missing home must not turn a git error into a second error. */
 
 export function logError(scope, error) {
   try {
-    mkdirSync(PLUGIN_LOG_DIR, { recursive: true })
+    const file = errorLogFile()
+    mkdirSync(path.dirname(file), { recursive: true })
     const detail = error instanceof Error
       ? (typeof error.stack === 'string' && error.stack !== '' ? error.stack : error.message)
       : String(error)
-    appendFileSync(PLUGIN_LOG_FILE, new Date().toISOString() + ' [' + scope + '] ' + detail + '\n')
+    appendFileSync(file, beijingTime() + ' [' + scope + '] ' + detail + '\n')
   } catch (_) { /* logging must never throw */ }
 }
 

@@ -1,8 +1,7 @@
 {
-  "id": "dsh-external/dsh-git4idea",
-  "version": "0.22.0",
+  "id": "guojinpeng/dsh-git4idea",
+  "version": "0.1.0",
   "main": "./src/index.js",
-  "description": "IDE 风格 Git 面板:分支树 + 提交图谱 + 变更/暂存/提交 + 提交详情。入口在会话标签行(对话 / 轨迹 旁边),需要时可再开进右侧栏;提交与推送都在会话页浮窗完成,结果走右下角通知。",
   "engines": {
     "dsh": ">=0.1.6-alpha.2"
   },

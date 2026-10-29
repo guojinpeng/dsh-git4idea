@@ -8,6 +8,10 @@
       ctx.effect(() => () => { style.remove() }, 'dsh-git4idea: panel styles')
 
       const t = translatorOf(ctx)
+      /* The notification stack is plain DOM outside React (m00761); the one
+         piece of copy it needs is the close button's accessible name. */
+      toastCenter.closeLabel = t('toast.close')
+      setBusyToast(t('status.busy'))
 
       /* DSH's own locale registry: bind this plugin's namespace so host-side
          consumers read exactly the copy the panel does. Every shipped
@@ -169,10 +173,6 @@
             { name: 'shell.overlay', id: 'dsh-git4idea:file', locale: LOCALE_NS },
             (overlayProps) => E(FileDialogHost, Object.assign({}, overlayProps, { t: t, ctx: ctx })),
           ))
-          const offToasts = overlaySlots.inject('shell.overlay', () => overlaySlots.register(
-            { name: 'shell.overlay', id: 'dsh-git4idea:toasts', locale: LOCALE_NS },
-            (overlayProps) => E(ToastHost, Object.assign({}, overlayProps, { t: t })),
-          ))
           overlaySeatReady = true
           return () => {
             overlaySeatReady = false
@@ -181,7 +181,7 @@
             pushDialog.set(null)
             try { offCommit() } catch (error) { void error }
             try { offFile() } catch (error) { void error }
-            try { offToasts() } catch (error) { void error }
+
           }
         }, 'dsh-git4idea: commit, file and push overlays')
       })
@@ -242,6 +242,6 @@
        mount any seat, so every readStored call below sees the saved value. */
     loadPanelSettings()
 
-    return { name: 'dsh-git4idea', inject: [], apply }
+    return { name: '@guojinpeng/dsh-git4idea', inject: [], apply }
   },
 })

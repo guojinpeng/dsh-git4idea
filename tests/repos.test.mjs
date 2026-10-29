@@ -21,6 +21,7 @@ import { apply } from '../src/index.js'
 let parent = ''
 let container = ''
 let route = null
+let logDir = ''
 
 function git(cwd, ...args) {
   /* `protocol.file.allow=always` is what makes a submodule fixture possible at
@@ -74,6 +75,9 @@ const rows = (body) => body.data.repos
 const find = (body, name) => rows(body).find((row) => row.name === name)
 
 before(() => {
+  // Fixture git runs must not append to the user's real console/error logs.
+  logDir = mkdtempSync(join(tmpdir(), 'dsh-git4idea-repos-log-'))
+  process.env.DSH_GIT4IDEA_LOG_DIR = logDir
   apply({ effect: (fn) => fn(), webServer: { register: (spec) => { route = spec; return () => {} } } })
   assert.equal(route.path, '/dsh-git4idea/api')
 
@@ -106,6 +110,8 @@ before(() => {
 
 after(() => {
   if (parent !== '') rmSync(parent, { recursive: true, force: true })
+  delete process.env.DSH_GIT4IDEA_LOG_DIR
+  if (logDir !== '') rmSync(logDir, { recursive: true, force: true })
 })
 
 test('repos reports the workspace repository and every submodule', async () => {

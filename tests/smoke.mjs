@@ -50,8 +50,8 @@ const BASELINE = new Set([
 test('release bookkeeping: package.json and dsh.plugin.json agree', () => {
   assert.equal(manifest.version, pkg.version)
   assert.equal(manifest.main, './' + pkg.main)
-  assert.equal(pkg.name, 'dsh-git4idea')
-  assert.match(manifest.id, /^dsh-external\//)
+  assert.equal(pkg.name, '@guojinpeng/dsh-git4idea')
+  assert.equal(manifest.id, 'guojinpeng/dsh-git4idea')
   assert.equal(pkg.license, 'MIT')
   assert.ok(exists('LICENSE'))
 })
@@ -133,18 +133,18 @@ test('the dsh peer survives the runtime compatibility check', () => {
   assert.equal(pkg.peerDependenciesMeta?.['@deepseek-ai/dsh']?.optional, true)
 })
 
-test('cordis patch mounts exactly one row named dsh-git4idea', () => {
+test('cordis patch mounts exactly one row named @guojinpeng/dsh-git4idea', () => {
   // Commented-out examples must not count: only live YAML lines are the mount.
   const active = patch.split('\n').filter((line) => !line.trim().startsWith('#')).join('\n')
   assert.match(active, /- insert:/)
   const names = active.match(/name: '([^']+)'/g) || []
-  assert.deepEqual(names, ["name: 'dsh-git4idea'"])
-  assert.match(active, /id: git4idea/)
+  assert.deepEqual(names, ["name: '@guojinpeng/dsh-git4idea'"])
+  assert.match(active, /id: guojinpeng\/dsh-git4idea/)
 })
 
 test('client half uses the no-build ModuleLoader wrapper', () => {
   assert.match(client, /window\.__ModuleLoader__\.load\(\{/)
-  assert.match(client, /id: 'dsh-git4idea'/)
+  assert.match(client, /id: '@guojinpeng\/dsh-git4idea'/)
   assert.match(client, /factory: \(require\) =>/)
   assert.doesNotMatch(client, /^\s*import\s/m, 'client half must not use import')
   assert.doesNotMatch(client, /\bexport\s+(default\s+)?(const|function|class)\b/)
@@ -657,11 +657,13 @@ test('the rc.2 surface contract: theme-owned menu material on its own layer', ()
   assert.match(cssRule('.git4idea-menu-wrap'), /max-width:calc\(100% - 8px\)/)
   assert.match(client, /className: 'git4idea-menu-scroll'/)
   assert.match(client, /'data-menu-material': 'translucent'/)
-  // Panel-internal overlays still stay inside .git4idea-root. The one portal is
-  // the notification stack (m05304): it sits in the frame's overlayLayer, whose
-  // z-index:20 stacking context painted it behind the composer.
-  assert.equal((client.match(/ReactDOM\.createPortal\(/g) || []).length, 1, 'only the toast stack leaves its slot')
-  assert.match(client, /ReactDOM\.createPortal\(stack, document\.body\)/)
+  // Panel-internal overlays still stay inside .git4idea-root. The notification
+  // stack is the one surface outside React (m00761): it owns a plain DOM element
+  // on document.body, because a node hosted in a slot painted behind the page
+  // chrome and the notice never showed.
+  assert.equal((client.match(/ReactDOM/g) || []).length, 0, 'the toast stack no longer needs react-dom')
+  assert.match(client, /root\.setAttribute\('data-git4idea-toasts', ''\)/)
+  assert.match(client, /document\.body\.appendChild\(root\)/)
 })
 
 test('the rc.2 surface contract: elevation instead of border plus shadow', () => {
@@ -762,7 +764,7 @@ test('client half has two doors: the native right sidebar, the conversation view
 })
 
 test('host half is an ESM cordis plugin with argv-only git calls', () => {
-  assert.match(host, /export const name = 'dsh-git4idea'/)
+  assert.match(host, /export const name = 'guojinpeng\/dsh-git4idea'/)
   assert.match(host, /export const inject = \['webServer'\]/)
   assert.match(host, /export function apply\(ctx\)/)
   assert.match(host, /ctx\.webServer\.register\(\{ kind: 'prefix', path: ROUTE_PREFIX/)
@@ -785,7 +787,7 @@ test('host half keeps the destructive-confirm guards', () => {
 })
 
 test('host half exposes the method table the client calls', () => {
-  const methods = ['summary', 'head', 'stats', 'branches', 'log', 'me', 'merge-point', 'commitDetail', 'diff', 'compare', 'repos', 'stage', 'unstage', 'discard', 'commit', 'checkout', 'branchCreate', 'branchRename', 'branch-upstream', 'branchDelete', 'merge', 'rebase', 'cherryPick', 'revert', 'reset', 'fetch', 'pull', 'push', 'stashList', 'stashPush', 'stashApply', 'stashDrop', 'tagCreate', 'tagDelete', 'tagDeleteRemote', 'pushTags', 'clone', 'gitLogs', 'remoteAdd', 'remoteRemove', 'branchDeleteRemote', 'rebaseAbort', 'stashClear', 'undoList', 'undoApply', 'version']
+  const methods = ['summary', 'head', 'stats', 'branches', 'log', 'me', 'merge-point', 'commitDetail', 'diff', 'compare', 'repos', 'stage', 'unstage', 'discard', 'commit', 'checkout', 'branchCreate', 'branchRename', 'branch-upstream', 'branchDelete', 'merge', 'rebase', 'cherryPick', 'revert', 'reset', 'fetch', 'pull', 'push', 'stashList', 'stashPush', 'stashApply', 'stashDrop', 'tagCreate', 'tagDelete', 'tagDeleteRemote', 'pushTags', 'clone', 'gitLogs', 'consoleLog', 'consoleClear', 'worktreeList', 'worktreeAdd', 'worktreeRemove', 'remoteAdd', 'remoteRemove', 'branchDeleteRemote', 'rebaseAbort', 'stashClear', 'undoList', 'undoApply', 'version']
   for (const method of methods) {
     if (method === 'merge-point') { assert.match(host, /^  'merge-point': mergePoint,$/m, 'host method missing: merge-point'); continue }
     if (method === 'branch-upstream') { assert.match(host, /^  'branch-upstream': branchUpstream,$/m, 'host method missing: branch-upstream'); continue }
@@ -817,7 +819,7 @@ test('host half serialises writes and refuses the dangerous cases', () => {
 
 test('client half offers an undo toast and a safe confirm', () => {
   for (const needle of [
-    'function ToastStack(props) {',
+    'const toastCenter = {',
     "actionLabel: t('toast.undo'),",
     "request('undoApply'",
     'function isProtectedBranch(name) {',
@@ -993,12 +995,15 @@ test('the client half is fragments plus one generated bundle (m05309)', () => {
   // the bundle" from drifting apart.
   const order = [
     'head.js', 'locale.js', 'core.js', 'diff.js', 'tree.js', 'changes.js',
-    'panel.js', 'styles.js', 'composer.js', 'dialogs.js', 'preview.js', 'app.js',
+    'workbench.js', 'panel.js', 'styles.js', 'composer.js', 'dialogs.js', 'preview.js', 'app.js',
   ]
   const names = readdirSync(join(root, 'src', 'client')).filter((name) => name.endsWith('.js')).sort()
   assert.deepEqual(names, order.slice().sort(), 'every fragment is listed exactly once')
   const joined = order.map((name) => read('src/client/' + name)).join('')
   assert.equal(joined, client, 'src/client.js must equal the concatenated fragments')
+  // Concatenation is a byte copy, not a parse: a stray parenthesis in one
+  // fragment would still make the generated bundle fail to load in the Web GUI.
+  assert.doesNotThrow(() => new Function(client), 'the generated bundle must parse')
   assert.match(client, /window\.__ModuleLoader__\.load\(\{/, 'the bundle keeps ONE module wrapper')
   assert.equal((joined.match(/window\.__ModuleLoader__\.load\(\{/g) || []).length, 1, 'the wrapper lives in exactly one fragment')
   const tool = read('src/utils/build-client.js')
@@ -2043,7 +2048,7 @@ test('the push dialog previews its commits and the file card floats (m02986)', (
   assert.match(client, /id: 'dsh-git4idea:file'/)
   assert.doesNotMatch(client, /id: 'dsh-git4idea:push'/, 'the separate push seat is gone')
   assert.match(client, /function GitDialogHost\(/, 'one host carries the commit and push cards')
-  assert.match(client, /id: 'dsh-git4idea:toasts'/)
+  assert.match(client, /data-git4idea-toasts/, 'the stack is a plain body element, not a slot seat')
   assert.match(client, /'\.git4idea-toasts\{position:fixed;right:12px;bottom:12px;/, 'the stack leaves the panel for the viewport corner')
   assert.match(client, /'\.git4idea-commit-overlay\{position:fixed;inset:0;z-index:80/, 'the push card is viewport-anchored like the commit card')
 

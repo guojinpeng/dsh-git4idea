@@ -55,7 +55,6 @@
       const entry = props.entry
       const [summary, setSummary] = useState(null)
       const [busy, setBusy] = useState(false)
-      const [error, setError] = useState('')
       const [groupBy, setGroupBy] = useState('flat')
       const [foldedDirs, setFoldedDirs] = useState({})
       const [rowMenu, setRowMenu] = useState(null)
@@ -75,7 +74,6 @@
           setSummary(data)
           return data
         } catch (caught) {
-          setError(messageOf(caught))
           notifyFail(caught)
           return null
         }
@@ -85,14 +83,12 @@
          the same summary, so overlapping calls would race their results. */
       const call = async (method, payload) => {
         setBusy(true)
-        setError('')
         try {
           await request(method, Object.assign({}, base, payload))
           await loadSummary()
           notifyOk(successToastText(t, method, payload))
           return true
         } catch (caught) {
-          setError(messageOf(caught))
           notifyFail(caught)
           return false
         } finally {
@@ -113,14 +109,13 @@
         })
       }
       /* A landed commit closes the card and tells every branch readout to
-         refresh; a rejected one keeps the box filled with the error above it.
+         refresh; a rejected one reports in the bottom-right stack.
          ChangesPanel has already cleared its draft by the time this returns.
          m02986: the push is a second, explicit step — hand over to the push
          dialog only after the commit route reports success. */
       const commit = (message, amend, push, paths) => {
         void (async () => {
           setBusy(true)
-          setError('')
           try {
             await request('commit', Object.assign({}, base, {
               message: message,
@@ -132,7 +127,6 @@
             if (push === true) pushDialog.set({ cwd: entry.cwd, repoRoot: entry.repoRoot, sessionId: entry.sessionId })
             props.onClose()
           } catch (caught) {
-            setError(messageOf(caught))
             notifyFail(caught)
             setBusy(false)
           }
@@ -174,9 +168,6 @@
               type: 'button', className: 'git4idea-icon-btn', 'data-tip': t('confirm.cancel'),
               onClick: () => props.onClose(),
             }, E(Icon, { name: 'close', size: 12 }))),
-          error === '' ? null : E('div', { className: 'git4idea-banner' },
-            E('span', { className: 'git4idea-banner-text' }, error),
-            E('button', { type: 'button', className: 'git4idea-link', onClick: () => setError('') }, t('error.dismiss'))),
           E('div', { className: 'git4idea-commit-layer-body' },
             E('div', { className: 'git4idea-commit-layer-left' },
               E(ChangesPanel, {
@@ -269,7 +260,6 @@
       const [branchList, setBranchList] = useState(null)
       const [branchLoading, setBranchLoading] = useState(false)
       const [checkingOut, setCheckingOut] = useState('')
-      const [error, setError] = useState('')
       const [tick, setTick] = useState(0)
       /* Branch popover (m01216 #10): a searchable local/remote/tag tree, the
          fetch button beside the search box, and commit/push/new-branch at the
@@ -437,12 +427,6 @@
         return () => document.removeEventListener('mousedown', close)
       }, [menu])
 
-      useEffect(() => {
-        if (error === '') return undefined
-        const timer = setTimeout(() => { setError('') }, COMPOSER_ERROR_TTL_MS)
-        return () => clearTimeout(timer)
-      }, [error])
-
       if (enabled !== true) return null
       const data = repoState
       if (data === null || (data.isRepo !== true && (data.repos === undefined || data.repos.length === 0))) return null
@@ -479,7 +463,6 @@
           notifyOk(fill(t('toast.checkedOut'), { name: name }))
         } catch (caught) {
           setMenu(null)
-          setError(caught instanceof Error ? caught.message : String(caught))
           notifyFail(caught)
         } finally { setCheckingOut('') }
       }
@@ -517,17 +500,12 @@
           if (action === 'merge' && result !== null && result !== undefined && result.conflicted === true) {
             const output = typeof result.output === 'string' ? result.output.trim() : ''
             const text = output === '' ? t('toast.mergedConflict') : output
-            setError(text)
-            toastCenter.push({ text: text, tone: 'error', icon: 'close' })
+            toastCenter.push({ text: text, tone: 'error' })
           } else {
             notifyOk(toastText !== '' ? toastText : csSuccessText(action, payload))
           }
         } catch (caught) {
-          const message = caught instanceof Error ? caught.message : String(caught)
           if (keepOpen !== true) setMenu(null)
-          setError(message)
-          /* Closing the chooser hides the popover error bar, so the failure also
-             surfaces where the result will be looked for (m03873). */
           notifyFail(caught)
         } finally { setCsBusy('') }
       }
@@ -578,7 +556,6 @@
         }))
         setMenu(null)
         setCsMenu(null)
-        setError('')
       }
       /* 更新 works on the SELECTED branch (m03873). The checked-out branch is
          pulled ff-only; any other branch is fast-forwarded in place by a
@@ -634,7 +611,6 @@
             notifyOk(fill(t('toast.branchCreated'), { name: local }))
           } catch (caught) {
             setMenu(null)
-            setError(caught instanceof Error ? caught.message : String(caught))
             notifyFail(caught)
           } finally { setCheckingOut('') }
         })()
@@ -725,7 +701,6 @@
             label: t(kind === 'remote' ? 'action.createLocalBranch' : 'action.newBranchFrom'),
             run: () => {
               setCsMenu(null)
-              setError('')
               openBranchPrompt({
                 key: 'new|' + kind + '|' + entry.name,
                 title: t('toolbar.newBranch'),
@@ -895,7 +870,6 @@
         ref: rootRef,
         className: 'git4idea-cs-root',
         'data-dsh-git4idea-status': '',
-        'data-tip': error === '' ? undefined : error,
       },
         branchName !== null ? E('button', {
           type: 'button',
@@ -940,7 +914,6 @@
                     })()
                   },
                 }, E(Icon, { name: 'fetch', size: 13 }))),
-              error !== '' ? E('div', { className: 'git4idea-cs-errorbar', 'data-tip': error }, error) : null,
               /* Actions sit under the search box and above the tree, one per row
                  (m01737 #6) — they read as verbs on the branch list below them,
                  not as a footer. */

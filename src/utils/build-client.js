@@ -30,6 +30,7 @@ export const FRAGMENT_ORDER = [
   'diff.js',
   'tree.js',
   'changes.js',
+  'workbench.js',
   'panel.js',
   'styles.js',
   'composer.js',

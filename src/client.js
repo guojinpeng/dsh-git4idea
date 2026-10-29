@@ -18,14 +18,9 @@
  * exactly like the host's own panels do.
  */
 window.__ModuleLoader__.load({
-  id: 'dsh-git4idea',
+  id: '@guojinpeng/dsh-git4idea',
   factory: (require) => {
     const React = require('react')
-    /* The frame's overlay slot lives inside .overlayLayer (z-index 20, a stacking
-       context), so a child can never paint above the page's own layers. The
-       notification stack escapes through a portal to document.body. */
-    let ReactDOM = null
-    try { ReactDOM = require('react-dom') } catch (error) { void ReactDOM }
     const E = React.createElement
     const Fragment = React.Fragment
     const useState = React.useState
@@ -173,7 +168,7 @@ window.__ModuleLoader__.load({
        regenerate with `node src/utils/i18n.js sync`. */
     const ZH = {
       'title': 'Git',
-      'description': 'IDE 级 Git 面板:分支树 / 提交图谱 / 变更与提交',
+      'description': '会话标签行中的 IDE 风格 Git 工具窗口:分支树、提交图谱、变更与提交、提交详情、差异视图、控制台和工作树。',
       'repo.label': '仓库',
       'repo.workspace': '工作区',
       'repo.nested': '子仓库',
@@ -362,14 +357,39 @@ window.__ModuleLoader__.load({
       'more.clone': '克隆...',
       'more.stashPop': '弹出最近贮藏',
       'more.deleteTag': '删除标签...',
-      'more.gitOutput': '显示 Git 输出',
+      'tab.log': '日志',
+      'tab.console': '控制台',
+      'tab.worktree': '工作树',
+      'console.empty': '暂无 Git 命令记录',
+      'console.truncated': '只显示最近 256 KiB,更早的记录在 {file}',
+      'console.clear': '全部清空日志',
+      'worktree.new': '新建工作树',
+      'worktree.remove': '删除工作树',
+      'worktree.refresh': '刷新',
+      'worktree.empty': '没有工作树',
+      'worktree.detached': '游离 HEAD',
+      'worktree.name': '名称',
+      'worktree.branch': '分支',
+      'worktree.path': '路径',
+      'worktree.title': '新建工作树',
+      'worktree.from': '从分支',
+      'worktree.newBranch': '新建分支',
+      'worktree.newBranchName': '新分支名称',
+      'worktree.projectName': '项目名称',
+      'worktree.location': '位置',
+      'worktree.target': '工作树将在以下位置创建:',
+      'worktree.create': '创建工作树',
+      'worktree.created': '已创建工作树 {path}',
+      'worktree.removed': '已删除工作树 {path}',
+      'worktree.removeTitle': '删除工作树',
+      'worktree.removeText': '删除工作树 {path}?未提交的改动会丢失。',
+      'worktree.pickDir': '选择目录',
+      'worktree.dirPrompt': '父目录(绝对路径)',
       'clone.title': '克隆仓库',
       'clone.url': '仓库 URL',
       'clone.dir': '目标目录(绝对路径)',
       'clone.run': '克隆',
       'prompt.deleteTag': '要删除的标签名',
-      'gitLog.title': 'Git 输出',
-      'gitLog.empty': '暂无 Git 运行记录',
       'toolbar.newBranch': '新建分支',
       'toolbar.fetch': '抓取(Fetch)',
       'toolbar.pull': '拉取(Pull)',
@@ -458,7 +478,6 @@ window.__ModuleLoader__.load({
       'prompt.renameBranch': '重命名分支',
       'prompt.newTag': '新标签名',
       'prompt.fromHead': '当前 HEAD',
-      'error.dismiss': '关闭',
       'status.loading': '正在读取...',
       'status.busy': '处理中...',
       'counts.staged': '已暂存 {n}',
@@ -521,7 +540,7 @@ window.__ModuleLoader__.load({
        regenerate with `node src/utils/i18n.js sync`. */
     const EN = {
       'title': 'Git',
-      'description': 'IDE-grade Git panel: branch tree / commit graph / changes',
+      'description': 'An IDE-style Git tool window in the conversation tab row: branch tree, commit graph, changes and commits, commit details, diffs, console, and worktrees.',
       'repo.label': 'Repository',
       'repo.workspace': 'workspace',
       'repo.nested': 'nested',
@@ -710,14 +729,39 @@ window.__ModuleLoader__.load({
       'more.clone': 'Clone...',
       'more.stashPop': 'Pop latest stash',
       'more.deleteTag': 'Delete tag...',
-      'more.gitOutput': 'Show Git output',
+      'tab.log': 'Log',
+      'tab.console': 'Console',
+      'tab.worktree': 'Worktrees',
+      'console.empty': 'No git commands yet',
+      'console.truncated': 'Showing the last 256 KiB; older records are in {file}',
+      'console.clear': 'Clear all log',
+      'worktree.new': 'New worktree',
+      'worktree.remove': 'Remove worktree',
+      'worktree.refresh': 'Refresh',
+      'worktree.empty': 'No worktrees',
+      'worktree.detached': 'Detached HEAD',
+      'worktree.name': 'Name',
+      'worktree.branch': 'Branch',
+      'worktree.path': 'Path',
+      'worktree.title': 'New Worktree',
+      'worktree.from': 'From branch',
+      'worktree.newBranch': 'New branch',
+      'worktree.newBranchName': 'New branch name',
+      'worktree.projectName': 'Project name',
+      'worktree.location': 'Location',
+      'worktree.target': 'The worktree will be created at:',
+      'worktree.create': 'Create worktree',
+      'worktree.created': 'Created worktree {path}',
+      'worktree.removed': 'Removed worktree {path}',
+      'worktree.removeTitle': 'Remove Worktree',
+      'worktree.removeText': 'Remove worktree {path}? Uncommitted changes will be lost.',
+      'worktree.pickDir': 'Choose directory',
+      'worktree.dirPrompt': 'Parent directory (absolute path)',
       'clone.title': 'Clone repository',
       'clone.url': 'Repository URL',
       'clone.dir': 'Target directory (absolute path)',
       'clone.run': 'Clone',
       'prompt.deleteTag': 'Tag name to delete',
-      'gitLog.title': 'Git output',
-      'gitLog.empty': 'No git runs yet',
       'toolbar.newBranch': 'New branch',
       'toolbar.fetch': 'Fetch',
       'toolbar.pull': 'Pull',
@@ -806,7 +850,6 @@ window.__ModuleLoader__.load({
       'prompt.renameBranch': 'Rename branch',
       'prompt.newTag': 'New tag name',
       'prompt.fromHead': 'current HEAD',
-      'error.dismiss': 'Dismiss',
       'status.loading': 'Reading...',
       'status.busy': 'Working...',
       'counts.staged': 'Staged {n}',
@@ -1066,7 +1109,50 @@ window.__ModuleLoader__.load({
        fallback at all (same-origin requests are always admitted). */
     let viaRemoteChannel = false
 
+    /* ---- the "working" notice (m00761) ----
+       A long git verb answers in the one bottom-right stack, not in the page
+       layout. The notice waits 400 ms first, so a fast call never flashes it,
+       and it leaves the stack when the last busy call settles. */
+    const BUSY_TOAST_METHODS = new Set([
+      'fetch', 'pull', 'push', 'commit', 'merge', 'rebase', 'cherryPick', 'revert',
+      'reset', 'checkout', 'clone', 'stashPush', 'stashApply', 'worktreeAdd',
+      'worktreeRemove', 'branchDelete', 'tagDelete', 'tagDeleteRemote', 'pushTags',
+    ])
+    const BUSY_TOAST_DELAY_MS = 400
+    let busyToastText = ''
+    let busyToastId = null
+    let busyToastTimer = null
+    let busyToastCount = 0
+
+    function setBusyToast(text) { busyToastText = typeof text === 'string' ? text : '' }
+
+    function busyBegin() {
+      busyToastCount += 1
+      if (busyToastText === '' || busyToastTimer !== null || busyToastId !== null) return
+      busyToastTimer = setTimeout(() => {
+        busyToastTimer = null
+        busyToastId = toastCenter.push({ text: busyToastText, ttl: 0 })
+      }, BUSY_TOAST_DELAY_MS)
+    }
+
+    function busyEnd() {
+      busyToastCount = Math.max(0, busyToastCount - 1)
+      if (busyToastCount > 0) return
+      if (busyToastTimer !== null) { clearTimeout(busyToastTimer); busyToastTimer = null }
+      if (busyToastId !== null) { const id = busyToastId; busyToastId = null; toastCenter.drop(id) }
+    }
+
     async function request(method, payload) {
+      if (BUSY_TOAST_METHODS.has(method) !== true) return requestOnce(method, payload)
+      busyBegin()
+      try {
+        return await requestOnce(method, payload)
+      } finally {
+        busyEnd()
+      }
+    }
+
+    async function requestOnce(method, payload) {
       const init = {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -3427,139 +3513,140 @@ window.__ModuleLoader__.load({
     }
 
 
-    /* One notification in the bottom-right stack (m02407 #3). It closes itself
-       after ttl ms; a pointer on it holds that count and leaving restarts a fresh
-       five seconds. A long result folds to two lines — hovering shows the whole
-       text, a click pins it open, and an over-long one scrolls. */
-    function ToastItem(props) {
-      const item = props.item
-      const ttl = item.ttl === undefined ? 5000 : item.ttl
-      const [open, setOpen] = useState(false)
-      const [hovered, setHovered] = useState(false)
-      const left = useRef(ttl)
-      const since = useRef(0)
-      useEffect(() => {
-        if (hovered === true || ttl <= 0) return undefined
-        since.current = Date.now()
-        const timer = setTimeout(() => item.onClose(), left.current)
-        return () => {
-          clearTimeout(timer)
-          left.current = Math.max(1200, left.current - (Date.now() - since.current))
-        }
-      }, [hovered, ttl, item])
-      const leave = () => {
-        left.current = ttl
-        setHovered(false)
-      }
-      const toggle = () => setOpen((value) => value !== true)
-      return E('div', {
-        className: 'git4idea-toast' + (item.tone === undefined ? '' : ' git4idea-toast-' + item.tone)
-          + (open === true ? ' git4idea-toast-open' : ''),
-        onMouseEnter: () => setHovered(true),
-        onMouseLeave: leave,
-      },
-        E('span', { className: 'git4idea-toast-icon' }, E(Icon, { name: item.icon === undefined ? 'check' : item.icon, size: 13 })),
-        E('div', {
-          className: 'git4idea-toast-text',
-          role: 'button',
-          tabIndex: 0,
-          'aria-expanded': open === true ? 'true' : 'false',
-          onClick: toggle,
-          onKeyDown: (event) => {
-            if (event.key !== 'Enter' && event.key !== ' ') return
-            event.preventDefault()
-            toggle()
-          },
-        }, item.text),
-        item.actionLabel === undefined ? null : E('button', {
-          type: 'button', className: 'git4idea-toast-action', onClick: () => item.onAction(),
-        }, item.actionLabel),
-        E('button', {
-          type: 'button', className: 'git4idea-icon-btn git4idea-icon-btn-small',
-          'data-tip': props.t('toast.close'), onClick: () => item.onClose(),
-        }, E(Icon, { name: 'close', size: 11 })))
-    }
+    /* ---- one bottom-right notification stack (m00761) ----
+       Plain DOM on document.body, deliberately outside React and outside every
+       app layer: shell.overlay and the composer are stacking contexts, so a
+       node hosted in a slot paints UNDER the page chrome and the notice never
+       shows. The stack owns its own element, mounts on the first push, and
+       carries the highest z-index in the document.
+       An entry closes itself after ttl; a pointer holds that count and leaving
+       restarts a fresh five seconds. A long result folds to two lines — hover
+       shows the whole text, a click pins it open. */
+    const TOAST_TTL_MS = 5000
+    const TOAST_TTL_ACTION_MS = 30000
+    const TOAST_MIN_LEFT_MS = 1200
 
-    function ToastStack(props) {
-      if (props.toasts.length === 0) return null
-      return E('div', { className: 'git4idea-toasts', role: 'status', 'aria-live': 'polite' },
-        props.toasts.map((item) => E(ToastItem, { key: item.id, item: item })))
-    }
-
-    /* Hosts that carry `shell.overlay` set this once the four dialog seats are
+    /* Hosts that carry `shell.overlay` set this once the dialog seats are
        registered (m03471). It is set SYNCHRONOUSLY by the registration call, so
        an entry that is raised before React has mounted the host still lands in
-       the store and is adopted on mount. The old gate read a host-lifetime flag
-       that was only true AFTER an effect ran; a click during mount, or a host
-       that never mounted, fell through to the sidebar or the native confirm. */
+       the store and is adopted on mount. */
     let overlaySeatReady = false
 
-    /* One bottom-right stack for the whole frame (m02986). The commit, push and
-       file dialogs live in shell.overlay - outside the panel's own React root or
-       the Git tab - so the queue cannot be panel state any more. Module-level
-       exactly like commitDialog: the panel, the composer pill and the overlay
-       hosts all push into this one list, and one ToastHost renders it. */
     const toastCenter = {
       items: [],
+      nodes: new Map(),
       nextId: 0,
-      listeners: new Set(),
-      emit() {
-        for (const listener of Array.from(this.listeners)) {
-          try { listener() } catch (error) { void error }
+      closeLabel: 'Close',
+      root: null,
+      container() {
+        if (this.root !== null && this.root.isConnected === true) return this.root
+        let root = document.querySelector('[data-git4idea-toasts]')
+        if (root !== null) {
+          /* A previous instance left its element behind: start from an empty one. */
+          root.textContent = ''
+        } else {
+          root = document.createElement('div')
+          root.setAttribute('data-git4idea-toasts', '')
+          root.className = 'git4idea-toasts'
+          root.setAttribute('role', 'status')
+          root.setAttribute('aria-live', 'polite')
+          document.body.appendChild(root)
+        }
+        this.root = root
+        return root
+      },
+      arm(item) {
+        if (item.left <= 0) return
+        item.since = Date.now()
+        item.timer = setTimeout(() => {
+          item.timer = null
+          item.onClose()
+        }, item.left)
+      },
+      hold(item) {
+        if (item.timer === null) return
+        clearTimeout(item.timer)
+        item.timer = null
+        item.left = Math.max(TOAST_MIN_LEFT_MS, item.left - (Date.now() - item.since))
+      },
+      node(item) {
+        const row = document.createElement('div')
+        row.className = 'git4idea-toast' + (item.tone === undefined ? '' : ' git4idea-toast-' + item.tone)
+        const text = document.createElement('div')
+        text.className = 'git4idea-toast-text'
+        text.textContent = item.text
+        text.title = item.text
+        text.addEventListener('click', () => { row.classList.toggle('git4idea-toast-open') })
+        row.appendChild(text)
+        if (item.actionLabel !== undefined) {
+          const action = document.createElement('button')
+          action.type = 'button'
+          action.className = 'git4idea-toast-action'
+          action.textContent = item.actionLabel
+          action.addEventListener('click', () => { item.onAction() })
+          row.appendChild(action)
+        }
+        const close = document.createElement('button')
+        close.type = 'button'
+        close.className = 'git4idea-icon-btn git4idea-icon-btn-small git4idea-toast-close'
+        close.setAttribute('aria-label', this.closeLabel)
+        close.textContent = '×'
+        close.addEventListener('click', () => { item.onClose() })
+        row.appendChild(close)
+        row.addEventListener('mouseenter', () => { this.hold(item) })
+        row.addEventListener('mouseleave', () => { item.left = item.ttl; this.arm(item) })
+        return row
+      },
+      render() {
+        if (typeof document === 'undefined') return
+        const root = this.container()
+        const live = new Set(this.items.map((item) => item.id))
+        for (const [id, node] of Array.from(this.nodes)) {
+          if (live.has(id) === true) continue
+          node.remove()
+          this.nodes.delete(id)
+        }
+        for (const item of this.items) {
+          if (this.nodes.has(item.id) === true) continue
+          const node = this.node(item)
+          this.nodes.set(item.id, node)
+          root.appendChild(node)
+          this.arm(item)
         }
       },
       push(toast) {
         this.nextId += 1
         const id = 'git4idea-toast-' + String(this.nextId)
-        const ttl = toast.ttl === undefined ? (toast.actionLabel === undefined ? 5000 : 30000) : toast.ttl
-        this.items = this.items.concat([Object.assign({ id: id, ttl: ttl, onClose: () => { toastCenter.drop(id) } }, toast)])
-        this.emit()
+        const ttl = toast.ttl === undefined ? (toast.actionLabel === undefined ? TOAST_TTL_MS : TOAST_TTL_ACTION_MS) : toast.ttl
+        const item = Object.assign({ id: id, ttl: ttl, left: ttl, timer: null, since: 0, onClose: () => { toastCenter.drop(id) } }, toast)
+        this.items = this.items.concat([item])
+        this.render()
         return id
       },
       drop(id) {
-        const next = this.items.filter((item) => item.id !== id)
-        if (next.length === this.items.length) return
-        this.items = next
-        this.emit()
-      },
-      subscribe(listener) {
-        this.listeners.add(listener)
-        return () => { this.listeners.delete(listener) }
+        const gone = this.items.filter((item) => item.id === id)
+        if (gone.length === 0) return
+        for (const item of gone) {
+          if (item.timer !== null) clearTimeout(item.timer)
+        }
+        this.items = this.items.filter((item) => item.id !== id)
+        this.render()
       },
     }
 
-    /* Every user gesture answers in that one stack (m05310). The panel routes its
-       failures through notifySink already; these two helpers give every other
-       surface — the composer popover, the commit/push cards, the settings writes —
-       the same path, so no outcome stays silent. */
+    /* Every user gesture answers in that one stack (m05310): the panel routes
+       its failures through notifySink; these two helpers give every other
+       surface — the composer popover, the commit/push cards, the settings
+       writes — the same path, so no outcome stays silent. */
     function notifyOk(text) {
       if (typeof text !== 'string' || text === '') return
-      toastCenter.push({ text: text, tone: 'ok', icon: 'check' })
+      toastCenter.push({ text: text, tone: 'ok' })
     }
     function notifyFail(caught) {
       const text = caught instanceof Error && caught.message !== '' ? caught.message : String(caught)
-      toastCenter.push({ text: text, tone: 'error', icon: 'close' })
+      toastCenter.push({ text: text, tone: 'error' })
     }
 
-    function ToastHost(props) {
-      const [items, setItems] = useState(() => toastCenter.items)
-      useEffect(() => {
-        const sync = () => setItems(toastCenter.items)
-        sync()
-        return toastCenter.subscribe(sync)
-      }, [])
-      const stack = E(ToastStack, { t: props.t, toasts: items })
-      /* m05304: body, not the seat. Every shell.overlay child sits in the frame's
-         overlayLayer, which is z-index:20 and therefore its own stacking context:
-         a toast there painted BELOW the composer and the page chrome, so the
-         bottom-right notice "stopped appearing". The portal puts the stack on
-         document.body, above every app layer. A host without react-dom keeps the
-         in-place render. */
-      if (typeof document !== 'undefined' && ReactDOM !== null && typeof ReactDOM.createPortal === 'function') {
-        return ReactDOM.createPortal(stack, document.body)
-      }
-      return stack
-    }
 
     function PromptDialog(props) {
       const [value, setValue] = useState(props.initialValue === undefined ? '' : props.initialValue)
@@ -3613,36 +3700,6 @@ window.__ModuleLoader__.load({
           E('div', { className: 'git4idea-dialog-actions' },
             E('button', { type: 'button', className: 'git4idea-btn', onClick: props.onCancel }, props.cancelLabel),
             E('button', { type: 'button', className: 'git4idea-btn git4idea-btn-primary', disabled: ready === false, onClick: submit }, props.okLabel))))
-    }
-
-    /* VS Code's "Git output" view (showOutput): the tail of the host's git-run
-       ring buffer, fetched through the gitLogs method. A debugging view —
-       opened on demand, refreshed by hand; newest land at the bottom and the
-       body auto-scrolls to them. Panel-internal absolute positioning (13). */
-    function GitOutputDrawer(props) {
-      const t = props.t
-      const ref = useRef(null)
-      useEffect(() => { if (ref.current !== null) ref.current.scrollTop = ref.current.scrollHeight }, [props.entries])
-      return E('div', { className: 'git4idea-gitlog' },
-        E('div', { className: 'git4idea-gitlog-head' },
-          E('span', { className: 'git4idea-gitlog-title' }, t('gitLog.title')),
-          E('span', { className: 'git4idea-topbar-spacer' }),
-          E('button', { type: 'button', className: 'git4idea-icon-btn git4idea-icon-btn-small', 'data-tip': t('toolbar.refresh'), onClick: props.onRefresh }, E(Icon, { name: 'refresh', size: 13 })),
-          E('button', { type: 'button', className: 'git4idea-icon-btn git4idea-icon-btn-small', 'data-tip': t('confirm.cancel'), onClick: props.onClose }, E(Icon, { name: 'collapse', size: 13 }))),
-        props.entries.length === 0
-          ? E('div', { className: 'git4idea-gitlog-empty' }, t('gitLog.empty'))
-          : E('div', { className: 'git4idea-gitlog-body', ref: ref },
-            props.entries.map((entry, index) => E('div', {
-              key: index,
-              className: 'git4idea-gitlog-row' + (String(entry.code) === '0' ? '' : ' git4idea-gitlog-row-bad'),
-            },
-              E('div', { className: 'git4idea-gitlog-meta' },
-                E('span', { className: 'git4idea-gitlog-code' }, String(entry.code)),
-                E('span', { className: 'git4idea-gitlog-ms' }, String(entry.ms) + 'ms'),
-                E('span', { className: 'git4idea-gitlog-at' }, String(entry.at)),
-                E('span', { className: 'git4idea-gitlog-argv' }, String(entry.argv))),
-              entry.out === '' && entry.err === '' ? null
-                : E('pre', { className: 'git4idea-gitlog-pre' }, String(entry.err) === '' ? String(entry.out) : String(entry.out) + '\n' + String(entry.err))))))
     }
 
     /* A destructive confirm: focus starts on Cancel (never on the red button), Enter
@@ -5487,6 +5544,351 @@ window.__ModuleLoader__.load({
         E('div', { className: 'git4idea-detail-files' }, fileRows))
     }
 
+/**
+ * dsh-git4idea — client / workbench (log · console · worktree tabs).
+ *
+ * The detail column used to show only the picked commit. It now carries the
+ * three IDEA tool-window tabs: the commit log (unchanged), the console (the
+ * host's console.log, one block per git run, Beijing time), and the worktree
+ * list. All three read through the same request() fence as the rest of the
+ * panel; the console refreshes only after a git run, never on a timer.
+ */
+
+/* Paths arrive from the host already normalized for the running platform.
+   The client only needs three tiny string helpers: parent, base name and a
+   join that keeps the separator the host used. */
+function worktreeParent(value) {
+  if (typeof value !== 'string' || value === '') return ''
+  const norm = value.replace(/[\\/]+$/, '')
+  const cut = Math.max(norm.lastIndexOf('/'), norm.lastIndexOf('\\'))
+  return cut <= 0 ? norm : norm.slice(0, cut)
+}
+
+function worktreeBaseName(value) {
+  if (typeof value !== 'string' || value === '') return ''
+  const norm = value.replace(/[\\/]+$/, '')
+  const cut = Math.max(norm.lastIndexOf('/'), norm.lastIndexOf('\\'))
+  return cut < 0 ? norm : norm.slice(cut + 1)
+}
+
+function worktreeJoin(dir, name) {
+  const left = String(dir).replace(/[\\/]+$/, '')
+  if (left === '') return name
+  const sep = left.indexOf('\\') >= 0 && left.indexOf('/') < 0 ? '\\' : '/'
+  return left + sep + name
+}
+
+function worktreeDefaultName(root, branch) {
+  const project = worktreeBaseName(root)
+  const suffix = typeof branch === 'string' && branch !== '' ? '-' + branch.replace(/[\\/:*?"<>|\s]+/g, '-') : ''
+  return project + suffix
+}
+
+/* Console lines are the host's blocks: a header line with the timestamp and
+   the command, then the output. Only the last 2000 lines are painted — the
+   file tail is 256 KiB and a full repaint of it every run costs more than the
+   view is worth. */
+const CONSOLE_LINE_MAX = 2000
+
+function consoleLineClass(line) {
+  if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}: \[/.test(line)) {
+    return /\[(timeout|spawn-error|\-?\d+)\]$/.test(line) ? 'git4idea-console-line git4idea-console-cmd git4idea-console-bad' : 'git4idea-console-line git4idea-console-cmd'
+  }
+  if (/^(fatal|error|warning|hint):/i.test(line)) return 'git4idea-console-line git4idea-console-bad'
+  return 'git4idea-console-line'
+}
+
+function WorktreeDialog(props) {
+  const t = props.t
+  const local = props.branches === null || props.branches === undefined ? [] : props.branches.local
+  const fallback = props.branch === undefined ? '' : props.branch
+  // IDEA preselects the branch the panel is on; a detached HEAD falls back to
+  // the first local branch.
+  const known = local.some((entry) => entry.name === fallback)
+  const first = known === true ? fallback : (local.length > 0 ? local[0].name : fallback)
+  const [base, setBase] = useState(first)
+  const [create, setCreate] = useState(false)
+  const [branch, setBranch] = useState('')
+  const [name, setName] = useState(() => worktreeDefaultName(props.repoRoot, first))
+  const [dir, setDir] = useState(() => worktreeParent(props.repoRoot))
+  const [nameTouched, setNameTouched] = useState(false)
+  const [dirPrompt, setDirPrompt] = useState(false)
+  const target = name.trim() === '' ? '' : worktreeJoin(dir.trim(), name.trim())
+  const ready = name.trim() !== '' && dir.trim() !== '' && base !== '' && (create === false || branch.trim() !== '')
+  const pickBase = (value) => {
+    setBase(value)
+    if (nameTouched === false) setName(worktreeDefaultName(props.repoRoot, value))
+  }
+  const onName = (value) => { setNameTouched(true); setName(value) }
+  const submit = () => {
+    if (ready === false) return
+    props.onSubmit({
+      path: target,
+      branch: create === true ? branch.trim() : base,
+      newBranch: create === true,
+      base: base,
+    })
+  }
+  const onKey = (event) => {
+    if (event.key === 'Enter') { event.preventDefault(); submit() }
+    if (event.key === 'Escape') { event.preventDefault(); props.onCancel() }
+  }
+  return E('div', { className: 'git4idea-overlay' },
+    E('div', { className: 'git4idea-dialog git4idea-dialog-wide git4idea-wt-dialog' },
+      E('div', { className: 'git4idea-dialog-title' }, t('worktree.title')),
+      E('label', { className: 'git4idea-wt-label' }, t('worktree.from')),
+      E('select', {
+        className: 'git4idea-input', value: base, onChange: (event) => pickBase(event.target.value),
+      }, local.length === 0 ? E('option', { value: '' }, fallback) : local.map((entry) => E('option', { key: entry.name, value: entry.name }, entry.name))),
+      E('label', { className: 'git4idea-wt-toggle' },
+        E('input', { type: 'checkbox', checked: create, onChange: (event) => setCreate(event.target.checked) }),
+        E('span', null, t('worktree.newBranch'))),
+      create === false ? null : E('input', {
+        className: 'git4idea-input', value: branch, spellCheck: false,
+        placeholder: t('worktree.newBranchName'),
+        onChange: (event) => setBranch(event.target.value), onKeyDown: onKey,
+      }),
+      E('label', { className: 'git4idea-wt-label' }, t('worktree.projectName')),
+      E('input', {
+        className: 'git4idea-input', value: name, spellCheck: false,
+        onChange: (event) => onName(event.target.value), onKeyDown: onKey,
+      }),
+      E('label', { className: 'git4idea-wt-label' }, t('worktree.location')),
+      E('div', { className: 'git4idea-wt-pathrow' },
+        E('input', {
+          className: 'git4idea-input', value: dir, spellCheck: false,
+          onChange: (event) => setDir(event.target.value), onKeyDown: onKey,
+        }),
+        E('button', {
+          type: 'button', className: 'git4idea-icon-btn', 'data-tip': t('worktree.pickDir'),
+          onClick: () => setDirPrompt(true),
+        }, E(Icon, { name: 'folder', size: 13 }))),
+      E('div', { className: 'git4idea-wt-hint' }, t('worktree.target') + ' ' + (target === '' ? '—' : target)),
+      E('div', { className: 'git4idea-dialog-actions' },
+        E('button', { type: 'button', className: 'git4idea-btn', onClick: props.onCancel }, t('confirm.cancel')),
+        E('button', { type: 'button', className: 'git4idea-btn git4idea-btn-primary', disabled: ready === false, onClick: submit }, t('worktree.create')))),
+    dirPrompt === false ? null : E(PromptDialog, {
+      title: t('worktree.dirPrompt'),
+      placeholder: t('worktree.dirPrompt'),
+      initialValue: dir,
+      okLabel: t('confirm.ok'),
+      cancelLabel: t('confirm.cancel'),
+      onCancel: () => setDirPrompt(false),
+      onSubmit: (value) => { setDir(value); setDirPrompt(false) },
+    }))
+}
+
+function Workbench(props) {
+  const t = props.t
+  const request = props.request
+  const base = props.base
+  const [tab, setTab] = useState('log')
+  const [consoleText, setConsoleText] = useState('')
+  const [consoleMeta, setConsoleMeta] = useState(null)
+  const [consoleError, setConsoleError] = useState(null)
+  const [trees, setTrees] = useState(null)
+  const [treeBusy, setTreeBusy] = useState(false)
+  const [treeError, setTreeError] = useState(null)
+  const [selected, setSelected] = useState('')
+  const [creating, setCreating] = useState(false)
+  const [removing, setRemoving] = useState(null)
+  const consoleRef = useRef(null)
+
+  const loadConsole = useCallback(async () => {
+    try {
+      const data = await request('consoleLog', base)
+      setConsoleText(typeof data.text === 'string' ? data.text : '')
+      setConsoleMeta(data)
+      setConsoleError(null)
+    } catch (caught) {
+      setConsoleError(caught instanceof Error ? caught.message : String(caught))
+    }
+  }, [request, base])
+
+  /* Refresh only when the console is on screen, and only after a git run
+     (props.consoleTick moves once per completed panel action). No interval. */
+  useEffect(() => {
+    if (tab !== 'console') return
+    void loadConsole()
+  }, [tab, props.consoleTick, loadConsole, props.showTabs])
+
+  useEffect(() => {
+    const element = consoleRef.current
+    if (element !== null) element.scrollTop = element.scrollHeight
+  }, [consoleText])
+
+  const clearConsole = useCallback(async () => {
+    try {
+      await request('consoleClear', base)
+      setConsoleText('')
+      setConsoleMeta(null)
+      setConsoleError(null)
+    } catch (caught) {
+      setConsoleError(caught instanceof Error ? caught.message : String(caught))
+    }
+  }, [request, base])
+
+  const loadTrees = useCallback(async (options) => {
+    setTreeBusy(true)
+    try {
+      /* Only the refresh button records its `git worktree list`; the first
+         open of the tab and the reread after an add/remove are bookkeeping,
+         and the add/remove request is already the recorded gesture. */
+      const consoleFlag = options !== undefined && options.manual === true
+      const data = await request('worktreeList', consoleFlag ? Object.assign({}, base, { console: true }) : base)
+      const list = Array.isArray(data.worktrees) ? data.worktrees : []
+      setTrees(list)
+      setSelected((current) => {
+        if (list.some((tree) => tree.path === current)) return current
+        const here = list.find((tree) => tree.current === true)
+        return here === undefined ? (list.length === 0 ? '' : list[0].path) : here.path
+      })
+      setTreeError(null)
+    } catch (caught) {
+      setTreeError(caught instanceof Error ? caught.message : String(caught))
+    } finally {
+      setTreeBusy(false)
+    }
+  }, [request, base])
+
+  useEffect(() => {
+    if (tab !== 'worktree' || trees !== null) return
+    void loadTrees()
+  }, [tab, trees, loadTrees])
+
+  /* Picking a commit is a request for the log tab: without this, a click on
+     the history while the console is open would change nothing on screen. */
+  useEffect(() => {
+    if (typeof props.selectedHash === 'string' && props.selectedHash !== '') setTab('log')
+  }, [props.selectedHash])
+
+  /* The tabs belong to the repository on screen, so switching repositories
+     starts again on the log instead of leaving the console of the old one. */
+  useEffect(() => {
+    setTab('log')
+  }, [props.repoRoot])
+
+  const createWorktree = useCallback(async (payload) => {
+    setCreating(false)
+    try {
+      await request('worktreeAdd', Object.assign({}, base, payload))
+      await loadTrees()
+      setSelected(payload.path)
+      props.notifyOk(fill(t('worktree.created'), { path: payload.path }))
+    } catch (caught) {
+      setTreeError(caught instanceof Error ? caught.message : String(caught))
+    }
+  }, [request, base, loadTrees, props, t])
+
+  const removeWorktree = useCallback(async (tree) => {
+    setRemoving(null)
+    try {
+      await request('worktreeRemove', Object.assign({}, base, { path: tree.path }))
+      await loadTrees()
+      props.notifyOk(fill(t('worktree.removed'), { path: tree.path }))
+    } catch (caught) {
+      setTreeError(caught instanceof Error ? caught.message : String(caught))
+    }
+  }, [request, base, loadTrees, props, t])
+
+  const selectedTree = trees === null ? undefined : trees.find((tree) => tree.path === selected)
+
+  const openConsoleMenu = useCallback((event) => {
+    event.preventDefault()
+    props.openMenuAt(event, [{
+      id: 'console-clear', icon: 'trash', tone: 'danger',
+      label: t('console.clear'), run: () => { void clearConsole() },
+    }])
+  }, [props, t, clearConsole])
+
+  /* Without a repository the panel shows its picker or a loading state; a tab
+     strip there would offer views of nothing, so the log content fills it. */
+  const showTabs = props.showTabs !== false
+  const active = showTabs === false ? 'log' : tab
+  const hiddenStyle = (which) => (active === which ? undefined : { display: 'none' })
+  const lines = consoleText === '' ? [] : consoleText.replace(/\s+$/, '').split('\n')
+  const shown = lines.length > CONSOLE_LINE_MAX ? lines.slice(-CONSOLE_LINE_MAX) : lines
+  const branch = props.branch === undefined || props.branch === null || props.branch === '' ? '' : props.branch
+
+  const consolePane = E('div', { className: 'git4idea-console' },
+    consoleError === null ? null : E('div', { className: 'git4idea-console-note git4idea-console-bad' }, consoleError),
+    consoleMeta !== null && consoleMeta.truncated === true ? E('div', { className: 'git4idea-console-note' }, fill(t('console.truncated'), { file: consoleMeta.file })) : null,
+    shown.length === 0
+      ? E('div', { className: 'git4idea-empty' }, t('console.empty'))
+      : E('div', { className: 'git4idea-console-body', ref: consoleRef, onContextMenu: openConsoleMenu },
+        shown.map((line, index) => E('div', { key: index, className: consoleLineClass(line) }, line === '' ? ' ' : line))))
+
+  const worktreePane = E('div', { className: 'git4idea-worktrees' },
+    E('div', { className: 'git4idea-wt-rail' },
+      E('button', { type: 'button', className: 'git4idea-icon-btn', 'data-action': 'worktree-new', 'data-tip': t('worktree.new'), onClick: () => setCreating(true) }, E(Icon, { name: 'plus', size: 13 })),
+      E('button', {
+        type: 'button', className: 'git4idea-icon-btn', 'data-action': 'worktree-remove', 'data-tip': t('worktree.remove'),
+        'aria-disabled': selectedTree === undefined || selectedTree.current === true ? 'true' : 'false',
+        onClick: () => { if (selectedTree !== undefined && selectedTree.current !== true) setRemoving(selectedTree) },
+      }, E(Icon, { name: 'trash', size: 13 })),
+      E('button', { type: 'button', className: 'git4idea-icon-btn', 'data-action': 'worktree-refresh', 'data-tip': t('worktree.refresh'), onClick: () => { void loadTrees({ manual: true }) } }, E(Icon, { name: 'refresh', size: 13 }))),
+    E('div', { className: 'git4idea-wt-main' },
+      treeError === null ? null : E('div', { className: 'git4idea-wt-error' }, treeError),
+      trees === null
+        ? E('div', { className: 'git4idea-empty' }, treeBusy === true ? t('status.loading') : t('worktree.empty'))
+        : trees.length === 0
+          ? E('div', { className: 'git4idea-empty' }, t('worktree.empty'))
+          : E('div', { className: 'git4idea-wt-list' },
+            E('div', { className: 'git4idea-wt-head' },
+              E('span', null, ''),
+              E('span', null, t('worktree.name')),
+              E('span', null, t('worktree.branch')),
+              E('span', null, t('worktree.path'))),
+            trees.map((tree) => E('div', {
+              key: tree.path,
+              className: 'git4idea-wt-row' + (tree.path === selected ? ' git4idea-wt-row-active' : ''),
+              'data-action': 'worktree-row',
+              onClick: () => setSelected(tree.path),
+            },
+              E('span', { className: 'git4idea-wt-check' }, tree.current === true ? E(Icon, { name: 'check', size: 12 }) : null),
+              E('span', { className: 'git4idea-wt-name' }, worktreeBaseName(tree.path)),
+              E('span', { className: 'git4idea-wt-branch' }, tree.detached === true ? t('worktree.detached') : (tree.branch === null || tree.branch === undefined ? '' : tree.branch)),
+              E('span', { className: 'git4idea-wt-path', 'data-tip': tree.path }, tree.path))))))
+
+  return E('div', { className: 'git4idea-workbench' },
+    showTabs === false ? null : E('div', { className: 'git4idea-tabs', role: 'tablist' },
+      E('button', {
+        type: 'button', role: 'tab', className: 'git4idea-tab', 'data-action': 'tab-log',
+        'data-active': tab === 'log' ? 'true' : 'false',
+        onClick: () => setTab('log'),
+      }, t('tab.log') + (branch === '' ? '' : ': ' + branch)),
+      E('button', {
+        type: 'button', role: 'tab', className: 'git4idea-tab', 'data-action': 'tab-console',
+        'data-active': tab === 'console' ? 'true' : 'false',
+        onClick: () => setTab('console'),
+      }, t('tab.console')),
+      E('button', {
+        type: 'button', role: 'tab', className: 'git4idea-tab', 'data-action': 'tab-worktree',
+        'data-active': tab === 'worktree' ? 'true' : 'false',
+        onClick: () => setTab('worktree'),
+      }, t('tab.worktree'))),
+    /* The log tab is the whole Git view (tree, history, commit detail): the
+       panel passes that body as children, so the tabs sit above every column
+       instead of above the detail pane alone. Every pane stays mounted and the
+       inactive ones are hidden: unmounting the log would reset the pane
+       measurements that the drag dividers keep in panel state. */
+    E('div', { className: 'git4idea-workbench-body', style: hiddenStyle('log') }, props.children),
+    E('div', { className: 'git4idea-workbench-body', style: hiddenStyle('console') }, consolePane),
+    E('div', { className: 'git4idea-workbench-body', style: hiddenStyle('worktree') }, worktreePane),
+    creating === true ? E(WorktreeDialog, {
+      t: t, branches: props.branches, branch: branch, repoRoot: props.repoRoot,
+      onCancel: () => setCreating(false), onSubmit: (payload) => { void createWorktree(payload) },
+    }) : null,
+    removing === null ? null : E(ConfirmDialog, {
+      t: t,
+      title: t('worktree.removeTitle'),
+      text: fill(t('worktree.removeText'), { path: removing.path }),
+      okLabel: t('worktree.remove'),
+      cancelLabel: t('confirm.cancel'),
+      onCancel: () => setRemoving(null),
+      onConfirm: () => { void removeWorktree(removing) },
+    }))
+}
     /* ============================== panel ============================== */
 
     function Panel(props) {
@@ -5927,18 +6329,10 @@ window.__ModuleLoader__.load({
          from. sortKey 'git' keeps git's own status order. */
       const [groupBy, setGroupBy] = useState('flat')
       const [sortKey, setSortKey] = useState('git')
-      /* The Git-output drawer (VS Code showOutput): null = closed, an array =
-         the entries it currently shows. Opened on demand, refreshed by hand or
-         by reopening — it is a debugging view, not a live stream. */
-      const [gitOutput, setGitOutput] = useState(null)
-      const openGitOutput = useCallback(async () => {
-        try {
-          const data = await request('gitLogs', {})
-          setGitOutput(Array.isArray(data.entries) ? data.entries : [])
-        } catch (caught) {
-          setError(caught instanceof Error ? caught.message : String(caught))
-        }
-      }, [request])
+      /* The console tab reads the host's console.log. It refreshes only after a
+         git run (consoleTick), never on the summary poll — the file is the
+         record, and a timer would re-read it while nothing new lands. */
+      const [consoleTick, setConsoleTick] = useState(0)
 
 
       /* Phase-two merge (issue #11): fold the [path, additions, deletions,
@@ -6165,8 +6559,13 @@ window.__ModuleLoader__.load({
       const runSuccessText = useCallback((method, payload) => successToastText(t, method, payload), [t])
       const run = useCallback(async (method, payload, options) => {
         const result = await guard(() => request(method, Object.assign({}, base, payload)))
+        /* A git run just happened — failed or not, the console has a new block. */
+        setConsoleTick((value) => value + 1)
         if (result === undefined) return undefined
         await refresh()
+        /* refresh itself runs git (status/log); the console gets those blocks
+           too, so the second tick keeps the tab on the newest line. */
+        setConsoleTick((value) => value + 1)
         if (options === undefined || options.quiet !== true) notifyOk(runSuccessText(method, payload))
         return result
       }, [base, runSuccessText, guard, refresh])
@@ -6999,7 +7398,6 @@ window.__ModuleLoader__.load({
           summary.behind > 0 ? E('span', { className: 'git4idea-track-behind' }, (summary.ahead > 0 ? ' ' : '') + '↓' + summary.behind) : null),
         operation === null ? null : E('span', { className: 'git4idea-opchip', 'data-tip': t('operation.hint') }, t('operation.' + operation)),
         E('span', { className: 'git4idea-topbar-spacer' }),
-        busy ? E('span', { className: 'git4idea-busy' }, t('status.busy')) : null,
         /* The commit button raises the frame commit dialog (m04920); the panel's
            own layer could not fix the height of its diff half. */
         E('button', {
@@ -7034,7 +7432,7 @@ window.__ModuleLoader__.load({
         request: request,
       })
 
-      const detailPane = E(CommitDetail, {
+      const commitDetail = E(CommitDetail, {
         t: t, detail: detail, selectedPath: selectedPath, pane: true,
         onBack: () => { setSelectedPath(null); setPatch(''); setDiffContext(null) },
         /* Plain click only highlights the file; the DOUBLE-click opens its
@@ -7050,6 +7448,10 @@ window.__ModuleLoader__.load({
         },
         onFileMenu: detailFileMenu,
       })
+
+      /* The commit detail keeps its pane; the tab strip lives on the panel
+         root, above every column, so the "日志" tab is the whole Git view. */
+      const detailPane = commitDetail
 
       const diffPane = patch === '' && patchLoading === false ? null : E('div', { className: 'git4idea-diff-pane', 'data-pane': 'diff', style: paneStyle('diff'), onContextMenu: onDiffPaneContextMenu },
         E('div', { className: 'git4idea-diff-head' },
@@ -7301,7 +7703,6 @@ window.__ModuleLoader__.load({
             { id: 'tg-push', label: t('more.pushTags'), disabled: tagCount === 0 || remoteNames.length === 0 || blocked, reason, run: () => setDialog({ kind: 'pushTags' }) },
           ] },
           null,
-          { id: 'mm-git-output', icon: 'commit', tone: 'secondary', label: t('more.gitOutput'), run: () => { void openGitOutput() } },
         ])
       }
       /* One panel spec, two hosts: the compact chrome renders it inline, the
@@ -7847,21 +8248,31 @@ window.__ModuleLoader__.load({
       // exactly one place.
       // While a divider is being dragged the whole panel stops selecting text and
       // keeps the resize cursor, even though the pointer has left the 8px gutter.
+      /* 日志 / 控制台 / 工作树 wrap the whole view, not only the detail pane:
+         IDEA puts its tab strip above the tree and the log alike. The log tab
+         receives the current chrome (rail + shell) as children. */
+      const logBody = E(Fragment, null,
+        columns === true || repoRoot === null ? null : renderRail(false),
+        E('div', { className: 'git4idea-shell' },
+          columns === true && repoRoot !== null ? renderRail(true) : null,
+          body))
+
       return E('div', {
         className: 'git4idea-root'
           + (compact ? ' git4idea-root-narrow' : '')
           + (paneDragging === null ? '' : ' git4idea-pane-dragging' + (paneByWidth ? '-v' : '-h')),
         ref: hostRef,
       }, topBar,
-        columns === true || repoRoot === null ? null : renderRail(false),
-        E('div', { className: 'git4idea-shell' },
-          columns === true && repoRoot !== null ? renderRail(true) : null,
-          body),
-        gitOutput === null ? null : E(GitOutputDrawer, {
-          t: t, entries: gitOutput,
-          onRefresh: () => { void openGitOutput() },
-          onClose: () => setGitOutput(null),
-        }),
+        E(Workbench, {
+          t: t, base: base, request: request,
+          branch: summary === null ? '' : summary.branch,
+          selectedHash: selectedHash,
+          branches: branches, repoRoot: repoRoot,
+          consoleTick: consoleTick,
+          showTabs: repoState !== null && repoRoot !== null,
+          openMenuAt: openMenuAt,
+          notifyOk: notifyOk,
+        }, logBody),
         overlays)
     }
 
@@ -7895,10 +8306,9 @@ window.__ModuleLoader__.load({
     LANE_TRACE_RULES.push('@keyframes git4idea-spin-rotate{to{transform:rotate(360deg)}}')
 
     const CSS = [
-      '.git4idea-root{position:relative;display:flex;flex-direction:column;height:100%;min-height:0;background:transparent;color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family,system-ui,sans-serif);font-size:13px;line-height:1.5;font-weight:600;overflow:hidden}',
+      '.git4idea-root{position:relative;display:flex;flex-direction:column;height:100%;min-height:0;background:transparent;color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family,-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",Helvetica,Arial,sans-serif);font-size:13px;line-height:1.5;font-weight:400;overflow:hidden}',
       '.git4idea-topbar{display:flex;align-items:center;gap:6px;padding:4px 6px;flex:none;min-width:0;border-bottom:1px solid var(--dsw-alias-border-l2);overflow:hidden}',
       '.git4idea-topbar-spacer{flex:1;min-width:4px}',
-      '.git4idea-busy{color:var(--dsw-alias-label-tertiary);flex:none;white-space:nowrap}',
       '.git4idea-track{color:var(--dsw-alias-label-secondary);flex:none;font-variant-numeric:tabular-nums;white-space:nowrap}',
       '.git4idea-select-wrap{display:inline-flex;align-items:center;gap:4px;min-width:0;flex:0 1 auto;max-width:90%;color:var(--dsw-alias-label-secondary)}',
       '.git4idea-select{appearance:none;-webkit-appearance:none;background:transparent;border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-sm,8px);color:var(--dsw-alias-label-primary);font:inherit;font-weight:500;padding:1px 6px;height:22px;max-width:min(280px,42%);min-width:0;cursor:pointer;text-overflow:ellipsis}',
@@ -7922,9 +8332,6 @@ window.__ModuleLoader__.load({
       '.git4idea-icon-btn:hover:not(:disabled):not([aria-disabled="true"]){background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
       '.git4idea-icon-btn:disabled,.git4idea-icon-btn[aria-disabled="true"]{opacity:.4;cursor:default}',
       '.git4idea-icon-btn-active{background:var(--dsw-alias-interactive-bg-active,var(--dsw-alias-interactive-bg-hover));color:var(--dsw-alias-label-primary)}',
-      '.git4idea-banner{display:flex;align-items:center;gap:8px;padding:4px 8px;flex:none;color:var(--dsw-alias-state-error-primary)}',
-      '.git4idea-note{display:flex;align-items:center;gap:8px;padding:4px 8px;flex:none;color:var(--dsw-alias-label-secondary)}',
-      '.git4idea-banner-text{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}',
       '.git4idea-shell{flex:1;min-height:0;display:flex;overflow:hidden}',
       '.git4idea-rail{width:32px;flex:none;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 0;overflow:hidden;border-right:1px solid var(--dsw-alias-border-l2)}',
       '.git4idea-rail-gap{flex:1;min-height:2px}',
@@ -8013,22 +8420,20 @@ window.__ModuleLoader__.load({
       '.git4idea-foldTitle{min-width:0;overflow-wrap:anywhere}',
       '.git4idea-root-narrow .git4idea-menu-item{white-space:normal}',
       '.git4idea-root-narrow .git4idea-toast-text{white-space:normal}',
-      /* m02986: the queue is frame-wide now, so the stack pins to the viewport
-         corner (inside shell.overlay) instead of the panel's own box. */
-      '.git4idea-tip{position:fixed;z-index:120;pointer-events:none;max-width:340px;padding:4px 8px;border-radius:var(--dsw-radius-sm,8px);border:1px solid var(--dsw-alias-border-l2,transparent);background:var(--dsw-alias-bg-layer-2,rgba(28,30,34,.98));box-shadow:var(--dsw-elevation-prominent,0 8px 22px rgba(0,0,0,.34));color:var(--dsw-alias-label-primary,inherit);font:500 12px/1.45 var(--dsw-font-family,system-ui,sans-serif);white-space:pre-wrap;overflow-wrap:anywhere}',
+      '.git4idea-tip{position:fixed;z-index:120;pointer-events:none;max-width:340px;padding:4px 8px;border-radius:var(--dsw-radius-sm,8px);border:1px solid var(--dsw-alias-border-l2,transparent);background:var(--dsw-alias-bg-layer-2,rgba(28,30,34,.98));box-shadow:var(--dsw-elevation-prominent,0 8px 22px rgba(0,0,0,.34));color:var(--dsw-alias-label-primary,inherit);font:500 12px/1.45 var(--dsw-font-family,-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",Helvetica,Arial,sans-serif);white-space:pre-wrap;overflow-wrap:anywhere}',
       /* the tooltip node lives on body; keep it above the toasts */
-      '.git4idea-toasts{position:fixed;right:12px;bottom:12px;display:flex;flex-direction:column;gap:6px;z-index:90;max-width:min(380px,92%);align-items:stretch}',
+      /* m00761: the stack lives on document.body, above every app layer (the
+         frame's overlay layer and the composer are stacking contexts), so no
+         page chrome can paint over a notice. */
+      '.git4idea-toasts{position:fixed;right:12px;bottom:12px;display:flex;flex-direction:column;gap:6px;z-index:2147483000;max-width:min(380px,92%);align-items:stretch}',
       '.git4idea-toast{display:flex;align-items:flex-start;gap:8px;padding:6px 8px;border-radius:var(--dsw-radius-sm,8px);background:var(--dsw-alias-bg-layer-2,var(--dsw-alias-bg-layer-1));border:0;box-shadow:var(--dsw-elevation-prominent,0 8px 22px rgba(0,0,0,.32))}',
-      '.git4idea-toast-icon{display:inline-flex;flex:none;margin-top:2px;color:var(--dsw-alias-label-secondary)}',
-      '.git4idea-toast-warn .git4idea-toast-icon{color:var(--dsw-alias-state-warn-primary,var(--dsw-alias-brand-primary))}',
-      '.git4idea-toast-ok .git4idea-toast-icon{color:var(--dsw-alias-state-success-primary)}',
-      '.git4idea-toast-error .git4idea-toast-icon{color:var(--dsw-alias-state-error-primary)}',
       /* m02407 #3: two lines while the pointer is away, the whole result while it
          is on the chip, and a pinned-open chip scrolls past min(40vh, 240px). */
       '.git4idea-toast-text{flex:1;min-width:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-wrap;overflow-wrap:anywhere;font-weight:500;cursor:pointer}',
       '.git4idea-toast:hover .git4idea-toast-text,.git4idea-toast-open .git4idea-toast-text{display:block;-webkit-line-clamp:unset;max-height:min(40vh,240px);overflow:auto}',
       '.git4idea-toast-action{border:none;background:transparent;color:var(--dsw-alias-brand-primary);font:inherit;font-weight:600;cursor:pointer;padding:0 2px;flex:none}',
       '.git4idea-toast-action:hover{text-decoration:underline}',
+      '.git4idea-toast-close{flex:none;color:var(--dsw-alias-label-tertiary);font-size:14px;line-height:1}',
       '.git4idea-opchip{flex:none;padding:0 6px;border-radius:999px;corner-shape:round;background:color-mix(in srgb, var(--dsw-alias-state-warn-primary,var(--dsw-alias-brand-primary)) 20%, transparent);color:var(--dsw-alias-state-warn-primary,var(--dsw-alias-brand-primary));font-weight:500;white-space:nowrap}',
       '.git4idea-rail-list{display:flex;flex-direction:column;gap:2px;max-height:min(50vh,300px);overflow:auto;padding:2px;border:1px solid var(--dsw-alias-hairline,var(--dsw-alias-border-l1));border-radius:var(--dsw-radius-sm,8px)}',
       '.git4idea-rail-item{display:flex;align-items:center;gap:6px;padding:2px 4px;border-radius:calc(var(--dsw-radius-sm,8px) - 2px)}',
@@ -8073,7 +8478,7 @@ window.__ModuleLoader__.load({
       /* No backdrop-filter here (m05305): a 2px blur over the whole viewport
          re-samples everything behind the scrim on every scroll frame, which made
          the diff card feel stuck. A denser scrim alone costs nothing. */
-      '.git4idea-commit-overlay{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--dsw-alias-bg-scrim,rgba(0,0,0,.42));color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family,system-ui,sans-serif);font-size:13px;line-height:1.5;font-weight:600}',
+      '.git4idea-commit-overlay{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--dsw-alias-bg-scrim,rgba(0,0,0,.42));color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family,-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",Helvetica,Arial,sans-serif);font-size:13px;line-height:1.5;font-weight:400}',
       /* m05307: the card carries the change list AND the file diff, so it takes
          the same footprint as the file card; the pane split is 40/60. */
       '.git4idea-commit-overlay .git4idea-commit-layer-card{width:min(1180px,94vw);height:min(760px,90vh)}',
@@ -8325,11 +8730,11 @@ window.__ModuleLoader__.load({
       '.git4idea-detail-body{margin:0;white-space:pre-wrap;color:var(--dsw-alias-label-secondary);font:inherit}',
       '.git4idea-detail-files-head{font-weight:600;margin-top:4px}',
       '.git4idea-detail-files{display:flex;flex-direction:column}',
-      '.git4idea-mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}',
+      '.git4idea-mono{font-family:var(--ds-font-family-code,"SF Mono","JetBrains Mono","Fira Code",Consolas,"Liberation Mono",Menlo,Courier,"PingFang SC","Microsoft YaHei",monospace)}',
       '.git4idea-diff-pane{flex:none;max-height:55%;display:flex;flex-direction:column;min-height:0;border-top:1px solid var(--dsw-alias-border-l2)}',
       '.git4idea-diff-head{display:flex;align-items:center;gap:8px;padding:3px 8px;color:var(--dsw-alias-label-tertiary);flex:none;min-width:0}',
       '.git4idea-diff-path{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}',
-      '.git4idea-diff{flex:1;overflow:auto;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:calc(12px + var(--dsh-code-font-delta, 0px));line-height:1.5;font-weight:500;min-height:0}',
+      '.git4idea-diff{flex:1;overflow:auto;font-family:var(--ds-font-family-code,"SF Mono","JetBrains Mono","Fira Code",Consolas,"Liberation Mono",Menlo,Courier,"PingFang SC","Microsoft YaHei",monospace);font-size:calc(12px + var(--dsh-code-font-delta, 0px));line-height:1.5;font-weight:500;min-height:0}',
       '.git4idea-diff-line{display:flex;gap:8px;padding:0 6px;white-space:pre}',
       '.git4idea-diff-gutter{width:32px;flex:none;text-align:right;color:var(--dsw-alias-label-dimmed,var(--dsw-alias-label-tertiary));user-select:none}',
       '.git4idea-diff-text{white-space:pre-wrap;word-break:break-word;flex:1;min-width:0}',
@@ -8347,21 +8752,39 @@ window.__ModuleLoader__.load({
       '.git4idea-file-icon{flex:none;opacity:.95}',
       '.git4idea-overlay{position:absolute;inset:0;padding:8px;box-sizing:border-box;background:var(--dsw-alias-bg-mask-1,rgba(0,0,0,.42));-webkit-backdrop-filter:var(--dsw-mask-blur,none);backdrop-filter:var(--dsw-mask-blur,none);display:flex;align-items:center;justify-content:center;z-index:60}',
       '.git4idea-dialog{box-sizing:border-box;min-width:min(240px,100%);max-width:min(420px,94%);max-height:100%;overflow:auto;background:var(--dsw-alias-bg-layer-2,var(--dsw-alias-bg-layer-1));border:0;border-radius:var(--dsw-radius-panel,28px);padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:var(--dsw-elevation-prominent,0 12px 32px rgba(0,0,0,.35))}',
-      /* Git-output drawer (VS Code showOutput): panel-internal absolute bottom
-         sheet (invariant 13). */
-      '.git4idea-gitlog{position:absolute;left:0;right:0;bottom:0;z-index:55;height:46%;min-height:132px;display:flex;flex-direction:column;background:var(--dsw-alias-bg-layer-2,var(--dsw-alias-bg-layer-1));border-radius:var(--dsw-radius-panel,28px) var(--dsw-radius-panel,28px) 0 0;box-shadow:var(--dsw-elevation-prominent,0 -8px 28px rgba(0,0,0,.3))}',
-      '.git4idea-gitlog-head{display:flex;align-items:center;gap:4px;padding:8px 14px 6px;flex:none}',
-      '.git4idea-gitlog-title{font-weight:600}',
-      '.git4idea-gitlog-empty{padding:10px 14px;color:var(--dsw-alias-label-tertiary)}',
-      '.git4idea-gitlog-body{flex:1;min-height:0;overflow:auto;padding:0 14px 10px;font-weight:400}',
-      '.git4idea-gitlog-row{padding:6px 0;border-top:1px solid var(--dsw-alias-border-l1,transparent)}',
-      '.git4idea-gitlog-row-bad .git4idea-gitlog-code{color:var(--dsw-alias-state-danger,#e5484d);font-weight:700}',
-      '.git4idea-gitlog-meta{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}',
-      '.git4idea-gitlog-code{color:var(--dsw-alias-label-tertiary);font-variant-numeric:tabular-nums}',
-      '.git4idea-gitlog-ms{color:var(--dsw-alias-label-tertiary);font-variant-numeric:tabular-nums}',
-      '.git4idea-gitlog-at{color:var(--dsw-alias-label-tertiary);font-size:calc(11px + var(--dsh-content-font-delta-secondary, 0px))}',
-      '.git4idea-gitlog-argv{font-weight:600;word-break:break-all}',
-      '.git4idea-gitlog-pre{margin:4px 0 0;padding:6px 8px;border-radius:var(--dsw-radius-md,12px);background:var(--dsw-alias-bg-layer-3,var(--dsw-alias-bg-layer-2));overflow:auto;max-height:160px;white-space:pre-wrap;word-break:break-all;font-size:calc(11px + var(--dsh-code-font-delta, 0px))}',
+      /* IDE tool-window tabs over the detail column: log (the commit detail),
+         console (host console.log) and worktrees. */
+      '.git4idea-workbench{display:flex;flex-direction:column;flex:1;min-height:0;min-width:0}',
+      '.git4idea-tabs{display:flex;align-items:center;gap:2px;flex:none;padding:0 6px;border-bottom:1px solid var(--dsw-alias-border-l1,var(--dsw-alias-border-subtle));overflow-x:auto;scrollbar-width:none}',
+      '.git4idea-tab{flex:none;padding:6px 10px;border:0;border-bottom:2px solid transparent;background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;font-size:calc(12px + var(--dsh-content-font-delta-secondary, 0px));cursor:pointer;white-space:nowrap}',
+      '.git4idea-tab:hover{color:var(--dsw-alias-label-primary)}',
+      '.git4idea-tab[data-active="true"]{color:var(--dsw-alias-label-primary);border-bottom-color:var(--dsw-alias-brand-primary)}',
+      '.git4idea-workbench-body{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}',
+      '.git4idea-console{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}',
+      '.git4idea-console-note{padding:4px 8px;color:var(--dsw-alias-label-tertiary);font-size:calc(11px + var(--dsh-content-font-delta-secondary, 0px));flex:none}',
+      '.git4idea-console-body{flex:1;min-height:0;overflow:auto;margin:0;padding:4px 8px 10px;font-family:var(--ds-font-family-code,"SF Mono","JetBrains Mono","Fira Code",Consolas,"Liberation Mono",Menlo,Courier,"PingFang SC","Microsoft YaHei",monospace);font-size:calc(11px + var(--dsh-code-font-delta, 0px));line-height:1.5;white-space:pre-wrap;word-break:break-word;user-select:text;cursor:auto}',
+      '.git4idea-console-line{white-space:pre-wrap}',
+      '.git4idea-console-cmd{font-weight:600;color:var(--dsw-alias-label-primary);margin-top:6px}',
+      '.git4idea-console-bad{color:var(--dsw-alias-state-error-primary)}',
+      '.git4idea-worktrees{flex:1;min-height:0;display:flex}',
+      '.git4idea-wt-rail{flex:none;display:flex;flex-direction:column;gap:2px;padding:4px;border-right:1px solid var(--dsw-alias-border-l1,transparent)}',
+      '.git4idea-wt-main{flex:1;min-width:0;min-height:0;overflow:auto}',
+      '.git4idea-wt-error{padding:6px 8px;color:var(--dsw-alias-state-error-primary);white-space:pre-wrap}',
+      '.git4idea-wt-list{display:flex;flex-direction:column;padding:2px 0 8px}',
+      '.git4idea-wt-head,.git4idea-wt-row{display:grid;grid-template-columns:20px minmax(0,1.1fr) minmax(0,1fr) minmax(0,2fr);gap:8px;align-items:center;padding:4px 8px}',
+      '.git4idea-wt-head{color:var(--dsw-alias-label-tertiary);font-size:calc(11px + var(--dsh-content-font-delta-secondary, 0px));border-bottom:1px solid var(--dsw-alias-border-l1,transparent)}',
+      '.git4idea-wt-row{cursor:pointer;border-radius:var(--dsw-radius-sm,8px)}',
+      '.git4idea-wt-row:hover{background:var(--dsw-alias-interactive-bg-hover)}',
+      '.git4idea-wt-row-active{background:var(--dsw-alias-interactive-bg-selected)}',
+      '.git4idea-wt-check{display:inline-flex;justify-content:center;color:var(--dsw-alias-state-success-primary)}',
+      '.git4idea-wt-name,.git4idea-wt-branch,.git4idea-wt-path{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+      '.git4idea-wt-path{color:var(--dsw-alias-label-tertiary)}',
+      '.git4idea-wt-label{color:var(--dsw-alias-label-secondary);font-size:calc(12px + var(--dsh-content-font-delta-secondary, 0px))}',
+      '.git4idea-wt-toggle{display:flex;align-items:center;gap:6px;color:var(--dsw-alias-label-secondary)}',
+      '.git4idea-wt-pathrow{display:flex;align-items:center;gap:6px}',
+      '.git4idea-wt-pathrow .git4idea-input{flex:1;min-width:0}',
+      '.git4idea-wt-hint{color:var(--dsw-alias-label-tertiary);font-size:calc(11px + var(--dsh-content-font-delta-secondary, 0px));word-break:break-all}',
+      '.git4idea-wt-dialog .git4idea-input{width:100%;box-sizing:border-box}',
       '.git4idea-dialog-wide{min-width:min(360px,92%)}',
       '.git4idea-dialog-title{font-weight:600}',
       '.git4idea-dialog-text{color:var(--dsw-alias-label-secondary);white-space:pre-wrap}',
@@ -8495,7 +8918,6 @@ window.__ModuleLoader__.load({
       '.git4idea-cs-pill svg{flex:none}',
       '.git4idea-cs-ahead{color:var(--dsw-alias-state-success-primary)}',
       '.git4idea-cs-behind{color:var(--dsw-alias-state-business-primary)}',
-      '.git4idea-cs-errorbar{flex:none;margin:0 6px 4px;padding:4px 8px;border-radius:var(--dsw-radius-sm,8px);background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-state-error-primary);font-size:11px;line-height:15px;word-break:break-word}',
       // .git4idea-cs-menu opens upward (the composer sits at the bottom of the UI). The surface
       // carries no backdrop-filter of its own: the data-cordis-panel attribute opts the popover
       // into dsh-any-background's input-surface channel (--dsw-specific-menu remapped to
@@ -8541,7 +8963,6 @@ window.__ModuleLoader__.load({
          commit and push cards (z 80) since it is the transient of the two. */
       '.git4idea-prompt-overlay{z-index:81}',
       '.git4idea-prompt-card{width:min(420px,92vw)}',
-      '.git4idea-dialog-error{color:var(--dsw-alias-state-error-primary,#e5484d);font-size:12px;line-height:16px;white-space:pre-wrap;max-height:120px;overflow:auto}',
       /* Inline secondary menu (m01737 #5): one row per verb, indented under
          the branch row it belongs to. */
       /* Row flyout (m02697 #2): floats beside the chooser, anchored on the row.
@@ -8692,7 +9113,6 @@ window.__ModuleLoader__.load({
        quickly and reloads the summary only when branch or HEAD actually
        moved. */
     const COMPOSER_HEAD_POLL_MS = 2500
-    const COMPOSER_ERROR_TTL_MS = 6000
     /* Line counts re-run at most this often without a real change: the two
        numstat passes are the expensive step on a big dirty tree (issue #11),
        so the pill keeps its cheap stats:false poll and refreshes lines only
@@ -8829,23 +9249,17 @@ window.__ModuleLoader__.load({
 
     function CenteredPrompt(props) {
       const [value, setValue] = useState(props.initialValue === undefined ? '' : props.initialValue)
-      const [error, setError] = useState('')
       const [busy, setBusy] = useState(false)
       const alive = useRef(true)
       const ref = useRef(null)
       useEffect(() => { if (ref.current !== null) ref.current.focus() }, [])
       useEffect(() => () => { alive.current = false }, [])
-      const textOf = (caught) => (caught !== null && caught !== undefined && typeof caught.message === 'string' && caught.message !== ''
-        ? caught.message
-        : String(caught))
       const ready = value.trim() !== '' && busy === false
       const submit = () => {
         if (ready !== true) return
         const name = value.trim()
         setBusy(true)
-        setError('')
         Promise.resolve(props.onSubmit(name)).catch((caught) => {
-          if (alive.current === true) setError(textOf(caught))
           notifyFail(caught)
         }).then(() => {
           if (alive.current === true) setBusy(false)
@@ -8868,7 +9282,6 @@ window.__ModuleLoader__.load({
             placeholder: props.placeholder === undefined ? '' : props.placeholder,
             onChange: (event) => setValue(event.target.value), onKeyDown: onKey,
           }),
-          error === '' ? null : E('div', { className: 'git4idea-dialog-error', 'data-tip': error }, error),
           E('div', { className: 'git4idea-dialog-actions' },
             E('button', {
               type: 'button', className: 'git4idea-btn',
@@ -8960,7 +9373,6 @@ window.__ModuleLoader__.load({
       const entry = props.entry
       const [summary, setSummary] = useState(null)
       const [busy, setBusy] = useState(false)
-      const [error, setError] = useState('')
       const [groupBy, setGroupBy] = useState('flat')
       const [foldedDirs, setFoldedDirs] = useState({})
       const [rowMenu, setRowMenu] = useState(null)
@@ -8980,7 +9392,6 @@ window.__ModuleLoader__.load({
           setSummary(data)
           return data
         } catch (caught) {
-          setError(messageOf(caught))
           notifyFail(caught)
           return null
         }
@@ -8990,14 +9401,12 @@ window.__ModuleLoader__.load({
          the same summary, so overlapping calls would race their results. */
       const call = async (method, payload) => {
         setBusy(true)
-        setError('')
         try {
           await request(method, Object.assign({}, base, payload))
           await loadSummary()
           notifyOk(successToastText(t, method, payload))
           return true
         } catch (caught) {
-          setError(messageOf(caught))
           notifyFail(caught)
           return false
         } finally {
@@ -9018,14 +9427,13 @@ window.__ModuleLoader__.load({
         })
       }
       /* A landed commit closes the card and tells every branch readout to
-         refresh; a rejected one keeps the box filled with the error above it.
+         refresh; a rejected one reports in the bottom-right stack.
          ChangesPanel has already cleared its draft by the time this returns.
          m02986: the push is a second, explicit step — hand over to the push
          dialog only after the commit route reports success. */
       const commit = (message, amend, push, paths) => {
         void (async () => {
           setBusy(true)
-          setError('')
           try {
             await request('commit', Object.assign({}, base, {
               message: message,
@@ -9037,7 +9445,6 @@ window.__ModuleLoader__.load({
             if (push === true) pushDialog.set({ cwd: entry.cwd, repoRoot: entry.repoRoot, sessionId: entry.sessionId })
             props.onClose()
           } catch (caught) {
-            setError(messageOf(caught))
             notifyFail(caught)
             setBusy(false)
           }
@@ -9079,9 +9486,6 @@ window.__ModuleLoader__.load({
               type: 'button', className: 'git4idea-icon-btn', 'data-tip': t('confirm.cancel'),
               onClick: () => props.onClose(),
             }, E(Icon, { name: 'close', size: 12 }))),
-          error === '' ? null : E('div', { className: 'git4idea-banner' },
-            E('span', { className: 'git4idea-banner-text' }, error),
-            E('button', { type: 'button', className: 'git4idea-link', onClick: () => setError('') }, t('error.dismiss'))),
           E('div', { className: 'git4idea-commit-layer-body' },
             E('div', { className: 'git4idea-commit-layer-left' },
               E(ChangesPanel, {
@@ -9174,7 +9578,6 @@ window.__ModuleLoader__.load({
       const [branchList, setBranchList] = useState(null)
       const [branchLoading, setBranchLoading] = useState(false)
       const [checkingOut, setCheckingOut] = useState('')
-      const [error, setError] = useState('')
       const [tick, setTick] = useState(0)
       /* Branch popover (m01216 #10): a searchable local/remote/tag tree, the
          fetch button beside the search box, and commit/push/new-branch at the
@@ -9342,12 +9745,6 @@ window.__ModuleLoader__.load({
         return () => document.removeEventListener('mousedown', close)
       }, [menu])
 
-      useEffect(() => {
-        if (error === '') return undefined
-        const timer = setTimeout(() => { setError('') }, COMPOSER_ERROR_TTL_MS)
-        return () => clearTimeout(timer)
-      }, [error])
-
       if (enabled !== true) return null
       const data = repoState
       if (data === null || (data.isRepo !== true && (data.repos === undefined || data.repos.length === 0))) return null
@@ -9384,7 +9781,6 @@ window.__ModuleLoader__.load({
           notifyOk(fill(t('toast.checkedOut'), { name: name }))
         } catch (caught) {
           setMenu(null)
-          setError(caught instanceof Error ? caught.message : String(caught))
           notifyFail(caught)
         } finally { setCheckingOut('') }
       }
@@ -9422,17 +9818,12 @@ window.__ModuleLoader__.load({
           if (action === 'merge' && result !== null && result !== undefined && result.conflicted === true) {
             const output = typeof result.output === 'string' ? result.output.trim() : ''
             const text = output === '' ? t('toast.mergedConflict') : output
-            setError(text)
-            toastCenter.push({ text: text, tone: 'error', icon: 'close' })
+            toastCenter.push({ text: text, tone: 'error' })
           } else {
             notifyOk(toastText !== '' ? toastText : csSuccessText(action, payload))
           }
         } catch (caught) {
-          const message = caught instanceof Error ? caught.message : String(caught)
           if (keepOpen !== true) setMenu(null)
-          setError(message)
-          /* Closing the chooser hides the popover error bar, so the failure also
-             surfaces where the result will be looked for (m03873). */
           notifyFail(caught)
         } finally { setCsBusy('') }
       }
@@ -9483,7 +9874,6 @@ window.__ModuleLoader__.load({
         }))
         setMenu(null)
         setCsMenu(null)
-        setError('')
       }
       /* 更新 works on the SELECTED branch (m03873). The checked-out branch is
          pulled ff-only; any other branch is fast-forwarded in place by a
@@ -9539,7 +9929,6 @@ window.__ModuleLoader__.load({
             notifyOk(fill(t('toast.branchCreated'), { name: local }))
           } catch (caught) {
             setMenu(null)
-            setError(caught instanceof Error ? caught.message : String(caught))
             notifyFail(caught)
           } finally { setCheckingOut('') }
         })()
@@ -9630,7 +10019,6 @@ window.__ModuleLoader__.load({
             label: t(kind === 'remote' ? 'action.createLocalBranch' : 'action.newBranchFrom'),
             run: () => {
               setCsMenu(null)
-              setError('')
               openBranchPrompt({
                 key: 'new|' + kind + '|' + entry.name,
                 title: t('toolbar.newBranch'),
@@ -9800,7 +10188,6 @@ window.__ModuleLoader__.load({
         ref: rootRef,
         className: 'git4idea-cs-root',
         'data-dsh-git4idea-status': '',
-        'data-tip': error === '' ? undefined : error,
       },
         branchName !== null ? E('button', {
           type: 'button',
@@ -9845,7 +10232,6 @@ window.__ModuleLoader__.load({
                     })()
                   },
                 }, E(Icon, { name: 'fetch', size: 13 }))),
-              error !== '' ? E('div', { className: 'git4idea-cs-errorbar', 'data-tip': error }, error) : null,
               /* Actions sit under the search box and above the tree, one per row
                  (m01737 #6) — they read as verbs on the branch list below them,
                  not as a footer. */
@@ -10294,7 +10680,6 @@ window.__ModuleLoader__.load({
       const entry = props.entry
       const base = { cwd: entry.cwd, repoRoot: entry.repoRoot }
       const [data, setData] = useState(null)
-      const [error, setError] = useState('')
       const [selected, setSelected] = useState(null)
       const [files, setFiles] = useState([])
       const [filesLoading, setFilesLoading] = useState(false)
@@ -10310,7 +10695,7 @@ window.__ModuleLoader__.load({
             setData(normalized)
             setSelected(normalized.commits.length === 0 ? null : normalized.commits[0].hash)
           } catch (caught) {
-            if (alive === true) { setError(messageOf(caught)); notifyFail(caught) }
+            if (alive === true) { notifyFail(caught) }
           }
         })()
         return () => { alive = false }
@@ -10325,7 +10710,7 @@ window.__ModuleLoader__.load({
             const detail = await request('commitDetail', Object.assign({}, base, { hash: selected }))
             if (alive === true) setFiles(Array.isArray(detail.files) ? detail.files : [])
           } catch (caught) {
-            if (alive === true) { setFiles([]); setError(messageOf(caught)); notifyFail(caught) }
+            if (alive === true) { setFiles([]); notifyFail(caught) }
           } finally {
             if (alive === true) setFilesLoading(false)
           }
@@ -10376,7 +10761,7 @@ window.__ModuleLoader__.load({
       }
       const canPush = data !== null && data.detached === false && data.remotes.length > 0 && data.commits.length > 0 && busy === false
       const emptyNote = data === null
-        ? (error === '' ? t('status.busy') : error)
+        ? t('status.busy')
         : data.detached === true
           ? t('push.detached')
           : data.remotes.length === 0
@@ -10447,7 +10832,7 @@ window.__ModuleLoader__.load({
             className: 'git4idea-btn git4idea-btn-primary',
             disabled: canPush !== true,
             onClick: () => { void runPush() },
-          }, busy === true ? t('status.busy') : t('toolbar.push')))))
+          }, t('toolbar.push')))))
     }
 
     function apply(ctx) {
@@ -10460,6 +10845,10 @@ window.__ModuleLoader__.load({
       ctx.effect(() => () => { style.remove() }, 'dsh-git4idea: panel styles')
 
       const t = translatorOf(ctx)
+      /* The notification stack is plain DOM outside React (m00761); the one
+         piece of copy it needs is the close button's accessible name. */
+      toastCenter.closeLabel = t('toast.close')
+      setBusyToast(t('status.busy'))
 
       /* DSH's own locale registry: bind this plugin's namespace so host-side
          consumers read exactly the copy the panel does. Every shipped
@@ -10621,10 +11010,6 @@ window.__ModuleLoader__.load({
             { name: 'shell.overlay', id: 'dsh-git4idea:file', locale: LOCALE_NS },
             (overlayProps) => E(FileDialogHost, Object.assign({}, overlayProps, { t: t, ctx: ctx })),
           ))
-          const offToasts = overlaySlots.inject('shell.overlay', () => overlaySlots.register(
-            { name: 'shell.overlay', id: 'dsh-git4idea:toasts', locale: LOCALE_NS },
-            (overlayProps) => E(ToastHost, Object.assign({}, overlayProps, { t: t })),
-          ))
           overlaySeatReady = true
           return () => {
             overlaySeatReady = false
@@ -10633,7 +11018,7 @@ window.__ModuleLoader__.load({
             pushDialog.set(null)
             try { offCommit() } catch (error) { void error }
             try { offFile() } catch (error) { void error }
-            try { offToasts() } catch (error) { void error }
+
           }
         }, 'dsh-git4idea: commit, file and push overlays')
       })
@@ -10694,6 +11079,6 @@ window.__ModuleLoader__.load({
        mount any seat, so every readStored call below sees the saved value. */
     loadPanelSettings()
 
-    return { name: 'dsh-git4idea', inject: [], apply }
+    return { name: '@guojinpeng/dsh-git4idea', inject: [], apply }
   },
 })
