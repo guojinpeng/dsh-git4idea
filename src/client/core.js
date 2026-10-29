@@ -1185,22 +1185,26 @@
       if (text === '' || text.indexOf('@@') < 0) return null
       const lines = text.split('\n')
       let path = null
+      /* The `--- `/`+++ ` file headers only exist above the first hunk; after
+         it, such a line is a removed/added body line (`-- comment` renders as
+         `--- comment`) and must be replayed, not dropped. */
+      let inBody = false
       const oldText = []
       const newText = []
       for (const line of lines) {
-        if (line.indexOf('+++ ') === 0) {
+        if (inBody === false && line.indexOf('+++ ') === 0) {
           const name = line.slice(4).split('\t')[0]
           if (name !== '/dev/null') path = name.replace(/^b\//, '')
           continue
         }
-        if (line.indexOf('--- ') === 0) {
+        if (inBody === false && line.indexOf('--- ') === 0) {
           if (path === null) {
             const name = line.slice(4).split('\t')[0]
             if (name !== '/dev/null') path = name.replace(/^a\//, '')
           }
           continue
         }
-        if (line.indexOf('@@') === 0) continue
+        if (line.indexOf('@@') === 0) { inBody = true; continue }
         if (line.indexOf('+') === 0) { newText.push(line.slice(1)); continue }
         if (line.indexOf('-') === 0) { oldText.push(line.slice(1)); continue }
         if (line.indexOf('\\') === 0) continue

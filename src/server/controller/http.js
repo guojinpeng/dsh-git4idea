@@ -24,11 +24,18 @@ export function headerOf(req, name) {
 export function isTrusted(req) {
   const host = headerOf(req, 'host')
   if (host === undefined || host === '') return false
+  /* A browser stamps where the request came from, and a cross-site page can POST
+     to a loopback Host without a preflight (text/plain is a simple request), so
+     this check runs BEFORE the Host allow-list: a loopback Host alone does not
+     prove the caller is local. Same-origin is the only browser origin that may
+     call this route; requests without the header (desktop shell, remote proxy)
+     fall through to the Host check. */
+  const site = headerOf(req, 'sec-fetch-site')
+  if (site !== undefined && site !== '' && site !== 'same-origin') return false
   const hostname = host.replace(/^\[/, '').replace(/\]:\d+$/, '').replace(/:\d+$/, '')
   if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1' || hostname === '0.0.0.0') return true
   if (/^127\./.test(hostname)) return true
-  const site = headerOf(req, 'sec-fetch-site')
-  return site === 'same-origin' || site === 'same-site'
+  return site === 'same-origin'
 }
 
 
@@ -78,6 +85,13 @@ export async function handle(req, res) {
   }
   if (req.method !== 'POST') {
     sendJson(res, 405, { ok: false, error: { code: 'method-error', message: 'POST required' } })
+    return
+  }
+  /* JSON only: a form or text/plain POST is a simple request the browser sends
+     without a preflight, so the fence above must not be the only gate. */
+  const type = headerOf(req, 'content-type')
+  if (type !== undefined && type !== '' && type.toLowerCase().indexOf('application/json') !== 0) {
+    sendJson(res, 415, { ok: false, error: { code: 'unsupported-media-type', message: 'application/json required' } })
     return
   }
   const pathname = new URL(req.url === undefined ? '/' : req.url, 'http://dsh.internal').pathname

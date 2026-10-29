@@ -5,7 +5,8 @@
  * gives each plugin a single factory and resolves only frozen platform modules, so
  * the client code cannot use relative ESM imports. To keep the source readable it
  * lives as ordered fragments in src/client/ and this tool concatenates them into
- * src/client.js, the file the host loads. The fragments are verbatim slices of the
+ * src/client.js, the file the host loads. FRAGMENT_ORDER pins the order; the
+ * fragment file names carry no ordering. The fragments are verbatim slices of the
  * bundle: regeneration is byte-identical.
  *
  * Run `node src/utils/build-client.js` after editing a fragment; `--check` only
@@ -19,9 +20,34 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..')
 export const FRAGMENT_DIR = join(ROOT, 'src', 'client')
 export const CLIENT_FILE = join(ROOT, 'src', 'client.js')
 
-/* Fragment order is the file-name order: 00-head, 10-locale, 20-core, … 90-app. */
+/* The fragments share one closure, so the order below is load order: a
+   declaration must precede its first reader. Names carry no order; only this
+   list decides the bundle, and it must name every fragment. */
+export const FRAGMENT_ORDER = [
+  'head.js',
+  'locale.js',
+  'core.js',
+  'diff.js',
+  'tree.js',
+  'changes.js',
+  'panel.js',
+  'styles.js',
+  'composer.js',
+  'dialogs.js',
+  'preview.js',
+  'app.js',
+]
+
 export function fragmentNames() {
-  return readdirSync(FRAGMENT_DIR).filter((name) => name.endsWith('.js')).sort()
+  const present = readdirSync(FRAGMENT_DIR).filter((name) => name.endsWith('.js'))
+  const unlisted = present.filter((name) => FRAGMENT_ORDER.includes(name) === false).sort()
+  const missing = FRAGMENT_ORDER.filter((name) => present.includes(name) === false)
+  if (unlisted.length > 0 || missing.length > 0) {
+    throw new Error('src/client fragments and FRAGMENT_ORDER disagree'
+      + (unlisted.length > 0 ? ' (unlisted: ' + unlisted.join(', ') + ')' : '')
+      + (missing.length > 0 ? ' (missing: ' + missing.join(', ') + ')' : ''))
+  }
+  return FRAGMENT_ORDER.slice()
 }
 
 export function bundleOf(names) {

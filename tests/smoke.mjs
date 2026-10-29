@@ -960,22 +960,26 @@ test('the client half is fragments plus one generated bundle (m05309)', () => {
   // other — so src/client.js stays the loaded file and the builder concatenates
   // the fragments byte-for-byte. Equality keeps "edited a fragment" and "edited
   // the bundle" from drifting apart.
+  const order = [
+    'head.js', 'locale.js', 'core.js', 'diff.js', 'tree.js', 'changes.js',
+    'panel.js', 'styles.js', 'composer.js', 'dialogs.js', 'preview.js', 'app.js',
+  ]
   const names = readdirSync(join(root, 'src', 'client')).filter((name) => name.endsWith('.js')).sort()
-  assert.deepEqual(names, [
-    '00-head.js', '10-locale.js', '20-core.js', '30-diff.js', '35-tree.js', '40-changes.js',
-    '50-panel.js', '60-styles.js', '70-composer.js', '80-dialogs.js', '85-preview.js', '90-app.js',
-  ], 'the fragment order is the file-name order')
-  const joined = names.map((name) => read('src/client/' + name)).join('')
+  assert.deepEqual(names, order.slice().sort(), 'every fragment is listed exactly once')
+  const joined = order.map((name) => read('src/client/' + name)).join('')
   assert.equal(joined, client, 'src/client.js must equal the concatenated fragments')
   assert.match(client, /window\.__ModuleLoader__\.load\(\{/, 'the bundle keeps ONE module wrapper')
   assert.equal((joined.match(/window\.__ModuleLoader__\.load\(\{/g) || []).length, 1, 'the wrapper lives in exactly one fragment')
   const tool = read('src/utils/build-client.js')
   assert.match(tool, /export function buildClient\(/, 'one builder owns the bundle')
+  // The order lives in FRAGMENT_ORDER, not in the file names, so the list here
+  // must match it — a divergence would silently reorder the bundle.
+  assert.match(tool, /export const FRAGMENT_ORDER = \[\s*'head\.js'[\s\S]*?'app\.js',\s*\]/, 'the builder pins the fragment order')
   assert.match(tool, /export const FRAGMENT_DIR = join\(ROOT, 'src', 'client'\)/)
   assert.equal(pkg.scripts['build:client'], 'node src/utils/build-client.js')
   assert.equal(pkg.scripts['build:check'], 'node src/utils/build-client.js --check')
   const i18n = read('src/utils/i18n.js')
-  assert.match(i18n, /const LOCALE_FRAGMENT = join\(ROOT, 'src', 'client', '10-locale\.js'\)/, 'sync writes the locale fragment')
+  assert.match(i18n, /const LOCALE_FRAGMENT = join\(ROOT, 'src', 'client', 'locale\.js'\)/, 'sync writes the locale fragment')
   assert.match(i18n, /buildClient\(\)/, 'sync rebuilds the bundle, so the host never loads a stale copy')
 })
 
@@ -1522,6 +1526,28 @@ test('the commit box is the IDEA layout and the language picker replaces the quo
   //    deferred highlight empty, and both row renderers read spans.* anyway.
   assert.match(client, /const spans = props\.spans === undefined \|\| props\.spans === null \? \{\} : props\.spans/,
     'the split and unified rows default to no spans')
+})
+
+test('a diff body line that looks like a file header is replayed, not dropped', () => {
+  const start = client.indexOf('function patchToHunk(patch)')
+  assert.ok(start >= 0, 'patchToHunk must exist')
+  const end = client.indexOf('\n    function diffLines(patch)', start)
+  assert.ok(end > start, 'patchToHunk must be followed by diffLines')
+  const built = new Function(client.slice(start, end) + '; return patchToHunk')()
+  const patch = [
+    'diff --git a/notes.md b/notes.md',
+    '--- a/notes.md',
+    '+++ b/notes.md',
+    '@@ -1,3 +1,3 @@',
+    ' keep',
+    '--- removed heading',
+    '+++ added heading',
+    ' tail',
+  ].join('\n')
+  const hunk = built(patch)
+  assert.equal(hunk.path, 'notes.md', 'the file header still names the file')
+  assert.deepEqual(hunk.oldText.split('\n'), ['keep', '-- removed heading', 'tail'])
+  assert.deepEqual(hunk.newText.split('\n'), ['keep', '++ added heading', 'tail'])
 })
 
 test('split + wrap rows share one source, and the preview carries a render boundary (issue #16)', () => {

@@ -119,33 +119,50 @@ export async function ignoredEntriesOf(root) {
 }
 
 
-/** `git diff --numstat -z` -> Map(path -> { additions, deletions, binary }). */
-export async function numstatOf(root, args) {
-  const result = await runGit(root, ['diff', '--numstat', '-z', ...args])
-  const map = new Map()
-  if (result.code !== 0) return map
-  const records = result.stdout.split('\u0000')
+/**
+ * `git diff/show --numstat -z` -> file records. A rename record is
+ * `add\tdel\t\0old-path\0new-path\0`: the empty path is followed by the two
+ * names, and the new one is what `git status` reports, so it is the key that
+ * matches the change list.
+ */
+export function parseNumstat(stdout) {
+  const files = []
+  const records = stdout.split('\u0000')
   for (let index = 0; index < records.length; index += 1) {
     const record = records[index]
     if (record === '') continue
     const firstTab = record.indexOf('\t')
     const secondTab = record.indexOf('\t', firstTab + 1)
     if (firstTab < 0 || secondTab < 0) continue
+    let filePath = record.slice(secondTab + 1)
+    let origPath
+    if (filePath === '') {
+      origPath = records[index + 1]
+      filePath = records[index + 2]
+      index += 2
+    }
     const addRaw = record.slice(0, firstTab)
     const delRaw = record.slice(firstTab + 1, secondTab)
-    let filePath = record.slice(secondTab + 1)
-    if (filePath === '') {
-      filePath = records[index + 1] === undefined ? '' : records[index + 1]
-      index += 1
-      const renamed = records[index + 1]
-      if (renamed !== undefined && renamed !== '') index += 1
-    }
     const binary = addRaw === '-' || delRaw === '-'
-    map.set(filePath, {
+    files.push({
+      path: filePath === undefined ? '' : filePath,
+      origPath: origPath === undefined || origPath === '' ? undefined : origPath,
       additions: binary ? 0 : Number.parseInt(addRaw, 10) || 0,
       deletions: binary ? 0 : Number.parseInt(delRaw, 10) || 0,
       binary,
     })
+  }
+  return files
+}
+
+
+/** `git diff --numstat -z` -> Map(path -> { additions, deletions, binary }). */
+export async function numstatOf(root, args) {
+  const result = await runGit(root, ['diff', '--numstat', '-z', ...args])
+  const map = new Map()
+  if (result.code !== 0) return map
+  for (const file of parseNumstat(result.stdout)) {
+    map.set(file.path, { additions: file.additions, deletions: file.deletions, binary: file.binary })
   }
   return map
 }

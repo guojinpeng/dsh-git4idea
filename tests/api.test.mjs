@@ -281,6 +281,35 @@ test('commitDetail returns body and per-file numstat', async () => {
   assert.ok(paths.includes('sub/b.txt'))
 })
 
+test('a staged rename keeps its stats under the new path, in stats and in compare', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'dsh-git4idea-rename-'))
+  const at = (...args) => execFileSync('git', args, { cwd: dir, encoding: 'utf8' })
+  at('init', '-q', '-b', 'main')
+  at('config', 'user.email', 'test@example.com')
+  at('config', 'user.name', 'test')
+  at('config', 'core.autocrlf', 'false')
+  writeFileSync(join(dir, 'old-name.txt'), 'one\ntwo\n')
+  at('add', '-A')
+  at('commit', '-q', '-m', 'seed')
+  at('mv', 'old-name.txt', 'new-name.txt')
+  writeFileSync(join(dir, 'new-name.txt'), 'one\ntwo\nthree\n')
+  at('add', '-A')
+  // git status reports the NEW path; the numstat record names both, and only
+  // the new one is a key the change list can match.
+  const stats = await call('stats', { cwd: dir })
+  assert.deepEqual(stats.body.data.staged, [['new-name.txt', 1, 0, false]])
+  const summary = await call('summary', { cwd: dir })
+  const row = summary.body.data.changes.staged.find((file) => file.path === 'new-name.txt')
+  assert.ok(row !== undefined, 'the change list names the new path')
+  assert.equal(row.origPath, 'old-name.txt')
+  assert.equal(row.additions, 1)
+  // compare() reuses the same parse: the record must not collapse to a blank path.
+  at('checkout', '-q', '-b', 'side')
+  at('commit', '-q', '-am', 'rename on side')
+  const compared = await call('compare', { cwd: dir, base: 'main', head: 'side' })
+  assert.deepEqual(compared.body.data.files.map((file) => [file.path, file.origPath]), [['new-name.txt', 'old-name.txt']])
+})
+
 test('diff returns a unified patch and rejects escaping paths', async () => {
   const ok = await call('diff', { cwd: repo, path: 'a.txt' })
   assert.match(ok.body.data.patch, /\+three/)
@@ -375,8 +404,19 @@ test('trust fence refuses cross-site requests and accepts same-origin remote hos
   const hostile = await call('summary', { cwd: repo }, { host: 'evil.example.com', 'sec-fetch-site': 'cross-site' })
   assert.equal(hostile.status, 403)
   assert.equal(hostile.body.error.code, 'forbidden')
+  // A loopback Host alone is not proof: a cross-site page can POST to it with a
+  // simple request (text/plain, no preflight), so the site header must win.
+  const loopbackCross = await call('summary', { cwd: repo }, { 'sec-fetch-site': 'cross-site' })
+  assert.equal(loopbackCross.status, 403)
+  assert.equal(loopbackCross.body.error.code, 'forbidden')
+  const sameSiteOtherHost = await call('summary', { cwd: repo }, { host: 'example.com', 'sec-fetch-site': 'same-site' })
+  assert.equal(sameSiteOtherHost.status, 403)
+  const formPost = await call('summary', { cwd: repo }, { 'content-type': 'application/x-www-form-urlencoded' })
+  assert.equal(formPost.status, 415)
   const remote = await call('summary', { cwd: repo }, { host: 'remote.example.com', 'sec-fetch-site': 'same-origin' })
   assert.equal(remote.body.ok, true)
+  const shell = await call('summary', { cwd: repo }, { 'content-type': 'application/json; charset=utf-8' })
+  assert.equal(shell.body.ok, true, 'the desktop shell sends no site header')
   const noHost = await call('summary', { cwd: repo }, { host: '' })
   assert.equal(noHost.status, 403)
 })

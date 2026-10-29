@@ -6,7 +6,7 @@ import path from 'node:path'
 import { PanelError, badRequest } from './../core/errors.js'
 import { MAX_DIFF_CHARS, RECORD_SEP, FIELD_SEP, runGit, git } from './../core/git.js'
 import { requireRef, cwdOf, requireRelativePath, clampInt } from './../core/payload.js'
-import { repoRootOf, currentBranchOf, aheadBehindOf, parseLog, LOG_FORMAT, sameDirectory, worktreesOf } from './../core/repo.js'
+import { repoRootOf, currentBranchOf, aheadBehindOf, parseLog, parseNumstat, LOG_FORMAT, sameDirectory, worktreesOf } from './../core/repo.js'
 
 
 export async function branches(payload) {
@@ -57,12 +57,14 @@ export async function branches(payload) {
     }
     else if (parts[0].startsWith('refs/tags/')) tags.push({ name: entry.name, hash: entry.hash, shortHash: entry.shortHash, date: entry.date, subject: entry.subject })
   }
-  for (const entry of local) {
-    if (entry.upstream === null) continue
+  /* Read-only, so one process per branch can run together: a repository with
+     dozens of branches otherwise pays dozens of sequential git starts. */
+  await Promise.all(local.map(async (entry) => {
+    if (entry.upstream === null) return
     const tracking = await aheadBehindOf(root, entry.upstream, entry.name)
     entry.ahead = tracking.ahead
     entry.behind = tracking.behind
-  }
+  }))
   local.sort((a, b) => (a.head === b.head ? a.name.localeCompare(b.name) : a.head ? -1 : 1))
   remote.sort((a, b) => a.name.localeCompare(b.name))
   tags.sort((a, b) => a.name.localeCompare(b.name))
@@ -132,32 +134,7 @@ export async function commitDetail(payload) {
   const parts = metaOut.trim().split(FIELD_SEP)
   const parents = parts[2] === undefined || parts[2].trim() === '' ? [] : parts[2].trim().split(' ')
   const numstatOut = await git(root, ['show', '--numstat', '-z', '--format=', '-m', '--first-parent', hash])
-  const files = []
-  const records = numstatOut.split('\u0000')
-  for (let index = 0; index < records.length; index += 1) {
-    const record = records[index]
-    if (record === '') continue
-    const firstTab = record.indexOf('\t')
-    const secondTab = record.indexOf('\t', firstTab + 1)
-    if (firstTab < 0 || secondTab < 0) continue
-    let filePath = record.slice(secondTab + 1)
-    let origPath
-    if (filePath === '') {
-      origPath = records[index + 1]
-      filePath = records[index + 2]
-      index += 2
-    }
-    const addRaw = record.slice(0, firstTab)
-    const delRaw = record.slice(firstTab + 1, secondTab)
-    const binary = addRaw === '-' || delRaw === '-'
-    files.push({
-      path: filePath === undefined ? '' : filePath,
-      origPath: origPath === undefined || origPath === '' ? undefined : origPath,
-      additions: binary ? 0 : Number.parseInt(addRaw, 10) || 0,
-      deletions: binary ? 0 : Number.parseInt(delRaw, 10) || 0,
-      binary,
-    })
-  }
+  const files = parseNumstat(numstatOut)
   return {
     hash: parts[0],
     shortHash: parts[1],
@@ -238,24 +215,7 @@ export async function compare(payload) {
   const base = requireRef(payload.base, 'base')
   const head = requireRef(payload.head, 'head')
   const stat = await git(root, ['diff', '--numstat', '-z', base + '...' + head])
-  const files = []
-  const records = stat.split('\u0000')
-  for (let index = 0; index < records.length; index += 1) {
-    const record = records[index]
-    if (record === '') continue
-    const firstTab = record.indexOf('\t')
-    const secondTab = record.indexOf('\t', firstTab + 1)
-    if (firstTab < 0 || secondTab < 0) continue
-    const addRaw = record.slice(0, firstTab)
-    const delRaw = record.slice(firstTab + 1, secondTab)
-    const binary = addRaw === '-' || delRaw === '-'
-    files.push({
-      path: record.slice(secondTab + 1),
-      additions: binary ? 0 : Number.parseInt(addRaw, 10) || 0,
-      deletions: binary ? 0 : Number.parseInt(delRaw, 10) || 0,
-      binary,
-    })
-  }
+  const files = parseNumstat(stat)
   const logOut = await git(root, ['log', '--max-count=100', '--date-order', '--pretty=format:' + LOG_FORMAT, base + '..' + head])
   return { base, head, files, commits: parseLog(logOut) }
 }

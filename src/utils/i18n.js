@@ -4,7 +4,7 @@
  * Why this file exists: the DSH client half of a plugin is a single bundled
  * module. A dynamic bundle may only resolve the frozen platform module table,
  * so it cannot read locale/*.json at runtime. The JSON files stay the source of
- * truth and this tool writes them into the locale fragment (src/client/10-locale.js)
+ * truth and this tool writes them into the locale fragment (src/client/locale.js)
  * as marked blocks; run `node src/utils/i18n.js sync` after editing either
  * language. Sync then rebuilds src/client.js from the fragments, so the host
  * never loads a stale bundle.
@@ -24,7 +24,7 @@ export const DEFAULT_LOCALE = 'en'
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const LOCALE_DIR = join(ROOT, 'locale')
 /* The generated blocks live in the locale fragment; src/client.js is rebuilt from it. */
-const LOCALE_FRAGMENT = join(ROOT, 'src', 'client', '10-locale.js')
+const LOCALE_FRAGMENT = join(ROOT, 'src', 'client', 'locale.js')
 const TABLE = { zh: 'ZH', en: 'EN' }
 
 /* One tag in, one shipped language out. */
@@ -81,10 +81,10 @@ export function embed(tag, messages) {
 
 function boundsOf(text, locale) {
   const start = text.indexOf('    /* i18n:generated:' + locale + ' ')
-  if (start < 0) throw new Error('missing the generated ' + locale + ' block in src/client/10-locale.js')
+  if (start < 0) throw new Error('missing the generated ' + locale + ' block in src/client/locale.js')
   const endMark = '    /* /i18n:generated:' + locale + ' */'
   const end = text.indexOf(endMark, start)
-  if (end < 0) throw new Error('missing the end marker for the ' + locale + ' block in src/client/10-locale.js')
+  if (end < 0) throw new Error('missing the end marker for the ' + locale + ' block in src/client/locale.js')
   return { start, end: end + endMark.length }
 }
 
@@ -120,7 +120,7 @@ function main(argv) {
   }
   const result = sync({ check: command === 'check' })
   if (command === 'check') {
-    if (result.ok === true) { console.log('i18n: src/client/10-locale.js and src/client.js match locale/*.json'); return 0 }
+    if (result.ok === true) { console.log('i18n: src/client/locale.js and src/client.js match locale/*.json'); return 0 }
     if (result.changed.length > 0) {
       console.error('i18n: the embedded blocks are out of date for ' + result.changed.join(', ') + '; run `node src/utils/i18n.js sync`')
     } else {
