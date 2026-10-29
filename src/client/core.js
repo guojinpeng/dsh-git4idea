@@ -17,6 +17,45 @@
       })
     }
 
+    /* One success line per write route (m05310). Every gesture that mutates the
+       repository answers in the bottom-right stack; the panel run() and the commit
+       card share this table so the same verb never words itself two ways. A route
+       that returns '' reports nothing (compare is a read). */
+    function successToastText(t, method, payload) {
+      const p = payload === null || payload === undefined ? {} : payload
+      const count = (value) => (Array.isArray(value) ? value.length : 0)
+      const names = (value) => (Array.isArray(value) ? value.join(', ') : '')
+      if (method === 'stage') return fill(t('toast.staged'), { n: count(p.paths) })
+      if (method === 'unstage') return fill(t('toast.unstaged'), { n: count(p.paths) })
+      if (method === 'checkout') return fill(t(p.create === true ? 'toast.branchCreated' : 'toast.checkedOut'), { name: String(p.branch) })
+      if (method === 'branchRename') return fill(t('toast.branchRenamed'), { from: String(p.from), to: String(p.to) })
+      if (method === 'branch-upstream') return p.unset === true ? fill(t('toast.upstreamUnset'), { name: String(p.branch) }) : fill(t('toast.upstreamSet'), { name: String(p.branch), upstream: String(p.upstream) })
+      if (method === 'branchDelete') return fill(t('toast.branchDeleted'), { name: p.name === undefined ? names(p.names) : String(p.name) })
+      if (method === 'branchDeleteRemote') return t('toast.remoteBranchDeleted')
+      if (method === 'commit') return t('toast.committed')
+      if (method === 'tagCreate') return fill(t('toast.tagCreated'), { name: String(p.name) })
+      if (method === 'tagDelete') return fill(t('toast.tagDeleted'), { name: p.name === undefined ? names(p.names) : String(p.name) })
+      if (method === 'tagDeleteRemote') return fill(t('toast.tagDeletedRemote'), { name: String(p.name) })
+      if (method === 'pushTags') return t('toast.tagsPushed')
+      if (method === 'push') return t('toast.pushDone')
+      if (method === 'pull') return t('toast.pullDone')
+      if (method === 'fetch') return t('toast.fetchDone')
+      if (method === 'merge') return fill(t('toast.merged'), { name: String(p.branch) })
+      if (method === 'rebase') return fill(t('toast.rebased'), { onto: String(p.onto) })
+      if (method === 'rebaseAbort') return t('toast.rebaseAborted')
+      if (method === 'cherryPick') return fill(t('toast.cherryPicked'), { n: p.hashes === undefined ? 1 : count(p.hashes) })
+      if (method === 'revert') return fill(t('toast.reverted'), { hash: String(p.hash).slice(0, 8) })
+      if (method === 'reset') return fill(t(p.mode === 'hard' ? 'toast.resetHard' : 'toast.resetSoft'), { hash: String(p.hash).slice(0, 8) })
+      if (method === 'discard') return fill(t('toast.discardedN'), { n: count(p.paths) })
+      if (method === 'stashPush') return t('toast.stashed')
+      if (method === 'stashApply') return p.pop === true ? t('toast.stashPopped') : t('toast.stashApplied')
+      if (method === 'stashClear') return t('toast.stashCleared')
+      if (method === 'remoteAdd') return fill(t('toast.remoteAdded'), { name: String(p.name) })
+      if (method === 'remoteRemove') return fill(t('toast.remoteRemoved'), { name: String(p.name) })
+      if (method === 'clone') return t('toast.cloned')
+      return ''
+    }
+
     /* ---- multi-select shared helpers (selection episode, issue #13) ---- */
 
     /* Keyboard shortcuts (Ctrl+C / Del / Ctrl+A / Esc) must never hijack the

@@ -561,7 +561,7 @@
         try {
           await guard(async () => {
             if (withFetch === true) {
-              try { await request('fetch', Object.assign({}, base, { prune: true })) } catch (error) { void error }
+              try { await request('fetch', Object.assign({}, base, { prune: true })) } catch (error) { notifyFail(error) }
             }
             const [summaryData, branchesData, page] = await Promise.all([loadSummary(), loadBranches(), loadCommits(0)])
             /* Keep the poll's HEAD signature in step (v0.18.7): after an
@@ -670,11 +670,17 @@
         return () => clearInterval(timer)
       }, [props.visible, repoRoot, loadSummary, loadBranches, loadCommits])
 
-      const run = useCallback(async (method, payload) => {
+      /* The failure path already reports through setError; the success half of
+         every gesture lands in the same stack (m05310). A call site that pushes a
+         richer toast of its own passes { quiet: true }. */
+      const runSuccessText = useCallback((method, payload) => successToastText(t, method, payload), [t])
+      const run = useCallback(async (method, payload, options) => {
         const result = await guard(() => request(method, Object.assign({}, base, payload)))
-        if (result !== undefined) await refresh()
+        if (result === undefined) return undefined
+        await refresh()
+        if (options === undefined || options.quiet !== true) notifyOk(runSuccessText(method, payload))
         return result
-      }, [base, guard, refresh])
+      }, [base, runSuccessText, guard, refresh])
 
       const pickRepo = useCallback((path) => {
         setRepoRoot(path)
@@ -1077,7 +1083,7 @@
          Plain function on purpose (invariant 12): a useCallback here would
          evaluate `undoAction` in its dep array — declared further below. */
       const deleteBranches = async (names) => {
-        const data = await run('branchDelete', { names: names, confirm: true })
+        const data = await run('branchDelete', { names: names, confirm: true }, { quiet: true })
         if (data === undefined) return
         if (data.undo === undefined) return
         pushToast({
@@ -1344,7 +1350,7 @@
       }, [base, guard, refresh, pushToast, t])
 
       const deleteBranch = useCallback(async (name) => {
-        const data = await run('branchDelete', { name: name, confirm: true })
+        const data = await run('branchDelete', { name: name, confirm: true }, { quiet: true })
         if (data === undefined) return
         if (data.undo === undefined) return
         pushToast({
@@ -1358,7 +1364,7 @@
       }, [run, pushToast, undoAction, t])
 
       const dropStash = useCallback(async (ref) => {
-        const data = await run('stashDrop', { ref: ref, confirm: true })
+        const data = await run('stashDrop', { ref: ref, confirm: true }, { quiet: true })
         if (data === undefined) return
         if (data.undo === undefined) return
         pushToast({
@@ -1394,7 +1400,7 @@
       // A discard really overwrote the working tree, so it hands back the same
       // kind of handle a delete does: the host snapshotted the bytes first.
       const discardChanges = useCallback(async (item, group) => {
-        const data = await run('discard', { paths: [item.path], untracked: group === 'untracked', confirm: true })
+        const data = await run('discard', { paths: [item.path], untracked: group === 'untracked', confirm: true }, { quiet: true })
         if (data === undefined) return
         if (data.undo === undefined) {
           // The host declined to snapshot (too big / not faithfully reproducible);
@@ -1827,7 +1833,7 @@
           void (async () => {
             /* paths: the ticked set; the host stages exactly these before it
                commits, so an unticked file is never swept in by `git add -A`. */
-            const result = await run('commit', { message: message, amend: amend, paths: paths })
+            const result = await run('commit', { message: message, amend: amend, paths: paths }, { quiet: true })
             /* Only a landed commit closes the layer; a rejected one keeps the
                message on screen while the failure surfaces as a notification. */
             if (result === undefined) return

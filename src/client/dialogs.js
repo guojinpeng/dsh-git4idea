@@ -76,6 +76,7 @@
           return data
         } catch (caught) {
           setError(messageOf(caught))
+          notifyFail(caught)
           return null
         }
       }
@@ -88,9 +89,11 @@
         try {
           await request(method, Object.assign({}, base, payload))
           await loadSummary()
+          notifyOk(successToastText(t, method, payload))
           return true
         } catch (caught) {
           setError(messageOf(caught))
+          notifyFail(caught)
           return false
         } finally {
           setBusy(false)
@@ -130,6 +133,7 @@
             props.onClose()
           } catch (caught) {
             setError(messageOf(caught))
+            notifyFail(caught)
             setBusy(false)
           }
         })()
@@ -472,13 +476,30 @@
           setMenu(null)
           setTick((value) => value + 1)
           notifyBranchSwitched(sessionId, repoRoot)
+          notifyOk(fill(t('toast.checkedOut'), { name: name }))
         } catch (caught) {
           setMenu(null)
           setError(caught instanceof Error ? caught.message : String(caught))
+          notifyFail(caught)
         } finally { setCheckingOut('') }
       }
       /* Popover actions (m01216 #10). Nothing here may depend on panel state:
          the pill lives in the host composer, outside the panel's React tree. */
+      /* Every popover verb answers in the frame notifications (m05310): the
+         success line and the failure line both, whether the chooser closes or
+         stays open. */
+      const csSuccessText = (action, payload) => {
+        const p = payload === null || payload === undefined ? {} : payload
+        if (action === 'fetch') return t('toast.fetchDone')
+        if (action === 'pull') return t('toast.pullDone')
+        if (action === 'push') return t('toast.pushDone')
+        if (action === 'merge') return fill(t('toast.merged'), { name: String(p.branch) })
+        if (action === 'tagDelete') return fill(t('toast.tagDeleted'), { name: String(p.name) })
+        if (action === 'branchDelete') return fill(t('toast.branchDeleted'), { name: String(p.name) })
+        if (action === 'branchDeleteRemote') return t('toast.remoteBranchDeleted')
+        if (action === 'stashDrop') return fill(t('toast.stashDropped'), { ref: String(p.ref) })
+        return ''
+      }
       const csCall = async (action, payload, options) => {
         if (repoRoot === null || csBusy !== '') return
         const keepOpen = options !== undefined && options.keepOpen === true
@@ -491,22 +512,23 @@
           if (keepOpen !== true) setMenu(null)
           setTick((value) => value + 1)
           notifyBranchSwitched(sessionId, repoRoot)
-          /* A row verb that closes the chooser has no error bar left on screen:
-             its result lands in the frame notifications instead (m03873). */
-          if (toastText !== '') toastCenter.push({ text: toastText, tone: 'ok', icon: 'check' })
           /* A merge that stops on conflicts exits 0-as-data, not as a refusal:
              report it instead of closing as if it had succeeded cleanly. */
           if (action === 'merge' && result !== null && result !== undefined && result.conflicted === true) {
             const output = typeof result.output === 'string' ? result.output.trim() : ''
-            setError(output === '' ? action : output)
+            const text = output === '' ? t('toast.mergedConflict') : output
+            setError(text)
+            toastCenter.push({ text: text, tone: 'error', icon: 'close' })
+          } else {
+            notifyOk(toastText !== '' ? toastText : csSuccessText(action, payload))
           }
         } catch (caught) {
           const message = caught instanceof Error ? caught.message : String(caught)
           if (keepOpen !== true) setMenu(null)
           setError(message)
-          /* Closing the chooser hides the popover error bar, so the failure must
-             also surface where the result will be looked for (m03873). */
-          if (keepOpen !== true && action !== 'merge') toastCenter.push({ text: message, tone: 'error', icon: 'close' })
+          /* Closing the chooser hides the popover error bar, so the failure also
+             surfaces where the result will be looked for (m03873). */
+          notifyFail(caught)
         } finally { setCsBusy('') }
       }
       const openPanelSeat = () => {
@@ -609,9 +631,11 @@
             setMenu(null)
             setTick((value) => value + 1)
             notifyBranchSwitched(sessionId, repoRoot)
+            notifyOk(fill(t('toast.branchCreated'), { name: local }))
           } catch (caught) {
             setMenu(null)
             setError(caught instanceof Error ? caught.message : String(caught))
+            notifyFail(caught)
           } finally { setCheckingOut('') }
         })()
       }
@@ -721,6 +745,7 @@
                   promptDialog.set(null)
                   setTick((value) => value + 1)
                   notifyBranchSwitched(sessionId, repoRoot)
+                  notifyOk(fill(t('toast.branchCreated'), { name: name }))
                 },
               })
             },
@@ -763,6 +788,7 @@
                   promptDialog.set(null)
                   setTick((value) => value + 1)
                   if (entry.head === true) notifyBranchSwitched(sessionId, repoRoot)
+                  notifyOk(fill(t('toast.branchRenamed'), { from: entry.name, to: name }))
                 },
               })
             },
@@ -929,11 +955,22 @@
                 E('button', {
                   type: 'button', className: 'git4idea-cs-action', 'data-tip': t('toolbar.newBranch'),
                   onClick: () => {
-                    setNewBranchFrom('')
-                    setNewBranchTrack(false)
-                    setNewBranchName('')
-                    setError('')
-                    setNewBranchOpen(true)
+                    openBranchPrompt({
+                      key: 'new|head',
+                      title: t('toolbar.newBranch'),
+                      text: branchName === null ? '' : branchName,
+                      initialValue: '',
+                      placeholder: t('prompt.newBranch'),
+                      onSubmit: async (name) => {
+                        await request('checkout', {
+                          cwd: cwd, repoRoot: repoRoot, branch: name, create: true, confirm: true,
+                        })
+                        promptDialog.set(null)
+                        setTick((value) => value + 1)
+                        notifyBranchSwitched(sessionId, repoRoot)
+                        notifyOk(fill(t('toast.branchCreated'), { name: name }))
+                      },
+                    })
                   },
                 }, E(Icon, { name: 'plus', size: 12 }), E('span', null, t('toolbar.newBranch')))),
               E('div', {

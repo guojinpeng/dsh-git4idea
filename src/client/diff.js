@@ -882,6 +882,19 @@
       },
     }
 
+    /* Every user gesture answers in that one stack (m05310). The panel routes its
+       failures through notifySink already; these two helpers give every other
+       surface — the composer popover, the commit/push cards, the settings writes —
+       the same path, so no outcome stays silent. */
+    function notifyOk(text) {
+      if (typeof text !== 'string' || text === '') return
+      toastCenter.push({ text: text, tone: 'ok', icon: 'check' })
+    }
+    function notifyFail(caught) {
+      const text = caught instanceof Error && caught.message !== '' ? caught.message : String(caught)
+      toastCenter.push({ text: text, tone: 'error', icon: 'close' })
+    }
+
     function ToastHost(props) {
       const [items, setItems] = useState(() => toastCenter.items)
       useEffect(() => {

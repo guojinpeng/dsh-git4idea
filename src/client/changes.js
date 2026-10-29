@@ -238,6 +238,7 @@
         } catch (error) {
           const code = error !== null && error !== undefined && typeof error.code === 'string' ? error.code : 'unknown'
           setAiNote(t('changes.aiFailed') + ' [' + code + '] ' + String(error && error.message ? error.message : error))
+          notifyFail(error)
         } finally {
           setAiBusy(false)
         }

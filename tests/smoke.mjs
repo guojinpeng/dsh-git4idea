@@ -851,6 +851,37 @@ test('a discard is reversible through the same undo stack', () => {
   }
 })
 
+test('every page gesture answers in the one notification stack (m05310)', () => {
+  // One stack for outcomes: a success helper, a failure helper, and a single
+  // verb -> text table both the panel and the commit card read.
+  for (const needle of [
+    'function notifyOk(text) {',
+    'function notifyFail(caught) {',
+    'function successToastText(t, method, payload) {',
+  ]) {
+    assert.ok(client.includes(needle), 'missing outcome helper: ' + needle)
+  }
+  // Every write route the panel can run has a success line; a read route
+  // (compare) returns '' and stays quiet.
+  const routes = ['stage', 'unstage', 'checkout', 'branchRename', 'branch-upstream', 'branchDelete',
+    'branchDeleteRemote', 'commit', 'tagCreate', 'tagDelete', 'tagDeleteRemote', 'pushTags', 'push',
+    'pull', 'fetch', 'merge', 'rebase', 'rebaseAbort', 'cherryPick', 'revert', 'reset', 'discard',
+    'stashPush', 'stashApply', 'stashClear', 'remoteAdd', 'remoteRemove', 'clone']
+  for (const method of routes) {
+    assert.ok(client.includes("if (method === '" + method + "')"), 'no success line for the route: ' + method)
+  }
+  assert.match(client, /if \(options === undefined \|\| options\.quiet !== true\) notifyOk\(runSuccessText\(method, payload\)\)/,
+    'the panel reports the successful half of a run')
+  // Call sites that raise a richer toast of their own opt out instead of stacking two.
+  assert.equal((client.match(/\}, \{ quiet: true \}\)/g) || []).length, 5, 'the five richer-toast call sites opt out')
+  // A failed settings write used to vanish; the toggle itself carries success.
+  assert.ok(/config-set[\s\S]{0,160}notifyFail\(caught\)/.test(client), 'a failed config-set reports')
+  assert.ok(!/config-set[\s\S]{0,160}catch\(\(\) => undefined\)/.test(client), 'and no longer swallows')
+  // The commit card and the composer prompt report both halves too.
+  assert.ok(/notifyOk\(successToastText\(t, method, payload\)\)/.test(client), 'the commit card reports staging and discarding')
+  assert.match(client, /notifyFail\(caught\)\n        \}\)/, 'the composer prompt reports a failed submit')
+})
+
 test('the dock actions exist only where the right sidebar can perform them', () => {
   // The official right sidebar is read at RENDER time: ctx.get('sidebarRight')
   // returns undefined while ui-sidebar-right has not mounted yet (measured on
@@ -1806,7 +1837,8 @@ test('a local branch row also updates, pushes and renames that branch (m03873)',
   assert.match(client, /const flyoutHeight = 8 \+ items\.length \* 26/, 'the height follows the verb count')
   // A verb that closes the chooser still reports: its error bar would be gone.
   assert.match(client, /typeof options\.toast === 'string'/, 'csCall can raise a toast')
-  assert.match(client, /toastCenter\.push\(\{ text: toastText, tone: 'ok', icon: 'check' \}\)/, 'a completed verb reports success')
+  assert.match(client, /notifyOk\(toastText !== '' \? toastText : csSuccessText\(action, payload\)\)/, 'a completed verb reports success (m05310)')
+  assert.match(client, /notifyFail\(caught\)/, 'a failed verb always reports, whether the chooser stays open or not (m05310)')
   assert.match(client, /branchPushed/, 'a push reports with its own toast')
   assert.doesNotMatch(client, /newBranchOpen/, 'the old inline dialog state is gone')
   assert.equal((client.match(/'action\.updateBranch':/g) || []).length, 2, 'the update label exists in both dictionaries')
@@ -1999,7 +2031,7 @@ test('the push dialog previews its commits and the file card floats (m02986)', (
   // Commit + push is two steps now: commit, close, then push. Both dialogs and
   // the composer pill follow the same order.
   const panelCommit = client.slice(client.indexOf("const result = await run('commit'"), client.indexOf("const result = await run('commit'") + 900)
-  assert.match(panelCommit, /run\('commit', \{ message: message, amend: amend, paths: paths \}\)/, 'the commit run no longer pushes')
+  assert.match(panelCommit, /run\('commit', \{ message: message, amend: amend, paths: paths \}, \{ quiet: true \}\)/, 'the commit run no longer pushes and leaves the toast to the card (m05310)')
   assert.ok(panelCommit.indexOf("run('commit'") < panelCommit.indexOf('if (push === true) openPushDialog()'),
     'the commit runs before the push dialog opens')
   assert.match(panelCommit, /(?:toastCenter\.push|pushToast)\(\{ text: t\('toast.committed'\)/, 'the commit result lands in the notifications')

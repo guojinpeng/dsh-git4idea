@@ -100,7 +100,8 @@ window.__ModuleLoader__.load({
     }
     function writeStored(key, value) {
       panelSettings.set(key, value)
-      void request('config-set', { key: key, value: value }).catch(() => undefined)
+      /* The toggle already shows the new state, so success needs no toast; a failure must not vanish (m05310). */
+      void request('config-set', { key: key, value: value }).catch((caught) => notifyFail(caught))
     }
     /* The bundle's package name: the key the Plugins page uses for a bundle's own
        page and its `plugins.bundle.config` slot. */

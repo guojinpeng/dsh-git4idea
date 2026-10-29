@@ -100,7 +100,8 @@ window.__ModuleLoader__.load({
     }
     function writeStored(key, value) {
       panelSettings.set(key, value)
-      void request('config-set', { key: key, value: value }).catch(() => undefined)
+      /* The toggle already shows the new state, so success needs no toast; a failure must not vanish (m05310). */
+      void request('config-set', { key: key, value: value }).catch((caught) => notifyFail(caught))
     }
     /* The bundle's package name: the key the Plugins page uses for a bundle's own
        page and its `plugins.bundle.config` slot. */
@@ -482,6 +483,37 @@ window.__ModuleLoader__.load({
       'resetHard.confirm': '硬重置到 {hash}?未提交的更改会丢失。',
       'resetSoft.confirm': '将 HEAD 重置到 {hash}(保留工作区更改)?',
       'checkoutCommit.confirm': '签出提交 {hash}?(分离头指针)',
+      'toast.staged': '已暂存 {n} 个文件',
+      'toast.unstaged': '已取消暂存 {n} 个文件',
+      'toast.checkedOut': '已切换到 {name}',
+      'toast.branchCreated': '已创建并切换到 {name}',
+      'toast.branchRenamed': '已将 {from} 重命名为 {to}',
+      'toast.upstreamSet': '已将 {name} 的上游设为 {upstream}',
+      'toast.upstreamUnset': '已取消 {name} 的上游',
+      'toast.remoteBranchDeleted': '已删除远程分支',
+      'toast.tagCreated': '已创建标签 {name}',
+      'toast.tagDeleted': '已删除标签 {name}',
+      'toast.tagDeletedRemote': '已删除远程标签 {name}',
+      'toast.tagsPushed': '已推送标签到远程',
+      'toast.pushDone': '已推送',
+      'toast.pullDone': '拉取完成',
+      'toast.fetchDone': '已从远程获取',
+      'toast.merged': '已合并 {name}',
+      'toast.mergedConflict': '合并停在冲突上,请解决冲突后继续',
+      'toast.rebased': '已变基到 {onto}',
+      'toast.rebaseAborted': '已中止变基',
+      'toast.cherryPicked': '已拣选 {n} 个提交',
+      'toast.reverted': '已还原提交 {hash}',
+      'toast.resetSoft': '已软重置到 {hash},提交内容仍在暂存区',
+      'toast.resetHard': '已硬重置到 {hash}',
+      'toast.discardedN': '已丢弃 {n} 个文件的更改',
+      'toast.stashed': '已把工作区改动存入贮藏',
+      'toast.stashPopped': '已弹出贮藏',
+      'toast.stashApplied': '已应用贮藏',
+      'toast.stashCleared': '已清空贮藏列表',
+      'toast.remoteAdded': '已添加远程 {name}',
+      'toast.remoteRemoved': '已删除远程 {name}',
+      'toast.cloned': '已克隆仓库',
     }
     /* /i18n:generated:zh */
 
@@ -799,6 +831,37 @@ window.__ModuleLoader__.load({
       'resetHard.confirm': 'Hard reset to {hash}? Uncommitted changes are lost.',
       'resetSoft.confirm': 'Move HEAD to {hash} (working tree kept)?',
       'checkoutCommit.confirm': 'Check out commit {hash}? (detached HEAD)',
+      'toast.staged': 'Staged {n} file(s)',
+      'toast.unstaged': 'Unstaged {n} file(s)',
+      'toast.checkedOut': 'Checked out {name}',
+      'toast.branchCreated': 'Created and checked out {name}',
+      'toast.branchRenamed': 'Renamed {from} to {to}',
+      'toast.upstreamSet': 'Set the upstream of {name} to {upstream}',
+      'toast.upstreamUnset': 'Unset the upstream of {name}',
+      'toast.remoteBranchDeleted': 'Deleted the remote branch',
+      'toast.tagCreated': 'Created tag {name}',
+      'toast.tagDeleted': 'Deleted tag {name}',
+      'toast.tagDeletedRemote': 'Deleted remote tag {name}',
+      'toast.tagsPushed': 'Pushed the tags',
+      'toast.pushDone': 'Pushed',
+      'toast.pullDone': 'Pull finished',
+      'toast.fetchDone': 'Fetched from the remote',
+      'toast.merged': 'Merged {name}',
+      'toast.mergedConflict': 'The merge stopped on conflicts — resolve them to continue',
+      'toast.rebased': 'Rebased onto {onto}',
+      'toast.rebaseAborted': 'Rebase aborted',
+      'toast.cherryPicked': 'Cherry-picked {n} commit(s)',
+      'toast.reverted': 'Reverted commit {hash}',
+      'toast.resetSoft': "Soft reset to {hash} — the commit's work stays staged",
+      'toast.resetHard': 'Hard reset to {hash}',
+      'toast.discardedN': 'Discarded changes in {n} file(s)',
+      'toast.stashed': 'Stashed the working tree',
+      'toast.stashPopped': 'Popped the stash',
+      'toast.stashApplied': 'Applied the stash',
+      'toast.stashCleared': 'Cleared the stash list',
+      'toast.remoteAdded': 'Added remote {name}',
+      'toast.remoteRemoved': 'Removed remote {name}',
+      'toast.cloned': 'Cloned the repository',
     }
     /* /i18n:generated:en */
 
@@ -868,6 +931,45 @@ window.__ModuleLoader__.load({
         const value = values[key]
         return value === undefined ? match : String(value)
       })
+    }
+
+    /* One success line per write route (m05310). Every gesture that mutates the
+       repository answers in the bottom-right stack; the panel run() and the commit
+       card share this table so the same verb never words itself two ways. A route
+       that returns '' reports nothing (compare is a read). */
+    function successToastText(t, method, payload) {
+      const p = payload === null || payload === undefined ? {} : payload
+      const count = (value) => (Array.isArray(value) ? value.length : 0)
+      const names = (value) => (Array.isArray(value) ? value.join(', ') : '')
+      if (method === 'stage') return fill(t('toast.staged'), { n: count(p.paths) })
+      if (method === 'unstage') return fill(t('toast.unstaged'), { n: count(p.paths) })
+      if (method === 'checkout') return fill(t(p.create === true ? 'toast.branchCreated' : 'toast.checkedOut'), { name: String(p.branch) })
+      if (method === 'branchRename') return fill(t('toast.branchRenamed'), { from: String(p.from), to: String(p.to) })
+      if (method === 'branch-upstream') return p.unset === true ? fill(t('toast.upstreamUnset'), { name: String(p.branch) }) : fill(t('toast.upstreamSet'), { name: String(p.branch), upstream: String(p.upstream) })
+      if (method === 'branchDelete') return fill(t('toast.branchDeleted'), { name: p.name === undefined ? names(p.names) : String(p.name) })
+      if (method === 'branchDeleteRemote') return t('toast.remoteBranchDeleted')
+      if (method === 'commit') return t('toast.committed')
+      if (method === 'tagCreate') return fill(t('toast.tagCreated'), { name: String(p.name) })
+      if (method === 'tagDelete') return fill(t('toast.tagDeleted'), { name: p.name === undefined ? names(p.names) : String(p.name) })
+      if (method === 'tagDeleteRemote') return fill(t('toast.tagDeletedRemote'), { name: String(p.name) })
+      if (method === 'pushTags') return t('toast.tagsPushed')
+      if (method === 'push') return t('toast.pushDone')
+      if (method === 'pull') return t('toast.pullDone')
+      if (method === 'fetch') return t('toast.fetchDone')
+      if (method === 'merge') return fill(t('toast.merged'), { name: String(p.branch) })
+      if (method === 'rebase') return fill(t('toast.rebased'), { onto: String(p.onto) })
+      if (method === 'rebaseAbort') return t('toast.rebaseAborted')
+      if (method === 'cherryPick') return fill(t('toast.cherryPicked'), { n: p.hashes === undefined ? 1 : count(p.hashes) })
+      if (method === 'revert') return fill(t('toast.reverted'), { hash: String(p.hash).slice(0, 8) })
+      if (method === 'reset') return fill(t(p.mode === 'hard' ? 'toast.resetHard' : 'toast.resetSoft'), { hash: String(p.hash).slice(0, 8) })
+      if (method === 'discard') return fill(t('toast.discardedN'), { n: count(p.paths) })
+      if (method === 'stashPush') return t('toast.stashed')
+      if (method === 'stashApply') return p.pop === true ? t('toast.stashPopped') : t('toast.stashApplied')
+      if (method === 'stashClear') return t('toast.stashCleared')
+      if (method === 'remoteAdd') return fill(t('toast.remoteAdded'), { name: String(p.name) })
+      if (method === 'remoteRemove') return fill(t('toast.remoteRemoved'), { name: String(p.name) })
+      if (method === 'clone') return t('toast.cloned')
+      return ''
     }
 
     /* ---- multi-select shared helpers (selection episode, issue #13) ---- */
@@ -3426,6 +3528,19 @@ window.__ModuleLoader__.load({
       },
     }
 
+    /* Every user gesture answers in that one stack (m05310). The panel routes its
+       failures through notifySink already; these two helpers give every other
+       surface — the composer popover, the commit/push cards, the settings writes —
+       the same path, so no outcome stays silent. */
+    function notifyOk(text) {
+      if (typeof text !== 'string' || text === '') return
+      toastCenter.push({ text: text, tone: 'ok', icon: 'check' })
+    }
+    function notifyFail(caught) {
+      const text = caught instanceof Error && caught.message !== '' ? caught.message : String(caught)
+      toastCenter.push({ text: text, tone: 'error', icon: 'close' })
+    }
+
     function ToastHost(props) {
       const [items, setItems] = useState(() => toastCenter.items)
       useEffect(() => {
@@ -4342,6 +4457,7 @@ window.__ModuleLoader__.load({
         } catch (error) {
           const code = error !== null && error !== undefined && typeof error.code === 'string' ? error.code : 'unknown'
           setAiNote(t('changes.aiFailed') + ' [' + code + '] ' + String(error && error.message ? error.message : error))
+          notifyFail(error)
         } finally {
           setAiBusy(false)
         }
@@ -5934,7 +6050,7 @@ window.__ModuleLoader__.load({
         try {
           await guard(async () => {
             if (withFetch === true) {
-              try { await request('fetch', Object.assign({}, base, { prune: true })) } catch (error) { void error }
+              try { await request('fetch', Object.assign({}, base, { prune: true })) } catch (error) { notifyFail(error) }
             }
             const [summaryData, branchesData, page] = await Promise.all([loadSummary(), loadBranches(), loadCommits(0)])
             /* Keep the poll's HEAD signature in step (v0.18.7): after an
@@ -6043,11 +6159,17 @@ window.__ModuleLoader__.load({
         return () => clearInterval(timer)
       }, [props.visible, repoRoot, loadSummary, loadBranches, loadCommits])
 
-      const run = useCallback(async (method, payload) => {
+      /* The failure path already reports through setError; the success half of
+         every gesture lands in the same stack (m05310). A call site that pushes a
+         richer toast of its own passes { quiet: true }. */
+      const runSuccessText = useCallback((method, payload) => successToastText(t, method, payload), [t])
+      const run = useCallback(async (method, payload, options) => {
         const result = await guard(() => request(method, Object.assign({}, base, payload)))
-        if (result !== undefined) await refresh()
+        if (result === undefined) return undefined
+        await refresh()
+        if (options === undefined || options.quiet !== true) notifyOk(runSuccessText(method, payload))
         return result
-      }, [base, guard, refresh])
+      }, [base, runSuccessText, guard, refresh])
 
       const pickRepo = useCallback((path) => {
         setRepoRoot(path)
@@ -6450,7 +6572,7 @@ window.__ModuleLoader__.load({
          Plain function on purpose (invariant 12): a useCallback here would
          evaluate `undoAction` in its dep array — declared further below. */
       const deleteBranches = async (names) => {
-        const data = await run('branchDelete', { names: names, confirm: true })
+        const data = await run('branchDelete', { names: names, confirm: true }, { quiet: true })
         if (data === undefined) return
         if (data.undo === undefined) return
         pushToast({
@@ -6717,7 +6839,7 @@ window.__ModuleLoader__.load({
       }, [base, guard, refresh, pushToast, t])
 
       const deleteBranch = useCallback(async (name) => {
-        const data = await run('branchDelete', { name: name, confirm: true })
+        const data = await run('branchDelete', { name: name, confirm: true }, { quiet: true })
         if (data === undefined) return
         if (data.undo === undefined) return
         pushToast({
@@ -6731,7 +6853,7 @@ window.__ModuleLoader__.load({
       }, [run, pushToast, undoAction, t])
 
       const dropStash = useCallback(async (ref) => {
-        const data = await run('stashDrop', { ref: ref, confirm: true })
+        const data = await run('stashDrop', { ref: ref, confirm: true }, { quiet: true })
         if (data === undefined) return
         if (data.undo === undefined) return
         pushToast({
@@ -6767,7 +6889,7 @@ window.__ModuleLoader__.load({
       // A discard really overwrote the working tree, so it hands back the same
       // kind of handle a delete does: the host snapshotted the bytes first.
       const discardChanges = useCallback(async (item, group) => {
-        const data = await run('discard', { paths: [item.path], untracked: group === 'untracked', confirm: true })
+        const data = await run('discard', { paths: [item.path], untracked: group === 'untracked', confirm: true }, { quiet: true })
         if (data === undefined) return
         if (data.undo === undefined) {
           // The host declined to snapshot (too big / not faithfully reproducible);
@@ -7200,7 +7322,7 @@ window.__ModuleLoader__.load({
           void (async () => {
             /* paths: the ticked set; the host stages exactly these before it
                commits, so an unticked file is never swept in by `git add -A`. */
-            const result = await run('commit', { message: message, amend: amend, paths: paths })
+            const result = await run('commit', { message: message, amend: amend, paths: paths }, { quiet: true })
             /* Only a landed commit closes the layer; a rejected one keeps the
                message on screen while the failure surfaces as a notification. */
             if (result === undefined) return
@@ -8724,6 +8846,7 @@ window.__ModuleLoader__.load({
         setError('')
         Promise.resolve(props.onSubmit(name)).catch((caught) => {
           if (alive.current === true) setError(textOf(caught))
+          notifyFail(caught)
         }).then(() => {
           if (alive.current === true) setBusy(false)
         })
@@ -8858,6 +8981,7 @@ window.__ModuleLoader__.load({
           return data
         } catch (caught) {
           setError(messageOf(caught))
+          notifyFail(caught)
           return null
         }
       }
@@ -8870,9 +8994,11 @@ window.__ModuleLoader__.load({
         try {
           await request(method, Object.assign({}, base, payload))
           await loadSummary()
+          notifyOk(successToastText(t, method, payload))
           return true
         } catch (caught) {
           setError(messageOf(caught))
+          notifyFail(caught)
           return false
         } finally {
           setBusy(false)
@@ -8912,6 +9038,7 @@ window.__ModuleLoader__.load({
             props.onClose()
           } catch (caught) {
             setError(messageOf(caught))
+            notifyFail(caught)
             setBusy(false)
           }
         })()
@@ -9254,13 +9381,30 @@ window.__ModuleLoader__.load({
           setMenu(null)
           setTick((value) => value + 1)
           notifyBranchSwitched(sessionId, repoRoot)
+          notifyOk(fill(t('toast.checkedOut'), { name: name }))
         } catch (caught) {
           setMenu(null)
           setError(caught instanceof Error ? caught.message : String(caught))
+          notifyFail(caught)
         } finally { setCheckingOut('') }
       }
       /* Popover actions (m01216 #10). Nothing here may depend on panel state:
          the pill lives in the host composer, outside the panel's React tree. */
+      /* Every popover verb answers in the frame notifications (m05310): the
+         success line and the failure line both, whether the chooser closes or
+         stays open. */
+      const csSuccessText = (action, payload) => {
+        const p = payload === null || payload === undefined ? {} : payload
+        if (action === 'fetch') return t('toast.fetchDone')
+        if (action === 'pull') return t('toast.pullDone')
+        if (action === 'push') return t('toast.pushDone')
+        if (action === 'merge') return fill(t('toast.merged'), { name: String(p.branch) })
+        if (action === 'tagDelete') return fill(t('toast.tagDeleted'), { name: String(p.name) })
+        if (action === 'branchDelete') return fill(t('toast.branchDeleted'), { name: String(p.name) })
+        if (action === 'branchDeleteRemote') return t('toast.remoteBranchDeleted')
+        if (action === 'stashDrop') return fill(t('toast.stashDropped'), { ref: String(p.ref) })
+        return ''
+      }
       const csCall = async (action, payload, options) => {
         if (repoRoot === null || csBusy !== '') return
         const keepOpen = options !== undefined && options.keepOpen === true
@@ -9273,22 +9417,23 @@ window.__ModuleLoader__.load({
           if (keepOpen !== true) setMenu(null)
           setTick((value) => value + 1)
           notifyBranchSwitched(sessionId, repoRoot)
-          /* A row verb that closes the chooser has no error bar left on screen:
-             its result lands in the frame notifications instead (m03873). */
-          if (toastText !== '') toastCenter.push({ text: toastText, tone: 'ok', icon: 'check' })
           /* A merge that stops on conflicts exits 0-as-data, not as a refusal:
              report it instead of closing as if it had succeeded cleanly. */
           if (action === 'merge' && result !== null && result !== undefined && result.conflicted === true) {
             const output = typeof result.output === 'string' ? result.output.trim() : ''
-            setError(output === '' ? action : output)
+            const text = output === '' ? t('toast.mergedConflict') : output
+            setError(text)
+            toastCenter.push({ text: text, tone: 'error', icon: 'close' })
+          } else {
+            notifyOk(toastText !== '' ? toastText : csSuccessText(action, payload))
           }
         } catch (caught) {
           const message = caught instanceof Error ? caught.message : String(caught)
           if (keepOpen !== true) setMenu(null)
           setError(message)
-          /* Closing the chooser hides the popover error bar, so the failure must
-             also surface where the result will be looked for (m03873). */
-          if (keepOpen !== true && action !== 'merge') toastCenter.push({ text: message, tone: 'error', icon: 'close' })
+          /* Closing the chooser hides the popover error bar, so the failure also
+             surfaces where the result will be looked for (m03873). */
+          notifyFail(caught)
         } finally { setCsBusy('') }
       }
       const openPanelSeat = () => {
@@ -9391,9 +9536,11 @@ window.__ModuleLoader__.load({
             setMenu(null)
             setTick((value) => value + 1)
             notifyBranchSwitched(sessionId, repoRoot)
+            notifyOk(fill(t('toast.branchCreated'), { name: local }))
           } catch (caught) {
             setMenu(null)
             setError(caught instanceof Error ? caught.message : String(caught))
+            notifyFail(caught)
           } finally { setCheckingOut('') }
         })()
       }
@@ -9503,6 +9650,7 @@ window.__ModuleLoader__.load({
                   promptDialog.set(null)
                   setTick((value) => value + 1)
                   notifyBranchSwitched(sessionId, repoRoot)
+                  notifyOk(fill(t('toast.branchCreated'), { name: name }))
                 },
               })
             },
@@ -9545,6 +9693,7 @@ window.__ModuleLoader__.load({
                   promptDialog.set(null)
                   setTick((value) => value + 1)
                   if (entry.head === true) notifyBranchSwitched(sessionId, repoRoot)
+                  notifyOk(fill(t('toast.branchRenamed'), { from: entry.name, to: name }))
                 },
               })
             },
@@ -9711,11 +9860,22 @@ window.__ModuleLoader__.load({
                 E('button', {
                   type: 'button', className: 'git4idea-cs-action', 'data-tip': t('toolbar.newBranch'),
                   onClick: () => {
-                    setNewBranchFrom('')
-                    setNewBranchTrack(false)
-                    setNewBranchName('')
-                    setError('')
-                    setNewBranchOpen(true)
+                    openBranchPrompt({
+                      key: 'new|head',
+                      title: t('toolbar.newBranch'),
+                      text: branchName === null ? '' : branchName,
+                      initialValue: '',
+                      placeholder: t('prompt.newBranch'),
+                      onSubmit: async (name) => {
+                        await request('checkout', {
+                          cwd: cwd, repoRoot: repoRoot, branch: name, create: true, confirm: true,
+                        })
+                        promptDialog.set(null)
+                        setTick((value) => value + 1)
+                        notifyBranchSwitched(sessionId, repoRoot)
+                        notifyOk(fill(t('toast.branchCreated'), { name: name }))
+                      },
+                    })
                   },
                 }, E(Icon, { name: 'plus', size: 12 }), E('span', null, t('toolbar.newBranch')))),
               E('div', {
@@ -10150,7 +10310,7 @@ window.__ModuleLoader__.load({
             setData(normalized)
             setSelected(normalized.commits.length === 0 ? null : normalized.commits[0].hash)
           } catch (caught) {
-            if (alive === true) setError(messageOf(caught))
+            if (alive === true) { setError(messageOf(caught)); notifyFail(caught) }
           }
         })()
         return () => { alive = false }
@@ -10165,7 +10325,7 @@ window.__ModuleLoader__.load({
             const detail = await request('commitDetail', Object.assign({}, base, { hash: selected }))
             if (alive === true) setFiles(Array.isArray(detail.files) ? detail.files : [])
           } catch (caught) {
-            if (alive === true) { setFiles([]); setError(messageOf(caught)) }
+            if (alive === true) { setFiles([]); setError(messageOf(caught)); notifyFail(caught) }
           } finally {
             if (alive === true) setFilesLoading(false)
           }

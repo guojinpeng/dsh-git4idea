@@ -191,6 +191,7 @@
         setError('')
         Promise.resolve(props.onSubmit(name)).catch((caught) => {
           if (alive.current === true) setError(textOf(caught))
+          notifyFail(caught)
         }).then(() => {
           if (alive.current === true) setBusy(false)
         })

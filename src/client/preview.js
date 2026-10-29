@@ -223,7 +223,7 @@
             setData(normalized)
             setSelected(normalized.commits.length === 0 ? null : normalized.commits[0].hash)
           } catch (caught) {
-            if (alive === true) setError(messageOf(caught))
+            if (alive === true) { setError(messageOf(caught)); notifyFail(caught) }
           }
         })()
         return () => { alive = false }
@@ -238,7 +238,7 @@
             const detail = await request('commitDetail', Object.assign({}, base, { hash: selected }))
             if (alive === true) setFiles(Array.isArray(detail.files) ? detail.files : [])
           } catch (caught) {
-            if (alive === true) { setFiles([]); setError(messageOf(caught)) }
+            if (alive === true) { setFiles([]); setError(messageOf(caught)); notifyFail(caught) }
           } finally {
             if (alive === true) setFilesLoading(false)
           }
