@@ -87,12 +87,63 @@ export async function log(payload) {
   const skip = clampInt(payload.skip, 0, 1_000_000, 0)
   const args = ['log', '--max-count=' + (limit + 1), '--skip=' + skip, '--date-order', '--pretty=format:' + LOG_FORMAT]
   if (typeof payload.rev === 'string' && payload.rev.trim() !== '') args.push(requireRef(payload.rev, 'rev'))
-  if (typeof payload.path === 'string' && payload.path.trim() !== '') args.push('--', payload.path)
+  /* Round 3 #2: the path filter carries a LIST of pathspecs (the tree picker
+     checks several rows), and git takes them all after one '--'. A single
+     string from the typed prompt still works. */
+  const paths = Array.isArray(payload.path) === true
+    ? payload.path.filter((entry) => typeof entry === 'string' && entry.trim() !== '')
+    : typeof payload.path === 'string' && payload.path.trim() !== '' ? [payload.path] : []
+  if (paths.length > 0) args.push('--', ...paths)
   const out = await git(root, args)
   const all = parseLog(out)
   const hasMore = all.length > limit
   return { repoRoot: root, commits: hasMore ? all.slice(0, limit) : all, hasMore, skip, limit }
 }
+/* What the path filter offers (v0.3.1 #N2, round 2 #4): one `ls-tree -r` of
+   HEAD lists every file, and the client derives the directories from their
+   prefixes plus indents both into one tree. A repository with tens of
+   thousands of files is capped; the input row of the picker still takes a full
+   path. A missing HEAD (fresh repo) is data, not a failure: the picker then
+   has no rows. */
+const DIR_TREE_LIMIT = 4000
+
+export async function dirTree(payload) {
+  const cwd = cwdOf(payload)
+  const root = await repoRootOf(cwd, payload)
+  /* core.quotepath=false: git escapes non-ASCII names as octal by default
+     (\345\206\205...), and the picker rendered those escapes literally
+     (round 3 #2). */
+  const out = await runGit(root, ['-c', 'core.quotepath=false', 'ls-tree', '-r', '--name-only', 'HEAD'])
+  const dirs = []
+  const files = []
+  let truncated = false
+  if (out.code === 0) {
+    const seen = new Set()
+    for (const line of out.stdout.split('\n')) {
+      const name = line.trim()
+      if (name === '') continue
+      files.push(name)
+      /* Every ancestor, not just the immediate parent: a folder row must exist
+         at each level the picker indents by. */
+      const parts = name.split('/')
+      let prefix = ''
+      for (let index = 0; index < parts.length - 1; index += 1) {
+        prefix = prefix === '' ? parts[index] : prefix + '/' + parts[index]
+        if (seen.has(prefix) !== true) {
+          seen.add(prefix)
+          dirs.push(prefix)
+        }
+      }
+      if (files.length >= DIR_TREE_LIMIT) {
+        truncated = true
+        break
+      }
+    }
+  }
+  return { repoRoot: root, dirs: dirs, files: files, truncated: truncated }
+}
+
+
 /* The merge that carried `from` INTO `to`, newest first — the anchor the
    branch tree's double-click-to-browse lands on (IDEA-style: double-click
    branch 2, then branch 1, and 1's list opens scrolled to the merge commit

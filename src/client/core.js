@@ -536,7 +536,9 @@
     }
 
     function treeSectionDefaults() {
-      return { favorites: false, remote: false, tags: true }
+      /* remote folded by default (v0.3.1): a repository with dozens of remote
+         branches opened the tree with a wall of names. */
+      return { favorites: false, remote: true, tags: true }
     }
 
     function treeSectionsOf(stored) {
@@ -614,11 +616,14 @@
       { id: 'compare', icon: 'compare', key: 'action.compare', tone: 'secondary' },
       { id: 'fetch', icon: 'fetch', key: 'toolbar.fetch', tone: 'secondary' },
       { id: 'favorite', icon: 'star', key: 'action.favorite', tone: 'warn' },
+      { id: 'refresh', icon: 'refresh', key: 'toolbar.refreshRemote', tone: 'secondary' },
+      { id: 'expandAll', icon: 'expand', key: 'changes.expandAll', tone: 'secondary' },
+      { id: 'collapseAll', icon: 'collapse', key: 'changes.collapseAll', tone: 'secondary' },
     ]
     const RAIL_IDS = RAIL_SPECS.map((spec) => spec.id)
     /* Actions that arrange the view rather than touch the repository, so a running
        git command never greys them out. */
-    const RAIL_VIEW_IDS = ['tree']
+    const RAIL_VIEW_IDS = ['tree', 'expandAll', 'collapseAll']
 
     function normalizeRail(raw) {
       const source = raw !== null && typeof raw === 'object' ? raw : {}

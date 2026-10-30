@@ -258,13 +258,19 @@
       '.git4idea-conflict-mid{flex:1 1 33.334%;min-width:0;display:flex;border-left:1px solid var(--dsw-alias-border-l2);border-right:1px solid var(--dsw-alias-border-l2)}',
       '.git4idea-conflict-gutter{flex:none;overflow:hidden;font:12px/18px ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace}',
       '.git4idea-conflict-gutter-row{display:flex;align-items:center;height:18px;line-height:18px}',
-      '.git4idea-conflict-row{position:relative;display:flex;align-items:center;height:18px;line-height:18px}',
+      /* v0.3.1: a row is as wide as its longest line (min 100%), so the pane
+         grows a real horizontal scrollbar instead of clipping the code. */
+      '.git4idea-conflict-row{position:relative;display:flex;align-items:center;width:max-content;min-width:100%;height:18px;line-height:18px}',
       '.git4idea-conflict-row.is-ours{background:color-mix(in srgb, var(--dsw-alias-state-success-primary,#3fb950) 14%, transparent)}',
       '.git4idea-conflict-row.is-theirs{background:color-mix(in srgb, var(--dsw-alias-state-business-primary,#4d9fff) 14%, transparent)}',
       '.git4idea-conflict-row.is-conflict.is-ours{background:color-mix(in srgb, var(--dsw-alias-state-success-primary,#3fb950) 24%, transparent)}',
       '.git4idea-conflict-row.is-conflict.is-theirs{background:color-mix(in srgb, var(--dsw-alias-state-business-primary,#4d9fff) 24%, transparent)}',
       '.git4idea-conflict-num{flex:none;width:48px;box-sizing:border-box;padding:0 8px 0 6px;text-align:right;color:var(--dsw-alias-label-tertiary);user-select:none;font-variant-numeric:tabular-nums;cursor:context-menu}',
-      '.git4idea-conflict-code{flex:1;min-width:0;overflow:hidden;white-space:pre;padding-right:8px;color:var(--dsw-alias-label-primary)}',
+      '.git4idea-conflict-code{flex:1 0 auto;min-width:0;overflow:visible;white-space:pre;padding-right:8px;color:var(--dsw-alias-label-primary)}',
+      /* v0.3.1 (#1): the side panes ALWAYS show their bottom scrollbar — a long
+         line must be visibly reachable, and a reserved track keeps the three
+         columns the same height. */
+      '.git4idea-conflict-pane.is-left,.git4idea-conflict-pane.is-right{overflow-x:scroll}',
       '.git4idea-conflict-pane.is-left .git4idea-conflict-code{padding-right:52px}',
       '.git4idea-conflict-pane.is-right .git4idea-conflict-code{padding-left:52px;padding-right:8px}',
       '.git4idea-conflict-blame{flex:none;width:72px;padding:0 6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right;color:var(--dsw-alias-label-tertiary);font-size:11px;user-select:none}',
@@ -410,9 +416,11 @@
       '.git4idea-row-tag .git4idea-row-label{color:var(--dsw-alias-state-warn-primary,var(--dsw-alias-brand-primary))}',
       '.git4idea-row-icon{display:inline-flex;flex:none;opacity:.9}',
       '.git4idea-row-label{overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}',
-      // Inline tracking target (issue #18): flex:none so it never starves the
-      // label, capped and ellipsised so a long origin/… cannot push the badges.
-      '.git4idea-row-upstream{flex:none;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;font-weight:400;color:var(--dsw-alias-label-tertiary,var(--dsw-alias-label-secondary))}',
+      // Tracking target (issue #18): the inline "→ origin/…" text cost up to
+      // 180px and ellipsised the branch name in a narrow panel. It is a small
+      // muted tag glyph now (same outline as the log ref badges), and the name
+      // lives in the row's tooltip. flex:none keeps it out of the label's box.
+      '.git4idea-row-upstream{flex:none;display:inline-flex;align-items:center;color:var(--dsw-alias-label-tertiary,var(--dsw-alias-label-secondary));opacity:.85}',
       '.git4idea-row-sub{color:var(--dsw-alias-label-tertiary);font-size:11px;flex:none;max-width:45%;overflow:hidden;text-overflow:ellipsis}',
       '.git4idea-row-dir{margin-left:auto;opacity:.75}',
       '.git4idea-badge{font-size:10px;padding:0 5px;border-radius:999px;corner-shape:round;background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary);flex:none}',
@@ -464,14 +472,23 @@
       '.git4idea-detail-branches .git4idea-link{margin-left:0;font-size:12px}',
       '.git4idea-detail-branches-list{display:flex;flex-direction:column;margin-top:2px}',
       '.git4idea-detail-branch{white-space:pre}',
-      '.git4idea-filters{display:flex;align-items:center;gap:4px;padding:4px 6px;flex:none;min-width:0;overflow-x:auto;overflow-y:hidden;border-bottom:1px solid var(--dsw-alias-border-l2)}',
-      '.git4idea-filter-text{flex:1 1 90px;min-width:80px;width:auto}',
-      '.git4idea-filter-select{flex:none;max-width:118px;appearance:none;-webkit-appearance:none;background:transparent;border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-sm,8px);color:var(--dsw-alias-label-secondary);font:inherit;height:22px;padding:0 4px;cursor:pointer;text-overflow:ellipsis}',
+      '/* v0.3.1 (round 2 #3): a narrow panel wraps the chips onto a second line\n         instead of crushing them into each other; the search box keeps a floor. */',
+      '.git4idea-filters{display:flex;flex-wrap:wrap;align-items:center;gap:4px;padding:4px 6px;flex:none;min-width:0;border-bottom:1px solid var(--dsw-alias-border-l2)}',
+      '.git4idea-filter-textwrap{flex:1 1 140px;display:inline-flex;align-items:center;gap:1px;min-width:110px}',
+      '.git4idea-filter-text{flex:1 1 auto;min-width:60px;width:auto}',
+      /* v0.3.1 (#N1, #N3): a chip is label plus optional value plus optional
+         x, so the box is a span with two buttons inside and cannot be one
+         button itself. The text is one ellipsized line and the tooltip carries
+         the whole value. */
+      '.git4idea-filter-select{flex:none;max-width:132px;background:transparent;border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-sm,8px);color:var(--dsw-alias-label-primary);font:inherit;height:22px;padding:0 3px 0 4px;cursor:pointer;text-overflow:ellipsis}',
       '.git4idea-filter-select:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
-      '.git4idea-filter-select{display:inline-flex;align-items:center;gap:3px}',
-      '.git4idea-filter-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:96px}',
+      '.git4idea-filter-select{display:inline-flex;align-items:center;gap:1px;min-width:0}',
+      '.git4idea-filter-main{display:inline-flex;align-items:center;gap:3px;min-width:0;background:transparent;border:0;color:inherit;font:inherit;padding:0;cursor:pointer}',
+      '.git4idea-filter-main:focus-visible{outline:1px solid var(--dsw-alias-brand-primary);outline-offset:1px;border-radius:var(--dsw-radius-xs,4px)}',
+      '.git4idea-filter-clear{display:inline-flex;align-items:center;justify-content:center;flex:none;background:transparent;border:0;color:inherit;padding:0 1px;cursor:pointer;opacity:.65}',
+      '.git4idea-filter-clear:hover{opacity:1}',
+      '.git4idea-filter-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:104px}',
       '.git4idea-filter-on{color:var(--dsw-alias-brand-primary);border-color:var(--dsw-alias-brand-primary)}',
-      '.git4idea-filter-path{flex:0 1 112px;min-width:70px;display:flex}',
       '.git4idea-load-more{margin:6px auto;display:block;padding:3px 12px;border-radius:var(--dsw-radius-sm,8px);border:1px solid var(--dsw-alias-border-l2);background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;cursor:pointer}',
       '.git4idea-load-more:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
       '.git4idea-empty{padding:14px;text-align:center;color:var(--dsw-alias-label-tertiary)}',
@@ -549,7 +566,12 @@
       '.git4idea-detail-author,.git4idea-detail-date{color:var(--dsw-alias-label-tertiary)}',
       '.git4idea-detail-subject{white-space:pre-wrap}',
       '.git4idea-detail-body{margin:0;white-space:pre-wrap;color:var(--dsw-alias-label-secondary);font:inherit}',
-      '.git4idea-detail-files-head{margin-top:4px}',
+      '.git4idea-detail-files-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:4px}',
+      /* v0.3.1: the expand-all / collapse-all pair that drives the changed-file
+         trees (commit detail head, push dialog head). */
+      '.git4idea-fold-btns{display:inline-flex;flex:none;gap:2px;align-items:center}',
+      '.git4idea-fold-btn{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;padding:0;border:0;border-radius:var(--dsw-radius-xs,4px);background:transparent;color:var(--dsw-alias-label-secondary);cursor:pointer}',
+      '.git4idea-fold-btn:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
       '.git4idea-detail-files{display:flex;flex-direction:column}',
       '.git4idea-mono{font-family:var(--ds-font-family-code,"SF Mono","JetBrains Mono","Fira Code",Consolas,"Liberation Mono",Menlo,Courier,"PingFang SC","Microsoft YaHei",monospace)}',
       '.git4idea-diff-pane{flex:none;max-height:55%;display:flex;flex-direction:column;min-height:0;border-top:1px solid var(--dsw-alias-border-l2)}',
@@ -576,10 +598,16 @@
       /* IDE tool-window tabs over the detail column: log (the commit detail),
          console (host console.log) and worktrees. */
       '.git4idea-workbench{display:flex;flex-direction:column;flex:1;min-height:0;min-width:0}',
-      '.git4idea-tabs{display:flex;align-items:center;gap:2px;flex:none;padding:0 6px;border-bottom:1px solid var(--dsw-alias-border-l1,var(--dsw-alias-border-subtle));overflow-x:auto;scrollbar-width:none}',
-      '.git4idea-tab{flex:none;padding:6px 10px;border:0;border-bottom:2px solid transparent;background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;font-size:calc(12px + var(--dsh-content-font-delta-secondary, 0px));cursor:pointer;white-space:nowrap}',
+      /* v0.3.1: the strip follows the host's tab row (对话/轨迹/Git): same
+         height, no gap, 12px side padding and a 2px brand underline. */
+      '.git4idea-tabs{display:flex;align-items:stretch;gap:0;flex:none;height:34px;padding:0 8px;border-bottom:1px solid var(--dsw-alias-border-l1,var(--dsw-alias-border-subtle));overflow-x:auto;scrollbar-width:none}',
+      '.git4idea-tab{position:relative;flex:none;display:inline-flex;align-items:center;padding:0 12px;border:0;background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;font-size:calc(12px + var(--dsh-content-font-delta-secondary, 0px));cursor:pointer;white-space:nowrap}',
       '.git4idea-tab:hover{color:var(--dsw-alias-label-primary)}',
-      '.git4idea-tab[data-active="true"]{color:var(--dsw-alias-label-primary);border-bottom-color:var(--dsw-alias-brand-primary)}',
+      '/* v0.3.1 (round 2 #6): the host paints a selected tab with state-business-primary\n         (brand-primary is near-white in the dark theme). Text and underline share one\n         colour so the pair can never drift. */',
+      '.git4idea-tab[data-active="true"]{color:var(--dsw-alias-state-business-primary,var(--dsw-alias-link))}',
+      /* The host draws its selected tab as a 2px bar sitting ON the strip border
+         (bottom:-1px), not above it; match that placement. */
+      '.git4idea-tab[data-active="true"]::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;border-radius:var(--dsw-radius-xs,4px);background:currentColor}',
       '.git4idea-workbench-body{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}',
       '.git4idea-console{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}',
       '.git4idea-console-note{padding:4px 8px;color:var(--dsw-alias-label-tertiary);font-size:calc(11px + var(--dsh-content-font-delta-secondary, 0px));flex:none}',
@@ -618,10 +646,11 @@
          left when the panel runs out of room (see ContextMenu.openSub). */
       '.git4idea-menu-wrap{position:absolute;z-index:70;width:max-content;max-width:calc(100% - 8px)}',
       '.git4idea-menu{box-sizing:border-box;min-width:200px;max-height:min(320px,calc(100% - 8px));padding:4px;border:0;border-radius:var(--dsw-radius-md,12px);background:transparent;box-shadow:var(--dsw-elevation-prominent,0 10px 28px rgba(0,0,0,.35));--dsw-elevation-stroke-color:var(--dsw-alias-border-l1);isolation:isolate;display:flex;flex-direction:column}',
-      '.git4idea-menu-sub{position:absolute;min-width:180px;max-width:320px;z-index:71}',
+      '/* v0.3.1 (round 2 #1): nested branch groups indent inside ONE submenu card,\n         so the card needs room for a full path segment. */',
+      '.git4idea-menu-sub{position:absolute;min-width:240px;max-width:360px;z-index:71}',
       '.git4idea-menu::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;background:var(--dsw-specific-menu,var(--dsw-alias-bg-layer-2,var(--dsw-alias-bg-layer-1)));-webkit-backdrop-filter:var(--dsw-menu-backdrop-filter,blur(14px) saturate(1.2));backdrop-filter:var(--dsw-menu-backdrop-filter,blur(14px) saturate(1.2));pointer-events:none}',
       '.git4idea-menu-scroll{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;display:flex;flex-direction:column}',
-      '.git4idea-menu-item{display:flex;align-items:center;gap:8px;padding:4px 8px;border:none;background:transparent;color:var(--dsw-alias-label-primary);font:inherit;text-align:left;border-radius:var(--dsw-radius-sm,8px);cursor:pointer;white-space:nowrap;overflow:hidden}',
+      '.git4idea-menu-item{display:flex;flex:none;align-items:center;gap:8px;padding:4px 8px;border:none;background:transparent;color:var(--dsw-alias-label-primary);font:inherit;text-align:left;border-radius:var(--dsw-radius-sm,8px);cursor:pointer;white-space:nowrap;overflow:hidden}',
       '.git4idea-menu-chevron{margin-left:auto;opacity:.6;flex:none;display:inline-flex}',
       '.git4idea-menu-icon{display:inline-flex;flex:none}',
       '.git4idea-menu-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}',
@@ -629,7 +658,37 @@
       '.git4idea-menu-item-active{color:var(--dsw-alias-state-warn-primary,var(--dsw-alias-brand-primary))}',
       '.git4idea-menu-danger,.git4idea-menu-danger .git4idea-menu-label{color:var(--dsw-alias-state-error-primary)}',
       '.git4idea-menu-disabled{opacity:.38;cursor:default}',
-      '.git4idea-menu-sep{height:1px;margin:3px 6px;background:var(--dsw-alias-hairline,var(--dsw-alias-border-l1))}',
+      '.git4idea-menu-sep{flex:none;height:1px;margin:3px 6px;background:var(--dsw-alias-hairline,var(--dsw-alias-border-l1))}',
+      '.git4idea-menu-header{flex:none;padding:4px 8px 2px;color:var(--dsw-alias-label-tertiary);font-size:11px;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+      /* v0.3.1 (#N2): the directory picker of the path filter. */
+      '.git4idea-dialog-tree{width:440px;max-width:88vw}',
+      '.git4idea-path-tree{display:flex;flex-direction:column;gap:1px;max-height:300px;overflow:auto;border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-sm,8px);padding:3px}',
+      '.git4idea-path-row{display:flex;align-items:center;gap:5px;width:100%;height:24px;flex:none;padding:0 6px;border:none;border-radius:var(--dsw-radius-xs,6px);background:transparent;color:var(--dsw-alias-label-primary);font:inherit;font-size:12px;text-align:left;cursor:pointer;white-space:nowrap;overflow:hidden}',
+      '.git4idea-path-row svg{flex:none}',
+      '.git4idea-path-row span{overflow:hidden;text-overflow:ellipsis}',
+      '.git4idea-path-row:hover{background:var(--dsw-alias-interactive-bg-hover)}',
+      '.git4idea-path-row-on{color:var(--dsw-alias-brand-primary)}',
+      '.git4idea-path-note{padding:4px 6px;color:var(--dsw-alias-label-tertiary);font-size:12px}',
+      /* Round 3 #2: the checkbox tree — a twist column, then a clickable pick
+         row. The tree starts fully folded; only opened folders show children. */
+      '.git4idea-path-bar{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:0 2px 2px}',
+      '.git4idea-path-clear{border:none;background:transparent;color:var(--dsw-alias-state-business-primary,var(--dsw-alias-link));font:inherit;font-size:12px;padding:2px 4px;cursor:pointer}',
+      '.git4idea-path-twist{width:14px;height:14px;flex:none;display:inline-flex;align-items:center;justify-content:center;border:none;background:transparent;color:var(--dsw-alias-label-tertiary);padding:0;cursor:pointer}',
+      '.git4idea-path-twist-open svg{transform:rotate(90deg)}',
+      '.git4idea-path-pick{display:flex;align-items:center;gap:5px;flex:1;min-width:0;cursor:pointer}',
+      '.git4idea-path-cb{margin:0;flex:none;width:12px;height:12px}',
+      '.git4idea-path-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+      /* v0.3.1 (#6): the chooser card keeps the composer's look; its seat floats
+         under the top-bar button and its flyout escapes the card's clip. */
+      '.git4idea-chooser-seat{position:fixed;z-index:89}',
+      '.git4idea-chooser-backdrop{position:fixed;inset:0;z-index:88}',
+      /* Round 3 #4: the card takes the seat's measured width, so a narrow page
+         never pushes it past the panel edge. */
+      '.git4idea-chooser-seat .git4idea-cs-menu{position:static;bottom:auto;left:auto;max-width:none;width:100%;min-width:0}',
+      '.git4idea-cs-empty{padding:22px 12px;text-align:center;color:var(--dsw-alias-label-tertiary);font-size:12px}',
+      '.git4idea-cs-tool-busy svg{animation:git4idea-spin-rotate .9s linear infinite}',
+      '/* Round 2 #5: the seat is the containing block, so the flyout stays on the\n         row it belongs to and the offset math survives contain:layout. */',
+      '.git4idea-chooser-seat .git4idea-cs-flyout{position:absolute;z-index:120}',
       /* ---- immersive conversation seat (issue #8 round 3) ---- */
       /* The seat itself carries `data-conversation-composer-overlay` (the
          host's own opt-in, what TrajectoryView rides): the host CSS flips the
@@ -714,6 +773,12 @@
       '.git4idea-lf-itemPath{min-width:0;overflow:hidden;line-height:20px;text-overflow:ellipsis;white-space:nowrap}',
       '.git4idea-lf-itemCounts,.git4idea-lf-counts{display:inline-flex;flex:none;gap:6px;align-items:center;font-family:var(--ds-font-family-code);font-size:calc(12px + var(--dsh-code-font-delta, 0px));line-height:20px;color:var(--dsw-alias-label-tertiary)}',
       '.git4idea-lf-counts{min-width:0;margin-right:auto}',
+      /* v0.3.1: change kind as a tag before the file name (the old note row
+         above the first hunk is gone). */
+      '.git4idea-lf-tag{flex:none;display:inline-flex;align-items:center;height:18px;padding:0 6px;border-radius:var(--dsw-radius-xs,4px);background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary);font-size:11px;line-height:18px;white-space:nowrap}',
+      '.git4idea-lf-tag.is-created{color:var(--dsw-alias-state-success-primary)}',
+      '.git4idea-lf-tag.is-deleted{color:var(--dsw-alias-state-error-primary)}',
+      '.git4idea-lf-extra{display:inline-flex}',
       '.git4idea-lf-added{color:var(--dsw-alias-state-success-primary)}',
       '.git4idea-lf-deleted{color:var(--dsw-alias-state-error-primary)}',
       '.git4idea-lf-label{color:var(--dsw-alias-label-tertiary)}',

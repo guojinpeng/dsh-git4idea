@@ -3,7 +3,7 @@
  */
 
 import { summary, headState, pushPreview, stats, repos, version } from './../services/workspace.js'
-import { branches, log, me, mergePoint, commitDetail, diff, compare } from './../services/history.js'
+import { branches, log, me, mergePoint, commitDetail, diff, compare, dirTree } from './../services/history.js'
 import { stage, unstage, discard, commit, checkout } from './../services/changes.js'
 import { branchCreate, branchUpstream, branchRename, branchDelete, merge, rebase, rebaseAbort, remoteAdd, remoteRemove, branchDeleteRemote, tagDeleteRemote, pushTags, stashClear, cherryPick, revert, reset } from './../services/branch-ops.js'
 import { fetch, pull, push, clone } from './../services/sync.js'
@@ -28,6 +28,7 @@ export const METHODS = {
   stats,
   branches,
   log,
+  dirTree,
   me,
   'merge-point': mergePoint,
   commitDetail,

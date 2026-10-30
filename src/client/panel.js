@@ -36,6 +36,9 @@
       const [panes, setPanes] = useState(readPanes)
       const panesRef = useRef(panes)
       const [treeOpen, setTreeOpen] = useState(panes.treeOpen)
+      /* v0.3.1: the rail's expand-all / collapse-all buttons drive the branch
+         tree from outside; BranchTree applies the signal when its stamp moves. */
+      const [branchFoldSignal, setBranchFoldSignal] = useState(null)
       const [paneDragging, setPaneDragging] = useState(null)
       const [paneSizes, setPaneSizes] = useState({})
       /* The float pane this panel is drawn in, or null while it is docked. The
@@ -89,9 +92,15 @@
       const onCommitPicks = useCallback((update) => { setPickedCommits(update); clearPicksExcept('history') }, [clearPicksExcept])
       const [menu, setMenu] = useState(null)
       const [dialog, setDialog] = useState(null)
+      /* v0.3.1 (#6): the branch chooser card sits under the top-bar button and
+         keeps its own seat, so the panel does not re-anchor it on every poll. */
+      const [chooserSeat, setChooserSeat] = useState(null)
       const [tick, setTick] = useState(0)
       const [favTick, setFavTick] = useState(0)
-      const [pathFilter, setPathFilter] = useState('')
+      /* Round 3 #2: the tree picker checks several paths, so the filter is a
+         LIST of pathspecs (git log takes them all after one '--'). A single
+         typed path is the one-element case. */
+      const [pathFilter, setPathFilter] = useState([])
       const [railConfig] = useState(readRailConfig)
       const [railBox, setRailBox] = useState({ width: 0, height: 0 })
 
@@ -518,7 +527,10 @@
         const activePath = overridePath === undefined ? pathFilter : overridePath
         const payload = Object.assign({}, base, { skip: skip === undefined ? 0 : skip, limit: 120 })
         if (browseRev !== '') payload.rev = browseRev
-        if (activePath !== undefined && activePath !== '') payload.path = activePath
+        const paths = Array.isArray(activePath) === true
+          ? activePath.filter((entry) => typeof entry === 'string' && entry !== '')
+          : typeof activePath === 'string' && activePath !== '' ? [activePath] : []
+        if (paths.length > 0) payload.path = paths
         const data = await request('log', payload)
         setCommits((previous) => (skip === undefined || skip === 0 ? data.commits : previous.concat(data.commits)))
         setHasMore(data.hasMore)
@@ -553,7 +565,13 @@
         try {
           await guard(async () => {
             if (withFetch === true) {
-              try { await request('fetch', Object.assign({}, base, { prune: true })) } catch (error) { notifyFail(error) }
+              /* Round 3 #3: a manual 提取 used to end silently — the only sign
+                 was the 400 ms busy toast, which read as "nothing happened".
+                 The result is now a toast of its own. */
+              try {
+                await request('fetch', Object.assign({}, base, { prune: true }))
+                pushToast({ text: t('toast.fetchDone'), icon: 'fetch', tone: 'ok', ttl: 3000 })
+              } catch (error) { notifyFail(error) }
             }
             const [summaryData, branchesData, page] = await Promise.all([loadSummary(), loadBranches(), loadCommits(0)])
             /* Keep the poll's HEAD signature in step (v0.18.7): after an
@@ -574,7 +592,7 @@
         } finally {
           if (withFetch === true) setRefreshSpinning(false)
         }
-      }, [guard, loadSummary, loadBranches, loadCommits, repoRoot, remoteReady, base, browseRev])
+      }, [guard, loadSummary, loadBranches, loadCommits, repoRoot, remoteReady, base, browseRev, pushToast, t])
 
       /* Double-click a branch (or the HEAD row): browse its history. The merge
          anchor comes from the PREVIOUSLY browsed branch — 'merge-point' finds
@@ -711,7 +729,7 @@
         setPatch('')
         setDiffContext(null)
         setView('history')
-        setPathFilter('')
+        setPathFilter([])
       }, [sessionId])
 
       /* The composer status pill and this panel are separate trees; when the
@@ -792,6 +810,24 @@
         void openDiff({ path: seed.path, staged: seed.staged === true, untracked: seed.untracked === true ? true : undefined })
       }, [previewDiff, openDiff])
 
+      /* v0.3.1: the rail's refresh button means "pull everything from the remote
+         again": fetch --prune plus summary/branches/log (refresh), then re-request
+         the open commit and the open inline diff so no pane keeps stale text. */
+      const refreshAll = useCallback(async () => {
+        await refresh({ fetchRemote: true })
+        if (selectedHash !== null) {
+          try {
+            setDetail(await request('commitDetail', Object.assign({}, base, { hash: selectedHash })))
+          } catch (caught) {
+            setDetail(null)
+            notifyFail(caught)
+          }
+        }
+        if (selectedPath === null) return
+        if (diffContext !== null && diffContext.kind === 'commit') void openDiff({ hash: diffContext.hash, path: selectedPath })
+        else if (diffContext !== null && diffContext.kind === 'worktree') void openDiff({ path: selectedPath, staged: diffContext.staged === true })
+      }, [refresh, selectedHash, selectedPath, diffContext, base, request, openDiff, notifyFail])
+
       /* A conflicted row opens the conflict card. git prints a combined diff
          for an unmerged path, which the diff view cannot parse, so the card is
          the only surface that can show all three versions. Without an overlay
@@ -816,7 +852,7 @@
       }, [cwd, repoRoot, scope])
 
 
-      const selectCommit = useCallback(async (commit) => {
+      const selectCommit = useCallback(async (commit, opts) => {
         setSelectedHash(commit.hash)
         setSelectedPath(null)
         setPatch('')
@@ -824,7 +860,7 @@
         /* Wide seats keep the log in the middle and open the commit in the
            right-hand column (m01216); a single-row seat has no third column, so
            there the detail takes the main one. */
-        if (compact === true) setView('detail')
+        if (compact === true && (opts === undefined || opts.keepView !== true)) setView('detail')
         setDetail(null)
         try {
           setDetail(await request('commitDetail', Object.assign({}, base, { hash: commit.hash })))
@@ -832,6 +868,16 @@
           setError(caught instanceof Error ? caught.message : String(caught))
         }
       }, [base, compact])
+
+      /* v0.3.1: the detail pane never sits empty. Whenever the open hash is not
+         in the loaded page (first paint, refresh lost it, branch switch, path
+         filter), the newest commit opens by itself. keepView keeps the compact
+         seat on the list. */
+      useEffect(() => {
+        if (commits.length === 0) return
+        if (selectedHash !== null && commits.some((commit) => commit.hash === selectedHash)) return
+        void selectCommit(commits[0], { keepView: true })
+      }, [commits, selectedHash, selectCommit])
 
       const checkout = useCallback(async (entry) => {
         if (entry.tag === true) { void run('checkout', { branch: entry.name }); return }
@@ -858,11 +904,18 @@
       const openMenuAt = useCallback((event, items) => {
         const element = hostRef.current
         const rect = element === null ? null : element.getBoundingClientRect()
+        /* A submenu must flip at the edge of the COLUMN that opened the menu.
+           The branch filter sits in the history column; flipping only at the
+           panel edge painted its submenu over the changes pane. */
+        const target = event.target
+        const pane = target instanceof Element ? target.closest('.git4idea-history, [data-pane]') : null
+        const paneRect = pane === null ? null : pane.getBoundingClientRect()
         setMenu({
           x: event.clientX - (rect === null ? 0 : rect.left),
           y: event.clientY - (rect === null ? 0 : rect.top),
           boundsWidth: rect === null ? 0 : Math.round(rect.width),
           boundsHeight: rect === null ? 0 : Math.round(rect.height),
+          subBoundsWidth: rect === null || paneRect === null ? 0 : Math.round(paneRect.right - rect.left),
           items: items,
         })
       }, [])
@@ -1166,7 +1219,7 @@
              FROM the remote ref with --track in one step (issue #18 item 5),
              replacing the plain "new branch from" which could not bind. */
           entry.remote === true
-            ? { id: 'createTracking', icon: 'branchCreate', tone: 'success', label: t('action.newBranchFrom'), run: () => setDialog({ kind: 'createTracking', from: entry.name, name: entry.name.slice(entry.name.indexOf('/') + 1) }) }
+            ? { id: 'newBranch', icon: 'branchCreate', tone: 'success', label: t('action.newBranchFrom'), run: () => setDialog({ kind: 'newBranch', from: entry.name, track: true }) }
             : { id: 'newBranch', icon: 'plus', tone: 'success', label: t('action.newBranchFrom'), run: () => setDialog({ kind: 'newBranch', from: entry.name }) },
           isLocal ? { id: 'rename', icon: 'file', tone: 'primary', label: t('action.rename'), run: () => setDialog({ kind: 'renameBranch', from: entry.name }) } : null,
           isLocal ? { id: 'delete', icon: 'trash', tone: 'danger', label: t('action.delete'), danger: true, disabled: entry.head === true, reason: reason, run: () => setDialog({ kind: 'deleteBranch', name: entry.name }) } : null,
@@ -1358,13 +1411,23 @@
 
       const submitDialog = useCallback(async (state, value) => {
         setDialog(null)
-        if (state.kind === 'newBranch') { await run('checkout', { branch: value, create: true, startPoint: state.from }); return }
-        /* From a remote ref (issue #18): --track binds the upstream in the
-           same checkout -b, so "create" and "set upstream" are one motion. */
-        if (state.kind === 'createTracking') { await run('checkout', { branch: value, create: true, startPoint: state.from, track: true }); return }
+        /* From a remote ref (issue #18): --track binds the upstream in the same
+           checkout -b, so "create" and "set upstream" are one motion. */
+        if (state.kind === 'newBranch') { await run('checkout', { branch: value, create: true, startPoint: state.from, track: state.track === true }); return }
         if (state.kind === 'renameBranch') { await run('branchRename', { from: state.from, to: value }); return }
         if (state.kind === 'newTag') { await run('tagCreate', { name: value, hash: state.hash }); return }
         if (state.kind === 'deleteTag') { await run('tagDelete', { name: value }); return }
+        /* v0.3.1 (#N2): the path filter's two entries end in the same value —
+           a typed path is one pathspec, the tree picker returns many. */
+        if (state.kind === 'pathFilter') {
+          const typed = typeof value === 'string' ? value.trim() : ''
+          setPathFilter(typed === '' ? [] : [typed])
+          return
+        }
+        if (state.kind === 'pathTree') {
+          setPathFilter(Array.isArray(value) === true ? value.filter((entry) => typeof entry === 'string' && entry !== '') : [])
+          return
+        }
         /* SCM ▸ Commit ▸ variants: one dialog, four (all/staged × amend/sign)
            shapes. `all` stages every visible change first — the paths go in
            explicitly, never '.', so the host's root guard stays shut. */
@@ -1499,17 +1562,27 @@
         })))
       }, [openMenuAt, repoOptions, repoRoot, pickRepo])
 
-      const openBranchSwitchMenu = useCallback((event) => {
-        const local = branches === null ? [] : branches.local
-        openMenuAt(event, local.map((entry) => ({
-          id: 'switch:' + entry.name,
-          icon: entry.head === true ? 'star' : 'branch',
-          tone: entry.head === true ? 'warn' : 'accent',
-          label: entry.name,
-          active: entry.head === true,
-          run: () => { if (entry.head !== true) void checkout(entry) },
-        })))
-      }, [openMenuAt, branches, checkout])
+      /* The composer's card, seated under the button (v0.3.1 #6).
+         Round 3 #4: at a narrow page the card's fixed min-width hung over the
+         panel edge. The seat now carries a width measured inside the host, and
+         flips above the button when the lower half of the page has no room. */
+      const openBranchChooser = useCallback((event) => {
+        if (chooserSeat !== null) { setChooserSeat(null); return }
+        const rect = event.currentTarget.getBoundingClientRect()
+        const host = hostRef.current
+        const box = host === null ? null : host.getBoundingClientRect()
+        const left = box === null ? 8 : Math.max(8, box.left)
+        const right = box === null ? window.innerWidth : Math.min(window.innerWidth, box.right)
+        const width = Math.max(180, Math.min(340, right - left - 12))
+        const x = Math.max(left + 4, Math.min(rect.left, right - width - 6))
+        const below = rect.bottom + 6
+        /* The card tops out around 420 px; anchor by its bottom edge when the
+           space under the button is too small. */
+        const flipUp = below + 420 > window.innerHeight && rect.top > 420
+        setChooserSeat(flipUp === true
+          ? { x: x, width: width, bottom: window.innerHeight - rect.top + 6 }
+          : { x: x, width: width, top: below })
+      }, [chooserSeat])
 
       const topBar = E('div', { className: 'git4idea-topbar' },
         E(RepoSelect, {
@@ -1522,7 +1595,7 @@
           E('button', {
             type: 'button',
             className: 'git4idea-select git4idea-select-btn git4idea-select-branch',
-            onClick: openBranchSwitchMenu,
+            onClick: openBranchChooser,
           },
             E('span', { className: 'git4idea-repo-name' }, branches.branch),
             E(Icon, { name: 'chevron', size: 12 }))),
@@ -1597,7 +1670,10 @@
       const historyPane = E(HistoryList, {
         t: t, commits: commits, hasMore: hasMore, busy: busy, selectedHash: selectedHash,
         hideSearch: compact, pathFilter: pathFilter, openMenuAt: openMenuAt,
+        branches: branches,
         onPathFilter: (value) => setPathFilter(value),
+        onPathPrompt: () => setDialog({ kind: 'pathFilter' }),
+        onPathTree: () => setDialog({ kind: 'pathTree' }),
         onSelect: (commit) => { void selectCommit(commit) },
         onMenu: commitMenu,
         onLoadMore: () => { void guard(() => loadCommits(commits.length)) },
@@ -2008,6 +2084,12 @@
           if (railPickedLocals.length > 0) { entry.label = fill(t('toolbar.pullPicked'), { n: railPickedLocals.length }); entry.disabled = blocked; entry.run = () => { void pullPickedBranches(railPickedLocals) } }
           else { entry.disabled = remoteReady !== true || tracked !== true || blocked; entry.run = () => { void run('pull', { mode: 'ff-only' }) } }
         }
+        else if (spec.id === 'refresh') {
+          entry.spinning = refreshSpinning === true
+          entry.run = () => { void refreshAll() }
+        }
+        else if (spec.id === 'expandAll') entry.run = () => setBranchFoldSignal({ mode: 'expand', at: Date.now() })
+        else if (spec.id === 'collapseAll') entry.run = () => setBranchFoldSignal({ mode: 'collapse', at: Date.now() })
         else if (spec.id === 'favorite') {
           // One picked LOCAL branch stars/unstars THAT branch; with no selection
           // it keeps starring the current one. Multi-select stays disabled —
@@ -2131,7 +2213,7 @@
               'data-tip': t('toolbar.tree'),
               onClick: () => foldTree(!treeOpen),
             }, E(Icon, { name: treeOpen ? 'chevronLeft' : 'chevronRight' }))),
-          treeOpen ? E('div', { className: 'git4idea-compact-tree', 'data-pane': 'tree', style: paneStyle('tree') }, E(BranchTree, { t: t, branches: branches, favorites: favorites, onCheckout: checkout, onBrowse: browseBranch, onBranchMenu: branchMenu, onDeleteEntries: deleteBranchEntries, onCopyValues: copyValues, onPicksChange: onBranchPicks, clearSignal: pickEpochs.tree })) : null,
+          treeOpen ? E('div', { className: 'git4idea-compact-tree', 'data-pane': 'tree', style: paneStyle('tree') }, E(BranchTree, { t: t, branches: branches, favorites: favorites, onCheckout: checkout, onBrowse: browseBranch, onBranchMenu: branchMenu, onDeleteEntries: deleteBranchEntries, onCopyValues: copyValues, onPicksChange: onBranchPicks, clearSignal: pickEpochs.tree, foldSignal: branchFoldSignal })) : null,
           treeOpen ? gutter('tree', 'prev') : null,
           view === 'changes' ? changesPane : view === 'detail'
             ? E('div', { className: 'git4idea-pane git4idea-pane-main git4idea-pane-detail' }, detailPane)
@@ -2140,7 +2222,7 @@
         // The collapse chevron lives in the action rail, in the same column as the
         // other buttons (m01216 #3), so a folded tree needs no strip of its own.
         body = E('div', { className: 'git4idea-body git4idea-body-columns', ref: bodyRef },
-          treeOpen ? E('div', { className: 'git4idea-pane git4idea-pane-tree', 'data-pane': 'tree', style: paneStyle('tree') }, E(BranchTree, { t: t, branches: branches, favorites: favorites, onCheckout: checkout, onBrowse: browseBranch, onBranchMenu: branchMenu, onDeleteEntries: deleteBranchEntries, onCopyValues: copyValues, onPicksChange: onBranchPicks, clearSignal: pickEpochs.tree })) : null,
+          treeOpen ? E('div', { className: 'git4idea-pane git4idea-pane-tree', 'data-pane': 'tree', style: paneStyle('tree') }, E(BranchTree, { t: t, branches: branches, favorites: favorites, onCheckout: checkout, onBrowse: browseBranch, onBranchMenu: branchMenu, onDeleteEntries: deleteBranchEntries, onCopyValues: copyValues, onPicksChange: onBranchPicks, clearSignal: pickEpochs.tree, foldSignal: branchFoldSignal })) : null,
           treeOpen ? gutter('tree', 'prev') : null,
           E('div', { className: 'git4idea-pane git4idea-pane-main' }, historyPane, diffGutter, diffPane),
           gutter('changes', 'next'),
@@ -2149,7 +2231,7 @@
           E('div', { className: 'git4idea-pane git4idea-pane-changes git4idea-pane-detail', 'data-pane': 'changes', style: paneStyle('changes') }, detailPane))
       } else {
         body = E('div', { className: 'git4idea-body git4idea-body-stack', ref: bodyRef },
-          treeOpen ? E('div', { className: 'git4idea-pane git4idea-pane-tree-stack', 'data-pane': 'tree', style: paneStyle('tree') }, E(BranchTree, { t: t, branches: branches, favorites: favorites, onCheckout: checkout, onBrowse: browseBranch, onBranchMenu: branchMenu, onDeleteEntries: deleteBranchEntries, onCopyValues: copyValues, onPicksChange: onBranchPicks, clearSignal: pickEpochs.tree })) : null,
+          treeOpen ? E('div', { className: 'git4idea-pane git4idea-pane-tree-stack', 'data-pane': 'tree', style: paneStyle('tree') }, E(BranchTree, { t: t, branches: branches, favorites: favorites, onCheckout: checkout, onBrowse: browseBranch, onBranchMenu: branchMenu, onDeleteEntries: deleteBranchEntries, onCopyValues: copyValues, onPicksChange: onBranchPicks, clearSignal: pickEpochs.tree, foldSignal: branchFoldSignal })) : null,
           treeOpen ? gutter('tree', 'prev') : null,
           E('div', { className: 'git4idea-pane git4idea-pane-changes-stack git4idea-pane-detail', 'data-pane': 'changes', style: paneStyle('changes') }, detailPane),
           gutter('changes', 'prev'),
@@ -2165,21 +2247,82 @@
           anchor: { x: menu.x, y: menu.y },
           boundsWidth: menu.boundsWidth,
           boundsHeight: menu.boundsHeight,
+          subBoundsWidth: menu.subBoundsWidth,
           items: menu.items,
           onClose: () => setMenu(null),
         }))
       }
-      if (dialog !== null && (dialog.kind === 'newBranch' || dialog.kind === 'createTracking' || dialog.kind === 'renameBranch' || dialog.kind === 'newTag' || dialog.kind === 'deleteTag' || dialog.kind === 'commitMsg')) {
-        const titles = { newBranch: t('prompt.newBranch'), createTracking: t('prompt.createTracking'), renameBranch: t('prompt.renameBranch'), newTag: t('prompt.newTag'), deleteTag: t('prompt.deleteTag'), commitMsg: t('prompt.commitMessage') }
+      if (dialog !== null && (dialog.kind === 'newBranch' || dialog.kind === 'renameBranch' || dialog.kind === 'newTag' || dialog.kind === 'deleteTag' || dialog.kind === 'commitMsg' || dialog.kind === 'pathFilter')) {
+        const titles = { newBranch: t('toolbar.newBranch'), renameBranch: t('prompt.renameBranch'), newTag: t('prompt.newTag'), deleteTag: t('prompt.deleteTag'), commitMsg: t('prompt.commitMessage'), pathFilter: t('prompt.pathTitle') }
+        const branchFrom = dialog.from === undefined ? (branches === null ? 'HEAD' : branches.branch) : dialog.from
         overlays.push(E(PromptDialog, {
           key: 'prompt',
           title: titles[dialog.kind],
-          placeholder: dialog.from === undefined ? t('prompt.fromHead') : dialog.from,
-          initialValue: dialog.kind === 'renameBranch' ? dialog.from : (dialog.kind === 'createTracking' ? dialog.name : ''),
+          /* Same card as the session page: the source branch is a sentence, not
+             the input placeholder (v0.3.1). */
+          text: dialog.kind === 'newBranch' ? fill(t('prompt.newBranchFrom'), { branch: branchFrom }) : undefined,
+          placeholder: dialog.kind === 'newBranch' ? t('prompt.newBranch')
+            : dialog.kind === 'pathFilter' ? t('prompt.path')
+              : (dialog.from === undefined ? t('prompt.fromHead') : dialog.from),
+          /* A remote start prefills the short name, exactly as the composer
+             chooser does (v0.3.1 #2): origin/ludan suggests "ludan". */
+          initialValue: dialog.kind === 'renameBranch' ? dialog.from
+            : dialog.kind === 'pathFilter' ? (pathFilter.length === 1 ? pathFilter[0] : '')
+              : dialog.kind === 'newBranch' && dialog.track === true && typeof dialog.from === 'string' && dialog.from.indexOf('/') > 0 ? dialog.from.slice(dialog.from.indexOf('/') + 1)
+                : '',
           okLabel: t('confirm.ok'), cancelLabel: t('confirm.cancel'),
           onCancel: () => setDialog(null),
           onSubmit: (value) => { void submitDialog(dialog, value) },
         }))
+      }
+      if (dialog !== null && dialog.kind === 'pathTree') {
+        overlays.push(E(PathTreeDialog, {
+          key: 'pathTree', t: t,
+          title: t('filter.pathTree'),
+          value: pathFilter,
+          /* Round 3 #2: the picker is a CHECKBOX tree of the files HEAD holds.
+             It starts fully folded and stays open while rows are checked. */
+          load: () => guard(() => request('dirTree', base)).then((data) => {
+            if (data === undefined || data === null) return []
+            const dirs = Array.isArray(data.dirs) ? data.dirs : []
+            const files = Array.isArray(data.files) ? data.files : []
+            return dirs.map((path) => ({ path: path, dir: true }))
+              .concat(files.map((path) => ({ path: path, dir: false })))
+          }),
+          okLabel: t('confirm.ok'), cancelLabel: t('confirm.cancel'),
+          onCancel: () => setDialog(null),
+          onSubmit: (value) => { void submitDialog({ kind: 'pathTree' }, value) },
+        }))
+      }
+      /* v0.3.1 (#6): the top-bar branch button opens the composer's chooser
+         card instead of a flat menu; the backdrop swallows the outside click. */
+      if (chooserSeat !== null) {
+        overlays.push(E('div', { key: 'chooser-backdrop', className: 'git4idea-chooser-backdrop', onMouseDown: () => setChooserSeat(null) }))
+        overlays.push(E('div', {
+          key: 'branch-chooser',
+          className: 'git4idea-chooser-seat',
+          style: chooserSeat.top === undefined
+            ? { left: String(chooserSeat.x) + 'px', bottom: String(chooserSeat.bottom) + 'px', width: String(chooserSeat.width) + 'px' }
+            : { left: String(chooserSeat.x) + 'px', top: String(chooserSeat.top) + 'px', width: String(chooserSeat.width) + 'px' },
+        }, E(BranchChooser, {
+          t: t, branches: branches, fetching: refreshSpinning,
+          onClose: () => setChooserSeat(null),
+          /* Round 2 #5: the tool icon means 提取 — it must reach the remote, not
+             re-read the local refs (the rail's refresh does the same). The card
+             stays open so the fresh list is what the user sees. */
+          onFetch: () => { void refresh({ fetchRemote: true }) },
+          onCheckout: (entry) => { setChooserSeat(null); void checkout(entry) },
+          onNewBranch: (entry, kind) => {
+            setChooserSeat(null)
+            setDialog({ kind: 'newBranch', from: entry.name, track: kind === 'remote' })
+          },
+          onNewBranchAtHead: () => { setChooserSeat(null); setDialog({ kind: 'newBranch' }) },
+          onMerge: (entry) => { setChooserSeat(null); void run('merge', { branch: entry.name }) },
+          onRename: (entry) => { setChooserSeat(null); setDialog({ kind: 'renameBranch', from: entry.name }) },
+          onDelete: (entry) => { setChooserSeat(null); deleteBranchEntries([entry]) },
+          onCommit: () => { setChooserSeat(null); setDialog({ kind: 'commitMsg' }) },
+          onPush: () => { setChooserSeat(null); openPushDialog() },
+        })))
       }
       if (dialog !== null && dialog.kind === 'clone') {
         overlays.push(E(CloneDialog, {

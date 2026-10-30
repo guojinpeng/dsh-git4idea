@@ -827,10 +827,6 @@
       const [author, setAuthor] = useState('')
       const [refName, setRefName] = useState('')
       const [since, setSince] = useState('')
-      const [order, setOrder] = useState('desc')
-      const [pathDraft, setPathDraft] = useState(props.pathFilter === undefined ? '' : props.pathFilter)
-
-      useEffect(() => { setPathDraft(props.pathFilter === undefined ? '' : props.pathFilter) }, [props.pathFilter])
 
       const authors = useMemo(() => {
         const found = []
@@ -840,17 +836,44 @@
         return found.sort()
       }, [commits])
 
+      /* Fallback only: the filter normally lists the branches payload. These
+         decorations cover the first paint before that payload arrives. HEAD is
+         mapped to its branch, and a remote's HEAD pointer is skipped. */
       const refOptions = useMemo(() => {
         const found = []
         for (const commit of commits) {
           const list = Array.isArray(commit.refs) ? commit.refs : []
           for (const entry of list) {
-            const info = refInfo(entry)
-            if (info.kind !== 'head' && found.indexOf(info.name) < 0) found.push(info.name)
+            const raw = String(entry)
+            const info = refInfo(raw)
+            const name = info.kind === 'head' && raw.indexOf('HEAD -> ') === 0 ? raw.slice(8) : info.name
+            if (name === '' || name === 'HEAD' || name.endsWith('/HEAD') === true) continue
+            if (found.indexOf(name) < 0) found.push(name)
           }
         }
         return found.sort()
       }, [commits])
+
+      /* v0.3.1 (#7): the branch filter groups its rows the way the branch tree
+         does. The branches payload owns the list, so the checked-out branch and
+         branches outside the loaded commit page still show up. */
+      const refGroups = useMemo(() => {
+        const namesOf = (entries) => (Array.isArray(entries) ? entries : [])
+          .map((entry) => String(entry.name))
+          .filter((name) => name !== '' && name !== 'HEAD' && name.endsWith('/HEAD') === false)
+        const list = props.branches
+        if (list !== null && list !== undefined && Array.isArray(list.local) === true) {
+          return { local: namesOf(list.local), remote: namesOf(list.remote), tags: namesOf(list.tags) }
+        }
+        const remoteNames = new Set(namesOf(list === null || list === undefined ? [] : list.remote))
+        const local = []
+        const remote = []
+        for (const name of refOptions) {
+          if (remoteNames.has(name) === true) remote.push(name)
+          else local.push(name)
+        }
+        return { local: local, remote: remote, tags: [] }
+      }, [refOptions, props.branches])
 
       const filtered = useMemo(() => {
         const needle = text.trim().toLowerCase()
@@ -873,8 +896,8 @@
           }
           return true
         })
-        return order === 'asc' ? kept.slice().reverse() : kept
-      }, [commits, text, author, refName, since, order])
+        return kept
+      }, [commits, text, author, refName, since])
 
       const rows = useMemo(() => buildRows(filtered), [filtered])
 
@@ -884,12 +907,10 @@
          extra clicks. The button stays as the visible affordance. The guard
          keeps one request in flight; it resets when busy settles. */
       const infiniteGuardRef = useRef(false)
-      const growAnchorRef = useRef(null)
       const mergeLocatedRef = useRef(false)
       const requestMore = () => {
         if (props.hasMore !== true || props.busy === true || infiniteGuardRef.current === true) return
         const host = historyScrollRef.current
-        growAnchorRef.current = { length: rows.length, height: host === null ? 0 : host.scrollHeight }
         infiniteGuardRef.current = true
         props.onLoadMore()
       }
@@ -928,17 +949,7 @@
         }, { root: root, rootMargin: '240px 0px' })
         io.observe(node)
         return () => { if (frame !== 0) cancelAnimationFrame(frame); io.disconnect() }
-      }, [props.hasMore, order, rows.length])
-      /* Ascending growth inserts rows above the viewport: re-anchor by the
-         height delta so the rows the user was reading stay put. */
-      useEffect(() => {
-        const anchor = growAnchorRef.current
-        if (anchor === null || rows.length <= anchor.length) return
-        growAnchorRef.current = null
-        const host = historyScrollRef.current
-        if (order !== 'asc' || host === null) return
-        host.scrollTop = host.scrollTop + (host.scrollHeight - anchor.height)
-      }, [rows.length, order])
+      }, [props.hasMore, rows.length])
       /* v0.19.3 IDEA-style merge memory: when a browsed branch has a merge
          relationship with the PREVIOUSLY browsed one, its list opens scrolled
          to that merge commit ('merge-point' resolved it) — the "2 was merged
@@ -1023,72 +1034,144 @@
         }
         if (props.onKeyDown !== undefined) props.onKeyDown(event)
       }
-      const dirtyFilter = text !== '' || author !== '' || refName !== '' || since !== '' || (props.pathFilter !== undefined && props.pathFilter !== '')
+      /* Round 3 #2: the path filter is a LIST (the checkbox tree picks several
+         rows); the chip shows one path verbatim and counts the rest. */
+      const pathList = Array.isArray(props.pathFilter) === true
+        ? props.pathFilter.filter((entry) => typeof entry === 'string' && entry !== '')
+        : typeof props.pathFilter === 'string' && props.pathFilter !== '' ? [props.pathFilter] : []
+      const pathValue = pathList.length === 0 ? '' : pathList.length === 1 ? pathList[0] : fill(t('filter.pathCount'), { n: String(pathList.length) })
+      const pathTip = pathList.join('\n')
       const applyPath = (value) => { if (props.onPathFilter !== undefined) props.onPathFilter(value) }
-      const clearAll = () => {
-        setText('')
-        setAuthor('')
-        setRefName('')
-        setSince('')
-        setPathDraft('')
-        applyPath('')
-      }
+      const dirtyFilter = text !== '' || author !== '' || refName !== '' || since !== '' || pathList.length > 0
 
-      /* Every filter opens the same in-panel menu; a checked row marks the active
-        value, so the button never has to spell the whole list out. */
-        const openFilterMenu = (event, options, currentValue, onPick, fold) => {
-          if (props.openMenuAt === undefined) return
-          const leafOf = (option, label) => ({
-            id: 'filter:' + String(option.value),
-            /* Only the checked row carries a mark (m04507); the unselected ones
-               used to draw a decorative icon, which read as a tick column. */
-            icon: option.value === currentValue ? 'check' : undefined,
-            tone: 'accent',
-            label: label === undefined ? option.label : label,
-            active: option.value === currentValue,
-            run: () => onPick(option.value),
-          })
-          if (fold !== true) {
-            props.openMenuAt(event, options.map((option) => leafOf(option)))
-            return
+      /* Every value filter opens the same in-panel menu; a checked row marks the
+         active value, so the chip never has to spell the whole list out. */
+      const openFilterMenu = (event, options, currentValue, onPick) => {
+        if (props.openMenuAt === undefined) return
+        props.openMenuAt(event, options.map((option) => ({
+          id: 'filter:' + String(option.value),
+          /* Only the checked row carries a mark (m04507); the unselected ones
+             used to draw a decorative icon, which read as a tick column. */
+          icon: option.value === currentValue ? 'check' : undefined,
+          tone: 'accent',
+          label: option.label,
+          active: option.value === currentValue,
+          run: () => onPick(option.value),
+        })))
+      }
+      /* v0.3.1 (round 2 #1, #2): the branch filter groups its rows under 本地 /
+         远程, the way the branch tree does. A name folds on every '/' into
+         header rows plus indented leaves — a menu carries one submenu level
+         only, so nesting lives inside the submenu card. Directories sort A→Z and
+         a branch with no '/' sits at the BOTTOM of its group. */
+      const openRefMenu = (event) => {
+        if (props.openMenuAt === undefined) return
+        const leafOf = (name, label, indent) => ({
+          id: 'filter:' + name,
+          icon: name === refName ? 'check' : undefined,
+          tone: 'accent',
+          label: label,
+          indent: indent,
+          active: name === refName,
+          run: () => setRefName(name),
+        })
+        /* strip is the prefix a leaf label drops (the group dir, or the remote
+           name), so a nested row shows only its own segment. */
+        const subRows = (names, strip, idPrefix) => {
+          const root = { dirs: new Map(), leaves: [] }
+          for (const name of names) {
+            const shown = strip !== '' && name.indexOf(strip + '/') === 0 ? name.slice(strip.length + 1) : name
+            const parts = shown.split('/')
+            let node = root
+            for (let index = 0; index < parts.length - 1; index += 1) {
+              const part = parts[index]
+              if (node.dirs.has(part) !== true) node.dirs.set(part, { dirs: new Map(), leaves: [] })
+              node = node.dirs.get(part)
+            }
+            node.leaves.push({ name: name, label: parts[parts.length - 1] })
           }
-          /* Branch names fold on their first '/' so a long remote list does not
-             run off the menu (m04510). A folder row opens the rest of the name
-             in a submenu; a name without '/' stays a plain row. */
           const rows = []
-          const dirs = new Map()
-          for (const option of options) {
-            const value = String(option.value)
-            const cut = value.indexOf('/')
-            if (cut <= 0) {
-              rows.push(leafOf(option))
-              continue
+          const walk = (node, depth) => {
+            for (const dir of Array.from(node.dirs.keys()).sort()) {
+              rows.push({ id: idPrefix + strip + '/' + dir + ':' + depth, header: true, label: dir, indent: depth })
+              walk(node.dirs.get(dir), depth + 1)
             }
-            const dir = value.slice(0, cut)
-            let row = dirs.get(dir)
-            if (row === undefined) {
-              row = { id: 'filter-dir:' + dir, icon: 'folder', tone: 'secondary', label: dir, items: [] }
-              dirs.set(dir, row)
-              rows.push(row)
-            }
-            row.items.push(leafOf(option, value.slice(cut + 1)))
+            for (const leaf of node.leaves) rows.push(leafOf(leaf.name, leaf.label, depth))
           }
-          props.openMenuAt(event, rows)
+          walk(root, 0)
+          return rows
         }
-        const allOption = { value: '', label: t('filter.all') }
-        const filterBar = props.hideSearch === true ? null : E('div', { className: 'git4idea-filters' },
-        E('input', {
-          className: 'git4idea-input git4idea-input-compact git4idea-filter-text', value: text, spellCheck: false,
-          placeholder: t('history.filter'),
-          onChange: (event) => setText(event.target.value),
-        }),
+        const groupRows = (names, idPrefix) => {
+          const groups = new Map()
+          const bare = []
+          for (const name of names) {
+            const cut = name.indexOf('/')
+            if (cut <= 0) { bare.push(name); continue }
+            const dir = name.slice(0, cut)
+            if (groups.has(dir) !== true) groups.set(dir, [])
+            groups.get(dir).push(name)
+          }
+          const rows = []
+          for (const dir of Array.from(groups.keys()).sort()) {
+            rows.push({ id: idPrefix + dir, icon: 'folder', tone: 'secondary', label: dir, items: subRows(groups.get(dir), dir, idPrefix) })
+          }
+          for (const name of bare.sort()) rows.push(leafOf(name, name, 0))
+          return rows
+        }
+        const rows = []
+        if (refName !== '') rows.push({ id: 'filter:none', icon: 'close', tone: 'secondary', label: t('filter.clearOne'), run: () => setRefName('') })
+        if (refGroups.local.length > 0) {
+          rows.push({ id: 'ref-head-local', header: true, label: t('branches.local') })
+          for (const row of groupRows(refGroups.local, 'filter-dir:')) rows.push(row)
+        }
+        if (refGroups.remote.length > 0) {
+          rows.push({ id: 'ref-head-remote', header: true, label: t('branches.remote') })
+          for (const row of groupRows(refGroups.remote, 'filter-dir-remote:')) rows.push(row)
+        }
+        if (refGroups.tags.length > 0) {
+          rows.push({ id: 'ref-head-tags', header: true, label: t('branches.tags') })
+          for (const row of groupRows(refGroups.tags, 'filter-dir-tag:')) rows.push(row)
+        }
+        props.openMenuAt(event, rows)
+      }
+      /* The path filter is a menu too (#N2): typing a path and walking a tree
+         are the two ways in, and the chip carries the picked one. */
+      const openPathMenu = (event) => {
+        if (props.openMenuAt === undefined) return
+        const rows = [
+          {
+            id: 'path:type', icon: 'file', tone: 'secondary', label: t('filter.pathChoose'),
+            run: () => { if (props.onPathPrompt !== undefined) props.onPathPrompt() },
+          },
+          {
+            id: 'path:tree', icon: 'folder', tone: 'secondary', label: t('filter.pathTree'),
+            run: () => { if (props.onPathTree !== undefined) props.onPathTree() },
+          },
+        ]
+        if (pathList.length > 0) rows.push({ id: 'path:clear', icon: 'close', tone: 'secondary', label: t('filter.clearOne'), run: () => applyPath([]) })
+        props.openMenuAt(event, rows)
+      }
+      const allOption = { value: '', label: t('filter.all') }
+      const filterBar = props.hideSearch === true ? null : E('div', { className: 'git4idea-filters' },
+        E('span', { className: 'git4idea-filter-textwrap' },
+          E('input', {
+            className: 'git4idea-input git4idea-input-compact git4idea-filter-text', value: text, spellCheck: false,
+            placeholder: t('history.filter'),
+            onChange: (event) => setText(event.target.value),
+          }),
+          text === '' ? null : E('button', {
+            type: 'button', className: 'git4idea-filter-clear', 'data-tip': t('filter.clearOne'),
+            onClick: () => setText(''),
+          }, E(Icon, { name: 'close', size: 9 }))),
         E(FilterSelect, {
           label: t('filter.branch'), value: refName, hint: t('filter.branch'),
-          options: [allOption].concat(refOptions.map((name) => ({ value: name, label: name }))),
-          onOpenMenu: (event, options) => openFilterMenu(event, options, refName, setRefName, true),
+          clearHint: t('filter.clearOne'), options: [],
+          onOpenMenu: openRefMenu,
+          onClear: () => setRefName(''),
         }),
         E(FilterSelect, {
           label: t('filter.user'), value: author, hint: t('filter.user'),
+          clearHint: t('filter.clearOne'),
           /* "Me" first (v0.19.3): resolved from git config and offered even
              when this branch has no commits of mine — selecting it over an
              empty list is the answer "I never committed here". */
@@ -1096,33 +1179,26 @@
             .concat(me !== null && me.name !== '' ? [{ value: me.name, label: t('history.me') + ' (' + me.name + ')' }] : [])
             .concat(authors.map((name) => ({ value: name, label: name }))),
           onOpenMenu: (event, options) => openFilterMenu(event, options, author, setAuthor),
+          onClear: () => setAuthor(''),
         }),
         E(FilterSelect, {
           label: t('filter.date'), value: since, hint: t('filter.date'),
+          clearHint: t('filter.clearOne'),
           options: [allOption,
             { value: 'today', label: t('filter.today') },
             { value: 'week', label: t('filter.week') },
             { value: 'month', label: t('filter.month') },
             { value: 'year', label: t('filter.year') }],
           onOpenMenu: (event, options) => openFilterMenu(event, options, since, setSince),
+          onClear: () => setSince(''),
         }),
-        E('form', {
-          className: 'git4idea-filter-path',
-          onSubmit: (event) => { event.preventDefault(); applyPath(pathDraft.trim()) },
-        }, E('input', {
-          className: 'git4idea-input git4idea-input-compact', value: pathDraft, spellCheck: false,
-          placeholder: t('filter.pathPlaceholder'),
-          onChange: (event) => setPathDraft(event.target.value),
-        })),
-        E('button', {
-          type: 'button', className: 'git4idea-icon-btn git4idea-icon-btn-small',
-          'data-tip': order === 'desc' ? t('filter.sortDesc') : t('filter.sortAsc'),
-          onClick: () => setOrder(order === 'desc' ? 'asc' : 'desc'),
-        }, E(Icon, { name: order === 'desc' ? 'down' : 'up', size: 12 })),
-        dirtyFilter ? E('button', {
-          type: 'button', className: 'git4idea-icon-btn git4idea-icon-btn-small', 'data-tip': t('filter.clear'),
-          onClick: clearAll,
-        }, E(Icon, { name: 'close', size: 12 })) : null)
+        E(FilterSelect, {
+          label: t('filter.path'), value: pathValue, hint: t('filter.path'),
+          clearHint: t('filter.clearOne'), options: [],
+          tip: pathList.length === 0 ? t('filter.path') : t('filter.path') + ':\n' + pathTip,
+          onOpenMenu: openPathMenu,
+          onClear: () => applyPath([]),
+        }))
 
       /* Windowed rendering: only the visible slice (± overscan) is mounted —
          "load more" into the hundreds still scrolls at frame rate. Spacers
@@ -1131,8 +1207,7 @@
       const winEnd = Math.min(rows.length, winStart + Math.ceil(viewport.viewH / HISTORY_ROW_H) + WINDOW_OVERSCAN * 2)
       const visibleRows = rows.slice(winStart, winEnd)
 
-      /* Ascending renders oldest-first, so load-more (older commits) lives
-         at the TOP; descending keeps it at the bottom where it always was. */
+      /* Older commits load at the bottom, where the list ends. */
       const loadMoreButton = props.hasMore === true
         ? E('button', { ref: loadMoreRef, type: 'button', className: 'git4idea-load-more', disabled: props.busy === true, onClick: requestMore }, t('history.loadMore'))
         : null
@@ -1157,7 +1232,7 @@
           },
         },
           rows.length === 0 ? E('div', { className: 'git4idea-empty' }, dirtyFilter ? t('filter.none') : t('history.empty')) : null,
-          order === 'asc' ? loadMoreButton : null,
+
           winStart > 0 ? E('div', { key: 'pad-top', style: { height: String(winStart * HISTORY_ROW_H) + 'px' } }) : null,
           visibleRows.map((row) => E(CommitRow, {
             key: row.commit.hash,
@@ -1167,7 +1242,7 @@
             onRowClick: handleRowClick, onMenu: props.onMenu, openMenuAt: props.openMenuAt,
           })),
           winEnd < rows.length ? E('div', { key: 'pad-bottom', style: { height: String((rows.length - winEnd) * HISTORY_ROW_H) + 'px' } }) : null,
-          order === 'desc' ? loadMoreButton : null),
+          loadMoreButton),
         E(MarqueeBox, { box: historyMarquee.box }))
     }
 
@@ -1176,11 +1251,41 @@
        commit tree. The push dialog used a flat row without the capped path
        class, so a long path squeezed the file name to zero width and clipped
        the stat. Two renderers cannot drift back apart when there is one. */
+    /* v0.3.1: fold-all needs every node id at once; the root folder row (files
+       directly under the repository root) is a node too, so it joins the set. */
+    function commitFileFoldState(files) {
+      const forest = buildDirForest(files, 'commitFiles')
+      const all = {}
+      if (forest.rootFiles.length > 0) all['commitFiles|/'] = true
+      for (const id of forest.ids) all[id] = true
+      return all
+    }
+
+    /* The expand-all / collapse-all pair, shared by the commit detail pane and
+       the push dialog. Both wear the rail's icon set and size. */
+    function FileTreeFoldButtons(props) {
+      const t = props.t
+      const files = Array.isArray(props.files) ? props.files : []
+      return E('span', { className: 'git4idea-fold-btns' },
+        E('button', {
+          type: 'button', className: 'git4idea-fold-btn', 'aria-label': t('changes.expandAll'), 'data-tip': t('changes.expandAll'),
+          onClick: () => props.onFolded({}),
+        }, E(Icon, { name: 'expand', size: 14 })),
+        E('button', {
+          type: 'button', className: 'git4idea-fold-btn', 'aria-label': t('changes.collapseAll'), 'data-tip': t('changes.collapseAll'),
+          onClick: () => props.onFolded(commitFileFoldState(files)),
+        }, E(Icon, { name: 'collapse', size: 14 })))
+    }
+
     function CommitFileList(props) {
       const t = props.t
       const files = Array.isArray(props.files) ? props.files : []
       const byPath = (a, b) => a.path.localeCompare(b.path)
-      const [folded, setFolded] = useState({})
+      /* Controlled when the caller owns the fold map (the fold buttons live in
+         the caller's header row); internal otherwise. */
+      const [innerFolded, setInnerFolded] = useState({})
+      const folded = props.folded === undefined ? innerFolded : props.folded
+      const setFolded = props.onFolded === undefined ? setInnerFolded : props.onFolded
       const forest = useMemo(() => buildDirForest(files, 'commitFiles'), [files])
       const toggle = (id) => setFolded((previous) => Object.assign({}, previous, { [id]: previous[id] !== true }))
       const rows = []
@@ -1243,6 +1348,7 @@
          commit hash, so picking another commit collapses it again without an
          effect (hooks run before the empty-state return below). */
       const [expandedHash, setExpandedHash] = useState(null)
+      const [fileFolded, setFileFolded] = useState({})
       /* The right column (m01216): changed files on top (2/3 of the height), the
          commit message below (1/3). The parent folder rides in its own column so
          two files called index.js are told apart without a tooltip. */
@@ -1253,6 +1359,8 @@
           : E(CommitFileList, {
               t: t,
               files: detail.files,
+              folded: fileFolded,
+              onFolded: setFileFolded,
               selectedPath: props.selectedPath,
               onSelect: props.onSelectFile,
               onOpen: props.onOpenFile,
@@ -1294,7 +1402,9 @@
         : detail.author + ' <' + detail.email + '>'
       if (props.pane === true) {
         return E('div', { className: 'git4idea-detail git4idea-detail-pane' },
-          E('div', { className: 'git4idea-detail-files-head' }, t('detail.files') + ' · ' + String(detail.files.length)),
+          E('div', { className: 'git4idea-detail-files-head' },
+            E('span', null, t('detail.files') + ' · ' + String(detail.files.length)),
+            E(FileTreeFoldButtons, { t: t, files: detail.files, onFolded: setFileFolded })),
           E('div', { className: 'git4idea-detail-files' }, fileRows),
           E('div', { className: 'git4idea-detail-msg' },
             E('div', { className: 'git4idea-detail-head' },

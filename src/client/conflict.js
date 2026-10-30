@@ -237,6 +237,10 @@
       const menuRef = useRef(null)
       const typingRef = useRef(0)
       const typingOpenRef = useRef(false)
+      /* Echo window: a programmatic scroll assignment fires the target's own
+         onScroll. Without the mute a clamped pane would push its shorter offset
+         back into the pane the user is dragging. */
+      const syncLockRef = useRef(0)
       const [blame, setBlame] = useState(null)
       const [menu, setMenu] = useState(null)
       const fail = (caught) => {
@@ -348,15 +352,21 @@
         dropResultBlame()
       }
 
-      /* The three panes follow each other: a wheel or a drag in one moves all
-         three, so the same block stays on screen. */
+      /* The three panes follow each other on BOTH axes (v0.3.1): a wheel or a
+         drag in one moves all three, so the same block and the same column stay
+         on screen. Left and right panes scroll horizontally on their own, the
+         result textarea does too; syncing scrollLeft keeps the columns lined up
+         when a long line is read. */
       const syncScroll = (source) => {
         const from = source.current
         if (from === null) return
+        const now = Date.now()
+        if (now < syncLockRef.current) return
+        syncLockRef.current = now + 80
         for (const other of [leftRef, midRef, rightRef]) {
           if (other === source || other.current === null) continue
-          if (Math.abs(other.current.scrollTop - from.scrollTop) <= 1) continue
-          other.current.scrollTop = from.scrollTop
+          if (Math.abs(other.current.scrollTop - from.scrollTop) > 1) other.current.scrollTop = from.scrollTop
+          if (Math.abs(other.current.scrollLeft - from.scrollLeft) > 1) other.current.scrollLeft = from.scrollLeft
         }
         syncGutter()
       }

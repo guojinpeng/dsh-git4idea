@@ -82,20 +82,37 @@
           sidebarRight.openResource(address)
         } catch (error) { void error }
       }
+      const copyButton = E('button', { type: 'button', className: 'git4idea-preview-btn', 'aria-label': t('diff.copy'), 'data-tip': t('diff.copy'), onClick: copyPatch },
+        E(Icon, { name: copied === true ? 'check' : 'copy', size: 13 }))
+      const refreshButton = E('button', { type: 'button', className: 'git4idea-preview-btn', 'aria-label': t('toolbar.refresh'), 'data-tip': t('toolbar.refresh'), onClick: () => { setRefreshTick((n) => n + 1) } },
+        E(Icon, { name: 'refresh', size: 13 }))
+      const closeButton = props.onClose === undefined ? null : E('button', {
+        type: 'button', className: 'git4idea-preview-btn', 'aria-label': t('toast.close'), 'data-tip': t('toast.close'),
+        onClick: props.onClose,
+      }, E(Icon, { name: 'close', size: 13 }))
+      /* v0.3.1: the commit layer already prints the file name in the diff's own
+         header, so a second title strip made the top of the pane look doubled.
+         With mergeHead the head disappears and copy/refresh/close join the diff
+         tool row, in its size and style. */
+      const merged = props.mergeHead === true
+      const mergedTools = merged !== true || seed === null
+        ? undefined
+        : [
+            E(LineDiffTool, { key: 'copy', tool: 'copy', label: t('diff.copy'), onClick: copyPatch }, E(Icon, { name: copied === true ? 'check' : 'copy', size: 13 })),
+            E(LineDiffTool, { key: 'refresh', tool: 'refresh', label: t('toolbar.refresh'), onClick: () => { setRefreshTick((n) => n + 1) } }, E(Icon, { name: 'refresh', size: 13 })),
+            closeButton === null ? null : E(LineDiffTool, { key: 'close', tool: 'close', label: t('toast.close'), onClick: props.onClose }, E(Icon, { name: 'close', size: 13 })),
+          ].filter((node) => node !== null)
       return E('div', { className: 'git4idea-preview-root' },
-        E('div', { className: 'git4idea-preview-head' },
-          E('span', { className: 'git4idea-preview-title', 'data-tip': title }, title === '' ? t('preview.title') : title),
-          /* m04913: the close button rides the action row, so the × sits on the
-             same line as copy/refresh at the far right of the head. */
-          E('div', { className: 'git4idea-preview-actions' },
-            seed === null ? null : E('button', { type: 'button', className: 'git4idea-preview-btn', 'aria-label': t('diff.copy'), 'data-tip': t('diff.copy'), onClick: copyPatch },
-              E(Icon, { name: copied === true ? 'check' : 'copy', size: 13 })),
-            seed === null ? null : E('button', { type: 'button', className: 'git4idea-preview-btn', 'aria-label': t('toolbar.refresh'), 'data-tip': t('toolbar.refresh'), onClick: () => { setRefreshTick((n) => n + 1) } },
-              E(Icon, { name: 'refresh', size: 13 })),
-            props.onClose === undefined ? null : E('button', {
-              type: 'button', className: 'git4idea-preview-btn', 'aria-label': t('toast.close'), 'data-tip': t('toast.close'),
-              onClick: props.onClose,
-            }, E(Icon, { name: 'close', size: 13 })))),
+        merged === true
+          ? null
+          : E('div', { className: 'git4idea-preview-head' },
+            E('span', { className: 'git4idea-preview-title', 'data-tip': title }, title === '' ? t('preview.title') : title),
+            /* m04913: the close button rides the action row, so the × sits on the
+               same line as copy/refresh at the far right of the head. */
+            E('div', { className: 'git4idea-preview-actions' },
+              seed === null ? null : copyButton,
+              seed === null ? null : refreshButton,
+              closeButton)),
         seed === null
           ? E('div', { className: 'git4idea-preview-body' }, E('div', { className: 'git4idea-empty' }, t('preview.hint')))
           : state.error !== null
@@ -104,6 +121,7 @@
                 patch: state.patch,
                 loading: state.loading,
                 t: t,
+                extraTools: mergedTools,
                 /* worktree seeds carry the file path: the review's open-file
                    tool jumps to the host's whole-file preview. */
                 onOpenFile: seed.path !== undefined && seed.path !== null && seed.path !== '' ? openInFilePreview : undefined,
@@ -223,6 +241,8 @@
       const [files, setFiles] = useState([])
       const [filesLoading, setFilesLoading] = useState(false)
       const [selectedPath, setSelectedPath] = useState(null)
+      /* v0.3.1: the changed-file tree folds from the header buttons. */
+      const [fileFolded, setFileFolded] = useState({})
       const [busy, setBusy] = useState(false)
       const [remote, setRemote] = useState('')
       const [destination, setDestination] = useState('')
@@ -427,7 +447,8 @@
               : E('div', { className: 'git4idea-push-files-head' },
                   E('span', { className: 'git4idea-mono' }, commit.shortHash),
                   E('span', { className: 'git4idea-push-files-subject' }, commit.subject),
-                  E('span', { className: 'git4idea-push-files-count' }, t('detail.files') + ' · ' + String(files.length))),
+                  E('span', { className: 'git4idea-push-files-count' }, t('detail.files') + ' · ' + String(files.length)),
+                  E(FileTreeFoldButtons, { t: t, files: files, onFolded: setFileFolded })),
             commit === null ? null : E('div', { className: 'git4idea-push-file-list' },
               filesLoading === true
                 ? E('div', { className: 'git4idea-empty' }, t('diff.loading'))
@@ -436,6 +457,8 @@
                   : E(CommitFileList, {
                       t: t,
                       files: files,
+                      folded: fileFolded,
+                      onFolded: setFileFolded,
                       selectedPath: selectedPath,
                       onSelect: (file) => { setSelectedPath(file.path) },
                       onOpen: openFile,

@@ -343,8 +343,17 @@
               }))
         : E('span', { className: 'git4idea-lf-selectorStatic', 'data-tip': file.path },
             SeedPathLabel === null ? file.path : E(SeedPathLabel, { path: file.path }))
+      /* v0.3.1: the change kind rides the header as a tag in front of the file
+         name; the old full-width note line ("新建的文件") pushed the first hunk
+         down for no information the tag does not carry. */
+      const fileTag = file.created === true
+        ? E('span', { className: 'git4idea-lf-tag is-created' }, t('lf.tagCreated'))
+        : (file.removed === true
+          ? E('span', { className: 'git4idea-lf-tag is-deleted' }, t('lf.tagDeleted'))
+          : E('span', { className: 'git4idea-lf-tag' }, t('lf.tagModified')))
       return E('div', { className: 'git4idea-lf-root' },
         E('div', { className: 'git4idea-lf-header' },
+          fileTag,
           selector,
           counts,
           E('span', { className: 'git4idea-lf-tools' },
@@ -362,6 +371,10 @@
               tool: 'open-file', label: t('preview.openFile'),
               onClick: props.onOpenFile,
             }, SeedIcons.IconInspectOutlineRegular === undefined ? E(Icon, { name: 'file', size: 13 }) : E(SeedIcons.IconInspectOutlineRegular)),
+            /* Extra head actions merged into the SAME row (v0.3.1): the commit
+               layer's copy/refresh used to sit on a strip of their own above
+               this header, which read as a second, duplicated title row. */
+            Array.isArray(props.extraTools) ? props.extraTools.map((node, index) => E('span', { key: 'extra-' + index, className: 'git4idea-lf-extra' }, node)) : null,
           )),
         file.binary === true
           ? E('p', { className: 'git4idea-lf-status' }, t('diff.binary'))
@@ -376,8 +389,6 @@
                 if (node.scrollTop + node.clientHeight >= node.scrollHeight - LINEDIFF_CHUNK_ROWS * 2) growRows()
               },
             },
-              file.created === true ? E('p', { className: 'git4idea-lf-note' }, t('lf.created')) : null,
-              file.removed === true ? E('p', { className: 'git4idea-lf-note' }, t('lf.removedFile')) : null,
               cut.truncated === true ? E('p', { className: 'git4idea-lf-note' }, fill(t('lf.truncated'), { count: String(LINEDIFF_MAX_LINES) })) : null,
               split === true && wrap !== true
                 ? E(SplitColumns, { sections: sections, highlights: maps, shown: shownRows, onNeedMore: growRows })
@@ -736,21 +747,47 @@
         if (card === null) return
         const cardRect = card.getBoundingClientRect()
         const itemRect = event.currentTarget.getBoundingClientRect()
-        const bounds = props.boundsWidth === undefined ? 0 : props.boundsWidth
+        /* The column edge wins over the panel edge: a wide branch submenu
+           flips left instead of painting over the neighbouring pane. */
+        const bounds = props.subBoundsWidth !== undefined && props.subBoundsWidth > 0
+          ? props.subBoundsWidth
+          : (props.boundsWidth === undefined ? 0 : props.boundsWidth)
+        /* Round 3 #1: the submenu card took the PARENT card's width (it is
+           absolutely positioned inside a shrink-to-fit wrapper), so long branch
+           names were cut with an ellipsis. Its width is measured from the
+           widest label and set inline; the flip test uses that same number. */
+        let widest = 0
+        for (const row of item.items) {
+          if (row === null) continue
+          const indent = row.indent === undefined ? 0 : row.indent
+          const label = row.label === undefined ? '' : String(row.label)
+          widest = Math.max(widest, indent * 12 + label.length * 6.8)
+        }
+        const subWidth = Math.max(240, Math.min(340, Math.round(24 + widest)))
         /* Direction only — the flush offset is CSS (`left:100%` / `right:100%`
-           against the wrapper, whose width IS the parent card), so the seam is
-           zero no matter how wide the submenu actually renders. */
-        const flip = bounds > 0 && position.left + cardRect.width + 220 > bounds - 4
+           against the wrapper), so the seam is zero. */
+        const flip = bounds > 0 && position.left + cardRect.width + subWidth > bounds - 4 && position.left - subWidth >= 4
         /* m04915: the folded branch list needs more rows than the parent card
            allows. The submenu takes its own height budget from the viewport
            instead of inheriting the parent's 320px cap, so a long branch list
            shows in one go and only then scrolls. */
+        /* Round 2 #1: a fixed budget, not one that grows with the row count —
+           a long branch group scrolls inside the card instead of tiling every
+           entry down the panel. */
         const height = props.boundsHeight === undefined || props.boundsHeight <= 0 ? window.innerHeight : props.boundsHeight
-        const room = Math.max(180, Math.min(440, height - itemRect.top - 16))
-        setSub({ items: item.items, flip: flip, top: Math.max(0, itemRect.top - cardRect.top - 4), maxHeight: room })
+        const room = Math.max(180, Math.min(320, height - itemRect.top - 16))
+        setSub({ items: item.items, flip: flip, width: subWidth, top: Math.max(0, itemRect.top - cardRect.top - 4), maxHeight: room })
       }
       const renderItem = (item, index, inSub) => {
         if (item === null) return E('div', { key: 'sep-' + index, className: 'git4idea-menu-sep' })
+        /* A header is a caption, not a verb: the branch filter groups its rows
+           under 本地 / 远程 (v0.3.1 #7) and a disabled row would read as a
+           broken entry. */
+        if (item.header === true) return E('div', {
+          key: 'head-' + index,
+          className: 'git4idea-menu-header',
+          style: item.indent === undefined || item.indent === 0 ? undefined : { paddingLeft: String(8 + item.indent * 12) + 'px' },
+        }, item.label)
         const hasSub = inSub !== true && Array.isArray(item.items) === true && item.items.length > 0
         return E('button', {
           key: item.id + '-' + index + (inSub === true ? '-sub' : ''),
@@ -763,6 +800,9 @@
           // The row keeps its id on the DOM so a `⋯ 更多` entry is addressable
           // (the rail's own buttons do the same; probes click through either).
           'data-action': item.id === undefined ? undefined : item.id,
+          /* v0.3.1 (round 2 #1): a nested branch group indents inside the one
+             submenu card, so depth travels as a row property. */
+          style: item.indent === undefined || item.indent === 0 ? undefined : { paddingLeft: String(8 + item.indent * 12) + 'px' },
           disabled: item.disabled === true,
           onMouseEnter: (event) => openSub(item, inSub, event),
           onClick: (event) => {
@@ -788,7 +828,7 @@
         E('div', { className: 'git4idea-menu', ref: cardRef, 'data-menu-material': 'translucent' },
           E('div', { className: 'git4idea-menu-scroll' },
             props.items.map((item, index) => renderItem(item, index, false)))),
-        sub === null ? null : E('div', { className: 'git4idea-menu git4idea-menu-sub', 'data-menu-material': 'translucent', style: Object.assign({ maxHeight: sub.maxHeight === undefined ? undefined : sub.maxHeight + 'px' }, sub.flip === true ? { right: '100%', top: sub.top + 'px' } : { left: '100%', top: sub.top + 'px' }) },
+        sub === null ? null : E('div', { className: 'git4idea-menu git4idea-menu-sub', 'data-menu-material': 'translucent', style: Object.assign({ maxHeight: sub.maxHeight === undefined ? undefined : sub.maxHeight + 'px', width: sub.width === undefined ? undefined : sub.width + 'px' }, sub.flip === true ? { right: '100%', top: sub.top + 'px' } : { left: '100%', top: sub.top + 'px' }) },
           E('div', { className: 'git4idea-menu-scroll' },
             sub.items.map((item, index) => renderItem(item, index, true)))))
     }
@@ -937,6 +977,7 @@
       return E('div', { className: 'git4idea-overlay' },
         E('div', { className: 'git4idea-dialog' },
           E('div', { className: 'git4idea-dialog-title' }, props.title),
+          props.text === undefined || props.text === '' ? null : E('div', { className: 'git4idea-dialog-text' }, props.text),
           E('input', {
             ref: ref, className: 'git4idea-input', value: value, spellCheck: false,
             placeholder: props.placeholder === undefined ? '' : props.placeholder,
@@ -946,6 +987,125 @@
               if (event.key === 'Escape') { event.preventDefault(); props.onCancel() }
             },
           }),
+          E('div', { className: 'git4idea-dialog-actions' },
+            E('button', { type: 'button', className: 'git4idea-btn', onClick: props.onCancel }, props.cancelLabel),
+            E('button', { type: 'button', className: 'git4idea-btn git4idea-btn-primary', onClick: submit }, props.okLabel))))
+    }
+
+    /* v0.3.1 (#N2, round 3 #2): the path filter's tree entry. Every directory
+       AND file HEAD holds, folded by default, one checkbox per row. Checked rows
+       become the git pathspec list (a folder covers its subtree), so several
+       unrelated paths filter one log at once. The list itself is the tree —
+       IDEA's picker has no search box either. */
+    function PathTreeDialog(props) {
+      const t = props.t
+      const [entries, setEntries] = useState(null)
+      const [checked, setChecked] = useState(() => new Set(Array.isArray(props.value) === true ? props.value : []))
+      const [open, setOpen] = useState({})
+      useEffect(() => {
+        let live = true
+        Promise.resolve(props.load()).then((list) => {
+          if (live !== true) return
+          setEntries(Array.isArray(list) === true ? list : [])
+        }, () => { if (live === true) setEntries([]) })
+        return () => { live = false }
+      }, [])
+      const tree = useMemo(() => {
+        const nodes = (entries === null ? [] : entries).map((item) => ({
+          path: String(item.path),
+          dir: item.dir === true,
+          children: [],
+        })).filter((node) => node.path !== '')
+        const byPath = new Map(nodes.map((node) => [node.path, node]))
+        const roots = []
+        for (const node of nodes) {
+          const cut = node.path.lastIndexOf('/')
+          const parent = cut > 0 ? byPath.get(node.path.slice(0, cut)) : undefined
+          if (parent === undefined) roots.push(node)
+          else parent.children.push(node)
+        }
+        const sort = (list) => {
+          list.sort((a, b) => {
+            if (a.dir !== b.dir) return a.dir === true ? -1 : 1
+            return a.path < b.path ? -1 : a.path > b.path ? 1 : 0
+          })
+          for (const node of list) sort(node.children)
+        }
+        sort(roots)
+        return roots
+      }, [entries])
+      const flip = (path) => setOpen((previous) => {
+        const next = Object.assign({}, previous)
+        if (next[path] === true) delete next[path]
+        else next[path] = true
+        return next
+      })
+      /* Accessible from the checkbox and the row: a click anywhere but the
+         twist toggles the pick. */
+      const toggle = (path) => setChecked((previous) => {
+        const next = new Set(previous)
+        if (next.has(path) === true) next.delete(path)
+        else next.add(path)
+        return next
+      })
+      const rows = []
+      const walk = (list, depth) => {
+        for (const node of list) {
+          rows.push({ node: node, depth: depth })
+          if (node.dir === true && open[node.path] === true) walk(node.children, depth + 1)
+        }
+      }
+      walk(tree, 0)
+      /* A checked folder already covers its children: submitting both would
+         pass a pathspec list git reads as redundant. */
+      const submit = () => {
+        const list = Array.from(checked).sort()
+        const out = []
+        for (const path of list) {
+          let covered = false
+          for (const kept of out) if (path.indexOf(kept + '/') === 0) { covered = true; break }
+          if (covered !== true) out.push(path)
+        }
+        props.onSubmit(out)
+      }
+      const rowOf = (item) => {
+        const node = item.node
+        const hasChildren = node.dir === true && node.children.length > 0
+        return E('div', {
+          key: (node.dir ? 'd:' : 'f:') + node.path,
+          className: 'git4idea-path-row',
+          style: { paddingLeft: String(4 + item.depth * 12) + 'px' },
+        },
+          hasChildren === true
+            ? E('button', {
+                type: 'button', className: 'git4idea-path-twist' + (open[node.path] === true ? ' git4idea-path-twist-open' : ''),
+                onClick: (event) => { event.stopPropagation(); flip(node.path) },
+              }, E(Icon, { name: 'chevron', size: 10 }))
+            : E('span', { className: 'git4idea-path-twist' }),
+          E('label', { className: 'git4idea-path-pick' },
+            E('input', {
+              type: 'checkbox', className: 'git4idea-path-cb', checked: checked.has(node.path),
+              onChange: () => toggle(node.path),
+            }),
+            E(Icon, { name: node.dir === true ? 'folder' : 'file', size: 11 }),
+            E('span', { className: 'git4idea-path-name', title: node.path },
+              node.path.slice(node.path.lastIndexOf('/') + 1))))
+      }
+      return E('div', { className: 'git4idea-overlay' },
+        E('div', { className: 'git4idea-dialog git4idea-dialog-tree' },
+          E('div', { className: 'git4idea-dialog-title' }, props.title),
+          E('div', { className: 'git4idea-path-tree' },
+            E('div', { className: 'git4idea-path-bar' },
+              E('span', { className: 'git4idea-path-note' }, checked.size === 0 ? t('filter.all') : fill(t('filter.pathCount'), { n: String(checked.size) })),
+              checked.size === 0 ? null : E('button', {
+                type: 'button', className: 'git4idea-path-clear',
+                onClick: () => setChecked(new Set()),
+              }, t('filter.clearOne'))),
+            entries === null
+              ? E('div', { className: 'git4idea-path-note' }, '…')
+              : rows.length === 0
+                ? E('div', { className: 'git4idea-path-note' }, t('filter.none'))
+                : rows.map(rowOf)),
           E('div', { className: 'git4idea-dialog-actions' },
             E('button', { type: 'button', className: 'git4idea-btn', onClick: props.onCancel }, props.cancelLabel),
             E('button', { type: 'button', className: 'git4idea-btn git4idea-btn-primary', onClick: submit }, props.okLabel))))
@@ -1151,15 +1311,29 @@
       const options = Array.isArray(props.options) ? props.options : []
       let current = options[0]
       for (const option of options) { if (option.value === props.value) { current = option; break } }
-      const label = props.label + ': ' + (current === undefined ? '' : current.label)
-      return E('button', {
-        type: 'button',
-        className: 'git4idea-filter-select' + (props.value === '' ? '' : ' git4idea-filter-on'),
-        'data-tip': props.hint === undefined ? label : props.hint,
-        onClick: (event) => { if (props.onOpenMenu !== undefined) props.onOpenMenu(event, options) },
-      },
-        E('span', { className: 'git4idea-filter-label' }, label),
-        E(Icon, { name: 'chevron', size: 11 }))
+      /* v0.3.1 (#N1): an empty filter shows its label alone. "分支: 全部" told
+         the user nothing and spent the width a long value needs. A set filter
+         shows label and value on one ellipsized line; the whole text is the
+         tooltip. Callers that own the wording pass 'tip' (the path chip prints
+         the full path on a second line). */
+      const empty = props.value === '' || props.value === undefined
+      const label = empty === true ? props.label : props.label + ': ' + (current === undefined ? String(props.value) : current.label)
+      const tip = props.tip !== undefined
+        ? props.tip
+        : (empty === true ? (props.hint === undefined ? props.label : props.hint) : label)
+      return E('span', { className: 'git4idea-filter-select' + (empty === true ? '' : ' git4idea-filter-on'), 'data-tip': tip },
+        E('button', {
+          type: 'button',
+          className: 'git4idea-filter-main',
+          onClick: (event) => { if (props.onOpenMenu !== undefined) props.onOpenMenu(event, options) },
+        },
+          E('span', { className: 'git4idea-filter-label' }, label),
+          E(Icon, { name: 'chevron', size: 11 })),
+        /* The x clears THIS filter (#N3); the filter bar has no global reset. */
+        empty === true || props.onClear === undefined ? null : E('button', {
+          type: 'button', className: 'git4idea-filter-clear', 'data-tip': props.clearHint,
+          onClick: (event) => { event.stopPropagation(); props.onClear() },
+        }, E(Icon, { name: 'close', size: 9 })))
     }
 
     function RepoPicker(props) {

@@ -233,6 +233,7 @@
                       sessionId: entry.sessionId,
                     },
                     t: t,
+                    mergeHead: true,
                   })))),
         discardAsk === null ? null : E(ConfirmDialog, {
           key: 'discard',
@@ -753,14 +754,18 @@
         const entry = sel.entry
         const kind = sel.kind
         const local = kind === 'local'
-        const blocked = entry.worktree !== null || checkingOut !== ''
+        /* A branch checked out in ANOTHER worktree stays selectable (m00043):
+           only 签出 is refused, because git cannot check the same branch out in
+           two trees. Every other verb works on the ref or the remote. */
+        const inUse = entry.worktree !== null && entry.worktree !== undefined
+        const busy = checkingOut !== ''
         /* The four verbs the IDEA row menu offers (m02697 #3). Merge always runs
            in the direction IDEA words it: the SELECTED ref is merged INTO the
            branch checked out right now, never the other way round. */
         return [
           {
             id: 'checkout', icon: 'checkout', tone: 'accent', label: t('action.checkout'),
-            disabled: entry.head === true || blocked,
+            disabled: entry.head === true || inUse || busy,
             run: () => { setCsMenu(null); csCheckout(entry, kind) },
           },
           {
@@ -771,7 +776,7 @@
               openBranchPrompt({
                 key: 'new|' + kind + '|' + entry.name,
                 title: t('toolbar.newBranch'),
-                text: entry.name,
+                text: fill(t('prompt.newBranchFrom'), { branch: entry.name }),
                 initialValue: kind === 'remote' ? entry.name.slice(entry.name.indexOf('/') + 1) : '',
                 placeholder: t('prompt.newBranch'),
                 onSubmit: async (name) => {
@@ -795,7 +800,7 @@
           {
             id: 'merge', icon: 'compare', tone: 'violet',
             label: fill(t('action.mergeInto'), { from: entry.name, to: branchName === null ? '' : branchName }),
-            disabled: entry.head === true || branchName === null || blocked,
+            disabled: entry.head === true || branchName === null || busy,
             run: () => { setCsMenu(null); void csCall('merge', { branch: entry.name }) },
           },
           /* Local rows only (m03873): update and push act on the SELECTED ref,
@@ -869,7 +874,7 @@
         className: 'git4idea-cs-item',
         'data-current': entry.head === true ? 'true' : 'false',
         'data-menu': csMenu !== null && csMenu.entry === entry ? 'true' : 'false',
-        disabled: entry.worktree !== null || checkingOut !== '',
+        disabled: checkingOut !== '',
         style: { paddingLeft: String(6 + depth * 12) + 'px' },
         onClick: (event) => { openCsMenu(entry, kind, event) },
       },
@@ -901,7 +906,10 @@
         }
         const rows = [E('div', { key: key + '-head', className: 'git4idea-cs-head' }, label)]
         const walk = (node, prefix, depth) => {
-          node.folders.forEach((child, name) => {
+          /* Round 2 #2: directories sort A→Z, so a fresh chooser reads like the
+             branch tree instead of following discovery order. */
+          for (const name of Array.from(node.folders.keys()).sort()) {
+            const child = node.folders.get(name)
             const path = prefix === '' ? name : prefix + '/' + name
             /* Closed unless opened (m00324): a fresh chooser must not dump
                every remote's branches; a search still forces folders open. */
@@ -917,7 +925,7 @@
               E(Icon, { name: 'folder', size: 11 }),
               E('span', { className: 'git4idea-cs-item-name' }, name)))
             if (closed !== true) walk(child, path, depth + 1)
-          })
+          }
           for (const entry of node.leaves) {
             rows.push(csLeaf(entry, kind, depth))
           }

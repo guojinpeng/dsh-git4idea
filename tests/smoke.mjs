@@ -787,7 +787,7 @@ test('host half keeps the destructive-confirm guards', () => {
 })
 
 test('host half exposes the method table the client calls', () => {
-  const methods = ['summary', 'head', 'stats', 'branches', 'log', 'me', 'merge-point', 'commitDetail', 'diff', 'compare', 'repos', 'stage', 'unstage', 'discard', 'commit', 'checkout', 'branchCreate', 'branchRename', 'branch-upstream', 'branchDelete', 'merge', 'rebase', 'cherryPick', 'revert', 'reset', 'fetch', 'pull', 'push', 'stashList', 'stashPush', 'stashApply', 'stashDrop', 'tagCreate', 'tagDelete', 'tagDeleteRemote', 'pushTags', 'clone', 'gitLogs', 'consoleLog', 'consoleClear', 'worktreeList', 'worktreeAdd', 'worktreeRemove', 'remoteAdd', 'remoteRemove', 'branchDeleteRemote', 'rebaseAbort', 'stashClear', 'undoList', 'undoApply', 'conflictDetail', 'conflictSave', 'conflictResolve', 'conflictBlame', 'operationFinish', 'version']
+  const methods = ['summary', 'head', 'stats', 'branches', 'log', 'me', 'merge-point', 'commitDetail', 'diff', 'compare', 'dirTree', 'repos', 'stage', 'unstage', 'discard', 'commit', 'checkout', 'branchCreate', 'branchRename', 'branch-upstream', 'branchDelete', 'merge', 'rebase', 'cherryPick', 'revert', 'reset', 'fetch', 'pull', 'push', 'stashList', 'stashPush', 'stashApply', 'stashDrop', 'tagCreate', 'tagDelete', 'tagDeleteRemote', 'pushTags', 'clone', 'gitLogs', 'consoleLog', 'consoleClear', 'worktreeList', 'worktreeAdd', 'worktreeRemove', 'remoteAdd', 'remoteRemove', 'branchDeleteRemote', 'rebaseAbort', 'stashClear', 'undoList', 'undoApply', 'conflictDetail', 'conflictSave', 'conflictResolve', 'conflictBlame', 'operationFinish', 'version']
   for (const method of methods) {
     if (method === 'merge-point') { assert.match(host, /^  'merge-point': mergePoint,$/m, 'host method missing: merge-point'); continue }
     if (method === 'branch-upstream') { assert.match(host, /^  'branch-upstream': branchUpstream,$/m, 'host method missing: branch-upstream'); continue }
@@ -929,10 +929,11 @@ test('the tree toggle is reachable again after it was folded', () => {
 
   const specs = client.slice(client.indexOf('const RAIL_SPECS = ['), client.indexOf('const RAIL_IDS ='))
   // m01216 #5: exactly these seven, in this order — branch-tree work only.
+  // v0.3.1 appends the remote refresh and the two fold verbs (#3, #10).
   const ids = [...specs.matchAll(/\{ id: '([^']+)'/g)].map((match) => match[1])
-  assert.deepEqual(ids, ['tree', 'newBranch', 'pull', 'delete', 'compare', 'fetch', 'favorite'],
-    'the rail carries the seven branch-tree actions, in order')
-  assert.match(client, /const RAIL_VIEW_IDS = \['tree'\]/, 'only the tree toggle stays clickable while git runs')
+  assert.deepEqual(ids, ['tree', 'newBranch', 'pull', 'delete', 'compare', 'fetch', 'favorite', 'refresh', 'expandAll', 'collapseAll'],
+    'the rail carries the seven branch-tree actions, in order, then the v0.3.1 verbs')
+  assert.match(client, /const RAIL_VIEW_IDS = \['tree', 'expandAll', 'collapseAll'\]/, 'only the view-arranging rail verbs stay clickable while git runs')
   assert.match(client, /'aria-disabled': action\.disabled === true \? 'true' : 'false'/,
     'a disabled action stays hoverable so its tooltip explains why (m01216 #7)')
   assert.match(client, /className: 'git4idea-rail-sep'/, 'the hairline sits under the tree toggle')
@@ -2044,7 +2045,10 @@ test('upstream management: bind, drop and create-tracking from menus (v0.20.0, i
   // Branch-row menu: local rows bind/drop, remote rows create a local branch.
   assert.match(client, /id: 'setUpstream'/, 'branch rows can set an upstream')
   assert.match(client, /id: 'unsetUpstream'/, 'branch rows can drop an upstream')
-  assert.match(client, /id: 'createTracking'/, 'remote rows offer create-local-branch')
+  // v0.3.1 (#2): one branch dialog serves both starts — a remote row passes
+  // track:true into it instead of opening a second create-tracking dialog.
+  assert.match(client, /kind: 'newBranch', from: entry\.name, track: true/, 'remote rows create a tracking branch')
+  assert.doesNotMatch(client, /createTracking/, 'the separate create-tracking dialog is deleted')
   // The submenu is built at click time (branches.remote), never at render
   // time — the useCallback deps must not grow a later-defined binding.
   assert.match(client, /run: \(event\) => openMenuAt\(event, withoutIcons\(branches\.remote\.map/, 'the remote picker is built inside run() at click time')
@@ -2054,14 +2058,18 @@ test('upstream management: bind, drop and create-tracking from menus (v0.20.0, i
   assert.match(client, /id: 'br-unset-upstream'/, 'the more menu can drop the current branch upstream')
   assert.match(client, /disabled: headBranch === '' \|\| remoteBranches\.length === 0 \|\| blocked/, 'set-head verb is gated on a branch and remotes existing')
   assert.match(client, /disabled: headBranch === '' \|\| tracked !== true \|\| blocked/, 'unset-head verb only makes sense when tracking')
-  // The dialog prefills the bare branch name and creates with --track.
-  assert.match(client, /kind === 'createTracking' \? dialog\.name/, 'the tracking dialog prefills the local name')
-  assert.match(client, /startPoint: state\.from, track: true \}\); return \}/, 'the tracking dialog creates with --track')
-  // The tree shows the binding inline, muted and capped.
-  assert.match(client, /className: 'git4idea-row-upstream'/, 'local rows show the upstream inline')
-  assert.match(cssRule('.git4idea-row-upstream'), /max-width:180px/, 'the inline target is capped so it cannot starve the label')
-  // Dictionary: 21 gates for all five new keys (key-set equality test pins parity).
-  for (const key of ['action.setUpstream', 'action.unsetUpstream', 'prompt.createTracking', 'more.setUpstreamHead', 'more.unsetUpstreamHead']) {
+  // The dialog names the local branch it will create from the remote one, and
+  // the checkout gains --track from the row's flag.
+  assert.match(client, /fill\(t\('prompt\.newBranchFrom'\), \{ branch: branchFrom \}\)/, 'the dialog states the start point')
+  assert.match(client, /startPoint: state\.from, track: state\.track === true \}\); return \}/, 'the dialog creates with --track when asked')
+  // The tree shows the binding as a muted glyph; the name lives in its tooltip
+  // (the old inline text capped at 180px and starved the label).
+  assert.match(client, /className: 'git4idea-row-upstream'/, 'local rows show the upstream binding')
+  assert.match(client, /'data-tip': entry\.name \+ ' → ' \+ entry\.upstream/, 'the upstream name lives in the hover tooltip')
+  assert.doesNotMatch(cssRule('.git4idea-row-upstream'), /max-width/, 'the binding glyph never claims label width')
+  // Dictionary: both dictionaries carry the four upstream keys (the key-set
+  // equality test pins parity).
+  for (const key of ['action.setUpstream', 'action.unsetUpstream', 'more.setUpstreamHead', 'more.unsetUpstreamHead']) {
     assert.equal((client.match(new RegExp("'" + key.replace(/\./g, '\\.') + "':", 'g')) || []).length, 2, 'both dictionaries carry ' + key)
   }
 })

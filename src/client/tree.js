@@ -28,10 +28,15 @@
       },
         E('span', { className: 'git4idea-row-icon git4idea-tone-' + tone + (starred === true ? ' git4idea-star-filled' : '') }, E(Icon, { name: glyph, size: 12 })),
         E('span', { className: 'git4idea-row-label' }, props.label === undefined ? entry.name : props.label),
-        // Inline tracking target (issue #18): the title already said "name →
-        // upstream", but nobody hovers a tree to learn a binding. Local rows
-        // show it as muted small text; remote rows ARE the upstream.
-        kind !== 'remote' && kind !== 'tag' && entry.upstream !== null && entry.upstream !== undefined ? E('span', { className: 'git4idea-row-upstream' }, '→ ' + entry.upstream) : null,
+        // Tracking target (issue #18): the old inline "→ origin/feature/…"
+        // text took up to 180px and pushed the branch name into an ellipsis in
+        // the narrow panel. It is now the same tag-outline glyph the log rows
+        // use for refs: the name lives in the hover tooltip, the label keeps
+        // the room. Remote rows ARE the upstream and tags never track.
+        kind !== 'remote' && kind !== 'tag' && entry.upstream !== null && entry.upstream !== undefined ? E('span', {
+          className: 'git4idea-row-upstream',
+          'data-tip': entry.name + ' → ' + entry.upstream,
+        }, E(Icon, { name: 'tagOutline', size: 12 })) : null,
         // A bare 'W' told nobody anything (reported right after the section counts):
         // it means this branch is checked out in ANOTHER working tree, which is why
         // git refuses to check it out here. An icon plus a spelled-out tooltip says so.
@@ -88,6 +93,37 @@
         const stored = readTreeState()
         writeTreeState(Object.assign({}, stored, { folders: foldedFolders }))
       }, [foldedFolders])
+      /* v0.3.1: the rail's expand-all / collapse-all buttons reach the tree as a
+         stamped signal. Applying it writes the SAME persisted state a click on a
+         section head writes, so the choice survives a remount. Collapse keeps
+         the section heads (only their bodies fold). */
+      const foldSignal = props.foldSignal === undefined ? null : props.foldSignal
+      const seenFoldSignal = useRef(foldSignal === null ? 0 : foldSignal.at)
+      useEffect(() => {
+        if (foldSignal === null || seenFoldSignal.current === foldSignal.at) return
+        seenFoldSignal.current = foldSignal.at
+        const fold = foldSignal.mode === 'collapse'
+        const next = {}
+        for (const key of ['favorites', 'local', 'remote', 'tags']) next[key] = fold
+        setCollapsed(next)
+        /* Round 2: 全部收起 must fold EVERY nested folder too, so opening a
+           section head afterwards still shows closed subdirectories. The ids use
+           the same scheme rowsOf renders with ('' for local/favorites, 'remote'
+           for the remote section). 全部展开 clears them all. */
+        const dirs = {}
+        if (fold === true) {
+          const collect = (node, prefix) => {
+            for (const name of node.folders.keys()) {
+              const id = prefix === '' ? name : prefix + '/' + name
+              dirs[id] = true
+              collect(node.folders.get(name), id)
+            }
+          }
+          collect(forestOf(locals), '')
+          collect(forestOf(remotes.map((entry) => Object.assign({}, entry, { remote: true })), remoteNameOf), 'remote')
+        }
+        setFoldedFolders(dirs)
+      }, [foldSignal])
       const branches = props.branches
       const needle = filter.trim().toLowerCase()
       const match = (name) => needle === '' || String(name).toLowerCase().indexOf(needle) >= 0
@@ -371,5 +407,176 @@
           section('remote', t('branches.remote'), remotes, (entry) => Object.assign({}, entry, { remote: true }), true, 'remote', remoteNameOf),
           section('tags', t('branches.tags'), tags, (entry) => Object.assign({}, entry, { tag: true }))),
         E(MarqueeBox, { box: treeMarquee.box }))
+    }
+
+    /* v0.3.1 (#6): the Git detail page names a branch with the composer's own
+       chooser — same search box, same 提交/推送/新建分支 verbs, same 本地/远程
+       tree, same row flyout. The old flat "switch branch" menu is gone, so the
+       two pages read as one control. */
+    function BranchChooser(props) {
+      const t = props.t
+      const [needle, setNeedle] = useState('')
+      const [folded, setFolded] = useState({})
+      const [row, setRow] = useState(null)
+      const inputRef = useRef(null)
+      useEffect(() => { if (inputRef.current !== null) inputRef.current.focus() }, [])
+      const list = props.branches
+      const locals = list !== null && list !== undefined && Array.isArray(list.local) === true ? list.local : []
+      const remotes = list !== null && list !== undefined && Array.isArray(list.remote) === true ? list.remote : []
+      const search = needle.trim().toLowerCase()
+      const entriesOf = (entries) => search === '' ? entries : entries.filter((entry) => String(entry.name).toLowerCase().indexOf(search) >= 0)
+
+      const menuFor = (entry, kind) => {
+        const items = [
+          /* A branch checked out in another worktree keeps a working row
+             (m00043): only 签出 is refused, the other verbs act on the ref. */
+          entry.head === true ? null : {
+            id: 'checkout', icon: 'branch', tone: 'accent', label: t('action.checkout'),
+            disabled: entry.worktree !== null && entry.worktree !== undefined,
+            run: () => props.onCheckout(entry, kind),
+          },
+          {
+            id: 'newBranch', icon: 'plus', tone: 'success', label: t('action.newBranchFrom'),
+            run: () => props.onNewBranch(entry, kind),
+          },
+          entry.head === true ? null : {
+            id: 'merge', icon: 'merge', tone: 'business', label: t('action.mergeIntoCurrent'),
+            run: () => props.onMerge(entry),
+          },
+          kind === 'remote' ? null : {
+            id: 'rename', icon: 'edit', tone: 'secondary', label: t('action.rename'),
+            run: () => props.onRename(entry),
+          },
+          kind === 'remote' ? null : {
+            id: 'delete', icon: 'trash', tone: 'danger', danger: true, label: t('action.delete'),
+            disabled: entry.head === true,
+            run: () => props.onDelete(entry),
+          },
+        ]
+        return items.filter((item) => item !== null)
+      }
+
+      const leaf = (entry, kind, depth) => E('button', {
+        key: kind + ':' + entry.name,
+        type: 'button',
+        className: 'git4idea-cs-item',
+        'data-current': entry.head === true ? 'true' : 'false',
+        'data-menu': row !== null && row.entry === entry ? 'true' : 'false',
+        style: { paddingLeft: String(6 + depth * 12) + 'px' },
+        onClick: (event) => {
+          event.stopPropagation()
+          /* Round 2 #5: the flyout opens flush against the ROW's right edge, not
+             at the pointer — a pointer anchor put it a card's width away. The
+             seat is the containing block (position:fixed), so the offsets are
+             measured against the seat: the workbench sets contain:layout on the
+             panel body, and that would offset viewport coordinates. */
+          const seatEl = event.currentTarget.closest('.git4idea-chooser-seat')
+          const seat = seatEl === null ? { left: 0, top: 0, width: 0 } : seatEl.getBoundingClientRect()
+          const rect = event.currentTarget.getBoundingClientRect()
+          const width = 240
+          const right = rect.right - seat.left + 4
+          const x = seat.left + right + width > window.innerWidth - 4
+            ? Math.max(4, rect.left - seat.left - width - 4)
+            : right
+          setRow({ entry: entry, kind: kind, x: x, y: Math.max(4, rect.top - seat.top) })
+        },
+      },
+        E(Icon, { name: 'branch', size: 11 }),
+        E('span', { className: 'git4idea-cs-item-name' }, entry.name.slice(entry.name.lastIndexOf('/') + 1)),
+        entry.worktree === null || entry.worktree === undefined ? null : E('span', { className: 'git4idea-cs-item-note' }, t('composer.inWorktree')),
+        E('span', { className: 'git4idea-cs-item-tail' },
+          entry.ahead > 0 || entry.behind > 0
+            ? E('span', { className: 'git4idea-cs-item-counts' },
+              entry.ahead > 0 ? E('span', { className: 'git4idea-cs-ahead' }, E(Icon, { name: 'push', size: 10 }), String(entry.ahead)) : null,
+              entry.behind > 0 ? E('span', { className: 'git4idea-cs-behind' }, E(Icon, { name: 'pull', size: 10 }), String(entry.behind)) : null)
+            : null,
+          E(Icon, { name: 'chevronRight', size: 10 })))
+
+      const tree = (key, label, entries, kind) => {
+        if (entries.length === 0) return null
+        const root = { folders: new Map(), leaves: [] }
+        for (const entry of entries) {
+          const parts = String(entry.name).split('/')
+          let node = root
+          for (let i = 0; i < parts.length - 1; i += 1) {
+            if (node.folders.has(parts[i]) !== true) node.folders.set(parts[i], { folders: new Map(), leaves: [] })
+            node = node.folders.get(parts[i])
+          }
+          node.leaves.push(entry)
+        }
+        const rows = [E('div', { key: key + '-head', className: 'git4idea-cs-head' }, label)]
+        const walk = (node, prefix, depth) => {
+          /* Round 2 #2: directories sort A→Z in every branch menu; the
+             ungrouped leaves already come after them at each level. */
+          for (const name of Array.from(node.folders.keys()).sort()) {
+            const child = node.folders.get(name)
+            const path = prefix === '' ? name : prefix + '/' + name
+            const closed = search === '' && folded[path] !== true
+            rows.push(E('button', {
+              key: key + ':dir:' + path,
+              type: 'button',
+              className: 'git4idea-cs-item git4idea-cs-folder',
+              style: { paddingLeft: String(6 + depth * 12) + 'px' },
+              onClick: () => setFolded((map) => Object.assign({}, map, { [path]: map[path] !== true })),
+            },
+              E(Icon, { name: closed === true ? 'chevronRight' : 'chevron', size: 10 }),
+              E(Icon, { name: 'folder', size: 11 }),
+              E('span', { className: 'git4idea-cs-item-name' }, name)))
+            if (closed !== true) walk(child, path, depth + 1)
+          }
+          for (const entry of node.leaves) rows.push(leaf(entry, kind, depth))
+        }
+        walk(root, '', 0)
+        return rows
+      }
+
+      const sections = [].concat(
+        tree('local', t('branches.local'), entriesOf(locals), 'local') || [],
+        tree('remote', t('branches.remote'), entriesOf(remotes), 'remote') || [])
+
+      return E('div', { className: 'git4idea-branch-chooser', onMouseDown: (event) => event.stopPropagation() },
+        E('div', { className: 'git4idea-cs-menu git4idea-cs-branches', 'data-cordis-panel': '' },
+          E('div', { className: 'git4idea-cs-search' },
+            E('input', {
+              ref: inputRef, className: 'git4idea-cs-input', value: needle, spellCheck: false,
+              placeholder: t('branches.filter'),
+              onChange: (event) => setNeedle(event.target.value),
+              onKeyDown: (event) => { if (event.key === 'Escape') props.onClose() },
+            }),
+            E('button', {
+              type: 'button',
+              className: 'git4idea-cs-tool' + (props.fetching === true ? ' git4idea-cs-tool-busy' : ''),
+              'data-tip': t('toolbar.fetch'),
+              'aria-busy': props.fetching === true ? 'true' : 'false',
+              onClick: () => { if (props.onFetch !== undefined && props.fetching !== true) props.onFetch() },
+            }, E(Icon, { name: 'fetch', size: 13 }))),
+          E('div', { className: 'git4idea-cs-actions' },
+            E('button', { type: 'button', className: 'git4idea-cs-action', 'data-tip': t('changes.commit'), onClick: () => props.onCommit() },
+              E(Icon, { name: 'commit', size: 12 }), E('span', null, t('changes.commit'))),
+            E('button', { type: 'button', className: 'git4idea-cs-action', 'data-tip': t('toolbar.push'), onClick: () => props.onPush() },
+              E(Icon, { name: 'push', size: 12 }), E('span', null, t('toolbar.push'))),
+            E('button', { type: 'button', className: 'git4idea-cs-action', 'data-tip': t('toolbar.newBranch'), onClick: () => props.onNewBranchAtHead() },
+              E(Icon, { name: 'plus', size: 12 }), E('span', null, t('toolbar.newBranch')))),
+          E('div', { className: 'git4idea-cs-sections', onScroll: () => { if (row !== null) setRow(null) } },
+            /* Round 3 #4: an empty repository must still show the CARD, with a
+               centred note — the card used to collapse to a bare row. */
+            sections.length === 0
+              ? E('div', { className: 'git4idea-cs-empty' },
+                list === null || list === undefined
+                  ? t('status.busy')
+                  : locals.length + remotes.length === 0 ? t('branches.empty') : t('filter.none'))
+              : sections)),
+        row === null ? null : E('div', {
+          className: 'git4idea-cs-flyout',
+          'data-cordis-panel': '',
+          style: { left: String(row.x) + 'px', top: String(row.y) + 'px' },
+        }, menuFor(row.entry, row.kind).map((item) => E('button', {
+          key: item.id,
+          type: 'button',
+          className: 'git4idea-cs-sub-item',
+          'data-tone': item.danger === true ? 'danger' : (item.tone === undefined ? 'secondary' : item.tone),
+          'aria-disabled': item.disabled === true ? 'true' : 'false',
+          onClick: () => { if (item.disabled !== true) { setRow(null); item.run() } },
+        }, E('span', { className: 'git4idea-cs-sub-label' }, item.label)))))
     }
 
