@@ -29,6 +29,7 @@ export const WRITE_METHODS = new Set([
   'branchDelete', 'merge', 'rebase', 'cherryPick', 'revert', 'reset', 'fetch', 'pull',
   'push', 'stashPush', 'stashApply', 'stashDrop', 'stashClear', 'tagCreate', 'tagDelete', 'tagDeleteRemote', 'pushTags', 'clone', 'remoteAdd', 'remoteRemove', 'branchDeleteRemote', 'undoApply',
   'worktreeAdd', 'worktreeRemove',
+  'rebaseAbort', 'conflictSave', 'conflictResolve', 'operationFinish',
 ])
 
 

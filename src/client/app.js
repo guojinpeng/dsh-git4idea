@@ -179,6 +179,8 @@
             commitDialog.set(null)
             fileDialog.set(null)
             pushDialog.set(null)
+            conflictDialog.set(null)
+            conflictOverviewDialog.set(null)
             try { offCommit() } catch (error) { void error }
             try { offFile() } catch (error) { void error }
 

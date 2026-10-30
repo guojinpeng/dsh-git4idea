@@ -746,10 +746,6 @@
       const shownRefs = refs.slice(0, MAX_ROW_REFS)
       const hiddenRefs = refs.length - shownRefs.length
       return E('div', {
-        /* data-lane feeds the hover highlight: the scroll container copies the
-           hovered row's lane into data-hover-lane, and generated CSS dims every
-           graph stroke whose data-lane differs — zero React re-renders. */
-        'data-lane': String(props.row.lane),
         className: 'git4idea-commit' + (props.selected === true ? ' git4idea-commit-selected' : ''),
         /* Modifier handling lives in HistoryList (it owns the rendered row
            order the Shift-range walks); a plain click opens the detail (m00356). */
@@ -1159,19 +1155,6 @@
           onPointerDownCapture: (event) => {
             if (isTypingTarget(event.target) === false) event.currentTarget.focus({ preventScroll: true })
           },
-          /* Lane hover highlight (GitLens-style trace): copy the hovered row's
-             lane into data-hover-lane; generated CSS dims every stroke whose
-             data-lane differs. Direct DOM dataset writes on purpose — the
-             alternative is re-rendering every row on each hover change. */
-          onMouseOver: (event) => {
-            const host = event.currentTarget
-            const row = event.target instanceof Element ? event.target.closest('.git4idea-commit') : null
-            const lane = row === null ? null : row.getAttribute('data-lane')
-            if (lane === host.getAttribute('data-hover-lane')) return
-            if (lane === null) host.removeAttribute('data-hover-lane')
-            else host.setAttribute('data-hover-lane', lane)
-          },
-          onMouseLeave: (event) => event.currentTarget.removeAttribute('data-hover-lane'),
         },
           rows.length === 0 ? E('div', { className: 'git4idea-empty' }, dirtyFilter ? t('filter.none') : t('history.empty')) : null,
           order === 'asc' ? loadMoreButton : null,
@@ -1304,6 +1287,11 @@
         expanded
           ? E('div', { className: 'git4idea-detail-branches-list' }, branches.map((name) => E('div', { key: name, className: 'git4idea-detail-branch' }, name)))
           : null)
+      /* The header names the author the way git does, `name <email>`, so the
+         address is visible without a hover (m01756). */
+      const authorText = detail.email === undefined || detail.email === ''
+        ? detail.author
+        : detail.author + ' <' + detail.email + '>'
       if (props.pane === true) {
         return E('div', { className: 'git4idea-detail git4idea-detail-pane' },
           E('div', { className: 'git4idea-detail-files-head' }, t('detail.files') + ' · ' + String(detail.files.length)),
@@ -1311,7 +1299,7 @@
           E('div', { className: 'git4idea-detail-msg' },
             E('div', { className: 'git4idea-detail-head' },
               E('span', { className: 'git4idea-mono' }, detail.shortHash),
-              E('span', { className: 'git4idea-detail-author' }, detail.author),
+              E('span', { className: 'git4idea-detail-author', 'data-tip': authorText }, authorText),
               E('span', { className: 'git4idea-detail-date' }, shortDate(detail.date))),
             E('div', { className: 'git4idea-detail-subject' }, detail.subject),
             detail.body === undefined || detail.body.trim() === '' ? null : E('pre', { className: 'git4idea-detail-body' }, detail.body.trim()),
@@ -1322,7 +1310,7 @@
         E('div', { className: 'git4idea-detail-head' },
           E('button', { type: 'button', className: 'git4idea-btn git4idea-btn-small', onClick: props.onBack }, '← ' + t('detail.back')),
           E('span', { className: 'git4idea-mono' }, detail.shortHash),
-          E('span', { className: 'git4idea-detail-author' }, detail.author),
+          E('span', { className: 'git4idea-detail-author', 'data-tip': authorText }, authorText),
           E('span', { className: 'git4idea-detail-date' }, shortDate(detail.date))),
         E('div', { className: 'git4idea-detail-subject' }, detail.subject),
         detail.body === undefined || detail.body.trim() === '' ? null : E('pre', { className: 'git4idea-detail-body' }, detail.body.trim()),

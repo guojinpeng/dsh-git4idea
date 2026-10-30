@@ -2,24 +2,14 @@
     /* Tokens only (--dsw-alias-*): transparent themes and background plugins
        (dsh-any-background) keep showing through, like the host's own panels. */
 
-    /* Lane-hover trace, generated: one rule per lane (lanes are capped at
-       GRAPH_MAX_LANES, so this is a fixed handful). When the scroll container
-       carries data-hover-lane="N", every graph stroke whose data-lane differs
-       fades — the hovered lane reads as one continuous thread down the graph
-       with zero React involvement. */
-    const LANE_TRACE_RULES = []
-    for (let lane = 0; lane < GRAPH_MAX_LANES; lane += 1) {
-      LANE_TRACE_RULES.push(
-        '.git4idea-history-scroll[data-hover-lane="' + lane + '"] .git4idea-graph line:not([data-lane="' + lane + '"])'
-        + ',.git4idea-history-scroll[data-hover-lane="' + lane + '"] .git4idea-graph path:not([data-lane="' + lane + '"])'
-        + ',.git4idea-history-scroll[data-hover-lane="' + lane + '"] .git4idea-graph circle:not([data-lane="' + lane + '"])'
-        + '{stroke-opacity:.18;fill-opacity:.18}',
-      )
-    }
-    LANE_TRACE_RULES.push('.git4idea-graph line,.git4idea-graph path,.git4idea-graph circle{transition:stroke-opacity .15s,fill-opacity .15s}')
-    /* The rail refresh button spins while its fetch+refresh round-trip runs. */
-    LANE_TRACE_RULES.push('.git4idea-spin svg{animation:git4idea-spin-rotate .9s linear infinite}')
-    LANE_TRACE_RULES.push('@keyframes git4idea-spin-rotate{to{transform:rotate(360deg)}}')
+    /* Graph strokes keep their own colour on row hover (m01785): the row
+       background already shows the hover cue, so the per-lane trace that faded
+       every other stroke is gone. */
+    const EXTRA_RULES = [
+      /* The rail refresh button spins while its fetch+refresh round-trip runs. */
+      '.git4idea-spin svg{animation:git4idea-spin-rotate .9s linear infinite}',
+      '@keyframes git4idea-spin-rotate{to{transform:rotate(360deg)}}',
+    ]
 
     const CSS = [
       '.git4idea-root{position:relative;display:flex;flex-direction:column;height:100%;min-height:0;background:transparent;color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family,-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",Helvetica,Arial,sans-serif);font-size:13px;line-height:1.5;font-weight:400;overflow:hidden}',
@@ -212,6 +202,20 @@
          the right. Double-clicking a file raises the diff dialog above. */
       '.git4idea-push-card{display:flex;flex-direction:column;width:min(1100px,94vw);height:min(720px,88vh);overflow:hidden;border-radius:var(--dsw-radius-md,12px);border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1,var(--dsw-alias-bg-layer-2));box-shadow:var(--dsw-elevation-prominent,0 18px 48px rgba(0,0,0,.45))}',
       '.git4idea-push-target{flex:none;max-width:40%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dsw-alias-label-tertiary)}',
+      /* The local -> remote mapping line (m00005): a branch may leave under a
+         different name, and a destination that is new on the remote says so. */
+      '.git4idea-push-map{display:flex;align-items:center;gap:6px;flex:none;flex-wrap:wrap;padding:6px 10px;border-bottom:1px solid var(--dsw-alias-border-l2);font-size:12px}',
+      '.git4idea-push-map-label{color:var(--dsw-alias-label-tertiary)}',
+      '.git4idea-push-map-branch{max-width:30%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dsw-alias-label-primary)}',
+      '.git4idea-push-map-arrow{color:var(--dsw-alias-label-tertiary)}',
+      '.git4idea-push-map-remote{flex:none;max-width:180px}',
+      '.git4idea-push-map-dest{flex:none;width:240px;max-width:36vw}',
+      /* The destination field carries a datalist for suggestions. Chromium draws
+         its own picker arrow inside the field; the list still opens on typing
+         and on ArrowDown, so the arrow goes (m02021). */
+      '.git4idea-push-map-dest::-webkit-calendar-picker-indicator{display:none}',
+      '.git4idea-push-map-state{flex:none;padding:1px 6px;border-radius:999px;corner-shape:round;background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary);font-size:11px}',
+      '.git4idea-push-map-force{color:var(--dsw-alias-label-primary)}',
       '.git4idea-push-body{flex:1;min-height:0;display:flex;overflow:hidden}',
       '.git4idea-push-commits{width:calc((100% - 1px)*2/5);flex:none;display:flex;flex-direction:column;overflow:auto;padding:4px;border-right:1px solid var(--dsw-alias-border-l2)}',
       '.git4idea-push-commit{display:flex;align-items:center;gap:8px;width:100%;flex:none;padding:4px 6px;border:0;border-radius:calc(var(--dsw-radius-sm,8px) - 2px);background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer}',
@@ -233,6 +237,92 @@
       '.git4idea-push-file-list .git4idea-row:focus-visible{outline:1px solid var(--dsw-alias-brand-primary);outline-offset:-1px}',
       '.git4idea-push-foot{display:flex;align-items:center;gap:8px;flex:none;padding:6px 8px;border-top:1px solid var(--dsw-alias-border-l2)}',
       '.git4idea-push-footnote{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dsw-alias-label-tertiary);font-size:11px}',
+      /* Conflict card (m01041): one scroller holds three aligned columns, so a
+         single scroll gesture moves the current branch, the result and the
+         incoming branch together. The old card painted git's marker lines; this
+         one paints each changed region with a tint and keeps every line level by
+         giving each row one cell per column. */
+      '.git4idea-conflict-overlay{z-index:84}',
+      '.git4idea-conflict-card{display:flex;flex-direction:column;width:min(1420px,97vw);height:min(860px,93vh);overflow:hidden;border-radius:var(--dsw-radius-md,12px);border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1,var(--dsw-alias-bg-layer-2));box-shadow:var(--dsw-elevation-prominent,0 18px 48px rgba(0,0,0,.45))}',
+      '.git4idea-conflict-path{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dsw-alias-label-secondary);font-size:11px}',
+      '.git4idea-conflict-toolbar{display:flex;align-items:center;gap:6px;flex:none;padding:4px 8px;border-bottom:1px solid var(--dsw-alias-border-l2)}',
+      '.git4idea-conflict-toolbar-label{flex:none;margin-right:2px;color:var(--dsw-alias-label-tertiary);font-size:11px}',
+      '.git4idea-conflict-toolbar .git4idea-btn.is-on{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary);border-color:var(--dsw-alias-brand-primary)}',
+      '.git4idea-conflict-flip{display:inline-flex;transform:scaleX(-1)}',
+      '.git4idea-conflict-body{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}',
+      '.git4idea-conflict-heads{display:grid;grid-template-columns:33.333% 33.333% 33.334%;flex:none;border-bottom:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-2,transparent)}',
+      '.git4idea-conflict-head{display:flex;align-items:center;gap:6px;min-width:0;height:26px;padding:0 8px;overflow:hidden;color:var(--dsw-alias-label-secondary);font-size:11px;white-space:nowrap}',
+      '.git4idea-conflict-head + .git4idea-conflict-head{border-left:1px solid var(--dsw-alias-border-l2)}',
+      '.git4idea-conflict-cols{flex:1;min-height:0;display:flex;overflow:hidden}',
+      '.git4idea-conflict-pane{flex:1 1 33.333%;min-width:0;overflow:auto;font:12px/18px ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace}',
+      '.git4idea-conflict-mid{flex:1 1 33.334%;min-width:0;display:flex;border-left:1px solid var(--dsw-alias-border-l2);border-right:1px solid var(--dsw-alias-border-l2)}',
+      '.git4idea-conflict-gutter{flex:none;overflow:hidden;font:12px/18px ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace}',
+      '.git4idea-conflict-gutter-row{display:flex;align-items:center;height:18px;line-height:18px}',
+      '.git4idea-conflict-row{position:relative;display:flex;align-items:center;height:18px;line-height:18px}',
+      '.git4idea-conflict-row.is-ours{background:color-mix(in srgb, var(--dsw-alias-state-success-primary,#3fb950) 14%, transparent)}',
+      '.git4idea-conflict-row.is-theirs{background:color-mix(in srgb, var(--dsw-alias-state-business-primary,#4d9fff) 14%, transparent)}',
+      '.git4idea-conflict-row.is-conflict.is-ours{background:color-mix(in srgb, var(--dsw-alias-state-success-primary,#3fb950) 24%, transparent)}',
+      '.git4idea-conflict-row.is-conflict.is-theirs{background:color-mix(in srgb, var(--dsw-alias-state-business-primary,#4d9fff) 24%, transparent)}',
+      '.git4idea-conflict-num{flex:none;width:48px;box-sizing:border-box;padding:0 8px 0 6px;text-align:right;color:var(--dsw-alias-label-tertiary);user-select:none;font-variant-numeric:tabular-nums;cursor:context-menu}',
+      '.git4idea-conflict-code{flex:1;min-width:0;overflow:hidden;white-space:pre;padding-right:8px;color:var(--dsw-alias-label-primary)}',
+      '.git4idea-conflict-pane.is-left .git4idea-conflict-code{padding-right:52px}',
+      '.git4idea-conflict-pane.is-right .git4idea-conflict-code{padding-left:52px;padding-right:8px}',
+      '.git4idea-conflict-blame{flex:none;width:72px;padding:0 6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right;color:var(--dsw-alias-label-tertiary);font-size:11px;user-select:none}',
+      '.git4idea-conflict-blame.is-author{width:94px;text-align:left}',
+      '.git4idea-conflict-acts{position:absolute;top:0;z-index:1;display:inline-flex;align-items:center;gap:2px;height:18px}',
+      '.git4idea-conflict-acts.is-left{left:50px}',
+      '.git4idea-conflict-acts.is-right{right:50px}',
+      '.git4idea-conflict-result{flex:1;min-height:0;width:100%;box-sizing:border-box;resize:none;padding:0 8px;border:0;background:transparent;color:var(--dsw-alias-label-primary);font:12px/18px ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;outline:none;tab-size:4;white-space:pre;overflow:auto}',
+      '.git4idea-conflict-mark{display:inline-flex;align-items:center;justify-content:center;width:22px;height:16px;padding:0;flex:none;border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-xs,4px);background:var(--dsw-alias-bg-layer-1,var(--dsw-alias-bg-layer-2));color:var(--dsw-alias-label-secondary);cursor:pointer}',
+      '.git4idea-conflict-mark:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
+      '.git4idea-conflict-mark-ours:hover{border-color:var(--dsw-alias-state-success-primary);color:var(--dsw-alias-state-success-primary)}',
+      '.git4idea-conflict-mark-theirs:hover{border-color:var(--dsw-alias-state-business-primary,var(--dsw-alias-brand-primary));color:var(--dsw-alias-state-business-primary,var(--dsw-alias-brand-primary))}',
+      '.git4idea-conflict-mark-drop:hover{border-color:var(--dsw-alias-state-error-primary);color:var(--dsw-alias-state-error-primary)}',
+      '.git4idea-conflict-dim{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dsw-alias-label-tertiary)}',
+      '.git4idea-conflict-editor{flex:1;min-height:0;width:100%;box-sizing:border-box;resize:none;padding:6px 8px;border:0;background:transparent;color:var(--dsw-alias-label-primary);font:12px/18px ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;outline:none;tab-size:4;white-space:pre;overflow:auto}',
+      '.git4idea-conflict-void{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:12px;color:var(--dsw-alias-label-tertiary);text-align:center}',
+      '.git4idea-conflict-void p{margin:0}',
+      '.git4idea-conflict-menu{position:fixed;z-index:12;min-width:190px;padding:4px;border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-xs,4px);background:var(--dsw-alias-bg-layer-1,var(--dsw-alias-bg-layer-2));box-shadow:0 8px 24px rgba(0,0,0,.35)}',
+      '.git4idea-conflict-menu-item{display:flex;align-items:center;gap:6px;width:100%;padding:5px 8px;border:0;border-radius:var(--dsw-radius-xs,4px);background:transparent;color:var(--dsw-alias-label-primary);font:inherit;font-size:12px;text-align:left;cursor:pointer}',
+      '.git4idea-conflict-menu-item:hover{background:var(--dsw-alias-interactive-bg-hover)}',
+      /* Conflict overview: the unresolved files, one accept verb per side.
+         Same card frame as the push card, and under the editor card. */
+      '.git4idea-conflict-overview-overlay{z-index:83}',
+      '.git4idea-conflict-overview-card{width:min(900px,94vw);height:min(560px,86vh)}',
+      '.git4idea-conflict-overview-body{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;padding:6px 8px;gap:6px}',
+      '.git4idea-conflict-overview-sub{flex:none;color:var(--dsw-alias-label-secondary)}',
+      '.git4idea-conflict-overview-head{flex:none;display:flex;align-items:center;gap:8px;padding:4px 6px;border-bottom:1px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-tertiary);font-size:11px}',
+      '.git4idea-conflict-overview-head .git4idea-conflict-overview-file-col{padding-left:20px}',
+      '.git4idea-conflict-accept{flex:none;width:120px;justify-content:center}',
+      '.git4idea-conflict-overview-file-col{flex:1;min-width:0}',
+      '.git4idea-conflict-overview-side{flex:none;width:120px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+      '.git4idea-conflict-overview-list{flex:1;min-height:0;overflow:auto}',
+      '.git4idea-conflict-overview-row{display:flex;align-items:center;gap:8px;padding:3px 6px;border-radius:var(--dsw-radius-sm,8px);cursor:pointer}',
+      '.git4idea-conflict-overview-row:hover{background:var(--dsw-alias-interactive-bg-hover)}',
+      '.git4idea-conflict-overview-row.is-selected{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
+      '.git4idea-conflict-overview-path{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+      '.git4idea-conflict-overview-row .git4idea-btn{flex:none;width:130px;justify-content:center}',
+      /* Composer pill in operation mode: the warning glyph, the operation text,
+         and the two verbs that operation accepts (open the overview, abort). */
+      '.git4idea-cs-op{display:inline-flex;align-items:center;gap:4px;min-width:0}',
+      '.git4idea-cs-alert{display:inline-flex;align-items:center;flex:none}',
+      '.git4idea-cs-opbtn{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;padding:0;border:none;border-radius:var(--dsw-radius-sm,8px);background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;cursor:pointer;flex:none;transition:filter .12s ease, transform .12s ease}',
+      '.git4idea-cs-opbtn:hover:not([aria-disabled=true]){filter:brightness(1.1)}',
+      '.git4idea-cs-opbtn:active:not([aria-disabled=true]){transform:scale(.94)}',
+      '.git4idea-cs-opbtn[aria-disabled=true]{opacity:.45;cursor:default}',
+      '.git4idea-cs-advance{display:inline-flex;align-items:center;gap:0}',
+      /* The two verbs read as buttons, not glyphs (m00849 #1): green accepts
+         the operation, red aborts it, with white icons on the state colors. */
+      '.git4idea-cs-opbtn.git4idea-cs-go{background:var(--dsw-alias-state-success-primary);color:var(--dsw-static-neutral-bluish-00,#fff);box-shadow:0 1px 2px rgba(0,0,0,.18)}',
+      '.git4idea-cs-opbtn.git4idea-cs-stop{background:var(--dsw-alias-state-error-primary);color:var(--dsw-static-neutral-bluish-00,#fff);box-shadow:0 1px 2px rgba(0,0,0,.18)}',
+      /* An unfinished merge/rebase/cherry-pick/revert turns its chip into the
+         finish/abort/skip controls instead of hiding them in the "..." menu. */
+      '.git4idea-opgroup{display:inline-flex;align-items:center;gap:4px;flex:none}',
+      '.git4idea-opchip-btn{border:0;font:inherit;cursor:pointer}',
+      '.git4idea-opchip-btn:hover{filter:brightness(1.15)}',
+      '.git4idea-opbtn{padding:1px 6px;border-radius:var(--dsw-radius-sm,8px);border:1px solid var(--dsw-alias-border-l2);background:transparent;color:var(--dsw-alias-label-primary);font:inherit;font-size:11px;cursor:pointer;flex:none}',
+      '.git4idea-opbtn:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover)}',
+      '.git4idea-opbtn:disabled{opacity:.45;cursor:default}',
       '.git4idea-commit-layer-head{display:flex;align-items:center;gap:8px;padding:5px 8px;flex:none;border-bottom:1px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-secondary)}',
       '.git4idea-commit-layer-title{color:var(--dsw-alias-label-primary)}',
       '.git4idea-commit-layer-body{flex:1;min-height:0;display:flex;overflow:hidden}',
@@ -720,7 +810,7 @@
       '.git4idea-cs-action{display:flex;align-items:center;gap:6px;width:100%;height:24px;padding:0 8px;flex:none;border:none;border-radius:var(--dsw-radius-sm,8px);background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;font-size:12px;text-align:left;cursor:pointer}',
       '.git4idea-cs-action:hover:not([aria-disabled="true"]){background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
       '.git4idea-cs-action[aria-disabled="true"]{opacity:.4;cursor:default}',
-    ].concat(LANE_TRACE_RULES).join('\n')
+    ].concat(EXTRA_RULES).join('\n')
 
     /* ============================== plugin ============================== */
 

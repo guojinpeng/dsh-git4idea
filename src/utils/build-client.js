@@ -36,6 +36,7 @@ export const FRAGMENT_ORDER = [
   'composer.js',
   'dialogs.js',
   'preview.js',
+  'conflict.js',
   'app.js',
 ]
 

@@ -17,6 +17,15 @@
       })
     }
 
+    /* The short author name of a blame record: a name that is an e-mail address
+       keeps only its local part, so a narrow annotation column has room for the
+       date. Everything else is shown as it comes from git. */
+    function shortAuthorName(name) {
+      if (typeof name !== 'string') return ''
+      const at = name.indexOf('@')
+      return at > 0 ? name.slice(0, at) : name
+    }
+
     /* One success line per write route (m05310). Every gesture that mutates the
        repository answers in the bottom-right stack; the panel run() and the commit
        card share this table so the same verb never words itself two ways. A route
@@ -43,6 +52,12 @@
       if (method === 'merge') return fill(t('toast.merged'), { name: String(p.branch) })
       if (method === 'rebase') return fill(t('toast.rebased'), { onto: String(p.onto) })
       if (method === 'rebaseAbort') return t('toast.rebaseAborted')
+      if (method === 'operationFinish') {
+        if (p.action === 'continue') return t('toast.operationFinished')
+        if (p.action === 'abort') return t('toast.operationAborted')
+        return t('toast.operationSkipped')
+      }
+      if (method === 'conflictResolve') return t('toast.conflictResolved')
       if (method === 'cherryPick') return fill(t('toast.cherryPicked'), { n: p.hashes === undefined ? 1 : count(p.hashes) })
       if (method === 'revert') return fill(t('toast.reverted'), { hash: String(p.hash).slice(0, 8) })
       if (method === 'reset') return fill(t(p.mode === 'hard' ? 'toast.resetHard' : 'toast.resetSoft'), { hash: String(p.hash).slice(0, 8) })
@@ -1243,7 +1258,6 @@
       for (const segment of edgeSegments(row, x, middle, height)) {
         children.push(E('line', {
           key: segment.key,
-          'data-lane': String(segment.lane),
           x1: segment.x1, y1: segment.y1, x2: segment.x2, y2: segment.y2,
           stroke: color(segment.color), strokeWidth: stem, strokeLinecap: 'round',
         }))
@@ -1255,9 +1269,9 @@
          background colour: the ring spans r..r+2, the core sits at r/2. */
       children.push(isHead
         ? E('g', { key: 'dot' },
-          E('circle', { 'data-lane': String(row.lane), cx: x(row.lane), cy: middle, r: radius * 1.25, fill: 'none', stroke: color(row.lane), strokeWidth: radius * 0.5 }),
+          E('circle', { cx: x(row.lane), cy: middle, r: radius * 1.25, fill: 'none', stroke: color(row.lane), strokeWidth: radius * 0.5 }),
           E('circle', { cx: x(row.lane), cy: middle, r: radius * 0.5, fill: color(row.lane) }))
-        : E('circle', { key: 'dot', 'data-lane': String(row.lane), cx: x(row.lane), cy: middle, r: radius, fill: color(row.lane) }))
+        : E('circle', { key: 'dot', cx: x(row.lane), cy: middle, r: radius, fill: color(row.lane) }))
       return E('svg', { className: 'git4idea-graph', width: width, height: height, viewBox: '0 0 ' + width + ' ' + height }, children)
     }, (prev, next) => prev.row === next.row && prev.height === next.height)
 

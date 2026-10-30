@@ -49,10 +49,23 @@ export async function push(payload) {
   const root = await repoRootOf(cwd, payload)
   if (payload.confirm !== true) throw badRequest('push requires confirm: true')
   const args = ['push']
+  /* The push card names both ends explicitly (m00005): branch.<name>.merge is a
+     stale hint after a rename, and a bare `git push` would follow it back to the
+     old remote name. `--set-upstream` with a source:destination refspec records
+     the destination that was actually pushed. */
+  const remote = typeof payload.remote === 'string' && payload.remote.trim() !== '' ? requireRef(payload.remote, 'remote') : ''
+  const localBranch = typeof payload.localBranch === 'string' && payload.localBranch.trim() !== '' ? requireRef(payload.localBranch, 'localBranch') : ''
+  const remoteBranch = typeof payload.remoteBranch === 'string' && payload.remoteBranch.trim() !== ''
+    ? requireRef(payload.remoteBranch, 'remoteBranch').replace(/^refs\/heads\//, '')
+    : ''
+  const explicit = remote !== '' && localBranch !== '' && remoteBranch !== ''
   if (payload.setUpstream === true) args.push('--set-upstream')
   if (payload.force === true) args.push('--force-with-lease')
-  if (typeof payload.remote === 'string' && payload.remote.trim() !== '') args.push(requireRef(payload.remote, 'remote'))
-  if (typeof payload.branch === 'string' && payload.branch.trim() !== '') args.push(requireRef(payload.branch, 'branch'))
+  if (explicit === true) args.push(remote, localBranch + ':refs/heads/' + remoteBranch)
+  else {
+    if (remote !== '') args.push(remote)
+    if (typeof payload.branch === 'string' && payload.branch.trim() !== '') args.push(requireRef(payload.branch, 'branch'))
+  }
   const out = await git(root, args, { timeoutMs: NETWORK_TIMEOUT_MS })
   return { output: (out + '\n').trim() }
 }

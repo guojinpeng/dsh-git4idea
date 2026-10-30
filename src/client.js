@@ -312,7 +312,7 @@ window.__ModuleLoader__.load({
       'more.commitStaged': '提交已暂存文件...',
       'more.commitAll': '全部提交...',
       'more.undoCommit': '撤销上次提交',
-      'more.rebaseAbort': '中止变基',
+      'more.abortOperation': '中止当前操作',
       'more.commitStagedAmend': '提交已暂存文件(修改)...',
       'more.commitAllAmend': '全部提交(修改)...',
       'more.commitStagedSign': '提交已暂存文件(已签收)...',
@@ -469,12 +469,92 @@ window.__ModuleLoader__.load({
       'confirm.protected': '{name} 是主分支。删除是不可逆的高风险操作,请输入分支名确认。删除后仍可从浮窗撤回。',
       'discard.untracked.confirm': '删除未跟踪文件 {path}?文件内容会被删除,删除后浮窗里可以撤回。',
       'stashDrop.confirm': '删除贮藏 {ref}?删除后浮窗里可以撤回。',
+      'conflict.title': '解决冲突',
+      'conflict.open': '解决冲突...',
+      'conflict.hint': '中栏可直接编辑, 两侧用按钮采用或丢弃',
+      'conflict.save': '保存',
+      'conflict.saved': '已保存',
+      'conflict.savedMarkers': '已保存, 文件里还有冲突标记',
+      'conflict.markResolved': '标记已解决',
+      'conflict.resolved': '已标记为已解决',
+      'conflict.resolvedRemoved': '文件已删除并标记为已解决',
+      'conflict.adoptedFile': '已载入整个文件, 保存后生效',
+      'conflict.sideMissing': '该侧没有文件版本',
+      'conflict.noMarkers': '文件里没有冲突标记',
+      'conflict.blockApplied': '已替换冲突块, 保存后生效',
+      'conflict.binary': '二进制文件不能编辑, 请选择一侧',
+      'conflict.tooLarge': '文件超过 256 KiB, 不能在此编辑',
+      'conflict.prev': '上一处',
+      'conflict.next': '下一处',
+      'conflict.takeOursFile': '整个文件用我的',
+      'conflict.takeTheirsFile': '整个文件用对方的',
+      'conflict.eolLabel': '行尾',
+      'conflict.markersLeft': '还有冲突标记',
+      'conflict.paneOurs': '当前分支',
+      'conflict.paneResult': '合并结果',
+      'conflict.paneTheirs': '合并进来的分支',
+      'conflict.applyLabel': '应用不冲突的更改:',
+      'conflict.applyLeft': '左侧',
+      'conflict.applyBoth': '所有',
+      'conflict.applyRight': '右侧',
+      'conflict.applyLeftHint': '把左侧不冲突的改动放入结果',
+      'conflict.applyBothHint': '把两侧不冲突的改动放入结果',
+      'conflict.applyRightHint': '把右侧不冲突的改动放入结果',
+      'conflict.appliedOurs': '已应用左侧的不冲突改动',
+      'conflict.appliedBoth': '已应用两侧的不冲突改动',
+      'conflict.appliedTheirs': '已应用右侧的不冲突改动',
+      'conflict.blockOurs': '采用左侧',
+      'conflict.blockTheirs': '采用右侧',
+      'conflict.blockDrop': '丢弃该块',
+      'conflict.blockDropped': '已丢弃该块, 保存后生效',
+      'conflict.noBase': '该冲突缺少共同基线或某一侧版本, 只能直接编辑结果',
+      'conflict.regenerated': '结果已按选择重新生成, 撤销可找回手工修改',
+      'conflict.allApplied': '所有更改均已处理',
+      'conflict.annotate': '使用 Git 追溯注解',
+      'conflict.annotateHide': '隐藏 Git 追溯注解',
+      'conflict.blameToday': '今天',
+      'conflict.blameNone': '未提交',
+      'conflict.blameCommit': '提交',
+      'conflict.blameAuthor': '作者',
+      'conflict.blameDate': '日期',
+      'conflict.undo': '撤销',
+      'conflict.redo': '重做',
+      'conflict.unresolvedBlocks': '还有 {n} 处冲突未解决',
+      'conflict.noModel': '没有可用的三方版本',
+      'conflict.overviewTitle': '冲突',
+      'conflict.mergingInto': '将分支 {source} 合并到分支 {target}',
+      'conflict.oursSide': '您的更改({name})',
+      'conflict.oursPlain': '您的更改',
+      'conflict.theirsSide': '他人的更改({name})',
+      'conflict.theirsPlain': '他人的更改',
+      'conflict.fileCount': '未解决 · {n} 个文件',
+      'conflict.allResolved': '所有冲突已解决',
+      'conflict.accept': '接受',
+      'conflict.acceptHint': '用该侧的完整文件',
+      'conflict.manualResolve': '手动解决',
+      'conflict.finish': '接受并完成',
+      'conflict.finishHint': '冲突全部解决后完成该操作',
+      'conflict.close': '关闭',
+      'conflict.overviewHint': '双击文件编辑, 或点一侧的接受',
+      'conflict.noOperation': '没有正在进行的操作',
       'operation.merge': '合并进行中',
       'operation.rebase': '变基进行中',
       'operation.cherry-pick': '优选进行中',
       'operation.revert': '还原进行中',
       'operation.bisect': '二分定位进行中',
       'operation.hint': '该仓库还有一个多步操作没有结束,先完成或中止它再执行分支级操作',
+      'operation.continue': '继续',
+      'operation.skip': '跳过',
+      'operation.abort': '中止',
+      'operation.continueHint': '完成该操作并提交',
+      'operation.skipHint': '丢弃当前提交并继续',
+      'operation.abortHint': '回到操作前的状态',
+      'operation.pillMerge': '正在合并 {name}',
+      'operation.pillRebase': '正在变基 {name}',
+      'operation.pillCherryPick': '正在优选 {name}',
+      'operation.pillRevert': '正在还原 {name}',
+      'operation.pillBisect': '正在二分定位 {name}',
+      'operation.advanceHint': '打开冲突处理',
       'confirm.title': '确认操作',
       'confirm.cancel': '取消',
       'confirm.ok': '确定',
@@ -498,10 +578,17 @@ window.__ModuleLoader__.load({
       'push.noRemote': '未配置远程仓库',
       'push.truncated': '只显示最近 {n} 个提交',
       'push.hint': '双击文件查看变更',
+      'push.remote': '远程',
+      'push.localBranch': '本地分支',
+      'push.remoteBranch': '远程分支',
+      'push.newBranch': '新建',
+      'push.existingBranch': '已存在',
+      'push.remoteUnknown': '无法确认',
+      'push.force': '强制',
+      'push.forceHint': '使用 --force-with-lease 强制推送',
       'toast.committed': '提交成功',
       'toast.pushed': '已将 {n} 个提交推送到 {target}',
       'toast.branchUpdated': '已更新 {name}',
-      'toast.branchPushed': '已推送 {name}',
       'delete.confirm': '删除分支 {name}?删除后浮窗里可以撤回(未合并的分支 git 会拒绝删除)。',
       'discard.confirm': '丢弃 {path} 的更改?工作区内容会被覆盖,丢弃后浮窗里可以撤回。',
       'resetHard.confirm': '硬重置到 {hash}?未提交的更改会丢失。',
@@ -525,6 +612,10 @@ window.__ModuleLoader__.load({
       'toast.merged': '已合并 {name}',
       'toast.mergedConflict': '合并停在冲突上,请解决冲突后继续',
       'toast.rebased': '已变基到 {onto}',
+      'toast.operationFinished': '已继续操作',
+      'toast.operationAborted': '已中止操作',
+      'toast.operationSkipped': '已跳过当前步骤',
+      'toast.conflictResolved': '已标记为已解决',
       'toast.rebaseAborted': '已中止变基',
       'toast.cherryPicked': '已拣选 {n} 个提交',
       'toast.reverted': '已还原提交 {hash}',
@@ -538,6 +629,7 @@ window.__ModuleLoader__.load({
       'toast.remoteAdded': '已添加远程 {name}',
       'toast.remoteRemoved': '已删除远程 {name}',
       'toast.cloned': '已克隆仓库',
+      'conflict.openCount': '解决冲突 ({n} 个文件)',
     }
     /* /i18n:generated:zh */
 
@@ -689,7 +781,7 @@ window.__ModuleLoader__.load({
       'more.commitStaged': 'Commit Staged...',
       'more.commitAll': 'Commit All...',
       'more.undoCommit': 'Undo Last Commit',
-      'more.rebaseAbort': 'Abort Rebase',
+      'more.abortOperation': 'Abort Current Operation',
       'more.commitStagedAmend': 'Commit Staged (Amend)...',
       'more.commitAllAmend': 'Commit All (Amend)...',
       'more.commitStagedSign': 'Commit Staged (Signed Off)...',
@@ -846,12 +938,92 @@ window.__ModuleLoader__.load({
       'confirm.protected': '{name} is a main branch. Deleting it is high risk, so type the branch name to confirm — a toast can still bring it back afterwards.',
       'discard.untracked.confirm': 'Delete the untracked file {path}? Its content is removed — a toast will offer to bring it back.',
       'stashDrop.confirm': 'Drop stash {ref}? A toast will offer to bring it back.',
+      'conflict.title': 'Resolve Conflict',
+      'conflict.open': 'Resolve Conflict...',
+      'conflict.hint': 'Edit the result directly; use the buttons on the sides',
+      'conflict.save': 'Save',
+      'conflict.saved': 'Saved',
+      'conflict.savedMarkers': 'Saved. The file still has conflict markers',
+      'conflict.markResolved': 'Mark Resolved',
+      'conflict.resolved': 'Marked resolved',
+      'conflict.resolvedRemoved': 'File removed and marked resolved',
+      'conflict.adoptedFile': 'Loaded the whole file. Save to apply it',
+      'conflict.sideMissing': 'That side has no file version',
+      'conflict.noMarkers': 'The file has no conflict markers',
+      'conflict.blockApplied': 'Replaced the conflict block. Save to apply it',
+      'conflict.binary': 'A binary file cannot be edited. Pick one side',
+      'conflict.tooLarge': 'The file is over 256 KiB and cannot be edited here',
+      'conflict.prev': 'Previous',
+      'conflict.next': 'Next',
+      'conflict.takeOursFile': 'Whole File: Mine',
+      'conflict.takeTheirsFile': 'Whole File: Theirs',
+      'conflict.eolLabel': 'Line endings',
+      'conflict.markersLeft': 'markers left',
+      'conflict.paneOurs': 'Your branch',
+      'conflict.paneResult': 'Merged result',
+      'conflict.paneTheirs': 'Incoming branch',
+      'conflict.applyLabel': 'Apply non-conflicting changes:',
+      'conflict.applyLeft': 'Left',
+      'conflict.applyBoth': 'All',
+      'conflict.applyRight': 'Right',
+      'conflict.applyLeftHint': "Put the left side's non-conflicting changes into the result",
+      'conflict.applyBothHint': "Put both sides' non-conflicting changes into the result",
+      'conflict.applyRightHint': "Put the right side's non-conflicting changes into the result",
+      'conflict.appliedOurs': "Applied the left side's non-conflicting changes",
+      'conflict.appliedBoth': "Applied both sides' non-conflicting changes",
+      'conflict.appliedTheirs': "Applied the right side's non-conflicting changes",
+      'conflict.blockOurs': 'Take the left side',
+      'conflict.blockTheirs': 'Take the right side',
+      'conflict.blockDrop': 'Drop this block',
+      'conflict.blockDropped': 'Block dropped, applies on save',
+      'conflict.noBase': 'This conflict has no common base or no version on one side; edit the result directly',
+      'conflict.regenerated': 'The result was rebuilt from your picks; undo brings the manual edit back',
+      'conflict.allApplied': 'All changes are resolved',
+      'conflict.annotate': 'Annotate with Git',
+      'conflict.annotateHide': 'Hide Git annotations',
+      'conflict.blameToday': 'Today',
+      'conflict.blameNone': 'Uncommitted',
+      'conflict.blameCommit': 'Commit',
+      'conflict.blameAuthor': 'Author',
+      'conflict.blameDate': 'Date',
+      'conflict.undo': 'Undo',
+      'conflict.redo': 'Redo',
+      'conflict.unresolvedBlocks': '{n} conflict blocks left',
+      'conflict.noModel': 'No three-way version is available',
+      'conflict.overviewTitle': 'Conflicts',
+      'conflict.mergingInto': 'Merging branch {source} into branch {target}',
+      'conflict.oursSide': 'Your changes ({name})',
+      'conflict.oursPlain': 'Your changes',
+      'conflict.theirsSide': 'Their changes ({name})',
+      'conflict.theirsPlain': 'Their changes',
+      'conflict.fileCount': 'Unresolved · {n} files',
+      'conflict.allResolved': 'All conflicts are resolved',
+      'conflict.accept': 'Accept',
+      'conflict.acceptHint': 'Use the whole file from this side',
+      'conflict.manualResolve': 'Resolve Manually',
+      'conflict.finish': 'Accept and Finish',
+      'conflict.finishHint': 'Finish the operation after every conflict is resolved',
+      'conflict.close': 'Close',
+      'conflict.overviewHint': 'Double-click a file to edit it, or accept one side',
+      'conflict.noOperation': 'No operation in progress',
       'operation.merge': 'Merge in progress',
       'operation.rebase': 'Rebase in progress',
       'operation.cherry-pick': 'Cherry-pick in progress',
       'operation.revert': 'Revert in progress',
       'operation.bisect': 'Bisect in progress',
       'operation.hint': 'This repository still has a multi-step operation open — finish or abort it before branch-level actions',
+      'operation.continue': 'Continue',
+      'operation.skip': 'Skip',
+      'operation.abort': 'Abort',
+      'operation.continueHint': 'Finish the operation and commit',
+      'operation.skipHint': 'Drop this commit and continue',
+      'operation.abortHint': 'Return to the state before the operation',
+      'operation.pillMerge': 'Merging {name}',
+      'operation.pillRebase': 'Rebasing {name}',
+      'operation.pillCherryPick': 'Cherry-picking {name}',
+      'operation.pillRevert': 'Reverting {name}',
+      'operation.pillBisect': 'Bisecting {name}',
+      'operation.advanceHint': 'Open conflict resolution',
       'confirm.title': 'Confirm',
       'confirm.cancel': 'Cancel',
       'confirm.ok': 'OK',
@@ -875,10 +1047,17 @@ window.__ModuleLoader__.load({
       'push.noRemote': 'No remote is configured',
       'push.truncated': 'Showing the latest {n} commits only',
       'push.hint': 'Double-click a file to see its change',
+      'push.remote': 'Remote',
+      'push.localBranch': 'Local branch',
+      'push.remoteBranch': 'Remote branch',
+      'push.newBranch': 'New',
+      'push.existingBranch': 'Exists',
+      'push.remoteUnknown': 'Cannot confirm',
+      'push.force': 'Force',
+      'push.forceHint': 'Force push with --force-with-lease',
       'toast.committed': 'Committed',
       'toast.pushed': 'Pushed {n} commits to {target}',
       'toast.branchUpdated': 'Updated {name}',
-      'toast.branchPushed': 'Pushed {name}',
       'delete.confirm': 'Delete branch {name}? A toast will offer to bring it back (git still refuses unmerged branches).',
       'discard.confirm': 'Discard changes in {path}? The working-tree content is overwritten — a toast will offer to bring it back.',
       'resetHard.confirm': 'Hard reset to {hash}? Uncommitted changes are lost.',
@@ -902,6 +1081,10 @@ window.__ModuleLoader__.load({
       'toast.merged': 'Merged {name}',
       'toast.mergedConflict': 'The merge stopped on conflicts — resolve them to continue',
       'toast.rebased': 'Rebased onto {onto}',
+      'toast.operationFinished': 'Operation finished',
+      'toast.operationAborted': 'Operation aborted',
+      'toast.operationSkipped': 'Skipped the current step',
+      'toast.conflictResolved': 'Marked resolved',
       'toast.rebaseAborted': 'Rebase aborted',
       'toast.cherryPicked': 'Cherry-picked {n} commit(s)',
       'toast.reverted': 'Reverted commit {hash}',
@@ -915,6 +1098,7 @@ window.__ModuleLoader__.load({
       'toast.remoteAdded': 'Added remote {name}',
       'toast.remoteRemoved': 'Removed remote {name}',
       'toast.cloned': 'Cloned the repository',
+      'conflict.openCount': 'Resolve {n} conflicted files',
     }
     /* /i18n:generated:en */
 
@@ -986,6 +1170,15 @@ window.__ModuleLoader__.load({
       })
     }
 
+    /* The short author name of a blame record: a name that is an e-mail address
+       keeps only its local part, so a narrow annotation column has room for the
+       date. Everything else is shown as it comes from git. */
+    function shortAuthorName(name) {
+      if (typeof name !== 'string') return ''
+      const at = name.indexOf('@')
+      return at > 0 ? name.slice(0, at) : name
+    }
+
     /* One success line per write route (m05310). Every gesture that mutates the
        repository answers in the bottom-right stack; the panel run() and the commit
        card share this table so the same verb never words itself two ways. A route
@@ -1012,6 +1205,12 @@ window.__ModuleLoader__.load({
       if (method === 'merge') return fill(t('toast.merged'), { name: String(p.branch) })
       if (method === 'rebase') return fill(t('toast.rebased'), { onto: String(p.onto) })
       if (method === 'rebaseAbort') return t('toast.rebaseAborted')
+      if (method === 'operationFinish') {
+        if (p.action === 'continue') return t('toast.operationFinished')
+        if (p.action === 'abort') return t('toast.operationAborted')
+        return t('toast.operationSkipped')
+      }
+      if (method === 'conflictResolve') return t('toast.conflictResolved')
       if (method === 'cherryPick') return fill(t('toast.cherryPicked'), { n: p.hashes === undefined ? 1 : count(p.hashes) })
       if (method === 'revert') return fill(t('toast.reverted'), { hash: String(p.hash).slice(0, 8) })
       if (method === 'reset') return fill(t(p.mode === 'hard' ? 'toast.resetHard' : 'toast.resetSoft'), { hash: String(p.hash).slice(0, 8) })
@@ -2212,7 +2411,6 @@ window.__ModuleLoader__.load({
       for (const segment of edgeSegments(row, x, middle, height)) {
         children.push(E('line', {
           key: segment.key,
-          'data-lane': String(segment.lane),
           x1: segment.x1, y1: segment.y1, x2: segment.x2, y2: segment.y2,
           stroke: color(segment.color), strokeWidth: stem, strokeLinecap: 'round',
         }))
@@ -2224,9 +2422,9 @@ window.__ModuleLoader__.load({
          background colour: the ring spans r..r+2, the core sits at r/2. */
       children.push(isHead
         ? E('g', { key: 'dot' },
-          E('circle', { 'data-lane': String(row.lane), cx: x(row.lane), cy: middle, r: radius * 1.25, fill: 'none', stroke: color(row.lane), strokeWidth: radius * 0.5 }),
+          E('circle', { cx: x(row.lane), cy: middle, r: radius * 1.25, fill: 'none', stroke: color(row.lane), strokeWidth: radius * 0.5 }),
           E('circle', { cx: x(row.lane), cy: middle, r: radius * 0.5, fill: color(row.lane) }))
-        : E('circle', { key: 'dot', 'data-lane': String(row.lane), cx: x(row.lane), cy: middle, r: radius, fill: color(row.lane) }))
+        : E('circle', { key: 'dot', cx: x(row.lane), cy: middle, r: radius, fill: color(row.lane) }))
       return E('svg', { className: 'git4idea-graph', width: width, height: height, viewBox: '0 0 ' + width + ' ' + height }, children)
     }, (prev, next) => prev.row === next.row && prev.height === next.height)
 
@@ -3472,6 +3670,13 @@ window.__ModuleLoader__.load({
         {"d":"M11.9091 3.50552L12.0543 3.66053H12.2667L14 3.66053C14.2818 3.66053 14.5102 3.88895 14.5102 4.17073V6.90732C14.5102 7.31554 14.2421 7.5102 14.0667 7.5102H8.93333C8.75795 7.5102 8.4898 7.31554 8.4898 6.90732V3.09268C8.4898 2.68446 8.75795 2.4898 8.93333 2.4898H10.9226C10.9452 2.4898 10.9668 2.49915 10.9822 2.51563L11.9091 3.50552Z","sw":0.979592},
         {"d":"M11.9091 11.5055L12.0543 11.6605H12.2667L14 11.6605C14.2818 11.6605 14.5102 11.889 14.5102 12.1707V14.9073C14.5102 15.3155 14.2421 15.5102 14.0667 15.5102H8.93333C8.75795 15.5102 8.4898 15.3155 8.4898 14.9073V11.0927C8.4898 10.6845 8.75795 10.4898 8.93333 10.4898H10.9226C10.9452 10.4898 10.9668 10.4991 10.9822 10.5156L11.9091 11.5055Z","sw":0.979592},
         {"d":"M1.5 1.5V4.5M1.5 4.5H6.5M1.5 4.5V12C1.5 12.2761 1.72386 12.5 2 12.5H6.5","sw":1},
+      ],
+      /* No warning glyph exists in the IDE set; the triangle carries the
+         standard exclamation and reads at 13 px in the composer pill. */
+      warning: [
+        {"d":"M8.866 2.5C8.481 1.833 7.519 1.833 7.134 2.5L1.634 12C1.249 12.667 1.73 13.5 2.5 13.5H13.5C14.27 13.5 14.751 12.667 14.366 12L8.866 2.5Z","sw":1},
+        {"d":"M8 6V9.5","sw":1.3},
+        {"circle":[8,11.6,0.75],"f":1},
       ],
       chevronLeft: [
         {"d":"M9.5 11.5L6 8L9.5 4.5","sw":1},
@@ -5142,10 +5347,6 @@ window.__ModuleLoader__.load({
       const shownRefs = refs.slice(0, MAX_ROW_REFS)
       const hiddenRefs = refs.length - shownRefs.length
       return E('div', {
-        /* data-lane feeds the hover highlight: the scroll container copies the
-           hovered row's lane into data-hover-lane, and generated CSS dims every
-           graph stroke whose data-lane differs — zero React re-renders. */
-        'data-lane': String(props.row.lane),
         className: 'git4idea-commit' + (props.selected === true ? ' git4idea-commit-selected' : ''),
         /* Modifier handling lives in HistoryList (it owns the rendered row
            order the Shift-range walks); a plain click opens the detail (m00356). */
@@ -5555,19 +5756,6 @@ window.__ModuleLoader__.load({
           onPointerDownCapture: (event) => {
             if (isTypingTarget(event.target) === false) event.currentTarget.focus({ preventScroll: true })
           },
-          /* Lane hover highlight (GitLens-style trace): copy the hovered row's
-             lane into data-hover-lane; generated CSS dims every stroke whose
-             data-lane differs. Direct DOM dataset writes on purpose — the
-             alternative is re-rendering every row on each hover change. */
-          onMouseOver: (event) => {
-            const host = event.currentTarget
-            const row = event.target instanceof Element ? event.target.closest('.git4idea-commit') : null
-            const lane = row === null ? null : row.getAttribute('data-lane')
-            if (lane === host.getAttribute('data-hover-lane')) return
-            if (lane === null) host.removeAttribute('data-hover-lane')
-            else host.setAttribute('data-hover-lane', lane)
-          },
-          onMouseLeave: (event) => event.currentTarget.removeAttribute('data-hover-lane'),
         },
           rows.length === 0 ? E('div', { className: 'git4idea-empty' }, dirtyFilter ? t('filter.none') : t('history.empty')) : null,
           order === 'asc' ? loadMoreButton : null,
@@ -5700,6 +5888,11 @@ window.__ModuleLoader__.load({
         expanded
           ? E('div', { className: 'git4idea-detail-branches-list' }, branches.map((name) => E('div', { key: name, className: 'git4idea-detail-branch' }, name)))
           : null)
+      /* The header names the author the way git does, `name <email>`, so the
+         address is visible without a hover (m01756). */
+      const authorText = detail.email === undefined || detail.email === ''
+        ? detail.author
+        : detail.author + ' <' + detail.email + '>'
       if (props.pane === true) {
         return E('div', { className: 'git4idea-detail git4idea-detail-pane' },
           E('div', { className: 'git4idea-detail-files-head' }, t('detail.files') + ' · ' + String(detail.files.length)),
@@ -5707,7 +5900,7 @@ window.__ModuleLoader__.load({
           E('div', { className: 'git4idea-detail-msg' },
             E('div', { className: 'git4idea-detail-head' },
               E('span', { className: 'git4idea-mono' }, detail.shortHash),
-              E('span', { className: 'git4idea-detail-author' }, detail.author),
+              E('span', { className: 'git4idea-detail-author', 'data-tip': authorText }, authorText),
               E('span', { className: 'git4idea-detail-date' }, shortDate(detail.date))),
             E('div', { className: 'git4idea-detail-subject' }, detail.subject),
             detail.body === undefined || detail.body.trim() === '' ? null : E('pre', { className: 'git4idea-detail-body' }, detail.body.trim()),
@@ -5718,7 +5911,7 @@ window.__ModuleLoader__.load({
         E('div', { className: 'git4idea-detail-head' },
           E('button', { type: 'button', className: 'git4idea-btn git4idea-btn-small', onClick: props.onBack }, '← ' + t('detail.back')),
           E('span', { className: 'git4idea-mono' }, detail.shortHash),
-          E('span', { className: 'git4idea-detail-author' }, detail.author),
+          E('span', { className: 'git4idea-detail-author', 'data-tip': authorText }, authorText),
           E('span', { className: 'git4idea-detail-date' }, shortDate(detail.date))),
         E('div', { className: 'git4idea-detail-subject' }, detail.subject),
         detail.body === undefined || detail.body.trim() === '' ? null : E('pre', { className: 'git4idea-detail-body' }, detail.body.trim()),
@@ -6740,6 +6933,16 @@ function Workbench(props) {
         return () => clearInterval(timer)
       }, [props.visible, repoRoot, loadSummary, loadBranches, loadCommits])
 
+      /* A merge, rebase, cherry-pick or revert that stops on conflicts exits
+         as data, not as a refusal: the overview is the next step, and a toast
+         alone leaves the user without one. */
+      const openConflictOverview = useCallback(() => {
+        if (repoRoot === null || conflictOverviewDialog.hosted !== true) return false
+        const scopeObject = scope || {}
+        conflictOverviewDialog.set({ cwd: cwd, repoRoot: repoRoot, sessionId: scopeObject.sessionId })
+        return true
+      }, [cwd, repoRoot, scope])
+
       /* The failure path already reports through setError; the success half of
          every gesture lands in the same stack (m05310). A call site that pushes a
          richer toast of its own passes { quiet: true }. */
@@ -6753,9 +6956,14 @@ function Workbench(props) {
         /* refresh itself runs git (status/log); the console gets those blocks
            too, so the second tick keeps the tab on the newest line. */
         setConsoleTick((value) => value + 1)
+        /* An operation that started or ended here must reach the composer pill
+           now: the pill polls, so waiting for the poll looks like a stale
+           "merging" banner after an abort from this tab. */
+        notifyBranchSwitched(sessionId, base.repoRoot)
         if (options === undefined || options.quiet !== true) notifyOk(runSuccessText(method, payload))
+        if (result !== null && result !== undefined && result.conflicted === true) openConflictOverview()
         return result
-      }, [base, runSuccessText, guard, refresh])
+      }, [base, sessionId, runSuccessText, guard, refresh, openConflictOverview])
 
       const pickRepo = useCallback((path) => {
         setRepoRoot(path)
@@ -6855,15 +7063,27 @@ function Workbench(props) {
         void openDiff({ path: seed.path, staged: seed.staged === true, untracked: seed.untracked === true ? true : undefined })
       }, [previewDiff, openDiff])
 
+      /* A conflicted row opens the conflict card. git prints a combined diff
+         for an unmerged path, which the diff view cannot parse, so the card is
+         the only surface that can show all three versions. Without an overlay
+         slot the inline pane stays the fallback: it shows the comparison, not
+         the editor. */
+      const openConflict = useCallback((path) => {
+        if (repoRoot === null) return
+        if (conflictDialog.hosted !== true) { showDiff({ path: path }); return }
+        const scopeObject = scope || {}
+        conflictDialog.set({ path: path, cwd: cwd, repoRoot: repoRoot, sessionId: scopeObject.sessionId })
+      }, [cwd, repoRoot, scope, showDiff])
+
       /* m04920: the Git tab raises the SAME frame dialogs as the composer pill.
          The panel used to draw its own inline push card and commit layer, so the
          two surfaces drifted apart: the layer kept a right-hand diff that could
          not fit the card, and a file card opened from the panel could not cover
          the inline card. */
-      const openPushDialog = useCallback(() => {
+      const openPushDialog = useCallback((seed) => {
         const scopeObject = scope || {}
         if (repoRoot === null) return
-        pushDialog.set({ cwd: cwd, repoRoot: repoRoot, sessionId: scopeObject.sessionId })
+        pushDialog.set(Object.assign({ cwd: cwd, repoRoot: repoRoot, sessionId: scopeObject.sessionId }, seed || {}))
       }, [cwd, repoRoot, scope])
 
 
@@ -7235,7 +7455,7 @@ function Workbench(props) {
               }),
           null,
           { id: 'update', icon: 'fetch', tone: 'cyan', label: t('action.update'), run: () => { void run('fetch', { prune: true }) } },
-          { id: 'push', icon: 'push', tone: 'success', label: t('action.push'), disabled: blocked, reason: t('operation.hint'), run: () => openPushDialog() },
+          { id: 'push', icon: 'push', tone: 'success', label: t('action.push'), disabled: blocked, reason: t('operation.hint'), run: () => openPushDialog({ branch: entry.name }) },
         ].filter((item) => item !== null)
         openMenuAt(event, withoutIcons(items))
       }, [branches, checkout, run, t, compareWith, toggleFavoriteBranch, openMenuAt, favorites, blocked, sendGitSummaryToChat, repoLabel, copyValues])
@@ -7298,6 +7518,22 @@ function Workbench(props) {
           ].filter((entry) => entry !== null))
           return
         }
+        /* An unmerged path has no ordinary diff and "stage" alone would not
+           say what landed. The conflict verbs live here so a row can be settled
+           without opening the card. */
+        if (group === 'conflicted') {
+          openMenuAt(event, [
+            { id: 'conflict', icon: 'compare', tone: 'accent', label: t('conflict.open'), run: () => openConflict(item.path) },
+            null,
+            { id: 'conflict-ours', icon: 'check', tone: 'success', label: t('conflict.takeOursFile'), run: () => { void run('conflictResolve', { path: item.path, side: 'ours' }) } },
+            { id: 'conflict-theirs', icon: 'check', tone: 'warn', label: t('conflict.takeTheirsFile'), run: () => { void run('conflictResolve', { path: item.path, side: 'theirs' }) } },
+            { id: 'conflict-mark', icon: 'check', tone: 'success', label: t('conflict.markResolved'), run: () => { void run('conflictResolve', { path: item.path, side: 'worktree' }) } },
+            null,
+            { id: 'sendRef', icon: 'send', tone: 'accent', label: t('menu.sendToChat'), run: () => sendFileReferenceToChat(item.path) },
+            { id: 'copy', icon: 'tag', tone: 'secondary', label: t('action.copyPath'), run: () => { copyText(item.path) } },
+          ])
+          return
+        }
         const items = [
           { id: 'diff', icon: 'file', tone: 'primary', label: t('action.showDiff'), run: () => { showDiff({ path: item.path, staged: group === 'staged', untracked: group === 'untracked' }) } },
           { id: 'sendRef', icon: 'send', tone: 'accent', label: t('menu.sendToChat'), run: () => sendFileReferenceToChat(item.path) },
@@ -7310,7 +7546,7 @@ function Workbench(props) {
           { id: 'copy', icon: 'tag', tone: 'secondary', label: t('action.copyPath'), run: () => { copyText(item.path) } },
         ]
         openMenuAt(event, items)
-      }, [showDiff, run, t, openMenuAt, sendFileReferenceToChat, sendToComposer, changeSelection, changeSelectionGroups, openDiscardManyDialog, copyValues])
+      }, [showDiff, run, t, openMenuAt, openConflict, sendFileReferenceToChat, sendToComposer, changeSelection, changeSelectionGroups, openDiscardManyDialog, copyValues])
 
       /* The commit-detail file list shares the working-tree row menu, minus the
          staging verbs: a committed file's diff replays against its commit. */
@@ -7518,6 +7754,7 @@ function Workbench(props) {
 
       const repoOptions = repoState === null ? [] : repoState.repos
       const dirty = summary === null ? 0 : summary.changes.staged.length + summary.changes.unstaged.length + summary.changes.untracked.length + summary.changes.conflicted.length
+      const conflictedCount = summary === null ? 0 : summary.changes.conflicted.length
 
       /* Both header switchers are menu-driven now (see RepoSelect): the
          popovers reuse openMenuAt, so they clamp to the panel box and share
@@ -7600,7 +7837,30 @@ function Workbench(props) {
           E(Icon, { name: 'commit', size: 12 }),
           E('span', { className: 'git4idea-track-label' }, t('track.commit')),
           E('span', { className: 'git4idea-track-num' }, String(dirty)))),
-        operation === null ? null : E('span', { className: 'git4idea-opchip', 'data-tip': t('operation.hint') }, t('operation.' + operation)),
+        operation === null ? null : E('span', { className: 'git4idea-opgroup' },
+          E('button', {
+            type: 'button',
+            className: 'git4idea-opchip git4idea-opchip-btn',
+            'data-tip': conflictedCount > 0 ? fill(t('conflict.openCount'), { n: String(conflictedCount) }) : t('operation.hint'),
+            onClick: () => { openConflictOverview() },
+          }, t('operation.' + operation) + (conflictedCount > 0 ? ' · ' + String(conflictedCount) : '')),
+          E('button', {
+            type: 'button', className: 'git4idea-opbtn', 'data-tip': t('operation.continueHint'),
+            onClick: () => {
+              if (conflictedCount > 0 && openConflictOverview() === true) return
+              void run('operationFinish', { operation: operation, action: 'continue' })
+            },
+          }, t('operation.continue')),
+          operation === 'rebase' || operation === 'cherry-pick' || operation === 'revert'
+            ? E('button', {
+                type: 'button', className: 'git4idea-opbtn', 'data-tip': t('operation.skipHint'),
+                onClick: () => { void run('operationFinish', { operation: operation, action: 'skip' }) },
+              }, t('operation.skip'))
+            : null,
+          E('button', {
+            type: 'button', className: 'git4idea-opbtn', 'data-tip': t('operation.abortHint'),
+            onClick: () => { void run('operationFinish', { operation: operation, action: 'abort' }) },
+          }, t('operation.abort'))),
         E('span', { className: 'git4idea-topbar-spacer' }))
 
       /* The log never leaves the middle column any more: the picked commit
@@ -7806,7 +8066,7 @@ function Workbench(props) {
             { id: 'c-all', label: t('more.commitAll'), disabled: allChangePaths.length === 0, reason, run: () => setDialog({ kind: 'commitMsg', all: true, amend: false, sign: false }) },
             null,
             { id: 'c-undo', label: t('more.undoCommit'), disabled: commits.length === 0 || blocked, reason, run: () => setDialog({ kind: 'undoCommit' }) },
-            { id: 'c-abort', label: t('more.rebaseAbort'), disabled: operation !== 'rebase', reason, run: () => { void run('rebaseAbort', {}) } },
+            { id: 'c-abort', label: t('more.abortOperation'), disabled: operation === null, reason, run: () => { void run('operationFinish', { operation: operation, action: 'abort' }) } },
             null,
             { id: 'c-staged-amend', label: t('more.commitStagedAmend'), disabled: stagedPaths.length === 0 || commits.length === 0, reason, run: () => setDialog({ kind: 'commitMsg', all: false, amend: true, sign: false }) },
             { id: 'c-all-amend', label: t('more.commitAllAmend'), disabled: allChangePaths.length === 0 || commits.length === 0, reason, run: () => setDialog({ kind: 'commitMsg', all: true, amend: true, sign: false }) },
@@ -7832,7 +8092,7 @@ function Workbench(props) {
             null,
             { id: 'pp-push', label: t('toolbar.push'), disabled: remoteReady !== true || blocked, reason, run: () => openPushDialog() },
             { id: 'pp-push-force', label: t('more.pushForce'), danger: true, disabled: remoteReady !== true || blocked, reason, run: () => setDialog({ kind: 'pushForce' }) },
-            { id: 'pp-push-to', label: t('more.pushTo'), disabled: remoteNames.length === 0 || blocked, reason, run: pickRemote((name) => { void run('push', { remote: name, confirm: true }) }) },
+            { id: 'pp-push-to', label: t('more.pushTo'), disabled: remoteNames.length === 0 || blocked, reason, run: pickRemote((name) => openPushDialog({ remote: name })) },
             null,
             { id: 'pp-fetch', label: t('toolbar.fetch'), disabled: remoteReady !== true, reason, run: () => { void run('fetch', { prune: true }) } },
             { id: 'pp-fetch-all', label: t('more.fetchAll'), disabled: remoteNames.length === 0, reason, run: () => { void run('fetch', { all: true, prune: true }) } },
@@ -7848,7 +8108,7 @@ function Workbench(props) {
             { id: 'br-delete', label: t('action.delete'), danger: true, disabled: otherBranches.length === 0, reason, run: (ev) => pickBranchMenu(ev, 'delete') },
             { id: 'br-delete-remote', label: t('more.deleteRemoteBranch'), danger: true, disabled: remoteBranches.length === 0 || blocked, reason, run: (ev) => pickRemoteBranchMenu(ev) },
             null,
-            { id: 'br-publish', label: t('more.publish'), disabled: remoteReady !== true || tracked === true || blocked, reason, run: () => { void run('push', { setUpstream: true, confirm: true }) } },
+            { id: 'br-publish', label: t('more.publish'), disabled: remoteReady !== true || tracked === true || blocked, reason, run: () => openPushDialog() },
             /* Upstream management for the CURRENT branch (issue #18): same
                verbs as the branch-row menu, reachable without selecting a
                branch first. Submenu built inside run() like rm-remove. */
@@ -7940,6 +8200,7 @@ function Workbench(props) {
       })
 
       const changesPane = renderChanges((item, group) => {
+        if (group === 'conflicted') { openConflict(item.path); return }
         showDiff({ path: item.path, staged: group === 'staged', untracked: group === 'untracked' })
       })
 
@@ -8232,7 +8493,7 @@ function Workbench(props) {
           text: t('confirm.pushForce'),
           okLabel: t('confirm.ok'), cancelLabel: t('confirm.cancel'),
           onCancel: () => setDialog(null),
-          onConfirm: () => { setDialog(null); void run('push', { force: true, confirm: true }) },
+          onConfirm: () => { setDialog(null); openPushDialog({ force: true }) },
         }))
       }
       if (dialog !== null && dialog.kind === 'deleteRemoteBranch') {
@@ -8486,24 +8747,14 @@ function Workbench(props) {
     /* Tokens only (--dsw-alias-*): transparent themes and background plugins
        (dsh-any-background) keep showing through, like the host's own panels. */
 
-    /* Lane-hover trace, generated: one rule per lane (lanes are capped at
-       GRAPH_MAX_LANES, so this is a fixed handful). When the scroll container
-       carries data-hover-lane="N", every graph stroke whose data-lane differs
-       fades — the hovered lane reads as one continuous thread down the graph
-       with zero React involvement. */
-    const LANE_TRACE_RULES = []
-    for (let lane = 0; lane < GRAPH_MAX_LANES; lane += 1) {
-      LANE_TRACE_RULES.push(
-        '.git4idea-history-scroll[data-hover-lane="' + lane + '"] .git4idea-graph line:not([data-lane="' + lane + '"])'
-        + ',.git4idea-history-scroll[data-hover-lane="' + lane + '"] .git4idea-graph path:not([data-lane="' + lane + '"])'
-        + ',.git4idea-history-scroll[data-hover-lane="' + lane + '"] .git4idea-graph circle:not([data-lane="' + lane + '"])'
-        + '{stroke-opacity:.18;fill-opacity:.18}',
-      )
-    }
-    LANE_TRACE_RULES.push('.git4idea-graph line,.git4idea-graph path,.git4idea-graph circle{transition:stroke-opacity .15s,fill-opacity .15s}')
-    /* The rail refresh button spins while its fetch+refresh round-trip runs. */
-    LANE_TRACE_RULES.push('.git4idea-spin svg{animation:git4idea-spin-rotate .9s linear infinite}')
-    LANE_TRACE_RULES.push('@keyframes git4idea-spin-rotate{to{transform:rotate(360deg)}}')
+    /* Graph strokes keep their own colour on row hover (m01785): the row
+       background already shows the hover cue, so the per-lane trace that faded
+       every other stroke is gone. */
+    const EXTRA_RULES = [
+      /* The rail refresh button spins while its fetch+refresh round-trip runs. */
+      '.git4idea-spin svg{animation:git4idea-spin-rotate .9s linear infinite}',
+      '@keyframes git4idea-spin-rotate{to{transform:rotate(360deg)}}',
+    ]
 
     const CSS = [
       '.git4idea-root{position:relative;display:flex;flex-direction:column;height:100%;min-height:0;background:transparent;color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family,-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",Helvetica,Arial,sans-serif);font-size:13px;line-height:1.5;font-weight:400;overflow:hidden}',
@@ -8696,6 +8947,20 @@ function Workbench(props) {
          the right. Double-clicking a file raises the diff dialog above. */
       '.git4idea-push-card{display:flex;flex-direction:column;width:min(1100px,94vw);height:min(720px,88vh);overflow:hidden;border-radius:var(--dsw-radius-md,12px);border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1,var(--dsw-alias-bg-layer-2));box-shadow:var(--dsw-elevation-prominent,0 18px 48px rgba(0,0,0,.45))}',
       '.git4idea-push-target{flex:none;max-width:40%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dsw-alias-label-tertiary)}',
+      /* The local -> remote mapping line (m00005): a branch may leave under a
+         different name, and a destination that is new on the remote says so. */
+      '.git4idea-push-map{display:flex;align-items:center;gap:6px;flex:none;flex-wrap:wrap;padding:6px 10px;border-bottom:1px solid var(--dsw-alias-border-l2);font-size:12px}',
+      '.git4idea-push-map-label{color:var(--dsw-alias-label-tertiary)}',
+      '.git4idea-push-map-branch{max-width:30%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dsw-alias-label-primary)}',
+      '.git4idea-push-map-arrow{color:var(--dsw-alias-label-tertiary)}',
+      '.git4idea-push-map-remote{flex:none;max-width:180px}',
+      '.git4idea-push-map-dest{flex:none;width:240px;max-width:36vw}',
+      /* The destination field carries a datalist for suggestions. Chromium draws
+         its own picker arrow inside the field; the list still opens on typing
+         and on ArrowDown, so the arrow goes (m02021). */
+      '.git4idea-push-map-dest::-webkit-calendar-picker-indicator{display:none}',
+      '.git4idea-push-map-state{flex:none;padding:1px 6px;border-radius:999px;corner-shape:round;background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary);font-size:11px}',
+      '.git4idea-push-map-force{color:var(--dsw-alias-label-primary)}',
       '.git4idea-push-body{flex:1;min-height:0;display:flex;overflow:hidden}',
       '.git4idea-push-commits{width:calc((100% - 1px)*2/5);flex:none;display:flex;flex-direction:column;overflow:auto;padding:4px;border-right:1px solid var(--dsw-alias-border-l2)}',
       '.git4idea-push-commit{display:flex;align-items:center;gap:8px;width:100%;flex:none;padding:4px 6px;border:0;border-radius:calc(var(--dsw-radius-sm,8px) - 2px);background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer}',
@@ -8717,6 +8982,92 @@ function Workbench(props) {
       '.git4idea-push-file-list .git4idea-row:focus-visible{outline:1px solid var(--dsw-alias-brand-primary);outline-offset:-1px}',
       '.git4idea-push-foot{display:flex;align-items:center;gap:8px;flex:none;padding:6px 8px;border-top:1px solid var(--dsw-alias-border-l2)}',
       '.git4idea-push-footnote{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dsw-alias-label-tertiary);font-size:11px}',
+      /* Conflict card (m01041): one scroller holds three aligned columns, so a
+         single scroll gesture moves the current branch, the result and the
+         incoming branch together. The old card painted git's marker lines; this
+         one paints each changed region with a tint and keeps every line level by
+         giving each row one cell per column. */
+      '.git4idea-conflict-overlay{z-index:84}',
+      '.git4idea-conflict-card{display:flex;flex-direction:column;width:min(1420px,97vw);height:min(860px,93vh);overflow:hidden;border-radius:var(--dsw-radius-md,12px);border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1,var(--dsw-alias-bg-layer-2));box-shadow:var(--dsw-elevation-prominent,0 18px 48px rgba(0,0,0,.45))}',
+      '.git4idea-conflict-path{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dsw-alias-label-secondary);font-size:11px}',
+      '.git4idea-conflict-toolbar{display:flex;align-items:center;gap:6px;flex:none;padding:4px 8px;border-bottom:1px solid var(--dsw-alias-border-l2)}',
+      '.git4idea-conflict-toolbar-label{flex:none;margin-right:2px;color:var(--dsw-alias-label-tertiary);font-size:11px}',
+      '.git4idea-conflict-toolbar .git4idea-btn.is-on{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary);border-color:var(--dsw-alias-brand-primary)}',
+      '.git4idea-conflict-flip{display:inline-flex;transform:scaleX(-1)}',
+      '.git4idea-conflict-body{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}',
+      '.git4idea-conflict-heads{display:grid;grid-template-columns:33.333% 33.333% 33.334%;flex:none;border-bottom:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-2,transparent)}',
+      '.git4idea-conflict-head{display:flex;align-items:center;gap:6px;min-width:0;height:26px;padding:0 8px;overflow:hidden;color:var(--dsw-alias-label-secondary);font-size:11px;white-space:nowrap}',
+      '.git4idea-conflict-head + .git4idea-conflict-head{border-left:1px solid var(--dsw-alias-border-l2)}',
+      '.git4idea-conflict-cols{flex:1;min-height:0;display:flex;overflow:hidden}',
+      '.git4idea-conflict-pane{flex:1 1 33.333%;min-width:0;overflow:auto;font:12px/18px ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace}',
+      '.git4idea-conflict-mid{flex:1 1 33.334%;min-width:0;display:flex;border-left:1px solid var(--dsw-alias-border-l2);border-right:1px solid var(--dsw-alias-border-l2)}',
+      '.git4idea-conflict-gutter{flex:none;overflow:hidden;font:12px/18px ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace}',
+      '.git4idea-conflict-gutter-row{display:flex;align-items:center;height:18px;line-height:18px}',
+      '.git4idea-conflict-row{position:relative;display:flex;align-items:center;height:18px;line-height:18px}',
+      '.git4idea-conflict-row.is-ours{background:color-mix(in srgb, var(--dsw-alias-state-success-primary,#3fb950) 14%, transparent)}',
+      '.git4idea-conflict-row.is-theirs{background:color-mix(in srgb, var(--dsw-alias-state-business-primary,#4d9fff) 14%, transparent)}',
+      '.git4idea-conflict-row.is-conflict.is-ours{background:color-mix(in srgb, var(--dsw-alias-state-success-primary,#3fb950) 24%, transparent)}',
+      '.git4idea-conflict-row.is-conflict.is-theirs{background:color-mix(in srgb, var(--dsw-alias-state-business-primary,#4d9fff) 24%, transparent)}',
+      '.git4idea-conflict-num{flex:none;width:48px;box-sizing:border-box;padding:0 8px 0 6px;text-align:right;color:var(--dsw-alias-label-tertiary);user-select:none;font-variant-numeric:tabular-nums;cursor:context-menu}',
+      '.git4idea-conflict-code{flex:1;min-width:0;overflow:hidden;white-space:pre;padding-right:8px;color:var(--dsw-alias-label-primary)}',
+      '.git4idea-conflict-pane.is-left .git4idea-conflict-code{padding-right:52px}',
+      '.git4idea-conflict-pane.is-right .git4idea-conflict-code{padding-left:52px;padding-right:8px}',
+      '.git4idea-conflict-blame{flex:none;width:72px;padding:0 6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right;color:var(--dsw-alias-label-tertiary);font-size:11px;user-select:none}',
+      '.git4idea-conflict-blame.is-author{width:94px;text-align:left}',
+      '.git4idea-conflict-acts{position:absolute;top:0;z-index:1;display:inline-flex;align-items:center;gap:2px;height:18px}',
+      '.git4idea-conflict-acts.is-left{left:50px}',
+      '.git4idea-conflict-acts.is-right{right:50px}',
+      '.git4idea-conflict-result{flex:1;min-height:0;width:100%;box-sizing:border-box;resize:none;padding:0 8px;border:0;background:transparent;color:var(--dsw-alias-label-primary);font:12px/18px ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;outline:none;tab-size:4;white-space:pre;overflow:auto}',
+      '.git4idea-conflict-mark{display:inline-flex;align-items:center;justify-content:center;width:22px;height:16px;padding:0;flex:none;border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-xs,4px);background:var(--dsw-alias-bg-layer-1,var(--dsw-alias-bg-layer-2));color:var(--dsw-alias-label-secondary);cursor:pointer}',
+      '.git4idea-conflict-mark:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
+      '.git4idea-conflict-mark-ours:hover{border-color:var(--dsw-alias-state-success-primary);color:var(--dsw-alias-state-success-primary)}',
+      '.git4idea-conflict-mark-theirs:hover{border-color:var(--dsw-alias-state-business-primary,var(--dsw-alias-brand-primary));color:var(--dsw-alias-state-business-primary,var(--dsw-alias-brand-primary))}',
+      '.git4idea-conflict-mark-drop:hover{border-color:var(--dsw-alias-state-error-primary);color:var(--dsw-alias-state-error-primary)}',
+      '.git4idea-conflict-dim{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dsw-alias-label-tertiary)}',
+      '.git4idea-conflict-editor{flex:1;min-height:0;width:100%;box-sizing:border-box;resize:none;padding:6px 8px;border:0;background:transparent;color:var(--dsw-alias-label-primary);font:12px/18px ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;outline:none;tab-size:4;white-space:pre;overflow:auto}',
+      '.git4idea-conflict-void{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:12px;color:var(--dsw-alias-label-tertiary);text-align:center}',
+      '.git4idea-conflict-void p{margin:0}',
+      '.git4idea-conflict-menu{position:fixed;z-index:12;min-width:190px;padding:4px;border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-xs,4px);background:var(--dsw-alias-bg-layer-1,var(--dsw-alias-bg-layer-2));box-shadow:0 8px 24px rgba(0,0,0,.35)}',
+      '.git4idea-conflict-menu-item{display:flex;align-items:center;gap:6px;width:100%;padding:5px 8px;border:0;border-radius:var(--dsw-radius-xs,4px);background:transparent;color:var(--dsw-alias-label-primary);font:inherit;font-size:12px;text-align:left;cursor:pointer}',
+      '.git4idea-conflict-menu-item:hover{background:var(--dsw-alias-interactive-bg-hover)}',
+      /* Conflict overview: the unresolved files, one accept verb per side.
+         Same card frame as the push card, and under the editor card. */
+      '.git4idea-conflict-overview-overlay{z-index:83}',
+      '.git4idea-conflict-overview-card{width:min(900px,94vw);height:min(560px,86vh)}',
+      '.git4idea-conflict-overview-body{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;padding:6px 8px;gap:6px}',
+      '.git4idea-conflict-overview-sub{flex:none;color:var(--dsw-alias-label-secondary)}',
+      '.git4idea-conflict-overview-head{flex:none;display:flex;align-items:center;gap:8px;padding:4px 6px;border-bottom:1px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-tertiary);font-size:11px}',
+      '.git4idea-conflict-overview-head .git4idea-conflict-overview-file-col{padding-left:20px}',
+      '.git4idea-conflict-accept{flex:none;width:120px;justify-content:center}',
+      '.git4idea-conflict-overview-file-col{flex:1;min-width:0}',
+      '.git4idea-conflict-overview-side{flex:none;width:120px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+      '.git4idea-conflict-overview-list{flex:1;min-height:0;overflow:auto}',
+      '.git4idea-conflict-overview-row{display:flex;align-items:center;gap:8px;padding:3px 6px;border-radius:var(--dsw-radius-sm,8px);cursor:pointer}',
+      '.git4idea-conflict-overview-row:hover{background:var(--dsw-alias-interactive-bg-hover)}',
+      '.git4idea-conflict-overview-row.is-selected{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
+      '.git4idea-conflict-overview-path{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+      '.git4idea-conflict-overview-row .git4idea-btn{flex:none;width:130px;justify-content:center}',
+      /* Composer pill in operation mode: the warning glyph, the operation text,
+         and the two verbs that operation accepts (open the overview, abort). */
+      '.git4idea-cs-op{display:inline-flex;align-items:center;gap:4px;min-width:0}',
+      '.git4idea-cs-alert{display:inline-flex;align-items:center;flex:none}',
+      '.git4idea-cs-opbtn{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;padding:0;border:none;border-radius:var(--dsw-radius-sm,8px);background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;cursor:pointer;flex:none;transition:filter .12s ease, transform .12s ease}',
+      '.git4idea-cs-opbtn:hover:not([aria-disabled=true]){filter:brightness(1.1)}',
+      '.git4idea-cs-opbtn:active:not([aria-disabled=true]){transform:scale(.94)}',
+      '.git4idea-cs-opbtn[aria-disabled=true]{opacity:.45;cursor:default}',
+      '.git4idea-cs-advance{display:inline-flex;align-items:center;gap:0}',
+      /* The two verbs read as buttons, not glyphs (m00849 #1): green accepts
+         the operation, red aborts it, with white icons on the state colors. */
+      '.git4idea-cs-opbtn.git4idea-cs-go{background:var(--dsw-alias-state-success-primary);color:var(--dsw-static-neutral-bluish-00,#fff);box-shadow:0 1px 2px rgba(0,0,0,.18)}',
+      '.git4idea-cs-opbtn.git4idea-cs-stop{background:var(--dsw-alias-state-error-primary);color:var(--dsw-static-neutral-bluish-00,#fff);box-shadow:0 1px 2px rgba(0,0,0,.18)}',
+      /* An unfinished merge/rebase/cherry-pick/revert turns its chip into the
+         finish/abort/skip controls instead of hiding them in the "..." menu. */
+      '.git4idea-opgroup{display:inline-flex;align-items:center;gap:4px;flex:none}',
+      '.git4idea-opchip-btn{border:0;font:inherit;cursor:pointer}',
+      '.git4idea-opchip-btn:hover{filter:brightness(1.15)}',
+      '.git4idea-opbtn{padding:1px 6px;border-radius:var(--dsw-radius-sm,8px);border:1px solid var(--dsw-alias-border-l2);background:transparent;color:var(--dsw-alias-label-primary);font:inherit;font-size:11px;cursor:pointer;flex:none}',
+      '.git4idea-opbtn:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover)}',
+      '.git4idea-opbtn:disabled{opacity:.45;cursor:default}',
       '.git4idea-commit-layer-head{display:flex;align-items:center;gap:8px;padding:5px 8px;flex:none;border-bottom:1px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-secondary)}',
       '.git4idea-commit-layer-title{color:var(--dsw-alias-label-primary)}',
       '.git4idea-commit-layer-body{flex:1;min-height:0;display:flex;overflow:hidden}',
@@ -9204,7 +9555,7 @@ function Workbench(props) {
       '.git4idea-cs-action{display:flex;align-items:center;gap:6px;width:100%;height:24px;padding:0 8px;flex:none;border:none;border-radius:var(--dsw-radius-sm,8px);background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;font-size:12px;text-align:left;cursor:pointer}',
       '.git4idea-cs-action:hover:not([aria-disabled="true"]){background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
       '.git4idea-cs-action[aria-disabled="true"]{opacity:.4;cursor:default}',
-    ].concat(LANE_TRACE_RULES).join('\n')
+    ].concat(EXTRA_RULES).join('\n')
 
     /* ============================== plugin ============================== */
 
@@ -9535,20 +9886,34 @@ function Workbench(props) {
     function GitDialogHost(props) {
       const [entry, setEntry] = useState(commitDialog.entry)
       const [pushEntry, setPushEntry] = useState(pushDialog.entry)
+      const [conflictEntry, setConflictEntry] = useState(conflictDialog.entry)
+      const [overviewEntry, setOverviewEntry] = useState(conflictOverviewDialog.entry)
       useEffect(() => {
         const sync = () => setEntry(commitDialog.entry)
         const syncPush = () => setPushEntry(pushDialog.entry)
+        const syncConflict = () => setConflictEntry(conflictDialog.entry)
+        const syncOverview = () => setOverviewEntry(conflictOverviewDialog.entry)
         sync()
         syncPush()
+        syncConflict()
+        syncOverview()
         const off = commitDialog.subscribe(sync)
         const offPush = pushDialog.subscribe(syncPush)
+        const offConflict = conflictDialog.subscribe(syncConflict)
+        const offOverview = conflictOverviewDialog.subscribe(syncOverview)
         commitDialog.hosted = true
         pushDialog.hosted = true
+        conflictDialog.hosted = true
+        conflictOverviewDialog.hosted = true
         return () => {
           commitDialog.hosted = false
           pushDialog.hosted = false
+          conflictDialog.hosted = false
+          conflictOverviewDialog.hosted = false
           off()
           offPush()
+          offConflict()
+          offOverview()
         }
       }, [])
       /* A throw inside either card used to unmount the overlay slot for the rest
@@ -9571,12 +9936,24 @@ function Workbench(props) {
           t: props.t,
           onClose: () => commitDialog.set(null),
         })),
-        pushEntry === null ? null : guard('push|' + pushEntry.sessionId + '|' + pushEntry.repoRoot, () => { pushDialog.set(null) }, E(PushDialogBody, {
-          key: 'push|' + pushEntry.sessionId + '|' + pushEntry.repoRoot,
+        pushEntry === null ? null : guard('push|' + pushEntry.sessionId + '|' + pushEntry.repoRoot + '|' + (typeof pushEntry.branch === 'string' ? pushEntry.branch : '') + '|' + (pushEntry.force === true ? 'force' : ''), () => { pushDialog.set(null) }, E(PushDialogBody, {
+          key: 'push|' + pushEntry.sessionId + '|' + pushEntry.repoRoot + '|' + (typeof pushEntry.branch === 'string' ? pushEntry.branch : '') + '|' + (pushEntry.force === true ? 'force' : ''),
           entry: pushEntry,
           t: props.t,
           ctx: props.ctx,
           onClose: () => { pushDialog.set(null) },
+        })),
+        overviewEntry === null ? null : guard('conflictOverview|' + overviewEntry.sessionId + '|' + overviewEntry.repoRoot, () => { conflictOverviewDialog.set(null) }, E(ConflictOverviewBody, {
+          key: 'conflictOverview|' + overviewEntry.sessionId + '|' + overviewEntry.repoRoot,
+          entry: overviewEntry,
+          t: props.t,
+          onClose: () => { conflictOverviewDialog.set(null) },
+        })),
+        conflictEntry === null ? null : guard('conflict|' + conflictEntry.sessionId + '|' + conflictEntry.repoRoot + '|' + conflictEntry.path, () => { conflictDialog.set(null) }, E(ConflictDialogBody, {
+          key: 'conflict|' + conflictEntry.sessionId + '|' + conflictEntry.repoRoot + '|' + conflictEntry.path,
+          entry: conflictEntry,
+          t: props.t,
+          onClose: () => { conflictDialog.set(null) },
         })),
         E(PromptDialogHost, null))
     }
@@ -9961,6 +10338,48 @@ function Workbench(props) {
         return () => document.removeEventListener('mousedown', close)
       }, [menu])
 
+      /* A merge in progress owns the pill (m00602): the branch it is on matters
+         less than the operation that blocks the tree, and the two buttons beside
+         it are the only two verbs that operation accepts right now. */
+      const operation = summary === null || summary.operation === undefined ? null : summary.operation
+      const operationSource = summary === null || summary.operationSource === undefined ? null : summary.operationSource
+      const operationPillKey = operation === 'cherry-pick' ? 'operation.pillCherryPick'
+        : operation === 'rebase' ? 'operation.pillRebase'
+          : operation === 'revert' ? 'operation.pillRevert'
+            : operation === 'bisect' ? 'operation.pillBisect'
+              : 'operation.pillMerge'
+      /* The pill names the merge as source -> target, so the branch the tree
+         sits on stays readable while the operation blocks it. */
+      const operationBranch = summary !== null && typeof summary.branch === 'string' ? summary.branch : ''
+      const operationName = operation === 'merge' && operationSource !== null && operationBranch !== ''
+        ? operationSource + ' → ' + operationBranch
+        : (operation === 'merge' && operationSource !== null ? operationSource : operationBranch)
+      const operationText = operation === null ? ''
+        : operationName === '' ? t('operation.' + operation) : fill(t(operationPillKey), { name: operationName })
+      const openConflictOverview = () => {
+        if (repoRoot === null) { openPanelSeat(); return }
+        if (conflictOverviewDialog.hosted === true) {
+          conflictOverviewDialog.set({ cwd: cwd, repoRoot: repoRoot, sessionId: sessionId })
+          setMenu(null)
+          return
+        }
+        openPanelSeat()
+      }
+      const abortOperation = async () => {
+        if (repoRoot === null || operation === null || csBusy !== '') return
+        setCsBusy('operationFinish')
+        try {
+          await request('operationFinish', { cwd: cwd, repoRoot: repoRoot, operation: operation, action: 'abort' })
+          setTick((value) => value + 1)
+          notifyBranchSwitched(sessionId, repoRoot)
+          notifyOk(t('toast.operationAborted'))
+        } catch (caught) {
+          notifyFail(caught)
+        } finally {
+          setCsBusy('')
+        }
+      }
+
       if (enabled !== true) return null
       const data = repoState
       if (data === null || (data.isRepo !== true && (data.repos === undefined || data.repos.length === 0))) return null
@@ -10029,12 +10448,18 @@ function Workbench(props) {
           if (keepOpen !== true) setMenu(null)
           setTick((value) => value + 1)
           notifyBranchSwitched(sessionId, repoRoot)
-          /* A merge that stops on conflicts exits 0-as-data, not as a refusal:
-             report it instead of closing as if it had succeeded cleanly. */
-          if (action === 'merge' && result !== null && result !== undefined && result.conflicted === true) {
+          /* A merge, rebase, cherry-pick or revert that stops on conflicts
+             exits as data, not as a refusal: report it and raise the conflict
+             overview, which is the only surface that can settle them. */
+          if (result !== null && result !== undefined && result.conflicted === true) {
             const output = typeof result.output === 'string' ? result.output.trim() : ''
             const text = output === '' ? t('toast.mergedConflict') : output
             toastCenter.push({ text: text, tone: 'error' })
+            if (conflictOverviewDialog.hosted === true) {
+              conflictOverviewDialog.set({ cwd: cwd, repoRoot: repoRoot, sessionId: sessionId })
+            } else {
+              openPanelSeat()
+            }
           } else {
             notifyOk(toastText !== '' ? toastText : csSuccessText(action, payload))
           }
@@ -10068,10 +10493,10 @@ function Workbench(props) {
       }
       /* Push followed the commit dialog (m02986): the popover verb previews
          the commits and files instead of publishing on a bare confirm. */
-      const openPushDialog = () => {
+      const openPushDialog = (seed) => {
         if (repoRoot === null) { openPanelSeat(); return }
         if (overlaySeatReady === true) {
-          pushDialog.set({ sessionId: sessionId, cwd: cwd, repoRoot: repoRoot })
+          pushDialog.set(Object.assign({ sessionId: sessionId, cwd: cwd, repoRoot: repoRoot }, seed || {}))
           setMenu(null)
           return
         }
@@ -10107,20 +10532,13 @@ function Workbench(props) {
         const remoteBranch = slash > 0 ? upstream.slice(slash + 1) : entry.name
         await csCall('fetch', { remote: remote, branch: remoteBranch + ':' + entry.name }, { toast: toastText })
       }
-      /* 推送 ships the SELECTED branch (m03873). The checked-out branch keeps
-         the full push card, which previews the commits and files; any other
-         branch has no preview route, so it pushes straight from the row. */
-      const pushBranch = async (entry) => {
+      /* 推送 opens the SAME push card for every branch (m00005). A row that is
+         not HEAD used to push straight with the configured upstream name, which
+         repeated a stale remote name after a rename; the card previews that
+         branch and lets the user correct the destination. */
+      const pushBranch = (entry) => {
         if (repoRoot === null || csBusy !== '') return
-        if (entry.head === true) { openPushDialog(); return }
-        const upstream = entry.upstream === null || entry.upstream === undefined ? '' : String(entry.upstream)
-        const slash = upstream.indexOf('/')
-        const remote = slash > 0 ? upstream.slice(0, slash) : 'origin'
-        const upstreamBranch = slash > 0 ? upstream.slice(slash + 1) : entry.name
-        const refspec = upstreamBranch === entry.name ? entry.name : entry.name + ':' + upstreamBranch
-        await csCall('push', {
-          remote: remote, branch: refspec, confirm: true, setUpstream: slash <= 0,
-        }, { toast: fill(t('toast.branchPushed'), { name: entry.name }) })
+        openPushDialog({ branch: entry.name })
       }
       /* A remote row that has no local twin is checked out as a tracking branch
          in one step (the panel's row menu does the same). Only the secondary
@@ -10405,7 +10823,23 @@ function Workbench(props) {
         className: 'git4idea-cs-root',
         'data-dsh-git4idea-status': '',
       },
-        branchName !== null ? E('button', {
+        operation !== null ? E('span', { className: 'git4idea-cs-op' },
+          E('span', { className: 'git4idea-cs-alert git4idea-tone-warn', 'data-tip': operationText }, E(Icon, { name: 'warning', size: 13 })),
+          E('button', {
+            type: 'button', className: 'git4idea-cs-pill', 'data-tip': operationText,
+            onClick: openConflictOverview,
+          }, E(ComposerMarqueeName, { text: operationText })),
+          E('button', {
+            type: 'button', className: 'git4idea-cs-opbtn git4idea-cs-go', 'data-tip': t('operation.advanceHint'),
+            onClick: openConflictOverview,
+          }, E('span', { className: 'git4idea-cs-advance' },
+            E(Icon, { name: 'chevronRight', size: 10 }),
+            E(Icon, { name: 'chevronRight', size: 10 }))),
+          E('button', {
+            type: 'button', className: 'git4idea-cs-opbtn git4idea-cs-stop', 'data-tip': t('operation.abortHint'),
+            'aria-disabled': csBusy !== '' ? 'true' : 'false',
+            onClick: () => { if (csBusy === '') void abortOperation() },
+          }, E(Icon, { name: 'close', size: 11 }))) : branchName !== null ? E('button', {
           type: 'button',
           className: 'git4idea-cs-pill',
           'data-tip': t('composer.branchHint'),
@@ -10891,7 +11325,12 @@ function Workbench(props) {
         branch: typeof bag.branch === 'string' ? bag.branch : '',
         detached: bag.detached === true,
         upstream: typeof bag.upstream === 'string' && bag.upstream !== '' ? bag.upstream : null,
+        upstreamGone: typeof bag.upstreamGone === 'string' && bag.upstreamGone !== '' ? bag.upstreamGone : null,
         remote: typeof bag.remote === 'string' ? bag.remote : '',
+        remoteBranch: typeof bag.remoteBranch === 'string' ? bag.remoteBranch : '',
+        remoteBranches: Array.isArray(bag.remoteBranches) ? bag.remoteBranches : [],
+        remoteChecked: bag.remoteChecked === true,
+        remoteExists: bag.remoteExists === true,
         target: typeof bag.target === 'string' ? bag.target : '',
         remotes: Array.isArray(bag.remotes) ? bag.remotes : [],
         commits: Array.isArray(bag.commits) ? bag.commits : [],
@@ -10903,27 +11342,54 @@ function Workbench(props) {
       const t = props.t
       const entry = props.entry
       const base = { cwd: entry.cwd, repoRoot: entry.repoRoot }
+      const force = entry.force === true
+      /* Every push entry opens this card (m00005), including a branch row that
+         is not HEAD and a forced push. The seed only preselects the branch and,
+         when a menu named one, its remote; the preview still decides the
+         destination and whether it exists. */
+      const initialBranch = typeof entry.branch === 'string' ? entry.branch : ''
+      const initialRemote = typeof entry.remote === 'string' ? entry.remote : ''
       const [data, setData] = useState(null)
       const [selected, setSelected] = useState(null)
       const [files, setFiles] = useState([])
       const [filesLoading, setFilesLoading] = useState(false)
       const [selectedPath, setSelectedPath] = useState(null)
       const [busy, setBusy] = useState(false)
+      const [remote, setRemote] = useState('')
+      const [destination, setDestination] = useState('')
+      const [checking, setChecking] = useState(false)
+      /* The state flag alone cannot stop two clicks in the same frame (setBusy
+         lands after the render), so the in-flight check is synchronous. */
+      const pushing = useRef(false)
+      const loadSeq = useRef(0)
       const messageOf = (caught) => (caught instanceof Error ? caught.message : String(caught))
+      const loadPreview = async (branch, remoteName, remoteBranch) => {
+        const seq = loadSeq.current + 1
+        loadSeq.current = seq
+        setChecking(true)
+        try {
+          const payload = Object.assign({}, base)
+          if (branch !== '') payload.branch = branch
+          if (remoteName !== '') payload.remote = remoteName
+          if (remoteBranch !== '') payload.remoteBranch = remoteBranch
+          const next = pushPreviewOf(await request('push-preview', payload))
+          if (seq !== loadSeq.current) return
+          setData(next)
+          setRemote(next.remote)
+          setDestination(next.remoteBranch)
+          setSelected((previous) => (previous !== null && next.commits.some((item) => item.hash === previous)
+            ? previous
+            : (next.commits.length === 0 ? null : next.commits[0].hash)))
+          setSelectedPath(null)
+        } catch (caught) {
+          if (seq === loadSeq.current) { notifyFail(caught) }
+        } finally {
+          if (seq === loadSeq.current) setChecking(false)
+        }
+      }
       useEffect(() => {
-        let alive = true
-        void (async () => {
-          try {
-            const next = await request('push-preview', base)
-            if (alive !== true) return
-            const normalized = pushPreviewOf(next)
-            setData(normalized)
-            setSelected(normalized.commits.length === 0 ? null : normalized.commits[0].hash)
-          } catch (caught) {
-            if (alive === true) { notifyFail(caught) }
-          }
-        })()
-        return () => { alive = false }
+        void loadPreview(initialBranch, initialRemote, '')
+        return () => { loadSeq.current += 1 }
         // eslint-disable-next-line react-hooks/exhaustive-deps
       }, [])
       useEffect(() => {
@@ -10964,16 +11430,44 @@ function Workbench(props) {
           sessionId: entry.sessionId,
         })
       }
+      const settleDestination = () => {
+        if (data === null) return
+        const typed = destination.trim()
+        if (typed === '') { setDestination(data.remoteBranch); return }
+        if (typed === data.remoteBranch && remote === data.remote) return
+        void loadPreview(data.branch, remote, typed)
+      }
+      const changeRemote = (event) => {
+        const next = event.target.value
+        setRemote(next)
+        if (data !== null) void loadPreview(data.branch, next, '')
+      }
+      const destinationKnown = data !== null && checking === false && remote === data.remote && destination === data.remoteBranch
+      const destinationState = destinationKnown !== true
+        ? ''
+        : data.remoteChecked !== true
+          ? t('push.remoteUnknown')
+          : data.remoteExists === true ? t('push.existingBranch') : t('push.newBranch')
       const runPush = async () => {
-        if (busy === true || data === null) return
+        if (pushing.current === true || data === null || destinationKnown !== true) return
+        pushing.current = true
         setBusy(true)
         try {
-          await request('push', Object.assign({}, base, {
+          /* Both ends are explicit: a bare push would follow the stale
+             branch.<name>.merge after a rename and re-create the old remote
+             branch. The host builds <local>:refs/heads/<remote> and records the
+             tracking reference that was actually pushed. */
+          const payload = Object.assign({}, base, {
             confirm: true,
-            setUpstream: data.upstream === null,
-          }))
+            remote: remote,
+            localBranch: data.branch,
+            remoteBranch: destination,
+            setUpstream: true,
+          })
+          if (force === true) payload.force = true
+          await request('push', payload)
           toastCenter.push({
-            text: fill(t('toast.pushed'), { n: data.commits.length, target: data.target }),
+            text: fill(t('toast.pushed'), { n: data.commits.length, target: remote + '/' + destination }),
             tone: 'ok',
             icon: 'check',
           })
@@ -10981,10 +11475,12 @@ function Workbench(props) {
         } catch (caught) {
           toastCenter.push({ text: messageOf(caught), tone: 'error', icon: 'close' })
         } finally {
+          pushing.current = false
           setBusy(false)
         }
       }
-      const canPush = data !== null && data.detached === false && data.remotes.length > 0 && data.commits.length > 0 && busy === false
+      const canPush = data !== null && data.detached === false && data.remotes.length > 0
+        && destinationKnown === true && (data.commits.length > 0 || data.remoteExists === false) && busy === false
       const emptyNote = data === null
         ? t('status.busy')
         : data.detached === true
@@ -11008,6 +11504,39 @@ function Workbench(props) {
             type: 'button', className: 'git4idea-icon-btn', 'aria-label': t('toast.close'), 'data-tip': t('toast.close'),
             onClick: () => { props.onClose() },
           }, E(Icon, { name: 'close', size: 13 }))),
+        /* The mapping line answers "where does this go?" before the push: local
+           branch, remote, remote branch, and whether that remote branch exists.
+           The host checks the REMOTE (ls-remote), not the stale local cache. */
+        data === null ? null : E('div', { className: 'git4idea-push-map' },
+          E('span', { className: 'git4idea-push-map-label' }, t('push.localBranch')),
+          E('span', { className: 'git4idea-push-map-branch git4idea-mono' }, data.branch),
+          E('span', { className: 'git4idea-push-map-arrow' }, '→'),
+          E('select', {
+            className: 'git4idea-select git4idea-push-map-remote',
+            value: remote,
+            disabled: data.remotes.length === 0,
+            'aria-label': t('push.remote'),
+            'data-git4idea-push-remote': '',
+            onChange: changeRemote,
+          }, data.remotes.map((name) => E('option', { key: name, value: name }, name))),
+          E('span', { className: 'git4idea-push-map-arrow' }, ':'),
+          E('input', {
+            className: 'git4idea-input git4idea-push-map-dest',
+            value: destination,
+            list: 'git4idea-push-destinations',
+            placeholder: t('push.remoteBranch'),
+            'aria-label': t('push.remoteBranch'),
+            'data-git4idea-push-dest': '',
+            disabled: data.remotes.length === 0,
+            onChange: (event) => { setDestination(event.target.value) },
+            onBlur: settleDestination,
+            onKeyDown: (event) => {
+              if (event.key === 'Enter') { event.preventDefault(); event.currentTarget.blur() }
+            },
+          }),
+          E('datalist', { id: 'git4idea-push-destinations' }, data.remoteBranches.map((name) => E('option', { key: name, value: name }))),
+          destinationState === '' ? null : E('span', { className: 'git4idea-push-map-state' }, destinationState),
+          force === true ? E('span', { className: 'git4idea-push-map-state git4idea-push-map-force' }, t('push.force')) : null),
         E('div', { className: 'git4idea-push-body' },
           E('div', { className: 'git4idea-push-commits' },
             data === null || data.commits.length === 0
@@ -11043,7 +11572,7 @@ function Workbench(props) {
                       onOpen: openFile,
                     })))),
         E('div', { className: 'git4idea-push-foot' },
-          E('span', { className: 'git4idea-push-footnote' }, emptyNote !== '' ? emptyNote : t('push.hint')),
+          E('span', { className: 'git4idea-push-footnote' }, emptyNote !== '' ? emptyNote : (force === true ? t('push.forceHint') : t('push.hint'))),
           E('span', { className: 'git4idea-topbar-spacer' }),
           E('button', { type: 'button', className: 'git4idea-btn', onClick: () => { props.onClose() } }, t('confirm.cancel')),
           E('button', {
@@ -11054,6 +11583,985 @@ function Workbench(props) {
           }, t('toolbar.push')))))
     }
 
+/**
+ * dsh-git4idea — conflict editor (client fragment).
+ *
+ * A conflicted path opens as a card over the page: the current branch on the
+ * left, the merged result in the middle, the incoming branch on the right. The
+ * two side panes are read-only and settle a conflict block with their own
+ * buttons; the middle pane is a plain editor from the start. Nothing here
+ * stages a file behind the user's back: "mark resolved" is the explicit verb,
+ * and the card closes once it lands.
+ */
+    /* One conflict card at a time, raised from a change row. The store matches
+       the commit/push/file dialogs so the frame-level host can mount it. */
+    const conflictDialog = {
+      entry: null,
+      hosted: false,
+      listeners: new Set(),
+      set(entry) {
+        conflictDialog.entry = entry
+        for (const listener of conflictDialog.listeners) {
+          try { listener() } catch (error) { void error }
+        }
+      },
+      subscribe(listener) {
+        conflictDialog.listeners.add(listener)
+        return () => { conflictDialog.listeners.delete(listener) }
+      },
+    }
+
+    const CONFLICT_LF = String.fromCharCode(10)
+    const CONFLICT_CRLF = String.fromCharCode(13) + CONFLICT_LF
+    const CONFLICT_LINE_HEIGHT = 18
+    const CONFLICT_BLANK = String.fromCharCode(160)
+
+    /* The host writes a CRLF file back as CRLF; the editor works in LF only, so
+       one conversion here keeps caret offsets equal to string offsets. */
+    function conflictToLf(value) {
+      return typeof value === 'string' ? value.split(CONFLICT_CRLF).join(CONFLICT_LF) : ''
+    }
+
+    /* ---- three-way merge model (m00849) ---------------------------------- */
+
+    /* The patch of one stage pair as base ranges: [b0,b1) is the base slice a
+       hunk replaces, and its '+' lines are that side's content there. The diff
+       runs with -U0, so a hunk carries no context lines to strip. */
+    function conflictHunks(patch) {
+      const hunks = []
+      for (const segment of splitPatchFiles(patch)) {
+        for (const hunk of segment.hunks) {
+          const lines = []
+          for (const line of hunk.lines) {
+            if (line.charAt(0) === '+') lines.push(line.slice(1))
+          }
+          const b0 = hunk.oldLines > 0 ? hunk.oldStart - 1 : hunk.oldStart
+          hunks.push({ b0: b0, b1: b0 + hunk.oldLines, lines: lines })
+        }
+      }
+      return hunks
+    }
+
+    /* One side's text for a base range: its hunks replace their slice, every
+       other base line stays. */
+    function conflictSideText(start, end, hunks, baseLines, sideLines) {
+      const out = []
+      let at = start
+      for (const hunk of hunks) {
+        if (hunk.b1 < start || hunk.b0 > end) continue
+        for (let line = at; line < hunk.b0; line++) out.push(baseLines[line])
+        for (const line of hunk.lines) out.push(line)
+        at = Math.max(at, hunk.b1)
+      }
+      for (let line = at; line < end; line++) out.push(baseLines[line])
+      return out
+    }
+
+    /* The blocks of a three-way merge: common runs, one-side changes, and the
+       regions both sides touched (the conflicts). Hunks that touch merge into
+       one cluster: git conflicts on adjacent lines too (measured), so touching
+       counts as overlap here. */
+    function conflictMergeModel(baseText, oursText, theirsText, oursHunks, theirsHunks) {
+      const baseLines = conflictToLf(baseText).split(CONFLICT_LF)
+      const oursLines = conflictToLf(oursText).split(CONFLICT_LF)
+      const theirsLines = conflictToLf(theirsText).split(CONFLICT_LF)
+      const all = []
+      for (const hunk of oursHunks) all.push({ b0: hunk.b0, b1: hunk.b1, side: 'ours' })
+      for (const hunk of theirsHunks) all.push({ b0: hunk.b0, b1: hunk.b1, side: 'theirs' })
+      all.sort((left, right) => (left.b0 - right.b0) || (left.b1 - right.b1))
+      const clusters = []
+      for (const item of all) {
+        const last = clusters.length === 0 ? null : clusters[clusters.length - 1]
+        if (last !== null && item.b0 <= last.b1) {
+          last.b1 = Math.max(last.b1, item.b1)
+          last.ours = last.ours === true || item.side === 'ours'
+          last.theirs = last.theirs === true || item.side === 'theirs'
+        } else {
+          clusters.push({ b0: item.b0, b1: item.b1, ours: item.side === 'ours', theirs: item.side === 'theirs' })
+        }
+      }
+      const blocks = []
+      let cursor = 0
+      for (const cluster of clusters) {
+        if (cluster.b0 > cursor) {
+          const run = baseLines.slice(cursor, cluster.b0)
+          blocks.push({ kind: 'common', base: run, ours: run, theirs: run })
+        }
+        const baseRun = baseLines.slice(cluster.b0, cluster.b1)
+        const oursRun = conflictSideText(cluster.b0, cluster.b1, oursHunks, baseLines, oursLines)
+        const theirsRun = conflictSideText(cluster.b0, cluster.b1, theirsHunks, baseLines, theirsLines)
+        if (cluster.ours === true && cluster.theirs === true) {
+          const same = oursRun.join(CONFLICT_LF) === theirsRun.join(CONFLICT_LF)
+          blocks.push({ kind: same ? 'same' : 'conflict', base: baseRun, ours: oursRun, theirs: theirsRun })
+        } else {
+          blocks.push({ kind: cluster.ours === true ? 'ours' : 'theirs', base: baseRun, ours: oursRun, theirs: theirsRun })
+        }
+        cursor = cluster.b1
+      }
+      if (cursor < baseLines.length) {
+        const run = baseLines.slice(cursor)
+        blocks.push({ kind: 'common', base: run, ours: run, theirs: run })
+      }
+      /* Each block's first line on each side, for the pane highlight. */
+      let baseAt = 0
+      let oursAt = 0
+      let theirsAt = 0
+      for (const block of blocks) {
+        block.baseStart = baseAt
+        block.oursStart = oursAt
+        block.theirsStart = theirsAt
+        baseAt += block.base.length
+        oursAt += block.ours.length
+        theirsAt += block.theirs.length
+      }
+      return { blocks: blocks, oursLines: oursLines, theirsLines: theirsLines }
+    }
+
+    /* The lines of one block in the result column. An untouched conflict block
+       keeps the base lines, so opening the card never loses code; the first
+       decision on either side replaces the base. "adopt" adds that side's
+       lines, and adopting both keeps both — left first, then right, the order
+       the IDE shows. "discard" adds nothing, because discarding abandons that
+       side's text. */
+    function conflictResultBlockLines(block, index, auto, decisions) {
+      if (block.kind === 'conflict') {
+        const decision = decisions[index]
+        const picked = decision !== undefined && (decision.ours !== undefined || decision.theirs !== undefined)
+        if (picked !== true) return block.base.slice()
+        const lines = []
+        if (decision.ours === 'adopt') for (const line of block.ours) lines.push(line)
+        if (decision.theirs === 'adopt') for (const line of block.theirs) lines.push(line)
+        return lines
+      }
+      if (block.kind === 'ours') return auto === 'theirs' ? block.base : block.ours
+      if (block.kind === 'theirs') return auto === 'ours' ? block.base : block.theirs
+      return block.ours
+    }
+
+    /* The whole result: the toolbar mode settles the one-sided blocks, the block
+       buttons settle the conflicts. */
+    function conflictResultLines(model, auto, decisions) {
+      const out = []
+      for (let index = 0; index < model.blocks.length; index++) {
+        for (const line of conflictResultBlockLines(model.blocks[index], index, auto, decisions)) out.push(line)
+      }
+      return out
+    }
+
+    function conflictResultText(model, auto, decisions) {
+      return conflictResultLines(model, auto, decisions).join(CONFLICT_LF)
+    }
+
+    /* One side's pane: every line of that file, numbered, tinted where the block
+       is not common, with the block's own buttons on its first line. */
+    function conflictSideRows(model, side) {
+      const rows = []
+      let number = 1
+      for (let index = 0; index < model.blocks.length; index++) {
+        const block = model.blocks[index]
+        const lines = side === 'ours' ? block.ours : block.theirs
+        const changed = block.kind === 'conflict'
+          || (side === 'ours' ? block.kind === 'ours' : block.kind === 'theirs')
+        for (let at = 0; at < lines.length; at++) {
+          rows.push({
+            block: index,
+            text: lines[at],
+            num: number++,
+            first: at === 0,
+            changed: changed,
+            conflict: block.kind === 'conflict',
+          })
+        }
+      }
+      return rows
+    }
+
+    /* How many result lines sit above a block: the jump buttons need it to put
+       the result column on the same block as the side panes. */
+    function conflictResultRowsBefore(model, auto, decisions, index) {
+      let total = 0
+      for (let at = 0; at < index; at++) {
+        total += conflictResultBlockLines(model.blocks[at], at, auto, decisions).length
+      }
+      return total
+    }
+
+    /* A block is settled when both sides carry a decision. Discard counts:
+       dropping both sides is a real choice, so it raises no "still open" note. */
+    function conflictSettled(decisions, index) {
+      const decision = decisions[index]
+      return decision !== undefined && decision.ours !== undefined && decision.theirs !== undefined
+    }
+
+    /* The conflict card of m01041: three panes side by side. The two side panes
+       are read-only and settle a conflict block with their own adopt/discard
+       pair; the result pane is an editor from the start. Changed regions carry a
+       tint instead of the <<<<<<< / ======= / >>>>>>> lines. Block picks, side
+       adoption and the toolbar verbs are undoable; Ctrl+Z / Ctrl+Y also work
+       (Cmd on macOS). */
+    function ConflictDialogBody(props) {
+      const t = props.t
+      const entry = props.entry
+      const base = { cwd: entry.cwd, repoRoot: entry.repoRoot }
+      const [detail, setDetail] = useState(null)
+      const [model, setModel] = useState(null)
+      const [auto, setAuto] = useState('both')
+      const [decisions, setDecisions] = useState({})
+      const [text, setText] = useState('')
+      const [dirty, setDirty] = useState(false)
+      const [busy, setBusy] = useState(false)
+      const [note, setNote] = useState('')
+      const [, bumpHistory] = useState(0)
+      const [active, setActive] = useState(-1)
+      const undoRef = useRef([])
+      const redoRef = useRef([])
+      const leftRef = useRef(null)
+      const midRef = useRef(null)
+      const rightRef = useRef(null)
+      const midGutterRef = useRef(null)
+      const menuRef = useRef(null)
+      const typingRef = useRef(0)
+      const typingOpenRef = useRef(false)
+      const [blame, setBlame] = useState(null)
+      const [menu, setMenu] = useState(null)
+      const fail = (caught) => {
+        const message = caught instanceof Error ? caught.message : String(caught)
+        setNote(message)
+        toastCenter.push({ text: message, tone: 'error', icon: 'close' })
+      }
+
+      useEffect(() => {
+        let alive = true
+        void (async () => {
+          try {
+            const next = await request('conflictDetail', Object.assign({}, base, { path: entry.path }))
+            if (alive !== true) return
+            setDetail(next)
+            setModel(null)
+            setAuto('both')
+            setDecisions({})
+            setText('')
+            setDirty(false)
+            setNote('')
+            setActive(-1)
+            undoRef.current = []
+            redoRef.current = []
+            if (next.binary === true || next.editable !== true) return
+            if (typeof next.base !== 'string' || typeof next.ours !== 'string' || typeof next.theirs !== 'string') return
+            try {
+              const patches = await Promise.all([
+                request('diff', Object.assign({}, base, { path: entry.path, stageA: 1, stageB: 2, context: 0 })),
+                request('diff', Object.assign({}, base, { path: entry.path, stageA: 1, stageB: 3, context: 0 })),
+              ])
+              if (alive !== true) return
+              const built = conflictMergeModel(next.base, next.ours, next.theirs, conflictHunks(patches[0].patch), conflictHunks(patches[1].patch))
+              setModel(built)
+              setText(conflictResultText(built, 'both', {}))
+            } catch (caught) {
+              /* A side that deletes the file has no stage to diff against: the
+                 card still edits and saves, only the columns stay off. */
+              void caught
+              if (alive === true) setModel(null)
+            }
+          } catch (caught) {
+            if (alive === true) fail(caught)
+          }
+        })()
+        return () => { alive = false }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+      }, [entry.path, entry.repoRoot])
+
+      const editable = detail !== null && detail.binary !== true && detail.editable === true
+      const conflictBlocks = []
+      const unresolved = []
+      if (model !== null) {
+        for (let index = 0; index < model.blocks.length; index++) {
+          if (model.blocks[index].kind !== 'conflict') continue
+          conflictBlocks.push(index)
+          if (conflictSettled(decisions, index) !== true) unresolved.push(index)
+        }
+      }
+      const leftRows = useMemo(() => (model === null ? [] : conflictSideRows(model, 'ours')), [model])
+      const rightRows = useMemo(() => (model === null ? [] : conflictSideRows(model, 'theirs')), [model])
+
+      const snapshot = () => ({ auto: auto, decisions: decisions, text: text })
+      const restore = (state) => {
+        setAuto(state.auto)
+        setDecisions(state.decisions)
+        setText(state.text)
+        /* The result annotations belong to the text that was just replaced. */
+        setBlame((now) => (now !== null && now.side === 'result' ? null : now))
+        setDirty(true)
+        setNote('')
+        bumpHistory((value) => value + 1)
+      }
+      const pushHistory = () => {
+        typingOpenRef.current = false
+        undoRef.current.push(snapshot())
+        if (undoRef.current.length > 80) undoRef.current.shift()
+        redoRef.current = []
+        bumpHistory((value) => value + 1)
+      }
+      const undo = () => {
+        const previous = undoRef.current.pop()
+        if (previous === undefined) return
+        redoRef.current.push(snapshot())
+        restore(previous)
+      }
+      const redo = () => {
+        const next = redoRef.current.pop()
+        if (next === undefined) return
+        undoRef.current.push(snapshot())
+        restore(next)
+      }
+
+      /* Annotations of the result text follow its line numbers: a new result
+         text makes them stale, so they go. The side panes do not move. */
+      const dropResultBlame = () => {
+        setBlame((now) => (now !== null && now.side === 'result' ? null : now))
+      }
+      /* Typing lands in the same undo stack as a block pick, grouped so one
+         Ctrl+Z does not walk back one character at a time. The snapshot pushed
+         on the first keystroke of a group holds the text before it. */
+      const editText = (next) => {
+        const now = Date.now()
+        if (typingOpenRef.current !== true || now - typingRef.current > 800) pushHistory()
+        typingOpenRef.current = true
+        typingRef.current = now
+        setText(next)
+        setDirty(true)
+        dropResultBlame()
+      }
+
+      /* The three panes follow each other: a wheel or a drag in one moves all
+         three, so the same block stays on screen. */
+      const syncScroll = (source) => {
+        const from = source.current
+        if (from === null) return
+        for (const other of [leftRef, midRef, rightRef]) {
+          if (other === source || other.current === null) continue
+          if (Math.abs(other.current.scrollTop - from.scrollTop) <= 1) continue
+          other.current.scrollTop = from.scrollTop
+        }
+        syncGutter()
+      }
+      /* The result editor scrolls inside itself; its number gutter is a plain
+         column beside it and must follow the same offset. */
+      const syncGutter = () => {
+        const area = midRef.current
+        const gutter = midGutterRef.current
+        if (area === null || gutter === null) return
+        if (Math.abs(gutter.scrollTop - area.scrollTop) > 1) gutter.scrollTop = area.scrollTop
+      }
+      const scrollToRows = (leftRow, resultRow, rightRow) => {
+        const line = CONFLICT_LINE_HEIGHT
+        for (const [ref, row] of [[leftRef, leftRow], [midRef, resultRow], [rightRef, rightRow]]) {
+          if (ref.current === null || row === undefined) continue
+          ref.current.scrollTop = Math.max(0, row * line - Math.round(ref.current.clientHeight / 3))
+        }
+        syncGutter()
+      }
+      const scrollToBlock = (index) => {
+        if (model === null) return
+        let leftRow = 0
+        let rightRow = 0
+        for (let at = 0; at < index; at++) {
+          leftRow += model.blocks[at].ours.length
+          rightRow += model.blocks[at].theirs.length
+        }
+        scrollToRows(leftRow, conflictResultRowsBefore(model, auto, decisions, index), rightRow)
+      }
+      const jump = (step) => {
+        if (conflictBlocks.length === 0) return
+        const list = unresolved.length > 0 ? unresolved : conflictBlocks
+        const at = list.indexOf(active)
+        const next = at < 0
+          ? (step > 0 ? list[0] : list[list.length - 1])
+          : list[(at + step + list.length) % list.length]
+        setActive(next)
+        scrollToBlock(next)
+      }
+      /* One button on one side of one conflict: keep that side's text in the
+         result, or drop it. Once either verb runs the block's two buttons go
+         away, so a block never wears a button it can no longer use. */
+      const decide = (index, side, action) => {
+        if (model === null) return
+        pushHistory()
+        dropResultBlame()
+        const next = Object.assign({}, decisions)
+        const block = Object.assign({}, undefined === next[index] ? {} : next[index])
+        block[side] = action
+        next[index] = block
+        const regenerated = text !== conflictResultText(model, auto, decisions)
+        setDecisions(next)
+        setText(conflictResultText(model, auto, next))
+        setDirty(true)
+        setActive(index)
+        setNote((action === 'adopt' ? t('conflict.blockApplied') : t('conflict.blockDropped'))
+          + (regenerated === true ? ' \u00b7 ' + t('conflict.regenerated') : ''))
+        const all = conflictBlocks.every((at) => conflictSettled(next, at))
+        if (all === true) toastCenter.push({ text: t('conflict.allApplied'), tone: 'ok', icon: 'check' })
+      }
+      /* The toolbar verbs: keep one side's non-conflicting changes, drop the
+         other side's, or keep both. Open conflicts keep their own buttons. */
+      const applyNonConflicting = (nextAuto) => {
+        if (model === null) { setNote(t('conflict.noModel')); return }
+        pushHistory()
+        dropResultBlame()
+        const regenerated = text !== conflictResultText(model, auto, decisions)
+        setAuto(nextAuto)
+        setText(conflictResultText(model, nextAuto, decisions))
+        setActive(-1)
+        setDirty(true)
+        setNote((nextAuto === 'ours' ? t('conflict.appliedOurs') : nextAuto === 'theirs' ? t('conflict.appliedTheirs') : t('conflict.appliedBoth'))
+          + (regenerated === true ? ' \u00b7 ' + t('conflict.regenerated') : ''))
+      }
+      const adoptFile = (side) => {
+        if (detail === null) return
+        const sideText = side === 'ours' ? detail.ours : detail.theirs
+        if (typeof sideText !== 'string') { setNote(t('conflict.sideMissing')); return }
+        pushHistory()
+        dropResultBlame()
+        setText(conflictToLf(sideText))
+        setDirty(true)
+        setNote(t('conflict.adoptedFile'))
+      }
+      /* The gutter menu: annotate a pane with the commit that last touched each
+         of its lines, or take the annotations away again. */
+      const openMenu = (event, side) => {
+        event.preventDefault()
+        event.stopPropagation()
+        setMenu({ x: event.clientX, y: event.clientY, side: side })
+      }
+      const toggleBlame = async (side) => {
+        setMenu(null)
+        if (blame !== null && blame.side === side) { setBlame(null); return }
+        try {
+          const result = await request('conflictBlame', Object.assign({}, base, {
+            path: entry.path,
+            side: side,
+            text: side === 'result' ? text : undefined,
+          }))
+          setBlame({ side: side, lines: result.lines === undefined ? [] : result.lines })
+        } catch (caught) {
+          fail(caught)
+        }
+      }
+      const save = async () => {
+        if (detail === null || busy === true) return false
+        setBusy(true)
+        try {
+          const result = await request('conflictSave', Object.assign({}, base, { path: entry.path, text: text, expectSha1: detail.sha1 }))
+          setDirty(false)
+          setDetail((now) => (now === null ? now : Object.assign({}, now, { sha1: result.sha1, hasMarkers: result.hasMarkers, working: text })))
+          setNote(result.hasMarkers === true ? t('conflict.savedMarkers') : t('conflict.saved'))
+          return true
+        } catch (caught) {
+          fail(caught)
+          return false
+        } finally {
+          setBusy(false)
+        }
+      }
+      /* Marking a file resolved stages what is on disk, so an edited result is
+         written first: staging text nobody chose would be a bug. */
+      const resolve = async (side) => {
+        if (busy === true) return
+        setBusy(true)
+        try {
+          if (editable === true && text !== (detail === null ? '' : conflictToLf(detail.working))) {
+            await request('conflictSave', Object.assign({}, base, { path: entry.path, text: text, expectSha1: detail.sha1 }))
+            setDirty(false)
+          }
+          const result = await request('conflictResolve', Object.assign({}, base, { path: entry.path, side: side }))
+          toastCenter.push({
+            text: result.removed === true ? t('conflict.resolvedRemoved') : t('conflict.resolved'),
+            tone: 'ok',
+            icon: 'check',
+          })
+          props.onClose()
+        } catch (caught) {
+          fail(caught)
+        } finally {
+          setBusy(false)
+        }
+      }
+
+      /* Esc closes a clean card only; Ctrl/Cmd+Z and Ctrl/Cmd+Shift+Z (Ctrl+Y
+         too) undo and redo a block pick, a toolbar verb or a side adoption. The
+         result editor keeps its own native history: the handler steps aside. */
+      useEffect(() => {
+        const onKey = (event) => {
+          const tag = event.target === null || event.target === undefined ? '' : event.target.tagName
+          const inResult = midRef.current !== null && event.target === midRef.current
+          if (tag === 'TEXTAREA' || tag === 'INPUT') {
+            /* The result editor shares the card's undo stack: Ctrl+Z must walk
+               back a block pick, which native undo cannot see. */
+            if (inResult !== true || event.key === 'Escape') return
+          }
+          if (event.key === 'Escape') {
+            if (dirty !== true) props.onClose()
+            return
+          }
+          if (event.ctrlKey !== true && event.metaKey !== true) return
+          const key = String(event.key).toLowerCase()
+          if (key === 'z') {
+            event.preventDefault()
+            if (event.shiftKey === true) redo(); else undo()
+          } else if (key === 'y') {
+            event.preventDefault()
+            redo()
+          }
+        }
+        document.addEventListener('keydown', onKey)
+        return () => { document.removeEventListener('keydown', onKey) }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+      }, [dirty, props.onClose, auto, decisions, text])
+
+      /* A click anywhere but the menu closes it. */
+      useEffect(() => {
+        if (menu === null) return undefined
+        const onDown = (event) => {
+          if (menuRef.current !== null && menuRef.current.contains(event.target)) return
+          setMenu(null)
+        }
+        const onKey = (event) => { if (event.key === 'Escape') setMenu(null) }
+        document.addEventListener('mousedown', onDown)
+        document.addEventListener('keydown', onKey)
+        return () => {
+          document.removeEventListener('mousedown', onDown)
+          document.removeEventListener('keydown', onKey)
+        }
+      }, [menu])
+
+      const readOnlyNote = detail === null
+        ? t('diff.loading')
+        : detail.binary === true ? t('conflict.binary')
+          : detail.editable === false ? t('conflict.tooLarge')
+            : ''
+      const eyebrow = detail === null
+        ? ''
+        : t('conflict.eolLabel') + ' ' + (detail.eol === 'crlf' ? 'CRLF' : 'LF')
+          + ' · ' + String(detail.size) + ' B'
+          + (unresolved.length > 0 ? ' · ' + fill(t('conflict.unresolvedBlocks'), { n: String(unresolved.length) }) : '')
+
+      const railButton = (block, side, action) => {
+        const adopt = action === 'adopt'
+        const label = adopt
+          ? (side === 'ours' ? t('conflict.blockOurs') : t('conflict.blockTheirs'))
+          : t('conflict.blockDrop')
+        const icon = adopt ? (side === 'ours' ? 'chevronRight' : 'chevronLeft') : 'close'
+        return E('button', {
+          type: 'button',
+          className: 'git4idea-conflict-mark'
+            + (adopt ? (side === 'ours' ? ' git4idea-conflict-mark-ours' : ' git4idea-conflict-mark-theirs') : ' git4idea-conflict-mark-drop'),
+          'data-tip': label,
+          'aria-label': label,
+          onMouseDown: (event) => { event.preventDefault() },
+          onClick: (event) => { event.stopPropagation(); decide(block, side, action) },
+        }, E(Icon, { name: icon, size: 9 }))
+      }
+      /* The buttons sit on the block's first line, on the edge that faces the
+         result column: the side tells them apart, and one decision hides both. */
+      const paneActions = (row, side) => {
+        if (row.first !== true || row.conflict !== true) return null
+        const decision = decisions[row.block]
+        if (decision !== undefined && decision[side] !== undefined) return null
+        const buttons = side === 'ours'
+          ? [railButton(row.block, side, 'discard'), railButton(row.block, side, 'adopt')]
+          : [railButton(row.block, side, 'adopt'), railButton(row.block, side, 'discard')]
+        return E('span', { key: 'acts', className: 'git4idea-conflict-acts is-' + (side === 'ours' ? 'right' : 'left') }, buttons)
+      }
+      /* The hover detail of one annotation: the commit, the author with the
+         full e-mail address, the timestamp and the subject — the IDE tooltip
+         (m01756). The column itself shows only the short name. */
+      const blameTip = (line) => {
+        const rows = [
+          t('conflict.blameCommit') + ': ' + (line.uncommitted === true ? t('conflict.blameNone') : line.short),
+          t('conflict.blameAuthor') + ': ' + line.author + (line.email === '' ? '' : ' <' + line.email + '>'),
+          t('conflict.blameDate') + ': ' + (line.uncommitted === true ? t('conflict.blameToday') : line.stamp),
+        ]
+        if (line.subject !== '') rows.push('', line.subject)
+        return rows.join('\n')
+      }
+      /* Annotation cells of one pane line: the date and the author of the
+         commit that last touched it. The side panes keep them on the outer
+         edge, away from the buttons. */
+      const blameCells = (side, column) => {
+        if (blame === null || blame.side !== side) return []
+        const line = blame.lines[column]
+        if (line === undefined || line === null) return []
+        return [
+          E('span', { key: 'date', className: 'git4idea-conflict-blame' },
+            line.uncommitted === true ? t('conflict.blameToday') : line.date),
+          E('span', {
+            key: 'author', className: 'git4idea-conflict-blame is-author',
+            'data-tip': blameTip(line),
+          }, shortAuthorName(line.author)),
+        ]
+      }
+      /* The line numbers sit on the edge that faces the result column: right
+         for the left pane, left for the right pane. */
+      const paneRow = (row, side) => {
+        const acts = paneActions(row, side)
+        /* The annotation sits beside the line number, on the side facing the
+           result column. A row that wears the adopt/discard pair has no space
+           there, so it shows no annotation. */
+        const annotated = acts === null ? blameCells(side, row.num - 1) : []
+        const cells = side === 'ours'
+          ? [].concat([
+            E('span', { key: 'code', className: 'git4idea-conflict-code' }, row.text === '' ? CONFLICT_BLANK : row.text),
+          ], annotated, [
+            E('span', { key: 'num', className: 'git4idea-conflict-num' }, String(row.num)),
+          ])
+          : [
+            E('span', { key: 'num', className: 'git4idea-conflict-num' }, String(row.num)),
+          ].concat(annotated, [
+            E('span', { key: 'code', className: 'git4idea-conflict-code' }, row.text === '' ? CONFLICT_BLANK : row.text),
+          ])
+        if (acts !== null) cells.push(acts)
+        return E('div', {
+          key: side + ':' + row.block + ':' + row.num,
+          className: 'git4idea-conflict-row'
+            + (row.changed === true ? ' is-' + (side === 'ours' ? 'ours' : 'theirs') : '')
+            + (row.conflict === true ? ' is-conflict' : ''),
+        }, cells)
+      }
+
+      const heads = E('div', { className: 'git4idea-conflict-heads' },
+        E('span', { className: 'git4idea-conflict-head' }, t('conflict.paneOurs')),
+        E('span', { className: 'git4idea-conflict-head is-mid' },
+          E('span', {}, t('conflict.paneResult')),
+          E('span', { className: 'git4idea-topbar-spacer' }),
+          E('span', { className: 'git4idea-conflict-dim' }, eyebrow)),
+        E('span', { className: 'git4idea-conflict-head' }, t('conflict.paneTheirs')))
+
+      /* The result gutter: one number per result line, plus annotations when
+         the user asked for them. It is not part of the textarea, so it follows
+         the editor's scrollTop by hand. */
+      const resultLineCount = text === '' ? 1 : text.split(CONFLICT_LF).length
+      const gutterRow = (index) => {
+        const cells = [E('span', { key: 'num', className: 'git4idea-conflict-num' }, String(index + 1))]
+        const line = blame !== null && blame.side === 'result' ? blame.lines[index] : null
+        if (line !== null && line !== undefined) {
+          cells.push(E('span', { key: 'date', className: 'git4idea-conflict-blame' },
+            line.uncommitted === true ? t('conflict.blameToday') : line.date))
+          cells.push(E('span', {
+            key: 'author', className: 'git4idea-conflict-blame is-author',
+            'data-tip': blameTip(line),
+          }, shortAuthorName(line.author)))
+        }
+        return E('div', { key: index, className: 'git4idea-conflict-gutter-row' }, cells)
+      }
+      const gutterRows = []
+      for (let index = 0; index < resultLineCount; index++) gutterRows.push(gutterRow(index))
+
+      const panes = model === null ? null : E('div', { className: 'git4idea-conflict-cols' },
+        E('div', {
+          ref: leftRef, className: 'git4idea-conflict-pane is-left',
+          onScroll: () => { syncScroll(leftRef) },
+          onContextMenu: (event) => { openMenu(event, 'ours') },
+        }, leftRows.map((row) => paneRow(row, 'ours'))),
+        E('div', { className: 'git4idea-conflict-mid' },
+          E('div', {
+            ref: midGutterRef, className: 'git4idea-conflict-gutter',
+            onContextMenu: (event) => { openMenu(event, 'result') },
+          }, gutterRows),
+          E('textarea', {
+            ref: midRef,
+            className: 'git4idea-conflict-result',
+            spellCheck: false,
+            wrap: 'off',
+            'aria-label': t('conflict.paneResult'),
+            value: text,
+            onChange: (event) => { editText(event.target.value) },
+            onScroll: () => { syncScroll(midRef); syncGutter() },
+          })),
+        E('div', {
+          ref: rightRef, className: 'git4idea-conflict-pane is-right',
+          onScroll: () => { syncScroll(rightRef) },
+          onContextMenu: (event) => { openMenu(event, 'theirs') },
+        }, rightRows.map((row) => paneRow(row, 'theirs'))))
+
+      const applyButton = (nextAuto, icons, labelKey, hintKey) => E('button', {
+        type: 'button',
+        className: 'git4idea-btn git4idea-btn-small' + (auto === nextAuto ? ' is-on' : ''),
+        disabled: model === null,
+        'data-tip': t(hintKey),
+        onClick: () => { applyNonConflicting(nextAuto) },
+      }, icons.map((name, index) => E(Icon, { key: index, name: name, size: 10 })), t(labelKey))
+
+      return E('div', {
+        className: 'git4idea-commit-overlay git4idea-conflict-overlay',
+        'data-git4idea-conflict-dialog': '',
+        onMouseDown: (event) => { if (event.target === event.currentTarget && dirty !== true) props.onClose() },
+      }, E('div', { className: 'git4idea-conflict-card' },
+        E('div', { className: 'git4idea-commit-layer-head' },
+          E(Icon, { name: 'compare', size: 14 }),
+          E('span', { className: 'git4idea-commit-layer-title' }, t('conflict.title')),
+          E('span', { className: 'git4idea-conflict-path git4idea-mono', 'data-tip': entry.path }, entry.path),
+          E('span', { className: 'git4idea-topbar-spacer' }),
+          E('button', {
+            type: 'button', className: 'git4idea-icon-btn', 'aria-label': t('toast.close'), 'data-tip': t('toast.close'),
+            onClick: () => { props.onClose() },
+          }, E(Icon, { name: 'close', size: 13 }))),
+        E('div', { className: 'git4idea-conflict-toolbar' },
+          E('span', { className: 'git4idea-conflict-toolbar-label' }, t('conflict.applyLabel')),
+          applyButton('ours', ['chevronRight'], 'conflict.applyLeft', 'conflict.applyLeftHint'),
+          applyButton('both', ['chevronRight', 'chevronLeft'], 'conflict.applyBoth', 'conflict.applyBothHint'),
+          applyButton('theirs', ['chevronLeft'], 'conflict.applyRight', 'conflict.applyRightHint'),
+          E('button', {
+            type: 'button', className: 'git4idea-icon-btn git4idea-icon-btn-small',
+            disabled: undoRef.current.length === 0, 'data-tip': t('conflict.undo'), 'aria-label': t('conflict.undo'),
+            onClick: undo,
+          }, E(Icon, { name: 'undo', size: 12 })),
+          E('button', {
+            type: 'button', className: 'git4idea-icon-btn git4idea-icon-btn-small',
+            disabled: redoRef.current.length === 0, 'data-tip': t('conflict.redo'), 'aria-label': t('conflict.redo'),
+            onClick: redo,
+          }, E('span', { className: 'git4idea-conflict-flip' }, E(Icon, { name: 'undo', size: 12 }))),
+          E('span', { className: 'git4idea-topbar-spacer' }),
+          E('button', {
+            type: 'button', className: 'git4idea-btn git4idea-btn-small', disabled: model === null,
+            'data-tip': t('conflict.prev'), onClick: () => { jump(-1) },
+          }, E(Icon, { name: 'up', size: 11 }), t('conflict.prev')),
+          E('button', {
+            type: 'button', className: 'git4idea-btn git4idea-btn-small', disabled: model === null,
+            'data-tip': t('conflict.next'), onClick: () => { jump(1) },
+          }, E(Icon, { name: 'down', size: 11 }), t('conflict.next'))),
+        editable !== true
+          ? E('div', { className: 'git4idea-conflict-body' }, E('div', { className: 'git4idea-conflict-void' }, E('p', {}, readOnlyNote)))
+          : model === null
+            ? E('div', { className: 'git4idea-conflict-body is-text' },
+                E('textarea', {
+                  ref: midRef,
+                  className: 'git4idea-conflict-editor',
+                  spellCheck: false,
+                  'aria-label': entry.path,
+                  value: text,
+                  onChange: (event) => { editText(event.target.value) },
+                }))
+            : E('div', { className: 'git4idea-conflict-body' }, heads, panes),
+        E('div', { className: 'git4idea-push-foot' },
+          E('span', { className: 'git4idea-push-footnote' }, note !== '' ? note : (editable === true && model === null ? t('conflict.noBase') : t('conflict.hint'))),
+          E('span', { className: 'git4idea-topbar-spacer' }),
+          /* Without a model (binary, oversize) the whole-file buttons must act
+             on the index directly: adopting text nobody can save would strand
+             the user on a disabled Save button. */
+          E('button', { type: 'button', className: 'git4idea-btn', disabled: busy === true, onClick: () => { if (editable === true) adoptFile('ours'); else void resolve('ours') } }, t('conflict.takeOursFile')),
+          E('button', { type: 'button', className: 'git4idea-btn', disabled: busy === true, onClick: () => { if (editable === true) adoptFile('theirs'); else void resolve('theirs') } }, t('conflict.takeTheirsFile')),
+          E('button', { type: 'button', className: 'git4idea-btn', disabled: busy === true || editable !== true || dirty !== true, onClick: () => { void save() } }, t('conflict.save')),
+          E('button', {
+            type: 'button', className: 'git4idea-btn git4idea-btn-primary',
+            disabled: busy === true || editable !== true,
+            onClick: () => { void resolve('worktree') },
+          }, t('conflict.markResolved'))),
+        menu === null ? null : E('div', {
+          ref: menuRef,
+          className: 'git4idea-conflict-menu',
+          role: 'menu',
+          style: { left: String(menu.x) + 'px', top: String(menu.y) + 'px' },
+        }, E('button', {
+          type: 'button',
+          className: 'git4idea-conflict-menu-item',
+          role: 'menuitem',
+          onClick: () => { void toggleBlame(menu.side) },
+        }, E(Icon, { name: 'compare', size: 11 }),
+          E('span', {}, blame !== null && blame.side === menu.side ? t('conflict.annotateHide') : t('conflict.annotate')))),
+      ))
+    }
+
+    /* One overview card at a time, raised from the operation chip and the
+       composer pill: the unresolved files, one accept button per side, and the
+       verb that ends the operation. It polls the summary itself, so a file
+       resolved in the editor card above it leaves the list without a callback. */
+    const conflictOverviewDialog = {
+      entry: null,
+      hosted: false,
+      listeners: new Set(),
+      set(entry) {
+        conflictOverviewDialog.entry = entry
+        for (const listener of conflictOverviewDialog.listeners) {
+          try { listener() } catch (error) { void error }
+        }
+      },
+      subscribe(listener) {
+        conflictOverviewDialog.listeners.add(listener)
+        return () => { conflictOverviewDialog.listeners.delete(listener) }
+      },
+    }
+
+    const CONFLICT_OVERVIEW_POLL_MS = 2000
+
+    /* The operation in one verb phrase: a merge names the ref it brings in, the
+       other operations name only themselves. */
+    function conflictOperationLine(t, summary) {
+      if (summary === null || summary.operation === undefined || summary.operation === null) return ''
+      const operation = summary.operation
+      const source = summary.operationSource === undefined ? null : summary.operationSource
+      const target = typeof summary.branch === 'string' && summary.branch !== '' ? summary.branch : ''
+      if (operation === 'merge' && source !== null && target !== '') return fill(t('conflict.mergingInto'), { source: source, target: target })
+      const label = t('operation.' + operation)
+      return target === '' ? label : label + ' · ' + target
+    }
+
+    /* The two side labels of the overview: with a named ref they read like the
+       IDE ("your changes (target)"), without one they stay generic. */
+    function conflictSideLabel(t, key, plainKey, name) {
+      return name === '' ? t(plainKey) : fill(t(key), { name: name })
+    }
+
+    function ConflictOverviewBody(props) {
+      const t = props.t
+      const entry = props.entry
+      const base = { cwd: entry.cwd, repoRoot: entry.repoRoot }
+      const [summary, setSummary] = useState(null)
+      const [selected, setSelected] = useState('')
+      const [busy, setBusy] = useState('')
+      const [note, setNote] = useState('')
+      const fail = (caught) => {
+        const message = caught instanceof Error ? caught.message : String(caught)
+        setNote(message)
+        toastCenter.push({ text: message, tone: 'error', icon: 'close' })
+      }
+
+      /* 2 s is enough to follow the editor card and the panel: every accept
+         already reloads, this tick only catches the other surfaces. */
+      const load = useCallback(async () => {
+        const next = await request('summary', Object.assign({}, base, { stats: false }))
+        setSummary(next)
+      }, [entry.cwd, entry.repoRoot])
+
+      useEffect(() => {
+        let alive = true
+        const tick = async () => {
+          try {
+            await load()
+          } catch (caught) { if (alive === true) fail(caught) }
+        }
+        setSummary(null)
+        void tick()
+        const timer = setInterval(() => { void tick() }, CONFLICT_OVERVIEW_POLL_MS)
+        return () => { alive = false; clearInterval(timer) }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+      }, [load])
+
+      const operation = summary === null || summary.operation === undefined ? null : summary.operation
+      const conflicts = summary === null || summary.changes === undefined ? [] : summary.changes.conflicted
+      const source = summary === null || summary.operationSource === undefined || summary.operationSource === null ? '' : summary.operationSource
+      const target = summary === null || typeof summary.branch !== 'string' ? '' : summary.branch
+      const oursLabel = conflictSideLabel(t, 'conflict.oursSide', 'conflict.oursPlain', target)
+      const theirsLabel = source === '' ? t('conflict.theirsPlain') : fill(t('conflict.theirsSide'), { name: source })
+
+      /* The selection is a path, not a row: the poll rebuilds the entries. */
+      useEffect(() => {
+        if (conflicts.length === 0) { if (selected !== '') setSelected(''); return }
+        if (conflicts.some((item) => item.path === selected)) return
+        setSelected(conflicts[0].path)
+      }, [summary])
+
+      useEffect(() => {
+        const onKey = (event) => { if (event.key === 'Escape' && busy === '') props.onClose() }
+        document.addEventListener('keydown', onKey)
+        return () => { document.removeEventListener('keydown', onKey) }
+      }, [busy, props.onClose])
+
+      const openEditor = (filePath) => {
+        if (conflictDialog.hosted !== true) return
+        conflictDialog.set({ path: filePath, cwd: entry.cwd, repoRoot: entry.repoRoot, sessionId: entry.sessionId })
+      }
+
+      const accept = async (filePath, side) => {
+        if (busy !== '') return
+        setBusy(filePath + ':' + side)
+        setNote('')
+        try {
+          await request('conflictResolve', Object.assign({}, base, { path: filePath, side: side }))
+          await load()
+        } catch (caught) {
+          fail(caught)
+        } finally {
+          setBusy('')
+        }
+      }
+
+      const finish = async () => {
+        if (busy !== '' || operation === null || conflicts.length > 0) return
+        setBusy('finish')
+        setNote('')
+        try {
+          await request('operationFinish', Object.assign({}, base, { operation: operation, action: 'continue' }))
+          toastCenter.push({ text: t('toast.operationFinished'), tone: 'ok', icon: 'check' })
+          /* The panel lives in another React tree: tell it the operation ended
+             so its own summary drops the chip without waiting for a poll. */
+          notifyBranchSwitched(entry.sessionId, entry.repoRoot)
+          props.onClose()
+        } catch (caught) {
+          fail(caught)
+        } finally {
+          setBusy('')
+        }
+      }
+
+      const subtitle = conflictOperationLine(t, summary)
+      const pending = conflicts.length
+      return E('div', {
+        className: 'git4idea-commit-overlay git4idea-conflict-overview-overlay',
+        'data-git4idea-conflict-overview': '',
+        onMouseDown: (event) => { if (event.target === event.currentTarget && busy === '') props.onClose() },
+      }, E('div', { className: 'git4idea-push-card git4idea-conflict-overview-card' },
+        E('div', { className: 'git4idea-commit-layer-head' },
+          E(Icon, { name: 'warning', size: 14 }),
+          E('span', { className: 'git4idea-commit-layer-title' }, t('conflict.overviewTitle')),
+          E('span', { className: 'git4idea-topbar-spacer' }),
+          E('button', {
+            type: 'button', className: 'git4idea-icon-btn', 'aria-label': t('conflict.close'), 'data-tip': t('conflict.close'),
+            onClick: () => { if (busy === '') props.onClose() },
+          }, E(Icon, { name: 'close', size: 13 }))),
+        E('div', { className: 'git4idea-conflict-overview-body' },
+          subtitle === '' ? null : E('div', { className: 'git4idea-conflict-overview-sub' }, subtitle),
+          E('div', { className: 'git4idea-conflict-overview-head' },
+            E('span', { className: 'git4idea-conflict-overview-file-col' }, pending === 0 ? t('conflict.allResolved') : fill(t('conflict.fileCount'), { n: String(pending) })),
+            E('span', { className: 'git4idea-conflict-overview-side' }, oursLabel),
+            E('span', { className: 'git4idea-conflict-overview-side' }, theirsLabel)),
+          pending === 0
+            ? E('div', { className: 'git4idea-conflict-void' }, E('p', {}, operation === null ? t('conflict.noOperation') : t('conflict.allResolved')))
+            : E('div', { className: 'git4idea-conflict-overview-list' }, conflicts.map((item) => E('div', {
+                key: item.path,
+                className: 'git4idea-row git4idea-conflict-overview-row' + (item.path === selected ? ' is-selected' : ''),
+                tabIndex: 0,
+                onClick: () => { setSelected(item.path) },
+                onDoubleClick: () => { openEditor(item.path) },
+                onKeyDown: (event) => { if (event.key === 'Enter') openEditor(item.path) },
+              },
+                E(Icon, { name: 'file', size: 12 }),
+                E('span', { className: 'git4idea-conflict-overview-path git4idea-mono', 'data-tip': item.path }, item.path),
+                E('button', {
+                  type: 'button', className: 'git4idea-btn git4idea-btn-small git4idea-conflict-accept', 'data-tip': t('conflict.acceptHint'),
+                  disabled: busy !== '',
+                  onClick: (event) => { event.stopPropagation(); void accept(item.path, 'ours') },
+                }, E(Icon, { name: 'check', size: 11 }), t('conflict.accept')),
+                E('button', {
+                  type: 'button', className: 'git4idea-btn git4idea-btn-small git4idea-conflict-accept', 'data-tip': t('conflict.acceptHint'),
+                  disabled: busy !== '',
+                  onClick: (event) => { event.stopPropagation(); void accept(item.path, 'theirs') },
+                }, E(Icon, { name: 'check', size: 11 }), t('conflict.accept'))))),
+        E('div', { className: 'git4idea-push-foot' },
+          E('span', { className: 'git4idea-push-footnote' }, note !== '' ? note : t('conflict.overviewHint')),
+          E('span', { className: 'git4idea-topbar-spacer' }),
+          E('button', { type: 'button', className: 'git4idea-btn', disabled: busy !== '', onClick: () => { props.onClose() } }, t('conflict.close')),
+          E('button', {
+            type: 'button', className: 'git4idea-btn', disabled: busy !== '' || pending === 0,
+            onClick: () => { openEditor(selected) },
+          }, t('conflict.manualResolve')),
+          E('button', {
+            type: 'button', className: 'git4idea-btn git4idea-btn-primary',
+            disabled: busy !== '' || pending !== 0 || operation === null,
+            'data-tip': t('conflict.finishHint'),
+            onClick: () => { void finish() },
+          }, t('conflict.finish')))),
+      ))
+    }
     function apply(ctx) {
       installTipLayer()
       installClientErrorHook()
@@ -11235,6 +12743,8 @@ function Workbench(props) {
             commitDialog.set(null)
             fileDialog.set(null)
             pushDialog.set(null)
+            conflictDialog.set(null)
+            conflictOverviewDialog.set(null)
             try { offCommit() } catch (error) { void error }
             try { offFile() } catch (error) { void error }
 

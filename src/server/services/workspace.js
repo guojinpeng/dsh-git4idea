@@ -5,8 +5,8 @@
 import { existsSync, readdirSync, realpathSync } from 'node:fs'
 import path from 'node:path'
 import { runGit, git } from './../core/git.js'
-import { cwdOf } from './../core/payload.js'
-import { repoRootOf, currentBranchOf, upstreamOf, aheadBehindOf, parsePorcelain, classify, ignoredEntriesOf, numstatOf, decorate, parseLog, LOG_FORMAT, stashCountOf, worktreesOf, operationOf } from './../core/repo.js'
+import { cwdOf, requireRef } from './../core/payload.js'
+import { repoRootOf, currentBranchOf, upstreamOf, aheadBehindOf, parsePorcelain, classify, ignoredEntriesOf, numstatOf, decorate, parseLog, LOG_FORMAT, stashCountOf, worktreesOf, operationOf, operationSourceOf } from './../core/repo.js'
 import { branches } from './history.js'
 
 export function repoNameFromUrl(url) {
@@ -71,6 +71,9 @@ export async function summary(payload) {
     git(root, ['rev-parse', 'HEAD']).then((out) => out.trim()).catch(() => ''),
     originNameOf(root),
   ])
+  /* Only a merge names the ref it brings in; the conflict card labels the two
+     sides with it. Other operations have no counterpart ref to show. */
+  const operationSource = await operationSourceOf(root, operation)
   const groups = classify(parsePorcelain(statusOut))
   return {
     repoRoot: root,
@@ -96,6 +99,7 @@ export async function summary(payload) {
     stashCount: stashCount,
     worktrees: worktrees,
     operation: operation,
+    operationSource: operationSource,
   }
 }
 
@@ -131,37 +135,127 @@ export async function headState(payload) {
    Read-only: one config read and one log. */
 
 export const PUSH_PREVIEW_LIMIT = 300
+export const PUSH_REMOTE_TIMEOUT_MS = 10 * 1000
 
+async function configOf(root, key) {
+  const out = await runGit(root, ['config', '--get', key])
+  return out.code === 0 ? out.stdout.trim() : ''
+}
+
+/* The remote's heads as the SERVER sees them. A local refs/remotes entry is a
+   cache of the last fetch: it survives a branch deleted on the remote, so it
+   cannot answer "does this branch exist there". A failed lookup is reported
+   instead of guessed - the card then labels the state as unknown. */
+async function remoteHeadsOf(root, remote) {
+  const heads = new Map()
+  if (remote === null) return { ok: false, heads }
+  let out
+  try {
+    out = await runGit(root, ['ls-remote', '--heads', remote], { timeoutMs: PUSH_REMOTE_TIMEOUT_MS })
+  } catch (error) { void error; return { ok: false, heads } }
+  if (out.code !== 0) return { ok: false, heads }
+  for (const line of out.stdout.split('\n')) {
+    const match = /^([0-9a-f]{40,64})\s+refs\/heads\/(.+)$/.exec(line.trim())
+    if (match !== null) heads.set(match[2], match[1])
+  }
+  return { ok: true, heads }
+}
+
+async function localRemoteBranchesOf(root, remote) {
+  const out = await runGit(root, ['for-each-ref', '--format=%(refname:short)', 'refs/remotes/' + remote])
+  if (out.code !== 0) return []
+  const prefix = remote + '/'
+  return out.stdout.split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line !== '' && line !== remote)
+    .map((line) => (line.startsWith(prefix) ? line.slice(prefix.length) : line))
+    .filter((line) => line !== 'HEAD')
+    .sort()
+}
+
+async function localRemoteBranchExists(root, remote, name) {
+  const out = await runGit(root, ['rev-parse', '--verify', '--quiet', 'refs/remotes/' + remote + '/' + name])
+  return out.code === 0
+}
+
+/* The push card maps a LOCAL branch onto a REMOTE branch (m00005). The old
+   preview assumed branch.<name>.merge still named a live remote branch; after
+   `git branch -m A B` plus deleting remote A it still says A, so pressing push
+   re-created A. The configured destination is offered only while it exists on
+   the remote; a gone destination falls back to the local name. */
 export async function pushPreview(payload) {
   const cwd = cwdOf(payload)
   const root = await repoRootOf(cwd, payload)
-  const branch = await currentBranchOf(root)
-  const detached = branch === 'HEAD'
-  const upstream = detached ? null : await upstreamOf(root, branch)
+  const requested = typeof payload.branch === 'string' && payload.branch.trim() !== ''
+    ? requireRef(payload.branch.trim(), 'branch')
+    : ''
+  const branch = requested !== '' ? requested : await currentBranchOf(root)
+  const detached = branch === 'HEAD' || branch === ''
   const remotesOut = await runGit(root, ['remote'])
   const remotes = remotesOut.code === 0
     ? remotesOut.stdout.split('\n').map((line) => line.trim()).filter((line) => line !== '')
     : []
-  let remote = null
+  let configuredRemote = ''
+  let configuredMerge = ''
   if (detached === false) {
-    const configured = await runGit(root, ['config', '--get', 'branch.' + branch + '.remote'])
-    if (configured.code === 0 && configured.stdout.trim() !== '' && configured.stdout.trim() !== '.') remote = configured.stdout.trim()
+    const [remoteOut, mergeOut] = await Promise.all([
+      configOf(root, 'branch.' + branch + '.remote'),
+      configOf(root, 'branch.' + branch + '.merge'),
+    ])
+    if (remoteOut !== '' && remoteOut !== '.') configuredRemote = remoteOut
+    if (mergeOut.startsWith('refs/heads/')) configuredMerge = mergeOut.slice('refs/heads/'.length)
   }
-  if (remote === null && upstream !== null) remote = upstream.split('/')[0]
-  if (remote === null && remotes.length > 0) remote = remotes[0]
+  const wantedRemote = typeof payload.remote === 'string' && payload.remote.trim() !== ''
+    ? requireRef(payload.remote.trim(), 'remote')
+    : ''
+  let remote = wantedRemote
+  if (remote === '') remote = configuredRemote !== '' ? configuredRemote : (remotes.length > 0 ? remotes[0] : null)
+  const configuredBranch = configuredRemote !== '' && configuredRemote === remote ? configuredMerge : ''
+  const requestedDest = typeof payload.remoteBranch === 'string' && payload.remoteBranch.trim() !== ''
+    ? requireRef(payload.remoteBranch.trim(), 'remoteBranch').replace(/^refs\/heads\//, '')
+    : ''
+  const remoteInfo = detached ? { ok: false, heads: new Map() } : await remoteHeadsOf(root, remote)
+  const remoteBranches = remoteInfo.ok
+    ? [...remoteInfo.heads.keys()].sort()
+    : (remote === null ? [] : await localRemoteBranchesOf(root, remote))
+  const remoteChecked = remoteInfo.ok
+  const existsOnRemote = async (name) => (remoteInfo.ok ? remoteInfo.heads.has(name) : await localRemoteBranchExists(root, remote, name))
+  const configuredExists = configuredBranch === '' ? false : await existsOnRemote(configuredBranch)
+  const upstream = configuredExists ? remote + '/' + configuredBranch : null
+  const upstreamGone = configuredBranch !== '' && configuredExists === false ? remote + '/' + configuredBranch : null
+  let remoteBranch = requestedDest
+  if (remoteBranch === '') remoteBranch = configuredExists ? configuredBranch : branch
+  const remoteExists = detached ? false : await existsOnRemote(remoteBranch)
   let commits = []
   let truncated = false
   if (detached === false) {
-    const range = upstream === null ? ['HEAD', '--not', '--remotes'] : [upstream + '..HEAD']
-    const out = await runGit(root, ['log', '--max-count=' + (PUSH_PREVIEW_LIMIT + 1), '--date-order', '--pretty=format:' + LOG_FORMAT, ...range])
+    let base = ''
+    if (remoteExists === true) {
+      if (remoteInfo.ok) base = remoteInfo.heads.get(remoteBranch) || ''
+      else {
+        const localRef = 'refs/remotes/' + remote + '/' + remoteBranch
+        const check = await runGit(root, ['rev-parse', '--verify', '--quiet', localRef])
+        if (check.code === 0) base = localRef
+      }
+    }
+    const range = base === '' ? [branch, '--not', '--remotes'] : [branch, '--not', base]
+    let out = await runGit(root, ['log', '--max-count=' + (PUSH_PREVIEW_LIMIT + 1), '--date-order', '--pretty=format:' + LOG_FORMAT, ...range])
+    /* A fresh remote tip may not be in the object database until the next
+       fetch; the refs/remotes fallback keeps the preview usable. */
+    if (out.code !== 0 && base !== '') {
+      out = await runGit(root, ['log', '--max-count=' + (PUSH_PREVIEW_LIMIT + 1), '--date-order', '--pretty=format:' + LOG_FORMAT, branch, '--not', '--remotes'])
+    }
     if (out.code === 0) {
       const all = parseLog(out.stdout)
       truncated = all.length > PUSH_PREVIEW_LIMIT
       commits = truncated ? all.slice(0, PUSH_PREVIEW_LIMIT) : all
     }
   }
-  const target = upstream !== null ? upstream : (remote === null ? branch : remote + '/' + branch)
-  return { repoRoot: root, branch, detached, upstream, remote, target, remotes, commits, truncated, count: commits.length }
+  const target = remote === null ? branch : remote + '/' + remoteBranch
+  return {
+    repoRoot: root, branch, detached, upstream, upstreamGone, remote, remoteBranch, remoteBranches,
+    remoteChecked, remoteExists, target, remotes, commits, truncated, count: commits.length,
+  }
 }
 
 

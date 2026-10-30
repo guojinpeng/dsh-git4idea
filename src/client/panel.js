@@ -662,6 +662,16 @@
         return () => clearInterval(timer)
       }, [props.visible, repoRoot, loadSummary, loadBranches, loadCommits])
 
+      /* A merge, rebase, cherry-pick or revert that stops on conflicts exits
+         as data, not as a refusal: the overview is the next step, and a toast
+         alone leaves the user without one. */
+      const openConflictOverview = useCallback(() => {
+        if (repoRoot === null || conflictOverviewDialog.hosted !== true) return false
+        const scopeObject = scope || {}
+        conflictOverviewDialog.set({ cwd: cwd, repoRoot: repoRoot, sessionId: scopeObject.sessionId })
+        return true
+      }, [cwd, repoRoot, scope])
+
       /* The failure path already reports through setError; the success half of
          every gesture lands in the same stack (m05310). A call site that pushes a
          richer toast of its own passes { quiet: true }. */
@@ -675,9 +685,14 @@
         /* refresh itself runs git (status/log); the console gets those blocks
            too, so the second tick keeps the tab on the newest line. */
         setConsoleTick((value) => value + 1)
+        /* An operation that started or ended here must reach the composer pill
+           now: the pill polls, so waiting for the poll looks like a stale
+           "merging" banner after an abort from this tab. */
+        notifyBranchSwitched(sessionId, base.repoRoot)
         if (options === undefined || options.quiet !== true) notifyOk(runSuccessText(method, payload))
+        if (result !== null && result !== undefined && result.conflicted === true) openConflictOverview()
         return result
-      }, [base, runSuccessText, guard, refresh])
+      }, [base, sessionId, runSuccessText, guard, refresh, openConflictOverview])
 
       const pickRepo = useCallback((path) => {
         setRepoRoot(path)
@@ -777,15 +792,27 @@
         void openDiff({ path: seed.path, staged: seed.staged === true, untracked: seed.untracked === true ? true : undefined })
       }, [previewDiff, openDiff])
 
+      /* A conflicted row opens the conflict card. git prints a combined diff
+         for an unmerged path, which the diff view cannot parse, so the card is
+         the only surface that can show all three versions. Without an overlay
+         slot the inline pane stays the fallback: it shows the comparison, not
+         the editor. */
+      const openConflict = useCallback((path) => {
+        if (repoRoot === null) return
+        if (conflictDialog.hosted !== true) { showDiff({ path: path }); return }
+        const scopeObject = scope || {}
+        conflictDialog.set({ path: path, cwd: cwd, repoRoot: repoRoot, sessionId: scopeObject.sessionId })
+      }, [cwd, repoRoot, scope, showDiff])
+
       /* m04920: the Git tab raises the SAME frame dialogs as the composer pill.
          The panel used to draw its own inline push card and commit layer, so the
          two surfaces drifted apart: the layer kept a right-hand diff that could
          not fit the card, and a file card opened from the panel could not cover
          the inline card. */
-      const openPushDialog = useCallback(() => {
+      const openPushDialog = useCallback((seed) => {
         const scopeObject = scope || {}
         if (repoRoot === null) return
-        pushDialog.set({ cwd: cwd, repoRoot: repoRoot, sessionId: scopeObject.sessionId })
+        pushDialog.set(Object.assign({ cwd: cwd, repoRoot: repoRoot, sessionId: scopeObject.sessionId }, seed || {}))
       }, [cwd, repoRoot, scope])
 
 
@@ -1157,7 +1184,7 @@
               }),
           null,
           { id: 'update', icon: 'fetch', tone: 'cyan', label: t('action.update'), run: () => { void run('fetch', { prune: true }) } },
-          { id: 'push', icon: 'push', tone: 'success', label: t('action.push'), disabled: blocked, reason: t('operation.hint'), run: () => openPushDialog() },
+          { id: 'push', icon: 'push', tone: 'success', label: t('action.push'), disabled: blocked, reason: t('operation.hint'), run: () => openPushDialog({ branch: entry.name }) },
         ].filter((item) => item !== null)
         openMenuAt(event, withoutIcons(items))
       }, [branches, checkout, run, t, compareWith, toggleFavoriteBranch, openMenuAt, favorites, blocked, sendGitSummaryToChat, repoLabel, copyValues])
@@ -1220,6 +1247,22 @@
           ].filter((entry) => entry !== null))
           return
         }
+        /* An unmerged path has no ordinary diff and "stage" alone would not
+           say what landed. The conflict verbs live here so a row can be settled
+           without opening the card. */
+        if (group === 'conflicted') {
+          openMenuAt(event, [
+            { id: 'conflict', icon: 'compare', tone: 'accent', label: t('conflict.open'), run: () => openConflict(item.path) },
+            null,
+            { id: 'conflict-ours', icon: 'check', tone: 'success', label: t('conflict.takeOursFile'), run: () => { void run('conflictResolve', { path: item.path, side: 'ours' }) } },
+            { id: 'conflict-theirs', icon: 'check', tone: 'warn', label: t('conflict.takeTheirsFile'), run: () => { void run('conflictResolve', { path: item.path, side: 'theirs' }) } },
+            { id: 'conflict-mark', icon: 'check', tone: 'success', label: t('conflict.markResolved'), run: () => { void run('conflictResolve', { path: item.path, side: 'worktree' }) } },
+            null,
+            { id: 'sendRef', icon: 'send', tone: 'accent', label: t('menu.sendToChat'), run: () => sendFileReferenceToChat(item.path) },
+            { id: 'copy', icon: 'tag', tone: 'secondary', label: t('action.copyPath'), run: () => { copyText(item.path) } },
+          ])
+          return
+        }
         const items = [
           { id: 'diff', icon: 'file', tone: 'primary', label: t('action.showDiff'), run: () => { showDiff({ path: item.path, staged: group === 'staged', untracked: group === 'untracked' }) } },
           { id: 'sendRef', icon: 'send', tone: 'accent', label: t('menu.sendToChat'), run: () => sendFileReferenceToChat(item.path) },
@@ -1232,7 +1275,7 @@
           { id: 'copy', icon: 'tag', tone: 'secondary', label: t('action.copyPath'), run: () => { copyText(item.path) } },
         ]
         openMenuAt(event, items)
-      }, [showDiff, run, t, openMenuAt, sendFileReferenceToChat, sendToComposer, changeSelection, changeSelectionGroups, openDiscardManyDialog, copyValues])
+      }, [showDiff, run, t, openMenuAt, openConflict, sendFileReferenceToChat, sendToComposer, changeSelection, changeSelectionGroups, openDiscardManyDialog, copyValues])
 
       /* The commit-detail file list shares the working-tree row menu, minus the
          staging verbs: a committed file's diff replays against its commit. */
@@ -1440,6 +1483,7 @@
 
       const repoOptions = repoState === null ? [] : repoState.repos
       const dirty = summary === null ? 0 : summary.changes.staged.length + summary.changes.unstaged.length + summary.changes.untracked.length + summary.changes.conflicted.length
+      const conflictedCount = summary === null ? 0 : summary.changes.conflicted.length
 
       /* Both header switchers are menu-driven now (see RepoSelect): the
          popovers reuse openMenuAt, so they clamp to the panel box and share
@@ -1522,7 +1566,30 @@
           E(Icon, { name: 'commit', size: 12 }),
           E('span', { className: 'git4idea-track-label' }, t('track.commit')),
           E('span', { className: 'git4idea-track-num' }, String(dirty)))),
-        operation === null ? null : E('span', { className: 'git4idea-opchip', 'data-tip': t('operation.hint') }, t('operation.' + operation)),
+        operation === null ? null : E('span', { className: 'git4idea-opgroup' },
+          E('button', {
+            type: 'button',
+            className: 'git4idea-opchip git4idea-opchip-btn',
+            'data-tip': conflictedCount > 0 ? fill(t('conflict.openCount'), { n: String(conflictedCount) }) : t('operation.hint'),
+            onClick: () => { openConflictOverview() },
+          }, t('operation.' + operation) + (conflictedCount > 0 ? ' · ' + String(conflictedCount) : '')),
+          E('button', {
+            type: 'button', className: 'git4idea-opbtn', 'data-tip': t('operation.continueHint'),
+            onClick: () => {
+              if (conflictedCount > 0 && openConflictOverview() === true) return
+              void run('operationFinish', { operation: operation, action: 'continue' })
+            },
+          }, t('operation.continue')),
+          operation === 'rebase' || operation === 'cherry-pick' || operation === 'revert'
+            ? E('button', {
+                type: 'button', className: 'git4idea-opbtn', 'data-tip': t('operation.skipHint'),
+                onClick: () => { void run('operationFinish', { operation: operation, action: 'skip' }) },
+              }, t('operation.skip'))
+            : null,
+          E('button', {
+            type: 'button', className: 'git4idea-opbtn', 'data-tip': t('operation.abortHint'),
+            onClick: () => { void run('operationFinish', { operation: operation, action: 'abort' }) },
+          }, t('operation.abort'))),
         E('span', { className: 'git4idea-topbar-spacer' }))
 
       /* The log never leaves the middle column any more: the picked commit
@@ -1728,7 +1795,7 @@
             { id: 'c-all', label: t('more.commitAll'), disabled: allChangePaths.length === 0, reason, run: () => setDialog({ kind: 'commitMsg', all: true, amend: false, sign: false }) },
             null,
             { id: 'c-undo', label: t('more.undoCommit'), disabled: commits.length === 0 || blocked, reason, run: () => setDialog({ kind: 'undoCommit' }) },
-            { id: 'c-abort', label: t('more.rebaseAbort'), disabled: operation !== 'rebase', reason, run: () => { void run('rebaseAbort', {}) } },
+            { id: 'c-abort', label: t('more.abortOperation'), disabled: operation === null, reason, run: () => { void run('operationFinish', { operation: operation, action: 'abort' }) } },
             null,
             { id: 'c-staged-amend', label: t('more.commitStagedAmend'), disabled: stagedPaths.length === 0 || commits.length === 0, reason, run: () => setDialog({ kind: 'commitMsg', all: false, amend: true, sign: false }) },
             { id: 'c-all-amend', label: t('more.commitAllAmend'), disabled: allChangePaths.length === 0 || commits.length === 0, reason, run: () => setDialog({ kind: 'commitMsg', all: true, amend: true, sign: false }) },
@@ -1754,7 +1821,7 @@
             null,
             { id: 'pp-push', label: t('toolbar.push'), disabled: remoteReady !== true || blocked, reason, run: () => openPushDialog() },
             { id: 'pp-push-force', label: t('more.pushForce'), danger: true, disabled: remoteReady !== true || blocked, reason, run: () => setDialog({ kind: 'pushForce' }) },
-            { id: 'pp-push-to', label: t('more.pushTo'), disabled: remoteNames.length === 0 || blocked, reason, run: pickRemote((name) => { void run('push', { remote: name, confirm: true }) }) },
+            { id: 'pp-push-to', label: t('more.pushTo'), disabled: remoteNames.length === 0 || blocked, reason, run: pickRemote((name) => openPushDialog({ remote: name })) },
             null,
             { id: 'pp-fetch', label: t('toolbar.fetch'), disabled: remoteReady !== true, reason, run: () => { void run('fetch', { prune: true }) } },
             { id: 'pp-fetch-all', label: t('more.fetchAll'), disabled: remoteNames.length === 0, reason, run: () => { void run('fetch', { all: true, prune: true }) } },
@@ -1770,7 +1837,7 @@
             { id: 'br-delete', label: t('action.delete'), danger: true, disabled: otherBranches.length === 0, reason, run: (ev) => pickBranchMenu(ev, 'delete') },
             { id: 'br-delete-remote', label: t('more.deleteRemoteBranch'), danger: true, disabled: remoteBranches.length === 0 || blocked, reason, run: (ev) => pickRemoteBranchMenu(ev) },
             null,
-            { id: 'br-publish', label: t('more.publish'), disabled: remoteReady !== true || tracked === true || blocked, reason, run: () => { void run('push', { setUpstream: true, confirm: true }) } },
+            { id: 'br-publish', label: t('more.publish'), disabled: remoteReady !== true || tracked === true || blocked, reason, run: () => openPushDialog() },
             /* Upstream management for the CURRENT branch (issue #18): same
                verbs as the branch-row menu, reachable without selecting a
                branch first. Submenu built inside run() like rm-remove. */
@@ -1862,6 +1929,7 @@
       })
 
       const changesPane = renderChanges((item, group) => {
+        if (group === 'conflicted') { openConflict(item.path); return }
         showDiff({ path: item.path, staged: group === 'staged', untracked: group === 'untracked' })
       })
 
@@ -2154,7 +2222,7 @@
           text: t('confirm.pushForce'),
           okLabel: t('confirm.ok'), cancelLabel: t('confirm.cancel'),
           onCancel: () => setDialog(null),
-          onConfirm: () => { setDialog(null); void run('push', { force: true, confirm: true }) },
+          onConfirm: () => { setDialog(null); openPushDialog({ force: true }) },
         }))
       }
       if (dialog !== null && dialog.kind === 'deleteRemoteBranch') {

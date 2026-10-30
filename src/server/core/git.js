@@ -101,7 +101,10 @@ export function runGit(cwd, args, options = {}) {
   return new Promise((resolve, reject) => {
     let child
     try {
-      child = spawn(gitBinary(), args, { cwd, windowsHide: true, env: { ...process.env, GIT_OPTIONAL_LOCKS: '0', GIT_TERMINAL_PROMPT: '0' } })
+      child = spawn(gitBinary(), args, { cwd, windowsHide: true, /* GIT_EDITOR: `merge/rebase/cherry-pick/revert --continue` and the merge
+       commit they create open an editor when the message needs one; without
+       this the child git blocks on vi and the request dies on the timeout. */
+        env: { ...process.env, GIT_OPTIONAL_LOCKS: '0', GIT_TERMINAL_PROMPT: '0', GIT_EDITOR: 'true' } })
     } catch (error) {
       logError('git:start', error)
       writeConsoleBlock(cwd, args, startedAt, 'spawn-error', '', messageOf(error))
@@ -151,10 +154,15 @@ export function runGit(cwd, args, options = {}) {
         err: clipGitLogText(Buffer.concat(err).toString('utf8')),
       })
       writeConsoleBlock(cwd, args, startedAt, code === null ? -1 : code, Buffer.concat(out).toString('utf8'), Buffer.concat(err).toString('utf8'))
+      const stdoutBuffer = Buffer.concat(out)
       resolve({
         code: code === null ? -1 : code,
         signal: signal === null ? undefined : signal,
-        stdout: Buffer.concat(out).toString('utf8'),
+        stdout: stdoutBuffer.toString('utf8'),
+        /* The undecoded bytes: `git show :1:path` on a binary blob would lose
+           its NUL bytes in the string form, and the conflict editor must know
+           that a file is binary before it offers an editor for it. */
+        stdoutBuffer: stdoutBuffer,
         stderr: Buffer.concat(err).toString('utf8'),
         truncated: outBytes > MAX_OUTPUT_BYTES,
       })

@@ -194,7 +194,12 @@
         branch: typeof bag.branch === 'string' ? bag.branch : '',
         detached: bag.detached === true,
         upstream: typeof bag.upstream === 'string' && bag.upstream !== '' ? bag.upstream : null,
+        upstreamGone: typeof bag.upstreamGone === 'string' && bag.upstreamGone !== '' ? bag.upstreamGone : null,
         remote: typeof bag.remote === 'string' ? bag.remote : '',
+        remoteBranch: typeof bag.remoteBranch === 'string' ? bag.remoteBranch : '',
+        remoteBranches: Array.isArray(bag.remoteBranches) ? bag.remoteBranches : [],
+        remoteChecked: bag.remoteChecked === true,
+        remoteExists: bag.remoteExists === true,
         target: typeof bag.target === 'string' ? bag.target : '',
         remotes: Array.isArray(bag.remotes) ? bag.remotes : [],
         commits: Array.isArray(bag.commits) ? bag.commits : [],
@@ -206,27 +211,54 @@
       const t = props.t
       const entry = props.entry
       const base = { cwd: entry.cwd, repoRoot: entry.repoRoot }
+      const force = entry.force === true
+      /* Every push entry opens this card (m00005), including a branch row that
+         is not HEAD and a forced push. The seed only preselects the branch and,
+         when a menu named one, its remote; the preview still decides the
+         destination and whether it exists. */
+      const initialBranch = typeof entry.branch === 'string' ? entry.branch : ''
+      const initialRemote = typeof entry.remote === 'string' ? entry.remote : ''
       const [data, setData] = useState(null)
       const [selected, setSelected] = useState(null)
       const [files, setFiles] = useState([])
       const [filesLoading, setFilesLoading] = useState(false)
       const [selectedPath, setSelectedPath] = useState(null)
       const [busy, setBusy] = useState(false)
+      const [remote, setRemote] = useState('')
+      const [destination, setDestination] = useState('')
+      const [checking, setChecking] = useState(false)
+      /* The state flag alone cannot stop two clicks in the same frame (setBusy
+         lands after the render), so the in-flight check is synchronous. */
+      const pushing = useRef(false)
+      const loadSeq = useRef(0)
       const messageOf = (caught) => (caught instanceof Error ? caught.message : String(caught))
+      const loadPreview = async (branch, remoteName, remoteBranch) => {
+        const seq = loadSeq.current + 1
+        loadSeq.current = seq
+        setChecking(true)
+        try {
+          const payload = Object.assign({}, base)
+          if (branch !== '') payload.branch = branch
+          if (remoteName !== '') payload.remote = remoteName
+          if (remoteBranch !== '') payload.remoteBranch = remoteBranch
+          const next = pushPreviewOf(await request('push-preview', payload))
+          if (seq !== loadSeq.current) return
+          setData(next)
+          setRemote(next.remote)
+          setDestination(next.remoteBranch)
+          setSelected((previous) => (previous !== null && next.commits.some((item) => item.hash === previous)
+            ? previous
+            : (next.commits.length === 0 ? null : next.commits[0].hash)))
+          setSelectedPath(null)
+        } catch (caught) {
+          if (seq === loadSeq.current) { notifyFail(caught) }
+        } finally {
+          if (seq === loadSeq.current) setChecking(false)
+        }
+      }
       useEffect(() => {
-        let alive = true
-        void (async () => {
-          try {
-            const next = await request('push-preview', base)
-            if (alive !== true) return
-            const normalized = pushPreviewOf(next)
-            setData(normalized)
-            setSelected(normalized.commits.length === 0 ? null : normalized.commits[0].hash)
-          } catch (caught) {
-            if (alive === true) { notifyFail(caught) }
-          }
-        })()
-        return () => { alive = false }
+        void loadPreview(initialBranch, initialRemote, '')
+        return () => { loadSeq.current += 1 }
         // eslint-disable-next-line react-hooks/exhaustive-deps
       }, [])
       useEffect(() => {
@@ -267,16 +299,44 @@
           sessionId: entry.sessionId,
         })
       }
+      const settleDestination = () => {
+        if (data === null) return
+        const typed = destination.trim()
+        if (typed === '') { setDestination(data.remoteBranch); return }
+        if (typed === data.remoteBranch && remote === data.remote) return
+        void loadPreview(data.branch, remote, typed)
+      }
+      const changeRemote = (event) => {
+        const next = event.target.value
+        setRemote(next)
+        if (data !== null) void loadPreview(data.branch, next, '')
+      }
+      const destinationKnown = data !== null && checking === false && remote === data.remote && destination === data.remoteBranch
+      const destinationState = destinationKnown !== true
+        ? ''
+        : data.remoteChecked !== true
+          ? t('push.remoteUnknown')
+          : data.remoteExists === true ? t('push.existingBranch') : t('push.newBranch')
       const runPush = async () => {
-        if (busy === true || data === null) return
+        if (pushing.current === true || data === null || destinationKnown !== true) return
+        pushing.current = true
         setBusy(true)
         try {
-          await request('push', Object.assign({}, base, {
+          /* Both ends are explicit: a bare push would follow the stale
+             branch.<name>.merge after a rename and re-create the old remote
+             branch. The host builds <local>:refs/heads/<remote> and records the
+             tracking reference that was actually pushed. */
+          const payload = Object.assign({}, base, {
             confirm: true,
-            setUpstream: data.upstream === null,
-          }))
+            remote: remote,
+            localBranch: data.branch,
+            remoteBranch: destination,
+            setUpstream: true,
+          })
+          if (force === true) payload.force = true
+          await request('push', payload)
           toastCenter.push({
-            text: fill(t('toast.pushed'), { n: data.commits.length, target: data.target }),
+            text: fill(t('toast.pushed'), { n: data.commits.length, target: remote + '/' + destination }),
             tone: 'ok',
             icon: 'check',
           })
@@ -284,10 +344,12 @@
         } catch (caught) {
           toastCenter.push({ text: messageOf(caught), tone: 'error', icon: 'close' })
         } finally {
+          pushing.current = false
           setBusy(false)
         }
       }
-      const canPush = data !== null && data.detached === false && data.remotes.length > 0 && data.commits.length > 0 && busy === false
+      const canPush = data !== null && data.detached === false && data.remotes.length > 0
+        && destinationKnown === true && (data.commits.length > 0 || data.remoteExists === false) && busy === false
       const emptyNote = data === null
         ? t('status.busy')
         : data.detached === true
@@ -311,6 +373,39 @@
             type: 'button', className: 'git4idea-icon-btn', 'aria-label': t('toast.close'), 'data-tip': t('toast.close'),
             onClick: () => { props.onClose() },
           }, E(Icon, { name: 'close', size: 13 }))),
+        /* The mapping line answers "where does this go?" before the push: local
+           branch, remote, remote branch, and whether that remote branch exists.
+           The host checks the REMOTE (ls-remote), not the stale local cache. */
+        data === null ? null : E('div', { className: 'git4idea-push-map' },
+          E('span', { className: 'git4idea-push-map-label' }, t('push.localBranch')),
+          E('span', { className: 'git4idea-push-map-branch git4idea-mono' }, data.branch),
+          E('span', { className: 'git4idea-push-map-arrow' }, '→'),
+          E('select', {
+            className: 'git4idea-select git4idea-push-map-remote',
+            value: remote,
+            disabled: data.remotes.length === 0,
+            'aria-label': t('push.remote'),
+            'data-git4idea-push-remote': '',
+            onChange: changeRemote,
+          }, data.remotes.map((name) => E('option', { key: name, value: name }, name))),
+          E('span', { className: 'git4idea-push-map-arrow' }, ':'),
+          E('input', {
+            className: 'git4idea-input git4idea-push-map-dest',
+            value: destination,
+            list: 'git4idea-push-destinations',
+            placeholder: t('push.remoteBranch'),
+            'aria-label': t('push.remoteBranch'),
+            'data-git4idea-push-dest': '',
+            disabled: data.remotes.length === 0,
+            onChange: (event) => { setDestination(event.target.value) },
+            onBlur: settleDestination,
+            onKeyDown: (event) => {
+              if (event.key === 'Enter') { event.preventDefault(); event.currentTarget.blur() }
+            },
+          }),
+          E('datalist', { id: 'git4idea-push-destinations' }, data.remoteBranches.map((name) => E('option', { key: name, value: name }))),
+          destinationState === '' ? null : E('span', { className: 'git4idea-push-map-state' }, destinationState),
+          force === true ? E('span', { className: 'git4idea-push-map-state git4idea-push-map-force' }, t('push.force')) : null),
         E('div', { className: 'git4idea-push-body' },
           E('div', { className: 'git4idea-push-commits' },
             data === null || data.commits.length === 0
@@ -346,7 +441,7 @@
                       onOpen: openFile,
                     })))),
         E('div', { className: 'git4idea-push-foot' },
-          E('span', { className: 'git4idea-push-footnote' }, emptyNote !== '' ? emptyNote : t('push.hint')),
+          E('span', { className: 'git4idea-push-footnote' }, emptyNote !== '' ? emptyNote : (force === true ? t('push.forceHint') : t('push.hint'))),
           E('span', { className: 'git4idea-topbar-spacer' }),
           E('button', { type: 'button', className: 'git4idea-btn', onClick: () => { props.onClose() } }, t('confirm.cancel')),
           E('button', {

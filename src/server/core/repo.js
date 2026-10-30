@@ -3,7 +3,7 @@
  */
 
 import { createHash } from 'node:crypto'
-import { existsSync, realpathSync } from 'node:fs'
+import { existsSync, readFileSync, realpathSync } from 'node:fs'
 import path from 'node:path'
 import { PanelError } from './errors.js'
 import { RECORD_SEP, FIELD_SEP, runGit, git } from './git.js'
@@ -266,6 +266,27 @@ export function relInside(root, target) {
   const rel = path.relative(root, target)
   if (rel === '' || rel.startsWith('..') || path.isAbsolute(rel)) return null
   return rel.split(path.sep).join('/')
+}
+
+
+/** The ref a merge brings in, from the message git prepared for its commit.
+ *  merge/rebase/cherry-pick/revert leave MERGE_MSG behind; only a branch merge
+ *  names a ref, and that is all the conflict card needs to label the sides. */
+export async function operationSourceOf(root, operation) {
+  if (operation !== 'merge') return null
+  const result = await runGit(root, ['rev-parse', '--absolute-git-dir'])
+  if (result.code !== 0) return null
+  const gitDir = result.stdout.trim()
+  if (gitDir === '') return null
+  let text = ''
+  try { text = readFileSync(path.join(gitDir, 'MERGE_MSG'), 'utf8') } catch (error) { void error; return null }
+  const first = text.split('\n')[0].trim()
+  const branch = /^Merge (?:remote-tracking )?branch '([^']+)'/.exec(first)
+  if (branch !== null) return branch[1]
+  const tag = /^Merge tag '([^']+)'/.exec(first)
+  if (tag !== null) return tag[1]
+  const commit = /^Merge commit '([0-9a-f]{7,40})'/.exec(first)
+  return commit === null ? null : commit[1].slice(0, 8)
 }
 
 

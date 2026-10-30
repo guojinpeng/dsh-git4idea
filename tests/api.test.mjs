@@ -194,6 +194,41 @@ test('push-preview lists the commits a push would send (m02986)', async () => {
     const detail = await call('commitDetail', { cwd: other, hash: top.hash })
     assert.equal(detail.status, 200)
     assert.deepEqual(detail.body.data.files.map((file) => file.path), ['b.txt'])
+
+    /* Rename main -> renamed, then remove the remote branch WITHOUT touching
+       the local tracking ref. The configured merge still says refs/heads/main
+       and the cache still carries origin/main; only ls-remote knows it is gone.
+       The card must offer the local name, flag the stale upstream and NOT push
+       back to main (m00005). */
+    run('branch', '-m', 'main', 'renamed')
+    execFileSync('git', ['update-ref', '-d', 'refs/heads/main'], { cwd: bare, encoding: 'utf8' })
+    run('show-ref', '--verify', 'refs/remotes/origin/main')
+    const renamed = await call('push-preview', { cwd: other })
+    assert.equal(renamed.status, 200)
+    assert.equal(renamed.body.data.branch, 'renamed')
+    assert.equal(renamed.body.data.remote, 'origin')
+    assert.equal(renamed.body.data.remoteBranch, 'renamed')
+    assert.equal(renamed.body.data.remoteExists, false)
+    assert.equal(renamed.body.data.remoteChecked, true)
+    assert.equal(renamed.body.data.upstream, null)
+    assert.equal(renamed.body.data.upstreamGone, 'origin/main')
+    assert.deepEqual(renamed.body.data.remoteBranches, [])
+    assert.equal(renamed.body.data.target, 'origin/renamed')
+
+    /* The explicit source:destination refspec is what the card sends. */
+    const pushed = await call('push', {
+      cwd: other, confirm: true, remote: 'origin', localBranch: 'renamed', remoteBranch: 'renamed', setUpstream: true,
+    })
+    assert.equal(pushed.status, 200)
+    const heads = execFileSync('git', ['ls-remote', '--heads', bare], { encoding: 'utf8' })
+    assert.match(heads, /refs\/heads\/renamed/)
+    assert.doesNotMatch(heads, /refs\/heads\/main/)
+    assert.equal(run('config', '--get', 'branch.renamed.merge').trim(), 'refs/heads/renamed')
+    assert.equal(run('config', '--get', 'branch.renamed.remote').trim(), 'origin')
+    const afterPush = await call('push-preview', { cwd: other })
+    assert.equal(afterPush.body.data.count, 0)
+    assert.equal(afterPush.body.data.target, 'origin/renamed')
+    assert.equal(afterPush.body.data.upstream, 'origin/renamed')
   } finally {
     rmSync(other, { recursive: true, force: true })
     rmSync(bare, { recursive: true, force: true })
@@ -1194,3 +1229,148 @@ test('an expired entry forces a real scan, and the scan repopulates the cache', 
 test('REPOS_CACHE_TTL_MS stays the documented 15-second window', () => {
   assert.equal(REPOS_CACHE_TTL_MS, 15000)
 })
+
+/* ============================ conflicts ============================ */
+
+/* A merge that stops on one text file, built from scratch so the shared
+   fixture above stays untouched. */
+function conflictFixture() {
+  const dir = mkdtempSync(join(tmpdir(), 'dsh-git4idea-conflict-'))
+  const run = (...args) => execFileSync('git', args, { cwd: dir, encoding: 'utf8' })
+  run('init', '-q', '-b', 'main')
+  run('config', 'core.autocrlf', 'false')
+  run('config', 'core.eol', 'lf')
+  run('config', 'user.name', 'Check')
+  run('config', 'user.email', 'check@example.com')
+  writeFileSync(join(dir, 'a.txt'), 'one\ntwo\nthree\n')
+  run('add', '-A')
+  run('commit', '-q', '-m', 'base')
+  run('checkout', '-q', '-b', 'feat')
+  writeFileSync(join(dir, 'a.txt'), 'one\ntheirs\nthree\n')
+  run('commit', '-q', '-am', 'theirs')
+  run('checkout', '-q', 'main')
+  writeFileSync(join(dir, 'a.txt'), 'one\nours\nthree\n')
+  run('commit', '-q', '-am', 'ours')
+  try { run('merge', 'feat') } catch (error) { void error }
+  return { dir, run }
+}
+
+test('conflictDetail reads all three stages and conflictSave keeps the file text and line endings', async () => {
+  const { dir } = conflictFixture()
+  /* The overview names the ref the merge brings in, not the checked out branch. */
+  const merged = (await call('summary', { cwd: dir })).body.data
+  assert.equal(merged.operation, 'merge')
+  assert.equal(merged.operationSource, 'feat')
+  assert.equal(merged.branch, 'main')
+  const detail = (await call('conflictDetail', { cwd: dir, path: 'a.txt' })).body.data
+  assert.deepEqual(detail.stages, { base: true, ours: true, theirs: true })
+  assert.equal(detail.binary, false)
+  assert.equal(detail.editable, true)
+  assert.equal(detail.hasMarkers, true)
+  assert.match(detail.working, /^<<<<<<< HEAD$/m)
+  assert.equal(detail.ours, 'one\nours\nthree\n')
+  assert.equal(detail.theirs, 'one\ntheirs\nthree\n')
+
+  /* git prints a combined diff for an unmerged path; the stage pair route is
+     the one the diff view can parse. */
+  const pair = (await call('diff', { cwd: dir, path: 'a.txt', stageA: 2, stageB: 3 })).body.data
+  assert.match(pair.patch, /^diff --git /m)
+  assert.match(pair.patch, /\+theirs/)
+
+  const stale = await call('conflictSave', { cwd: dir, path: 'a.txt', text: 'one\nours\nthree\n', expectSha1: 'deadbeef' })
+  assert.equal(stale.status, 409)
+  assert.equal(stale.body.error.code, 'conflict-stale')
+
+  /* The editor sends LF; a CRLF working copy must stay CRLF. */
+  const crlf = readFileSync(join(dir, 'a.txt'), 'utf8').split('\n').join('\r\n')
+  writeFileSync(join(dir, 'a.txt'), crlf)
+  const fresh = (await call('conflictDetail', { cwd: dir, path: 'a.txt' })).body.data
+  assert.equal(fresh.eol, 'crlf')
+  const saved = await call('conflictSave', { cwd: dir, path: 'a.txt', text: 'one\nours\nthree\n', expectSha1: fresh.sha1 })
+  assert.equal(saved.status, 200)
+  assert.equal(saved.body.data.hasMarkers, false)
+  assert.equal(readFileSync(join(dir, 'a.txt'), 'utf8'), 'one\r\nours\r\nthree\r\n')
+
+  const settled = await call('conflictResolve', { cwd: dir, path: 'a.txt', side: 'worktree' })
+  assert.equal(settled.status, 200)
+  assert.equal(settled.body.data.resolved, true)
+  assert.equal((await call('summary', { cwd: dir })).body.data.changes.conflicted.length, 0)
+})
+
+test('conflictBlame annotates each side and the edited result', async () => {
+  const { dir } = conflictFixture()
+
+  /* The two sides have no commit to blame by path, so each maps to the ref it
+     came from: HEAD for ours, MERGE_HEAD for theirs. */
+  const ours = (await call('conflictBlame', { cwd: dir, path: 'a.txt', side: 'ours' })).body.data
+  assert.equal(ours.rev, 'HEAD')
+  assert.equal(ours.lines.length, 3)
+  for (const line of ours.lines) {
+    assert.equal(line.uncommitted, false)
+    assert.equal(line.author, 'Check')
+    assert.equal(line.email, 'check@example.com')
+    assert.match(line.date, /^\d{4}\/\d{1,2}\/\d{1,2}$/)
+    /* The hover detail needs the time of day and the message subject. */
+    assert.match(line.stamp, /^\d{4}\/\d{1,2}\/\d{1,2} \d{2}:\d{2}$/)
+    assert.equal(line.short, line.sha.slice(0, 8))
+    assert.ok(line.subject === 'base' || line.subject === 'ours')
+  }
+
+  const theirs = (await call('conflictBlame', { cwd: dir, path: 'a.txt', side: 'theirs' })).body.data
+  assert.equal(theirs.rev, 'MERGE_HEAD')
+  assert.equal(theirs.lines.length, 3)
+  assert.equal(theirs.lines[1].author, 'Check')
+
+  /* The result text is blamed against HEAD through --contents: an unchanged
+     line keeps its commit, an edited line reports as uncommitted. */
+  const kept = (await call('conflictBlame', { cwd: dir, path: 'a.txt', side: 'result', text: 'one\nours\nthree\n' })).body.data
+  assert.equal(kept.lines.length, 3)
+  assert.equal(kept.lines[1].uncommitted, false)
+
+  const edited = (await call('conflictBlame', { cwd: dir, path: 'a.txt', side: 'result', text: 'one\nNEW\nthree\n' })).body.data
+  assert.equal(edited.lines.length, 3)
+  assert.equal(edited.lines[1].uncommitted, true)
+  assert.equal(edited.lines[1].author, 'Check')
+  /* An uncommitted line has no commit to show; the hover detail falls back to
+     the configured identity and the date reads as today. */
+  assert.equal(edited.lines[1].sha, null)
+  assert.equal(edited.lines[1].short, null)
+  assert.equal(edited.lines[1].email, 'check@example.com')
+  assert.equal(edited.lines[1].subject, '')
+  assert.equal(edited.lines[0].uncommitted, false)
+  assert.equal(edited.lines[0].subject, 'base')
+})
+
+test('conflictResolve takes one side, and operationFinish guards and ends the operation', async () => {
+  const { dir, run } = conflictFixture()
+
+  /* Continue before every path is settled must refuse, not run git. */
+  const early = await call('operationFinish', { cwd: dir, operation: 'merge', action: 'continue' })
+  assert.equal(early.status, 409)
+  assert.equal(early.body.error.code, 'conflict-unresolved')
+
+  const mismatch = await call('operationFinish', { cwd: dir, operation: 'rebase', action: 'abort' })
+  assert.equal(mismatch.status, 409)
+  assert.equal(mismatch.body.error.code, 'operation-mismatch')
+
+  const taken = await call('conflictResolve', { cwd: dir, path: 'a.txt', side: 'theirs' })
+  assert.equal(taken.status, 200)
+  assert.equal(taken.body.data.removed, false)
+  assert.equal(run('status', '--porcelain').trim(), 'M  a.txt')
+  assert.equal(readFileSync(join(dir, 'a.txt'), 'utf8'), 'one\ntheirs\nthree\n')
+
+  const done = await call('operationFinish', { cwd: dir, operation: 'merge', action: 'continue' })
+  assert.equal(done.status, 200)
+  assert.equal(done.body.data.action, 'continue')
+  assert.equal((await call('summary', { cwd: dir })).body.data.operation, null)
+  assert.match(run('log', '-1', '--format=%s'), /^Merge branch 'feat'/)
+
+  /* Abort on a second conflict returns the working copy to the pre-merge text. */
+  const second = conflictFixture()
+  assert.equal((await call('summary', { cwd: second.dir })).body.data.operation, 'merge')
+  const aborted = await call('operationFinish', { cwd: second.dir, operation: 'merge', action: 'abort' })
+  assert.equal(aborted.status, 200)
+  assert.equal((await call('summary', { cwd: second.dir })).body.data.operation, null)
+  assert.equal(readFileSync(join(second.dir, 'a.txt'), 'utf8'), 'one\nours\nthree\n')
+})
+

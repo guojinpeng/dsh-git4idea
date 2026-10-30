@@ -787,7 +787,7 @@ test('host half keeps the destructive-confirm guards', () => {
 })
 
 test('host half exposes the method table the client calls', () => {
-  const methods = ['summary', 'head', 'stats', 'branches', 'log', 'me', 'merge-point', 'commitDetail', 'diff', 'compare', 'repos', 'stage', 'unstage', 'discard', 'commit', 'checkout', 'branchCreate', 'branchRename', 'branch-upstream', 'branchDelete', 'merge', 'rebase', 'cherryPick', 'revert', 'reset', 'fetch', 'pull', 'push', 'stashList', 'stashPush', 'stashApply', 'stashDrop', 'tagCreate', 'tagDelete', 'tagDeleteRemote', 'pushTags', 'clone', 'gitLogs', 'consoleLog', 'consoleClear', 'worktreeList', 'worktreeAdd', 'worktreeRemove', 'remoteAdd', 'remoteRemove', 'branchDeleteRemote', 'rebaseAbort', 'stashClear', 'undoList', 'undoApply', 'version']
+  const methods = ['summary', 'head', 'stats', 'branches', 'log', 'me', 'merge-point', 'commitDetail', 'diff', 'compare', 'repos', 'stage', 'unstage', 'discard', 'commit', 'checkout', 'branchCreate', 'branchRename', 'branch-upstream', 'branchDelete', 'merge', 'rebase', 'cherryPick', 'revert', 'reset', 'fetch', 'pull', 'push', 'stashList', 'stashPush', 'stashApply', 'stashDrop', 'tagCreate', 'tagDelete', 'tagDeleteRemote', 'pushTags', 'clone', 'gitLogs', 'consoleLog', 'consoleClear', 'worktreeList', 'worktreeAdd', 'worktreeRemove', 'remoteAdd', 'remoteRemove', 'branchDeleteRemote', 'rebaseAbort', 'stashClear', 'undoList', 'undoApply', 'conflictDetail', 'conflictSave', 'conflictResolve', 'conflictBlame', 'operationFinish', 'version']
   for (const method of methods) {
     if (method === 'merge-point') { assert.match(host, /^  'merge-point': mergePoint,$/m, 'host method missing: merge-point'); continue }
     if (method === 'branch-upstream') { assert.match(host, /^  'branch-upstream': branchUpstream,$/m, 'host method missing: branch-upstream'); continue }
@@ -995,7 +995,7 @@ test('the client half is fragments plus one generated bundle (m05309)', () => {
   // the bundle" from drifting apart.
   const order = [
     'head.js', 'locale.js', 'core.js', 'diff.js', 'tree.js', 'changes.js',
-    'workbench.js', 'panel.js', 'styles.js', 'composer.js', 'dialogs.js', 'preview.js', 'app.js',
+    'workbench.js', 'panel.js', 'styles.js', 'composer.js', 'dialogs.js', 'preview.js', 'conflict.js', 'app.js',
   ]
   const names = readdirSync(join(root, 'src', 'client')).filter((name) => name.endsWith('.js')).sort()
   assert.deepEqual(names, order.slice().sort(), 'every fragment is listed exactly once')
@@ -1017,6 +1017,88 @@ test('the client half is fragments plus one generated bundle (m05309)', () => {
   const i18n = read('src/utils/i18n.js')
   assert.match(i18n, /const LOCALE_FRAGMENT = join\(ROOT, 'src', 'client', 'locale\.js'\)/, 'sync writes the locale fragment')
   assert.match(i18n, /buildClient\(\)/, 'sync rebuilds the bundle, so the host never loads a stale copy')
+})
+
+test('the conflict card keeps three level columns and drops the marker lines (m01041)', () => {
+  // The card used to paint git's <<<<<<< / ======= / >>>>>>> lines as rows, so
+  // the columns drifted apart and the user read raw marker text. The three
+  // columns now come from one merge model, and changed regions carry a tint
+  // instead of a marker line.
+  const conflict = read('src/client/conflict.js')
+  assert.match(conflict, /function conflictResultBlockLines\(block, index, auto, decisions\)/, 'one row model drives the result column')
+  assert.match(conflict, /decision\.ours === 'adopt'/, 'the left block button keeps the left text')
+  assert.match(conflict, /decision\.theirs === 'adopt'/, 'the right block button keeps the right text')
+  assert.ok(
+    conflict.indexOf("decision.ours === 'adopt'") < conflict.indexOf("decision.theirs === 'adopt'"),
+    'adopting both sides appends the right text after the left text',
+  )
+  assert.match(conflict, /function conflictSideRows\(model, side\)/, 'each side pane reads its own file')
+  assert.doesNotMatch(conflict, /CONFLICT_(OURS|BASE|MID|THEIRS)_MARK/, 'the card must not render git marker lines')
+  // One decision hides both of that side's buttons: the block never wears a
+  // button it can no longer use.
+  assert.match(conflict, /decision\[side\] !== undefined\) return null/, 'a decided side drops its buttons')
+  assert.match(conflict, /conflict\.allApplied/, 'settling every block raises the done toast')
+  // The result column is an editor from the start; the old "Edit Text" toggle
+  // and its mode are gone.
+  assert.match(conflict, /className: 'git4idea-conflict-result'/, 'the result column is a textarea')
+  assert.doesNotMatch(conflict, /conflict\.editText|mode === 'text'/, 'no separate text mode is left')
+  assert.match(conflict, /const syncScroll = \(source\)/, 'the three panes scroll together')
+  assert.match(conflict, /event\.metaKey !== true/, 'the undo shortcut also takes Cmd on macOS')
+  // The result column owns the undo stack: a block choice is not a native typing
+  // edit, so the browser's own undo cannot replay it. Inside the result textarea
+  // the card keeps its shortcuts instead of returning early.
+  assert.match(conflict, /const inResult = midRef\.current !== null && event\.target === midRef\.current/, 'the result textarea keeps the card undo')
+  assert.match(conflict, /inResult !== true \|\| event\.key === 'Escape'\) return/, 'only the non-result fields opt out of the shortcuts')
+  // The result column carries its own line numbers, which follow the shared
+  // scroll offset of the textarea.
+  assert.match(conflict, /midGutterRef/, 'the result column has a gutter')
+  assert.match(conflict, /const gutterRow = \(index\) =>/, 'the gutter numbers the result lines')
+  assert.match(conflict, /const syncGutter = \(\) =>/, 'the gutter follows the result scroll')
+  // A right click on a line number opens the annotate menu, and the menu blames
+  // the column it was opened on.
+  assert.match(conflict, /onContextMenu: \(event\) => \{ openMenu\(event, 'ours'\) \}/, 'the left gutter takes the menu')
+  assert.match(conflict, /onContextMenu: \(event\) => \{ openMenu\(event, 'theirs'\) \}/, 'the right gutter takes the menu')
+  assert.match(conflict, /request\('conflictBlame'/, 'the menu asks the host for the blame')
+  assert.match(conflict, /conflict\.annotateHide/, 'an annotated column offers to hide its annotations')
+  assert.match(conflict, /git4idea-conflict-blame/, 'the annotations ride a dedicated span')
+  // A write that stops on conflicts opens the overview by itself.
+  assert.match(client, /result\.conflicted === true\) openConflictOverview\(\)/, 'a conflicted write opens the overview')
+  assert.match(read('src/client/styles.js'), /\.git4idea-conflict-row\.is-ours\{background/, 'changed regions carry a tint')
+})
+
+test('blame reads as an IDEA annotation: short name, hover detail, mail in the detail head (m01756)', () => {
+  // The annotated line shows the short name; the full author, its mail, the
+  // commit and the time of day live in the hover detail.
+  const core = read('src/client/core.js')
+  assert.match(core, /function shortAuthorName\(name\)/, 'one helper shortens an author name')
+  assert.match(core, /return at > 0 \? name\.slice\(0, at\) : name/, 'the short name is the part before @')
+
+  const conflict = read('src/client/conflict.js')
+  assert.match(conflict, /const blameTip = \(line\) =>/, 'the hover detail is built in one place')
+  assert.match(conflict, /conflict\.blameCommit/, 'the detail names the commit')
+  assert.match(conflict, /conflict\.blameAuthor/, 'the detail names the author')
+  assert.match(conflict, /conflict\.blameDate/, 'the detail names the date')
+  // Both the side columns and the result gutter annotate through the helper.
+  assert.equal((conflict.match(/'data-tip': blameTip\(line\)/g) || []).length, 2, 'both annotation cells carry the detail')
+  assert.equal((conflict.match(/shortAuthorName\(line\.author\)/g) || []).length, 2, 'both annotation cells carry the short name')
+
+  // The commit detail head shows "name <mail>"; a host without a mail keeps the
+  // bare name.
+  const changes = read('src/client/changes.js')
+  assert.match(changes, /detail\.author \+ ' <' \+ detail\.email \+ '>'/, 'the detail head adds the mail')
+  assert.equal((changes.match(/const authorText = /g) || []).length, 1, 'one head text serves both detail layouts')
+  assert.equal((changes.match(/'data-tip': authorText/g) || []).length, 2, 'both detail heads show and hover the same text')
+})
+
+test('hovering the commit list no longer dims the branch lines (m01785)', () => {
+  // The lane trace used to fade every other lane under the pointer. That read
+  // as a flicker, so the hover lane plumbing is gone end to end: the row does
+  // not mark a lane, the list does not publish one, the stylesheet no longer
+  // generates the dimming rules and the graph cells do not tag their shapes.
+  assert.doesNotMatch(read('src/client/changes.js'), /data-hover-lane|data-lane/, 'the list and the rows keep no hover lane')
+  assert.doesNotMatch(read('src/client/core.js'), /data-lane/, 'the graph cells no longer tag a lane')
+  const styles = read('src/client/styles.js')
+  assert.doesNotMatch(styles, /hover-lane|data-lane/, 'the dimming rules are gone')
 })
 
 test('the repo ships one README and no upstream bookkeeping', () => {
@@ -1737,7 +1819,9 @@ test('the composer dock pill keeps only the branch, left of the session statisti
   assert.match(client, /name: 'conversation\.composer\.dock', id: 'dsh-git4idea:status', order: -10/, 'the entry sorts ahead of both stats pills')
   assert.doesNotMatch(client, /conversation\.input\.left/, 'the old input-row seat is gone')
   // One pill, one label: the branch (or the detached marker) and nothing else.
-  assert.equal((client.match(/className: 'git4idea-cs-pill'/g) || []).length, 1, 'a single pill remains')
+  // Two pill bodies, one visible at a time: the branch, and the operation
+  // state that replaces it while a merge/rebase/cherry-pick/revert is open.
+  assert.equal((client.match(/className: 'git4idea-cs-pill'/g) || []).length, 2, 'one pill per state remains')
   assert.match(client, /E\(Icon, \{ name: 'branch', size: 14 \}\)/, 'the branch icon leads the pill')
   assert.match(client, /E\(ComposerMarqueeName, \{ text: detached === true \? t\('composer\.detached'\) : branchName \}\)/, 'the pill label is the branch, or the detached marker')
   assert.doesNotMatch(client, /git4idea-cs-badge/, 'the change/pull/push counters are gone')
@@ -1831,9 +1915,10 @@ test('a local branch row also updates, pushes and renames that branch (m03873)',
   // in place by refspec when it is not.
   assert.match(client, /await csCall\('pull', \{ mode: 'ff-only' \}, \{ toast: toastText \}\)\n/, 'the checked-out branch is pulled ff-only')
   assert.match(client, /branch: remoteBranch \+ ':' \+ entry\.name/, 'another branch is fast-forwarded in place')
-  // Push ships the selected branch; a new upstream is bound only when it lacks one.
-  assert.match(client, /const refspec = upstreamBranch === entry\.name \? entry\.name : entry\.name \+ ':' \+ upstreamBranch/, 'the push refspec targets the upstream name')
-  assert.match(client, /remote: remote, branch: refspec, confirm: true, setUpstream: slash <= 0/, 'the push confirms and can bind an upstream')
+  // Push opens the SAME card for the selected branch (m00005): the preview
+  // decides the destination, so a stale upstream name cannot leak through.
+  assert.match(client, /const pushBranch = \(entry\) => \{\n        if \(repoRoot === null \|\| csBusy !== ''\) return\n        openPushDialog\(\{ branch: entry\.name \}\)/, 'a row push opens the card for its branch')
+  assert.doesNotMatch(client, /remote: remote, branch: refspec, confirm: true/, 'the row no longer pushes straight from the menu')
   // Rename moves the ref and refreshes the pill when it was the checked-out one.
   assert.match(client, /await request\('branchRename', \{/, 'rename calls the branchRename route')
   assert.match(client, /if \(entry\.head === true\) notifyBranchSwitched\(sessionId, repoRoot\)/, 'renaming HEAD refreshes the composer pill')
@@ -1844,11 +1929,11 @@ test('a local branch row also updates, pushes and renames that branch (m03873)',
   assert.match(client, /typeof options\.toast === 'string'/, 'csCall can raise a toast')
   assert.match(client, /notifyOk\(toastText !== '' \? toastText : csSuccessText\(action, payload\)\)/, 'a completed verb reports success (m05310)')
   assert.match(client, /notifyFail\(caught\)/, 'a failed verb always reports, whether the chooser stays open or not (m05310)')
-  assert.match(client, /branchPushed/, 'a push reports with its own toast')
+  assert.doesNotMatch(client, /branchPushed/, 'the card reports the push, not a row toast')
   assert.doesNotMatch(client, /newBranchOpen/, 'the old inline dialog state is gone')
   assert.equal((client.match(/'action\.updateBranch':/g) || []).length, 2, 'the update label exists in both dictionaries')
   assert.equal((client.match(/'toast\.branchUpdated':/g) || []).length, 2, 'the update toast exists in both dictionaries')
-  assert.equal((client.match(/'toast\.branchPushed':/g) || []).length, 2, 'the push toast exists in both dictionaries')
+  assert.equal((client.match(/'push\.newBranch':/g) || []).length, 2, 'the new-branch badge exists in both dictionaries')
 })
 
 test('an outside checkout renames the composer pill without waiting for the summary poll (m02856)', () => {
@@ -1897,7 +1982,9 @@ test('long branch names cap at 220px and scroll only on hover, seamlessly (v0.19
   // after paint, and ONLY :hover starts the marquee — short names keep the
   // plain ellipsis and never animate.
   assert.match(client, /max-width:220px/, 'the label cap matches the dock row')
-  assert.equal((client.match(/ComposerMarqueeName, \{ text:/g) || []).length, 1, 'the branch label uses the marquee name')
+  // Two labels use it: the branch pill and the operation pill that replaces it
+  // while a merge/rebase is open.
+  assert.equal((client.match(/ComposerMarqueeName, \{ text:/g) || []).length, 2, 'both pill texts use the marquee name')
   assert.match(client, /function ComposerMarqueeName\(/, 'the marquee name component exists')
   // Overflow detection happens on the real DOM after paint (scrollWidth vs
   // clientWidth); a replaced/unmounted node never re-measures.
@@ -1987,9 +2074,13 @@ test('the push dialog previews its commits and the file card floats (m02986)', (
   assert.match(host, /'push-preview': pushPreview,/, 'the route is registered under the API prefix')
   const writeSet = host.slice(host.indexOf('const WRITE_METHODS'), host.indexOf('])', host.indexOf('const WRITE_METHODS')))
   assert.doesNotMatch(writeSet, /push-preview/, 'push-preview stays read-only')
-  assert.match(host, /const range = upstream === null \? \['HEAD', '--not', '--remotes'\] : \[upstream \+ '\.\.HEAD'\]/,
-    'without an upstream the range is everything no remote has')
-  assert.match(host, /setUpstream/, 'the client asks the push route to set an upstream on a first push')
+  assert.match(host, /runGit\(root, \['ls-remote', '--heads', remote\], \{ timeoutMs: PUSH_REMOTE_TIMEOUT_MS \}\)/,
+    'the remote branch state comes from ls-remote, not the stale local cache')
+  assert.match(host, /const range = base === '' \? \[branch, '--not', '--remotes'\] : \[branch, '--not', base\]/,
+    'the range ends at the remote tip the push would replace')
+  assert.match(host, /const upstreamGone = configuredBranch !== '' && configuredExists === false \? remote \+ '\/' \+ configuredBranch : null/,
+    'a configured destination that vanished on the remote is reported as gone')
+  assert.match(host, /setUpstream/, 'the client asks the push route to set an upstream')
 
   // File card: same frame-wide seat and card shell as the commit dialog.
   assert.match(client, /const fileDialog = \{/)
@@ -2011,9 +2102,9 @@ test('the push dialog previews its commits and the file card floats (m02986)', (
   // the right, and a double click hands one file to the file card.
   assert.match(client, /const pushDialog = \{/)
   assert.match(client, /'data-git4idea-push-dialog': ''/)
-  assert.match(client, /request\('push-preview', base\)/)
-  assert.match(client, /const normalized = pushPreviewOf\(next\)/, 'the payload is normalised before it reaches the card (m04102)')
-  assert.match(client, /setSelected\(normalized\.commits\.length === 0 \? null : normalized\.commits\[0\]\.hash\)/, 'the newest commit opens selected')
+  assert.match(client, /request\('push-preview', payload\)/, 'the card asks the host for a preview of the chosen mapping')
+  assert.match(client, /const next = pushPreviewOf\(await request\('push-preview', payload\)\)/, 'the payload is normalised before it reaches the card (m04102)')
+  assert.match(client, /setSelected\(\(previous\) => \(previous !== null && next\.commits\.some/, 'a still-listed commit stays selected when the destination changes')
   assert.match(client, /request\('commitDetail', Object\.assign\(\{\}, base, \{ hash: selected \}\)\)/)
   assert.match(client, /const openFile = \(file\) => \{/)
   assert.match(client, /const commit = data === null \? null : \(data\.commits\.find\(\(item\) => item\.hash === selected\) \|\| null\)/,
@@ -2025,15 +2116,26 @@ test('the push dialog previews its commits and the file card floats (m02986)', (
   assert.match(client, /function CommitFileList\(props\)/, 'one renderer serves both lists')
   assert.equal((client.match(/E\(CommitFileList, \{/g) || []).length, 2, 'commit detail and push dialog both mount it')
   assert.match(client, /onOpen: openFile,/, 'a file double click floats the diff card')
-  assert.match(client, /const canPush = data !== null && data\.detached === false && data\.remotes\.length > 0 && data\.commits\.length > 0 && busy === false/)
-  assert.match(client, /request\('push', Object\.assign\(\{\}, base, \{\n            confirm: true,\n            setUpstream: data\.upstream === null,/, 'the first push sets the upstream')
+  assert.match(client, /const canPush = data !== null && data\.detached === false && data\.remotes\.length > 0\n\s+&& destinationKnown === true && \(data\.commits\.length > 0 \|\| data\.remoteExists === false\) && busy === false/,
+    'a new remote branch is pushable even with an empty list')
+  assert.match(client, /confirm: true,\n            remote: remote,\n            localBranch: data\.branch,\n            remoteBranch: destination,\n            setUpstream: true,/,
+    'both ends are explicit; a bare push would follow the stale merge name (m00005)')
+  assert.match(client, /if \(force === true\) payload\.force = true/, 'a forced push reuses the selected destination')
+  assert.match(client, /const destinationKnown = data !== null && checking === false && remote === data\.remote && destination === data\.remoteBranch/,
+    'a destination still being checked cannot push')
+  assert.match(client, /data\.remoteExists === true \? t\('push\.existingBranch'\) : t\('push\.newBranch'\)/, 'the card marks an existing branch and a new one')
+  assert.match(client, /const pushing = useRef\(false\)/, 'the in-flight guard is synchronous (m05311)')
+  assert.match(client, /if \(pushing\.current === true \|\| data === null \|\| destinationKnown !== true\) return/, 'a second click cannot start a second push')
 
   // Four push verbs all raise the same card; only the panel fallback survives.
   assert.equal((client.match(/run: \(\) => openPushDialog\(\)/g) || []).length, 3, 'palette and both menus share one verb')
   assert.match(client, /if \(remoteReady !== true \|\| blocked === true\) return\n            openPushDialog\(\)/, 'the toolbar button runs the same verb')
-  assert.match(client, /const openPushDialog = useCallback\(\(\) => \{/, 'the panel keeps one helper')
-  assert.match(client, /pushDialog\.set\(\{ cwd: cwd, repoRoot: repoRoot, sessionId: scopeObject\.sessionId \}\)/,
+  assert.match(client, /const openPushDialog = useCallback\(\(seed\) => \{/, 'the panel keeps one helper that accepts a seed')
+  assert.match(client, /pushDialog\.set\(Object\.assign\(\{ cwd: cwd, repoRoot: repoRoot, sessionId: scopeObject\.sessionId \}, seed \|\| \{\}\)\)/,
     'the panel raises the same frame push card as the composer pill (m04920)')
+  assert.match(client, /run: \(\) => openPushDialog\(\{ branch: entry\.name \}\)/, 'a branch row opens the card on that branch')
+  assert.match(client, /openPushDialog\(\{ force: true \}\)/, 'a forced push opens the card with the force badge')
+  assert.match(client, /run: pickRemote\(\(name\) => openPushDialog\(\{ remote: name \}\)\)/, 'push-to preselects the chosen remote')
   assert.doesNotMatch(client, /const \[pushOpen, setPushOpen\] = useState\(null\)/, 'the panel keeps no second push surface')
   assert.doesNotMatch(client, /git4idea-commit-overlay-inline/, 'the in-panel overlay variant is gone')
   assert.doesNotMatch(client, /setDialog\(\{ kind: 'push' \}\)/, 'no native confirm path is left for push')
@@ -2046,8 +2148,6 @@ test('the push dialog previews its commits and the file card floats (m02986)', (
     'the commit runs before the push dialog opens')
   assert.match(panelCommit, /(?:toastCenter\.push|pushToast)\(\{ text: t\('toast.committed'\)/, 'the commit result lands in the notifications')
   assert.match(client, /if \(push === true\) pushDialog\.set\(\{ cwd: entry\.cwd, repoRoot: entry\.repoRoot, sessionId: entry\.sessionId \}\)/)
-  assert.match(client, /if \(overlaySeatReady === true\) \{[^}]*pushDialog\.set\(\{ sessionId: sessionId, cwd: cwd, repoRoot: repoRoot \}\)/,
-    'the composer pill raises the card too')
 
   // Notifications are frame-wide now (the cards live outside the panel).
   assert.match(client, /id: 'dsh-git4idea:file'/)
@@ -2058,7 +2158,7 @@ test('the push dialog previews its commits and the file card floats (m02986)', (
   assert.match(client, /'\.git4idea-commit-overlay\{position:fixed;inset:0;z-index:80/, 'the push card is viewport-anchored like the commit card')
 
   // Eight keys × 21 gates; the key-set test pins exact parity.
-  for (const key of ['push.title', 'push.none', 'push.detached', 'push.noRemote', 'push.truncated', 'push.hint', 'toast.committed', 'toast.pushed']) {
+  for (const key of ['push.title', 'push.none', 'push.detached', 'push.noRemote', 'push.truncated', 'push.hint', 'push.localBranch', 'push.remoteBranch', 'push.newBranch', 'push.existingBranch', 'push.remoteUnknown', 'toast.committed', 'toast.pushed']) {
     const occurrences = client.split("'" + key + "'").length - 1
     assert.ok(occurrences >= 2, key + ' must ship in both shipped dictionaries (saw ' + occurrences + ')')
   }

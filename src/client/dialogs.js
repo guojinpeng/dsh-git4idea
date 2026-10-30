@@ -1,20 +1,34 @@
     function GitDialogHost(props) {
       const [entry, setEntry] = useState(commitDialog.entry)
       const [pushEntry, setPushEntry] = useState(pushDialog.entry)
+      const [conflictEntry, setConflictEntry] = useState(conflictDialog.entry)
+      const [overviewEntry, setOverviewEntry] = useState(conflictOverviewDialog.entry)
       useEffect(() => {
         const sync = () => setEntry(commitDialog.entry)
         const syncPush = () => setPushEntry(pushDialog.entry)
+        const syncConflict = () => setConflictEntry(conflictDialog.entry)
+        const syncOverview = () => setOverviewEntry(conflictOverviewDialog.entry)
         sync()
         syncPush()
+        syncConflict()
+        syncOverview()
         const off = commitDialog.subscribe(sync)
         const offPush = pushDialog.subscribe(syncPush)
+        const offConflict = conflictDialog.subscribe(syncConflict)
+        const offOverview = conflictOverviewDialog.subscribe(syncOverview)
         commitDialog.hosted = true
         pushDialog.hosted = true
+        conflictDialog.hosted = true
+        conflictOverviewDialog.hosted = true
         return () => {
           commitDialog.hosted = false
           pushDialog.hosted = false
+          conflictDialog.hosted = false
+          conflictOverviewDialog.hosted = false
           off()
           offPush()
+          offConflict()
+          offOverview()
         }
       }, [])
       /* A throw inside either card used to unmount the overlay slot for the rest
@@ -37,12 +51,24 @@
           t: props.t,
           onClose: () => commitDialog.set(null),
         })),
-        pushEntry === null ? null : guard('push|' + pushEntry.sessionId + '|' + pushEntry.repoRoot, () => { pushDialog.set(null) }, E(PushDialogBody, {
-          key: 'push|' + pushEntry.sessionId + '|' + pushEntry.repoRoot,
+        pushEntry === null ? null : guard('push|' + pushEntry.sessionId + '|' + pushEntry.repoRoot + '|' + (typeof pushEntry.branch === 'string' ? pushEntry.branch : '') + '|' + (pushEntry.force === true ? 'force' : ''), () => { pushDialog.set(null) }, E(PushDialogBody, {
+          key: 'push|' + pushEntry.sessionId + '|' + pushEntry.repoRoot + '|' + (typeof pushEntry.branch === 'string' ? pushEntry.branch : '') + '|' + (pushEntry.force === true ? 'force' : ''),
           entry: pushEntry,
           t: props.t,
           ctx: props.ctx,
           onClose: () => { pushDialog.set(null) },
+        })),
+        overviewEntry === null ? null : guard('conflictOverview|' + overviewEntry.sessionId + '|' + overviewEntry.repoRoot, () => { conflictOverviewDialog.set(null) }, E(ConflictOverviewBody, {
+          key: 'conflictOverview|' + overviewEntry.sessionId + '|' + overviewEntry.repoRoot,
+          entry: overviewEntry,
+          t: props.t,
+          onClose: () => { conflictOverviewDialog.set(null) },
+        })),
+        conflictEntry === null ? null : guard('conflict|' + conflictEntry.sessionId + '|' + conflictEntry.repoRoot + '|' + conflictEntry.path, () => { conflictDialog.set(null) }, E(ConflictDialogBody, {
+          key: 'conflict|' + conflictEntry.sessionId + '|' + conflictEntry.repoRoot + '|' + conflictEntry.path,
+          entry: conflictEntry,
+          t: props.t,
+          onClose: () => { conflictDialog.set(null) },
         })),
         E(PromptDialogHost, null))
     }
@@ -427,6 +453,48 @@
         return () => document.removeEventListener('mousedown', close)
       }, [menu])
 
+      /* A merge in progress owns the pill (m00602): the branch it is on matters
+         less than the operation that blocks the tree, and the two buttons beside
+         it are the only two verbs that operation accepts right now. */
+      const operation = summary === null || summary.operation === undefined ? null : summary.operation
+      const operationSource = summary === null || summary.operationSource === undefined ? null : summary.operationSource
+      const operationPillKey = operation === 'cherry-pick' ? 'operation.pillCherryPick'
+        : operation === 'rebase' ? 'operation.pillRebase'
+          : operation === 'revert' ? 'operation.pillRevert'
+            : operation === 'bisect' ? 'operation.pillBisect'
+              : 'operation.pillMerge'
+      /* The pill names the merge as source -> target, so the branch the tree
+         sits on stays readable while the operation blocks it. */
+      const operationBranch = summary !== null && typeof summary.branch === 'string' ? summary.branch : ''
+      const operationName = operation === 'merge' && operationSource !== null && operationBranch !== ''
+        ? operationSource + ' → ' + operationBranch
+        : (operation === 'merge' && operationSource !== null ? operationSource : operationBranch)
+      const operationText = operation === null ? ''
+        : operationName === '' ? t('operation.' + operation) : fill(t(operationPillKey), { name: operationName })
+      const openConflictOverview = () => {
+        if (repoRoot === null) { openPanelSeat(); return }
+        if (conflictOverviewDialog.hosted === true) {
+          conflictOverviewDialog.set({ cwd: cwd, repoRoot: repoRoot, sessionId: sessionId })
+          setMenu(null)
+          return
+        }
+        openPanelSeat()
+      }
+      const abortOperation = async () => {
+        if (repoRoot === null || operation === null || csBusy !== '') return
+        setCsBusy('operationFinish')
+        try {
+          await request('operationFinish', { cwd: cwd, repoRoot: repoRoot, operation: operation, action: 'abort' })
+          setTick((value) => value + 1)
+          notifyBranchSwitched(sessionId, repoRoot)
+          notifyOk(t('toast.operationAborted'))
+        } catch (caught) {
+          notifyFail(caught)
+        } finally {
+          setCsBusy('')
+        }
+      }
+
       if (enabled !== true) return null
       const data = repoState
       if (data === null || (data.isRepo !== true && (data.repos === undefined || data.repos.length === 0))) return null
@@ -495,12 +563,18 @@
           if (keepOpen !== true) setMenu(null)
           setTick((value) => value + 1)
           notifyBranchSwitched(sessionId, repoRoot)
-          /* A merge that stops on conflicts exits 0-as-data, not as a refusal:
-             report it instead of closing as if it had succeeded cleanly. */
-          if (action === 'merge' && result !== null && result !== undefined && result.conflicted === true) {
+          /* A merge, rebase, cherry-pick or revert that stops on conflicts
+             exits as data, not as a refusal: report it and raise the conflict
+             overview, which is the only surface that can settle them. */
+          if (result !== null && result !== undefined && result.conflicted === true) {
             const output = typeof result.output === 'string' ? result.output.trim() : ''
             const text = output === '' ? t('toast.mergedConflict') : output
             toastCenter.push({ text: text, tone: 'error' })
+            if (conflictOverviewDialog.hosted === true) {
+              conflictOverviewDialog.set({ cwd: cwd, repoRoot: repoRoot, sessionId: sessionId })
+            } else {
+              openPanelSeat()
+            }
           } else {
             notifyOk(toastText !== '' ? toastText : csSuccessText(action, payload))
           }
@@ -534,10 +608,10 @@
       }
       /* Push followed the commit dialog (m02986): the popover verb previews
          the commits and files instead of publishing on a bare confirm. */
-      const openPushDialog = () => {
+      const openPushDialog = (seed) => {
         if (repoRoot === null) { openPanelSeat(); return }
         if (overlaySeatReady === true) {
-          pushDialog.set({ sessionId: sessionId, cwd: cwd, repoRoot: repoRoot })
+          pushDialog.set(Object.assign({ sessionId: sessionId, cwd: cwd, repoRoot: repoRoot }, seed || {}))
           setMenu(null)
           return
         }
@@ -573,20 +647,13 @@
         const remoteBranch = slash > 0 ? upstream.slice(slash + 1) : entry.name
         await csCall('fetch', { remote: remote, branch: remoteBranch + ':' + entry.name }, { toast: toastText })
       }
-      /* 推送 ships the SELECTED branch (m03873). The checked-out branch keeps
-         the full push card, which previews the commits and files; any other
-         branch has no preview route, so it pushes straight from the row. */
-      const pushBranch = async (entry) => {
+      /* 推送 opens the SAME push card for every branch (m00005). A row that is
+         not HEAD used to push straight with the configured upstream name, which
+         repeated a stale remote name after a rename; the card previews that
+         branch and lets the user correct the destination. */
+      const pushBranch = (entry) => {
         if (repoRoot === null || csBusy !== '') return
-        if (entry.head === true) { openPushDialog(); return }
-        const upstream = entry.upstream === null || entry.upstream === undefined ? '' : String(entry.upstream)
-        const slash = upstream.indexOf('/')
-        const remote = slash > 0 ? upstream.slice(0, slash) : 'origin'
-        const upstreamBranch = slash > 0 ? upstream.slice(slash + 1) : entry.name
-        const refspec = upstreamBranch === entry.name ? entry.name : entry.name + ':' + upstreamBranch
-        await csCall('push', {
-          remote: remote, branch: refspec, confirm: true, setUpstream: slash <= 0,
-        }, { toast: fill(t('toast.branchPushed'), { name: entry.name }) })
+        openPushDialog({ branch: entry.name })
       }
       /* A remote row that has no local twin is checked out as a tracking branch
          in one step (the panel's row menu does the same). Only the secondary
@@ -871,7 +938,23 @@
         className: 'git4idea-cs-root',
         'data-dsh-git4idea-status': '',
       },
-        branchName !== null ? E('button', {
+        operation !== null ? E('span', { className: 'git4idea-cs-op' },
+          E('span', { className: 'git4idea-cs-alert git4idea-tone-warn', 'data-tip': operationText }, E(Icon, { name: 'warning', size: 13 })),
+          E('button', {
+            type: 'button', className: 'git4idea-cs-pill', 'data-tip': operationText,
+            onClick: openConflictOverview,
+          }, E(ComposerMarqueeName, { text: operationText })),
+          E('button', {
+            type: 'button', className: 'git4idea-cs-opbtn git4idea-cs-go', 'data-tip': t('operation.advanceHint'),
+            onClick: openConflictOverview,
+          }, E('span', { className: 'git4idea-cs-advance' },
+            E(Icon, { name: 'chevronRight', size: 10 }),
+            E(Icon, { name: 'chevronRight', size: 10 }))),
+          E('button', {
+            type: 'button', className: 'git4idea-cs-opbtn git4idea-cs-stop', 'data-tip': t('operation.abortHint'),
+            'aria-disabled': csBusy !== '' ? 'true' : 'false',
+            onClick: () => { if (csBusy === '') void abortOperation() },
+          }, E(Icon, { name: 'close', size: 11 }))) : branchName !== null ? E('button', {
           type: 'button',
           className: 'git4idea-cs-pill',
           'data-tip': t('composer.branchHint'),

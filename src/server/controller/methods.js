@@ -12,6 +12,7 @@ import { undoList, undoApply } from './../services/undo-ops.js'
 import { commitMessage } from './../services/ai.js'
 import { gitLogs, clientError, configGet, configSet, consoleLog, consoleClear } from './../services/diagnostics.js'
 import { worktreeList, worktreeAdd, worktreeRemove } from './../services/worktrees.js'
+import { conflictDetail, conflictSave, conflictResolve, conflictBlame, operationFinish } from './../services/conflicts.js'
 
 
 export const METHODS = {
@@ -71,4 +72,9 @@ export const METHODS = {
   stashClear,
   undoList,
   undoApply,
+  conflictDetail,
+  conflictSave,
+  conflictResolve,
+  conflictBlame,
+  operationFinish,
 }

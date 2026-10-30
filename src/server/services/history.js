@@ -13,7 +13,7 @@ export async function branches(payload) {
   const cwd = cwdOf(payload)
   const root = await repoRootOf(cwd, payload)
   const branch = await currentBranchOf(root)
-  const format = ['%(refname)', '%(refname:short)', '%(objectname)', '%(objectname:short)', '%(HEAD)', '%(upstream:short)', '%(committerdate:iso-strict)', '%(contents:subject)', '%(symref)'].join(FIELD_SEP)
+  const format = ['%(refname)', '%(refname:short)', '%(objectname)', '%(objectname:short)', '%(HEAD)', '%(upstream:short)', '%(upstream:track)', '%(committerdate:iso-strict)', '%(contents:subject)', '%(symref)'].join(FIELD_SEP)
   const out = await git(root, ['for-each-ref', '--format=' + format + RECORD_SEP, 'refs/heads', 'refs/remotes', 'refs/tags'])
   const local = []
   const remote = []
@@ -33,15 +33,21 @@ export async function branches(payload) {
     const trimmed = record.replace(/^\n+/, '')
     if (trimmed.trim() === '') continue
     const parts = trimmed.split(FIELD_SEP)
-    if (parts.length < 9) continue
+    if (parts.length < 10) continue
+    /* `%(upstream:short)` still names the configured branch after the remote
+       copy is deleted; `%(upstream:track)` adds [gone]. A gone upstream cannot
+       be ahead/behind, and showing it as live made the push row repeat the old
+       name (m00005). */
+    const gone = parts[6] === '[gone]'
     const entry = {
       name: parts[1],
       hash: parts[2],
       shortHash: parts[3],
       head: parts[4] === '*',
-      upstream: parts[5] === '' ? null : parts[5],
-      date: parts[6],
-      subject: parts[7],
+      upstream: parts[5] === '' || gone ? null : parts[5],
+      upstreamGone: gone ? parts[5] : null,
+      date: parts[7],
+      subject: parts[8],
       worktree: busy.get(parts[1]) === undefined ? null : busy.get(parts[1]),
       ahead: 0,
       behind: 0,
@@ -203,6 +209,29 @@ export async function diff(payload) {
     }
     const truncated = out.length > MAX_DIFF_CHARS
     return { patch: truncated ? out.slice(0, MAX_DIFF_CHARS) : out, truncated }
+  }
+  /* Two index stages of one path: a plain unified patch between them, which is
+     what the conflict editor shows. The working copy's own diff of an unmerged
+     path is a combined diff (diff --cc, @@@ hunks) that no patch viewer here
+     can parse. */
+  if (payload.stageA !== undefined || payload.stageB !== undefined) {
+    const a = clampInt(payload.stageA, 1, 3, 2)
+    const b = clampInt(payload.stageB, 1, 3, 3)
+    const given = requireRelativePath(payload.path)
+    const absolute = path.isAbsolute(given) ? path.resolve(given) : path.join(root, given)
+    if (absolute !== root && !absolute.startsWith(root + path.sep)) throw badRequest('path must stay inside the repository')
+    if (absolute === root) throw badRequest('path is required')
+    const rel = absolute.slice(root.length + 1).split(path.sep).join('/')
+    /* The conflict editor rebuilds the three-way merge from these patches, so
+       it asks for -U0 and gets hunks made of changed lines only. */
+    const context = clampInt(payload.context, 0, 10, 3)
+    const result = await runGit(root, ['diff', '--no-color', '--no-ext-diff', '-U' + context, ':' + a + ':' + rel, ':' + b + ':' + rel])
+    if (result.code !== 0) {
+      const detail = (result.stdout + '\n' + result.stderr).trim()
+      throw new PanelError('conflict-stage-missing', detail === '' ? 'stage ' + a + ' or ' + b + ' is missing' : detail, 409)
+    }
+    const truncated = result.stdout.length > MAX_DIFF_CHARS
+    return { patch: truncated ? result.stdout.slice(0, MAX_DIFF_CHARS) : result.stdout, truncated, stageA: a, stageB: b }
   }
   const args = ['diff', '--no-color', '--no-ext-diff', '-U3']
   if (payload.staged === true) args.push('--cached')
