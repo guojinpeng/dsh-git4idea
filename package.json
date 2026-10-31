@@ -1,6 +1,6 @@
 {
   "name": "@guojinpeng/dsh-git4idea",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "type": "module",
   "repository": {
     "type": "git",
@@ -46,7 +46,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "test": "node --test tests/smoke.mjs tests/api.test.mjs tests/graph.test.mjs tests/repos.test.mjs",
+    "test": "node --test tests/smoke.mjs tests/api.test.mjs tests/graph.test.mjs tests/repos.test.mjs tests/account.test.mjs",
     "build:client": "node src/utils/build-client.js",
     "build:check": "node src/utils/build-client.js --check",
     "i18n": "node src/utils/i18n.js sync",

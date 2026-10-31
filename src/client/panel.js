@@ -97,6 +97,9 @@
       const [chooserSeat, setChooserSeat] = useState(null)
       const [tick, setTick] = useState(0)
       const [favTick, setFavTick] = useState(0)
+      const [account, setAccount] = useState(null)
+      const [accountSeat, setAccountSeat] = useState(null)
+      const [accountAuth, setAccountAuth] = useState(false)
       /* Round 3 #2: the tree picker checks several paths, so the filter is a
          LIST of pathspecs (git log takes them all after one '--'). A single
          typed path is the one-element case. */
@@ -513,6 +516,20 @@
         setBranches(data)
         return data
       }, [base])
+
+      /* Identity is a read, not part of the refresh round: a missing identity
+         is normal and must not turn into an error notification. */
+      const loadAccount = useCallback(async () => {
+        if (repoRoot === null) { setAccount(null); return }
+        try {
+          setAccount(await request('account', base))
+        } catch (error) {
+          void error
+          setAccount(null)
+        }
+      }, [base, repoRoot])
+
+      useEffect(() => { void loadAccount() }, [loadAccount])
 
       /* ---- branch browsing (v0.19.3, IDEA-style) ----
          Double-clicking a tree branch no longer checks it out: it walks THAT
@@ -1599,6 +1616,7 @@
          panel edge. The seat now carries a width measured inside the host, and
          flips above the button when the lower half of the page has no room. */
       const openBranchChooser = useCallback((event) => {
+        if (accountSeat !== null) setAccountSeat(null)
         if (chooserSeat !== null) { setChooserSeat(null); return }
         const rect = event.currentTarget.getBoundingClientRect()
         const host = hostRef.current
@@ -1614,13 +1632,36 @@
         setChooserSeat(flipUp === true
           ? { x: x, width: width, bottom: window.innerHeight - rect.top + 6 }
           : { x: x, width: width, top: below })
-      }, [chooserSeat])
+      }, [chooserSeat, accountSeat])
+
+      /* The account card is 304 px wide and sits under its pill; it flips above
+         when the lower half of the page has no room. Same backdrop as the
+         branch chooser, so an outside click closes exactly one card. */
+      const openAccountMenu = useCallback((event) => {
+        if (accountSeat !== null) { setAccountSeat(null); return }
+        setChooserSeat(null)
+        const rect = event.currentTarget.getBoundingClientRect()
+        const host = hostRef.current
+        const box = host === null ? null : host.getBoundingClientRect()
+        const left = box === null ? 8 : Math.max(8, box.left)
+        const right = box === null ? window.innerWidth : Math.min(window.innerWidth, box.right)
+        const width = Math.max(180, Math.min(304, right - left - 12))
+        const x = Math.max(left + 4, Math.min(rect.left, right - width - 6))
+        const below = rect.bottom + 6
+        const flipUp = below + 260 > window.innerHeight && rect.top > 260
+        setAccountSeat(flipUp === true
+          ? { x: x, width: width, bottom: window.innerHeight - rect.top + 6 }
+          : { x: x, width: width, top: below })
+      }, [accountSeat, setChooserSeat])
 
       const topBar = E('div', { className: 'git4idea-topbar' },
         E(RepoSelect, {
           t: t, repos: repoOptions, value: repoRoot,
           loading: repoState === null,
           onOpenMenu: openRepoMenu,
+        }),
+        repoRoot === null ? null : E(AccountButton, {
+          t: t, account: account, onOpen: openAccountMenu,
         }),
         branches === null || branches.local.length === 0 ? null : E('span', { className: 'git4idea-select-wrap', 'data-tip': branches.branch },
           E(Icon, { name: 'branch', size: 12 }),
@@ -2357,6 +2398,30 @@
           onCommit: () => { setChooserSeat(null); setDialog({ kind: 'commitMsg' }) },
           onPush: () => { setChooserSeat(null); openPushDialog() },
         })))
+      }
+      if (accountSeat !== null) {
+        overlays.push(E('div', { key: 'account-backdrop', className: 'git4idea-chooser-backdrop', onMouseDown: () => setAccountSeat(null) }))
+        overlays.push(E('div', {
+          key: 'account-menu',
+          className: 'git4idea-account-seat',
+          style: accountSeat.top === undefined
+            ? { left: String(accountSeat.x) + 'px', bottom: String(accountSeat.bottom) + 'px', width: String(accountSeat.width) + 'px' }
+            : { left: String(accountSeat.x) + 'px', top: String(accountSeat.top) + 'px', width: String(accountSeat.width) + 'px' },
+        }, E(AccountMenu, {
+          t: t, account: account,
+          onAuth: () => { setAccountSeat(null); setAccountAuth(true) },
+        })))
+      }
+      if (accountAuth === true) {
+        overlays.push(E(AccountAuthDialog, {
+          key: 'account-auth', t: t, account: account, request: request, base: base,
+          onClose: () => setAccountAuth(false),
+          onDone: (data) => {
+            setAccountAuth(false)
+            if (data !== null && data !== undefined) setAccount(data)
+            pushToast({ text: t('account.ok'), tone: 'ok', icon: 'check', ttl: 3000 })
+          },
+        }))
       }
       if (dialog !== null && dialog.kind === 'clone') {
         overlays.push(E(CloneDialog, {

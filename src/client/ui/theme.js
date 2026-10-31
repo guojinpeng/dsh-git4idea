@@ -14,6 +14,7 @@
       /* Frame-level confirms sit outside every panel root; without the token
          scope their card had no surface and showed the page through it. */
       '.git4idea-overlay',
+      '.git4idea-account-seat',
     ].join(',')
     const G4_DARK_SCOPE = [
       'body[data-ds-dark-theme] .git4idea-root',
@@ -24,6 +25,7 @@
       'body[data-ds-dark-theme] .git4idea-chooser-seat',
       'body[data-ds-dark-theme] .git4idea-chooser-backdrop',
       'body[data-ds-dark-theme] .git4idea-overlay',
+      'body[data-ds-dark-theme] .git4idea-account-seat',
     ].join(',')
 
     const G4_THEME_CSS = [

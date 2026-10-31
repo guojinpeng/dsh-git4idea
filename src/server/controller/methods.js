@@ -13,6 +13,7 @@ import { commitMessage } from './../services/ai.js'
 import { gitLogs, clientError, configGet, configSet, consoleLog, consoleClear } from './../services/diagnostics.js'
 import { worktreeList, worktreeAdd, worktreeRemove } from './../services/worktrees.js'
 import { conflictDetail, conflictSave, conflictResolve, conflictBlame, operationFinish } from './../services/conflicts.js'
+import { account, accountWeb, accountToken } from './../services/account.js'
 
 
 export const METHODS = {
@@ -21,6 +22,9 @@ export const METHODS = {
   'config-get': configGet,
   'config-set': configSet,
   'commit-message': commitMessage,
+  account,
+  'account-web': accountWeb,
+  'account-token': accountToken,
   repos,
   summary,
   head: headState,

@@ -787,7 +787,7 @@ test('host half keeps the destructive-confirm guards', () => {
 })
 
 test('host half exposes the method table the client calls', () => {
-  const methods = ['summary', 'head', 'stats', 'branches', 'log', 'me', 'merge-point', 'commitDetail', 'diff', 'compare', 'dirTree', 'repos', 'stage', 'unstage', 'discard', 'commit', 'checkout', 'branchCreate', 'branchRename', 'branch-upstream', 'branchDelete', 'merge', 'rebase', 'cherryPick', 'revert', 'reset', 'fetch', 'pull', 'push', 'stashList', 'stashPush', 'stashApply', 'stashDrop', 'tagCreate', 'tagDelete', 'tagDeleteRemote', 'pushTags', 'clone', 'gitLogs', 'consoleLog', 'consoleClear', 'worktreeList', 'worktreeAdd', 'worktreeRemove', 'remoteAdd', 'remoteRemove', 'branchDeleteRemote', 'rebaseAbort', 'stashClear', 'undoList', 'undoApply', 'conflictDetail', 'conflictSave', 'conflictResolve', 'conflictBlame', 'operationFinish', 'version']
+  const methods = ['account', 'summary', 'head', 'stats', 'branches', 'log', 'me', 'merge-point', 'commitDetail', 'diff', 'compare', 'dirTree', 'repos', 'stage', 'unstage', 'discard', 'commit', 'checkout', 'branchCreate', 'branchRename', 'branch-upstream', 'branchDelete', 'merge', 'rebase', 'cherryPick', 'revert', 'reset', 'fetch', 'pull', 'push', 'stashList', 'stashPush', 'stashApply', 'stashDrop', 'tagCreate', 'tagDelete', 'tagDeleteRemote', 'pushTags', 'clone', 'gitLogs', 'consoleLog', 'consoleClear', 'worktreeList', 'worktreeAdd', 'worktreeRemove', 'remoteAdd', 'remoteRemove', 'branchDeleteRemote', 'rebaseAbort', 'stashClear', 'undoList', 'undoApply', 'conflictDetail', 'conflictSave', 'conflictResolve', 'conflictBlame', 'operationFinish', 'version']
   for (const method of methods) {
     if (method === 'merge-point') { assert.match(host, /^  'merge-point': mergePoint,$/m, 'host method missing: merge-point'); continue }
     if (method === 'branch-upstream') { assert.match(host, /^  'branch-upstream': branchUpstream,$/m, 'host method missing: branch-upstream'); continue }
@@ -798,6 +798,24 @@ test('host half exposes the method table the client calls', () => {
     const method = call.slice(call.indexOf("'") + 1, call.length - 1)
     assert.ok(methods.includes(method), 'client calls an unregistered method: ' + method)
   }
+})
+
+test('the Git account entry sits between the repo and branch pills', () => {
+  const panel = read('src/client/panel.js')
+  assert.ok(panel.indexOf('E(AccountButton') < panel.indexOf("className: 'git4idea-select-wrap'"), 'account pill belongs before the branch pill')
+  assert.match(panel, /request\('account', base\)/)
+  const account = read('src/client/account.js')
+  assert.match(account, /function AccountAuthDialog/)
+  assert.match(account, /account.endpointLabel/)
+  assert.match(account, /className: 'git4idea-account-field git4idea-account-endpoint'/)
+  assert.match(account, /request\('account-web', Object.assign\(\{\}, props.base, \{ endpoint: host \}\)\)/)
+  assert.match(account, /request\('account-token', Object.assign\(\{\}, props.base, \{ endpoint: host, token: token.trim\(\) \}\)\)/)
+  assert.match(account, /role: 'alert'/)
+  // A token must reach git on stdin: argv is written to the console log.
+  assert.match(host, /'credential', 'approve'/)
+  assert.match(host, /input: 'protocol=' \+ endpoint.protocol \+ '\\nhost=' \+ endpoint.host/)
+  assert.match(host, /endpointParts/)
+  assert.doesNotMatch(host, /credential', 'approve', '--?password/)
 })
 
 test('host half serialises writes and refuses the dangerous cases', () => {
@@ -1005,7 +1023,7 @@ test('the client half is fragments plus one generated bundle (m05309)', () => {
   // the bundle" from drifting apart.
   const order = [
     'head.js', 'locale.js', 'ui/icons.js', 'core.js', 'diff.js', 'tree.js', 'changes.js',
-    'workbench.js', 'panel.js', 'styles.js', 'composer.js', 'dialogs.js', 'preview.js', 'conflict.js',
+    'workbench.js', 'account.js', 'panel.js', 'styles.js', 'composer.js', 'dialogs.js', 'preview.js', 'conflict.js',
     'ui/theme.js', 'ui/components.js', 'app.js',
   ]
   const names = []
@@ -1931,7 +1949,7 @@ test('both branch menus count pending changes on their commit verb (m02223)', ()
   assert.match(client, /pending > 0 \? E\('span', \{ className: 'git4idea-cs-action-count' \}/, 'the popover reads the summary')
   assert.match(client, /props\.dirty > 0 \? E\('span', \{ className: 'git4idea-cs-action-count' \}/, 'the panel chooser reads the row count')
   assert.match(client, /dirty: dirty,/, 'the panel passes its count to the chooser')
-  assert.match(cssRule('.git4idea-cs-action-count'), /margin-left:auto/, 'the count sits at the row end')
+  assert.match(cssRule('.git4idea-cs-action-count'), /margin-left:0/, 'the count follows the verb instead of sitting at the row end')
 })
 
 test('a local branch row also updates, pushes and renames that branch (m03873)', () => {

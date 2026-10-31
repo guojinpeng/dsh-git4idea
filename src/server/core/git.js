@@ -111,6 +111,11 @@ export function runGit(cwd, args, options = {}) {
       reject(new PanelError('git-missing', 'cannot start git: ' + messageOf(error), 500))
       return
     }
+    /* Stdin is a pipe: close it at once unless the caller has data (a token
+       for `git credential approve`). An open pipe makes git wait for input
+       that will never come, and the request dies on the timeout instead. */
+    child.stdin.on('error', () => {})
+    child.stdin.end(typeof options.input === 'string' ? options.input : undefined)
     const out = []
     const err = []
     let outBytes = 0

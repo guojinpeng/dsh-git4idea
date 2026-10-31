@@ -876,7 +876,7 @@
       '.git4idea-cs-action{display:flex;align-items:center;gap:6px;width:100%;height:24px;padding:0 8px;flex:none;border:none;border-radius:var(--dsw-radius-sm,8px);background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;font-size:12px;text-align:left;cursor:pointer}',
       '.git4idea-cs-action:hover:not([aria-disabled="true"]){background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
       '.git4idea-cs-action[aria-disabled="true"]{opacity:.4;cursor:default}',
-      '.git4idea-cs-action-count{margin-left:auto;color:var(--dsw-alias-label-tertiary);font-size:11px;font-variant-numeric:tabular-nums}',
+      '.git4idea-cs-action-count{margin-left:0;color:var(--dsw-alias-label-primary);font-size:12px;font-weight:600;font-variant-numeric:tabular-nums}',
     ].concat(EXTRA_RULES).join('\n')
 
     /* ============================== plugin ============================== */

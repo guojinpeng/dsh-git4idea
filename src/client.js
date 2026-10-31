@@ -143,6 +143,33 @@ window.__ModuleLoader__.load({
       'title': 'Git',
       'description': '会话标签行中的 IDE 风格 Git 工具窗口:分支树、提交图谱、变更与提交、提交详情、差异视图、控制台和工作树。',
       'repo.label': '仓库',
+      'account.label': '账户',
+      'account.none': '未配置',
+      'account.loading': '正在读取账户',
+      'account.scopeLocal': '已配置(本地)',
+      'account.scopeGlobal': '已配置(全局)',
+      'account.scopeNone': '未配置',
+      'account.auth': 'Git 认证...',
+      'account.title': 'Git 认证',
+      'account.online': '在线登录',
+      'account.token': '填写 Token',
+      'account.endpointLabel': 'Git 服务器',
+      'account.endpointPlaceholder': 'https://github.com',
+      'account.endpointRequired': '请输入 Git 服务器地址。',
+      'account.onlineHint': '系统将打开浏览器,引导你完成 Git 服务授权。授权成功后自动返回。',
+      'account.onlineUnavailable': '未检测到 Git Credential Manager,请改用 Token 登录。',
+      'account.tokenLabel': '访问令牌',
+      'account.tokenPlaceholder': 'ghp_xxxxxxxxxxxxxxxxxxxx',
+      'account.tokenHint': '请使用 Git 服务生成的令牌,需要仓库读写权限。',
+      'account.tokenLink': '前往 GitHub Settings 生成 Token',
+      'account.tokenOnly': 'Token 仅用于本次认证,不会保存。',
+      'account.tokenRequired': '请输入 Token。',
+      'account.login': '在浏览器中登录...',
+      'account.useToken': '使用 Token',
+      'account.cancel': '取消',
+      'account.close': '关闭',
+      'account.failed': '无法完成 Git 认证。',
+      'account.ok': 'Git 认证成功。',
       'repo.workspace': '工作区',
       'repo.nested': '子仓库',
       'repo.none': '当前工作区不是 Git 仓库',
@@ -321,7 +348,7 @@ window.__ModuleLoader__.load({
       'confirm.discardAll': '放弃全部未暂存与未跟踪的更改?可通过撤回浮窗恢复(冲突文件除外)。',
       'confirm.pushForce': '强制推送会用本地分支覆盖远程(--force-with-lease,他人有新提交时会被拒绝)。继续?',
       'confirm.deleteRemoteBranch': '删除远程 {remote} 上的分支 {branch}?',
-      'confirm.forceDelete': '强制删除未合并的本地分支（git branch -D）',
+      'confirm.forceDelete': '强制删除未合并的本地分支 (git branch -D)',
       'confirm.remoteRemove': '删除远程 {name}?其跟踪配置一并移除。',
       'confirm.stashClear': '删除全部贮藏?此操作不可撤回。',
       'confirm.pushTags': '推送全部标签到 {remote}?',
@@ -626,6 +653,33 @@ window.__ModuleLoader__.load({
       'title': 'Git',
       'description': 'An IDE-style Git tool window in the conversation tab row: branch tree, commit graph, changes and commits, commit details, diffs, console, and worktrees.',
       'repo.label': 'Repository',
+      'account.label': 'Account',
+      'account.none': 'Not configured',
+      'account.loading': 'Reading account',
+      'account.scopeLocal': 'Configured (local)',
+      'account.scopeGlobal': 'Configured (global)',
+      'account.scopeNone': 'Not configured',
+      'account.auth': 'Git authentication...',
+      'account.title': 'Git authentication',
+      'account.online': 'Sign in online',
+      'account.token': 'Enter a token',
+      'account.endpointLabel': 'Git server',
+      'account.endpointPlaceholder': 'https://github.com',
+      'account.endpointRequired': 'Enter a Git server address.',
+      'account.onlineHint': 'The system browser opens to authorize your Git host. This dialog returns when the sign-in completes.',
+      'account.onlineUnavailable': 'Git Credential Manager was not found. Use a token instead.',
+      'account.tokenLabel': 'Access token',
+      'account.tokenPlaceholder': 'ghp_xxxxxxxxxxxxxxxxxxxx',
+      'account.tokenHint': 'Use a token from your Git host. It needs read and write access to the repository.',
+      'account.tokenLink': 'Create a token in GitHub Settings',
+      'account.tokenOnly': 'The token is used for this sign-in only and is not stored.',
+      'account.tokenRequired': 'Enter a token.',
+      'account.login': 'Sign in with the browser...',
+      'account.useToken': 'Use token',
+      'account.cancel': 'Cancel',
+      'account.close': 'Close',
+      'account.failed': 'Git authentication failed.',
+      'account.ok': 'Git authentication succeeded.',
       'repo.workspace': 'workspace',
       'repo.nested': 'nested',
       'repo.none': 'This workspace is not a Git repository',
@@ -804,7 +858,7 @@ window.__ModuleLoader__.load({
       'confirm.discardAll': 'Discard ALL unstaged and untracked changes? Recoverable via undo toasts (conflicted files excluded).',
       'confirm.pushForce': 'Force push overwrites the remote with this branch (--force-with-lease refuses when others pushed). Continue?',
       'confirm.deleteRemoteBranch': 'Delete branch {branch} on {remote}?',
-      'confirm.forceDelete': 'Force delete an unmerged local branch (git branch -D)',
+      'confirm.forceDelete': 'Force-delete local branches that are not merged (git branch -D)',
       'confirm.remoteRemove': 'Remove remote {name}? Its tracking config goes with it.',
       'confirm.stashClear': 'Drop ALL stashes? This cannot be undone.',
       'confirm.pushTags': 'Push all tags to {remote}?',
@@ -1192,6 +1246,7 @@ window.__ModuleLoader__.load({
       grip: [{"circle":[9,7,1.3]},{"circle":[9,12,1.3]},{"circle":[9,17,1.3]},{"circle":[15,7,1.3]},{"circle":[15,12,1.3]},{"circle":[15,17,1.3]}],
       info: [{"circle":[12,12,9]},{"d":"M12 11v5.5"},{"circle":[12,7.8,1]}],
       layers: [{"d":"m12 3 9 5-9 5-9-5z"},{"d":"m3 12 9 5 9-5M3 16l9 5 9-5"}],
+      lock: [{"d":"M6 10.5h12V20H6z"},{"d":"M8.5 10.5V7a3.5 3.5 0 0 1 7 0v3.5"}],
       merge: [{"circle":[7,5,2.2]},{"circle":[7,19,2.2]},{"circle":[17,12,2.2]},{"d":"M7 7.2v9.6"},{"d":"M9 9.5c4.2 0 3.8 2.5 5.9 2.5"}],
       minus: [{"d":"M5 12h14"}],
       more: [{"circle":[12,5,1.4]},{"circle":[12,12,1.4]},{"circle":[12,19,1.4]}],
@@ -6671,6 +6726,217 @@ function Workbench(props) {
       onConfirm: () => { void removeWorktree(removing) },
     }))
 }
+    /* ============================== account ============================== */
+
+    /* Git identity and sign-in, drawn as the small pill between the repo
+       switch and the branch pill. The plugin never stores a credential: the
+       host reads git config, and the dialog either asks GCM to run its browser
+       flow or passes a pasted token to the helper over stdin. */
+
+    function accountInitial(account) {
+      const name = account === null || account === undefined ? '' : String(account.name === undefined ? '' : account.name)
+      return name === '' ? '?' : name.slice(0, 1).toUpperCase()
+    }
+
+    function accountScopeLabel(t, account) {
+      if (account === null || account === undefined || account.scope === 'none') return t('account.scopeNone')
+      if (account.scope === 'local') return t('account.scopeLocal')
+      if (account.scope === 'global') return t('account.scopeGlobal')
+      return t('account.scopeNone')
+    }
+
+    function accountGithubHost(value) {
+      const raw = String(value === undefined || value === null ? '' : value).trim()
+      try {
+        const host = new URL(/^[a-z][a-z0-9+.-]*:\/\//i.test(raw) ? raw : 'https://' + raw).hostname.toLowerCase()
+        return host === 'github.com' || host.endsWith('.github.com')
+      } catch (error) {
+        void error
+        return false
+      }
+    }
+
+    function AccountButton(props) {
+      const account = props.account
+      const name = account === null || account === undefined || account.name === undefined || account.name === ''
+        ? props.t('account.none')
+        : String(account.name)
+      return E('button', {
+        type: 'button',
+        className: 'git4idea-account-btn',
+        'data-tip': account === null || account === undefined ? props.t('account.loading') : name + (account.email === undefined || account.email === '' ? '' : ' · ' + account.email),
+        'aria-label': props.t('account.label'),
+        onClick: props.onOpen,
+      },
+        E('span', { className: 'git4idea-account-avatar' }, accountInitial(account)),
+        E('span', { className: 'git4idea-account-name' }, name),
+        E(Icon, { name: 'chevron', size: 12 }))
+    }
+
+    function AccountMenu(props) {
+      const account = props.account
+      const name = account === null || account === undefined || account.name === undefined || account.name === ''
+        ? props.t('account.none')
+        : String(account.name)
+      const email = account === null || account === undefined || account.email === undefined ? '' : String(account.email)
+      return E('div', { className: 'git4idea-account-menu' },
+        E('div', { className: 'git4idea-account-identity' },
+          E('span', { className: 'git4idea-account-avatar git4idea-account-avatar-lg' }, accountInitial(account)),
+          E('div', { className: 'git4idea-account-text' },
+            E('div', { className: 'git4idea-account-title', title: name }, name),
+            email === '' ? null : E('div', { className: 'git4idea-account-mail', title: email }, email),
+            E('div', { className: 'git4idea-account-scope' }, accountScopeLabel(props.t, account)))),
+        E('div', { className: 'git4idea-account-sep' }),
+        E('button', {
+          type: 'button',
+          className: 'git4idea-account-action',
+          onClick: props.onAuth,
+        }, E(Icon, { name: 'lock', size: 15 }), E('span', null, props.t('account.auth'))))
+    }
+
+    function AccountAuthDialog(props) {
+      const online = props.account !== null && props.account !== undefined && props.account.online === true
+      const [tab, setTab] = useState(online === true ? 'online' : 'token')
+      const [endpoint, setEndpoint] = useState(props.account !== null && props.account !== undefined && typeof props.account.endpoint === 'string'
+        ? props.account.endpoint
+        : 'https://github.com')
+      const [token, setToken] = useState('')
+      const [busy, setBusy] = useState(false)
+      const [error, setError] = useState('')
+      const inputRef = useRef(null)
+
+      useEffect(() => {
+        if (tab !== 'token' || inputRef.current === null) return
+        inputRef.current.focus()
+      }, [tab])
+
+      const fail = (reason) => {
+        const text = reason === null || reason === undefined ? '' : String(reason.message === undefined ? reason : reason.message)
+        setError(props.t('account.failed') + (text === '' ? '' : ' ' + text))
+      }
+
+      const finish = (data) => {
+        setBusy(false)
+        props.onDone(data === null || data === undefined ? null : data)
+      }
+
+      const endpointValue = () => {
+        if (endpoint.trim() === '') {
+          setError(props.t('account.endpointRequired'))
+          return ''
+        }
+        return endpoint.trim()
+      }
+
+      const runWeb = async () => {
+        if (busy === true) return
+        const host = endpointValue()
+        if (host === '') return
+        setBusy(true)
+        setError('')
+        try {
+          finish(await props.request('account-web', Object.assign({}, props.base, { endpoint: host })))
+        } catch (reason) {
+          setBusy(false)
+          fail(reason)
+        }
+      }
+
+      const runToken = async () => {
+        if (busy === true) return
+        const host = endpointValue()
+        if (host === '') return
+        if (token.trim() === '') {
+          setError(props.t('account.tokenRequired'))
+          return
+        }
+        setBusy(true)
+        setError('')
+        try {
+          finish(await props.request('account-token', Object.assign({}, props.base, { endpoint: host, token: token.trim() })))
+        } catch (reason) {
+          setBusy(false)
+          fail(reason)
+        }
+      }
+
+      const closeButton = E('button', {
+        type: 'button',
+        className: 'git4idea-icon-btn git4idea-account-close',
+        'aria-label': props.t('account.close'),
+        onClick: busy === true ? undefined : props.onClose,
+        disabled: busy,
+      }, E(Icon, { name: 'close', size: 16 }))
+
+      const onlinePane = E('div', { className: 'git4idea-account-pane' },
+        E('div', { className: 'git4idea-account-globe' }, E(Icon, { name: 'remote', size: 40 })),
+        E('p', { className: 'git4idea-account-copy' }, props.t('account.onlineHint')),
+        online === true ? null : E('p', { className: 'git4idea-account-note' }, props.t('account.onlineUnavailable')))
+
+      const tokenPane = E('div', { className: 'git4idea-account-pane git4idea-account-pane-token' },
+        E('label', { className: 'git4idea-account-field' },
+          E('span', { className: 'git4idea-account-label' }, props.t('account.tokenLabel')),
+          E('input', {
+            ref: inputRef,
+            className: 'git4idea-input git4idea-account-input',
+            type: 'password',
+            spellCheck: false,
+            autoComplete: 'off',
+            placeholder: props.t('account.tokenPlaceholder'),
+            value: token,
+            disabled: busy,
+            onChange: (event) => setToken(event.currentTarget.value),
+            onKeyDown: (event) => { if (event.key === 'Enter') void runToken() },
+          })),
+        E('p', { className: 'git4idea-account-hint' },
+          props.t('account.tokenHint') + ' ',
+          accountGithubHost(endpoint) ? E('a', {
+            className: 'git4idea-account-link',
+            href: 'https://github.com/settings/tokens',
+            target: '_blank',
+            rel: 'noreferrer',
+          }, props.t('account.tokenLink')) : null),
+        E('p', { className: 'git4idea-account-hint' }, props.t('account.tokenOnly')))
+
+      const canRun = (online === true || tab === 'token') && endpoint.trim() !== ''
+      return E('div', { className: 'git4idea-overlay' },
+        E('div', { className: 'git4idea-dialog git4idea-account-dialog' },
+          E('div', { className: 'git4idea-account-head' },
+            E('div', { className: 'git4idea-dialog-title' }, props.t('account.title')),
+            closeButton),
+          E('div', { className: 'git4idea-seg git4idea-account-tabs' },
+            E('button', {
+              type: 'button', className: 'git4idea-seg-item', 'data-active': tab === 'online' ? 'true' : 'false',
+              disabled: busy, onClick: () => { setTab('online'); setError('') },
+            }, props.t('account.online')),
+            E('button', {
+              type: 'button', className: 'git4idea-seg-item', 'data-active': tab === 'token' ? 'true' : 'false',
+              disabled: busy, onClick: () => { setTab('token'); setError('') },
+            }, props.t('account.token'))),
+          E('label', { className: 'git4idea-account-field git4idea-account-endpoint' },
+            E('span', { className: 'git4idea-account-label' }, props.t('account.endpointLabel')),
+            E('input', {
+              className: 'git4idea-input git4idea-account-input',
+              type: 'text',
+              spellCheck: false,
+              autoComplete: 'off',
+              placeholder: props.t('account.endpointPlaceholder'),
+              value: endpoint,
+              disabled: busy,
+              onChange: (event) => setEndpoint(event.currentTarget.value),
+            })),
+          tab === 'online' ? onlinePane : tokenPane,
+          error === '' ? null : E('div', { className: 'git4idea-account-error', role: 'alert' }, error),
+          E('div', { className: 'git4idea-account-actions' },
+            E('button', { type: 'button', className: 'git4idea-btn', disabled: busy, onClick: props.onClose }, props.t('account.cancel')),
+            E('button', {
+              type: 'button',
+              className: 'git4idea-btn git4idea-btn-primary git4idea-account-primary',
+              disabled: busy || canRun !== true,
+              onClick: tab === 'online' ? () => { void runWeb() } : () => { void runToken() },
+            }, busy === true ? E('span', { className: 'git4idea-spin' }, E(Icon, { name: 'refresh', size: 13 })) : null,
+              E('span', null, tab === 'online' ? props.t('account.login') : props.t('account.useToken'))))))
+    }
     /* ============================== panel ============================== */
 
     function Panel(props) {
@@ -6770,6 +7036,9 @@ function Workbench(props) {
       const [chooserSeat, setChooserSeat] = useState(null)
       const [tick, setTick] = useState(0)
       const [favTick, setFavTick] = useState(0)
+      const [account, setAccount] = useState(null)
+      const [accountSeat, setAccountSeat] = useState(null)
+      const [accountAuth, setAccountAuth] = useState(false)
       /* Round 3 #2: the tree picker checks several paths, so the filter is a
          LIST of pathspecs (git log takes them all after one '--'). A single
          typed path is the one-element case. */
@@ -7186,6 +7455,20 @@ function Workbench(props) {
         setBranches(data)
         return data
       }, [base])
+
+      /* Identity is a read, not part of the refresh round: a missing identity
+         is normal and must not turn into an error notification. */
+      const loadAccount = useCallback(async () => {
+        if (repoRoot === null) { setAccount(null); return }
+        try {
+          setAccount(await request('account', base))
+        } catch (error) {
+          void error
+          setAccount(null)
+        }
+      }, [base, repoRoot])
+
+      useEffect(() => { void loadAccount() }, [loadAccount])
 
       /* ---- branch browsing (v0.19.3, IDEA-style) ----
          Double-clicking a tree branch no longer checks it out: it walks THAT
@@ -8272,6 +8555,7 @@ function Workbench(props) {
          panel edge. The seat now carries a width measured inside the host, and
          flips above the button when the lower half of the page has no room. */
       const openBranchChooser = useCallback((event) => {
+        if (accountSeat !== null) setAccountSeat(null)
         if (chooserSeat !== null) { setChooserSeat(null); return }
         const rect = event.currentTarget.getBoundingClientRect()
         const host = hostRef.current
@@ -8287,13 +8571,36 @@ function Workbench(props) {
         setChooserSeat(flipUp === true
           ? { x: x, width: width, bottom: window.innerHeight - rect.top + 6 }
           : { x: x, width: width, top: below })
-      }, [chooserSeat])
+      }, [chooserSeat, accountSeat])
+
+      /* The account card is 304 px wide and sits under its pill; it flips above
+         when the lower half of the page has no room. Same backdrop as the
+         branch chooser, so an outside click closes exactly one card. */
+      const openAccountMenu = useCallback((event) => {
+        if (accountSeat !== null) { setAccountSeat(null); return }
+        setChooserSeat(null)
+        const rect = event.currentTarget.getBoundingClientRect()
+        const host = hostRef.current
+        const box = host === null ? null : host.getBoundingClientRect()
+        const left = box === null ? 8 : Math.max(8, box.left)
+        const right = box === null ? window.innerWidth : Math.min(window.innerWidth, box.right)
+        const width = Math.max(180, Math.min(304, right - left - 12))
+        const x = Math.max(left + 4, Math.min(rect.left, right - width - 6))
+        const below = rect.bottom + 6
+        const flipUp = below + 260 > window.innerHeight && rect.top > 260
+        setAccountSeat(flipUp === true
+          ? { x: x, width: width, bottom: window.innerHeight - rect.top + 6 }
+          : { x: x, width: width, top: below })
+      }, [accountSeat, setChooserSeat])
 
       const topBar = E('div', { className: 'git4idea-topbar' },
         E(RepoSelect, {
           t: t, repos: repoOptions, value: repoRoot,
           loading: repoState === null,
           onOpenMenu: openRepoMenu,
+        }),
+        repoRoot === null ? null : E(AccountButton, {
+          t: t, account: account, onOpen: openAccountMenu,
         }),
         branches === null || branches.local.length === 0 ? null : E('span', { className: 'git4idea-select-wrap', 'data-tip': branches.branch },
           E(Icon, { name: 'branch', size: 12 }),
@@ -9030,6 +9337,30 @@ function Workbench(props) {
           onCommit: () => { setChooserSeat(null); setDialog({ kind: 'commitMsg' }) },
           onPush: () => { setChooserSeat(null); openPushDialog() },
         })))
+      }
+      if (accountSeat !== null) {
+        overlays.push(E('div', { key: 'account-backdrop', className: 'git4idea-chooser-backdrop', onMouseDown: () => setAccountSeat(null) }))
+        overlays.push(E('div', {
+          key: 'account-menu',
+          className: 'git4idea-account-seat',
+          style: accountSeat.top === undefined
+            ? { left: String(accountSeat.x) + 'px', bottom: String(accountSeat.bottom) + 'px', width: String(accountSeat.width) + 'px' }
+            : { left: String(accountSeat.x) + 'px', top: String(accountSeat.top) + 'px', width: String(accountSeat.width) + 'px' },
+        }, E(AccountMenu, {
+          t: t, account: account,
+          onAuth: () => { setAccountSeat(null); setAccountAuth(true) },
+        })))
+      }
+      if (accountAuth === true) {
+        overlays.push(E(AccountAuthDialog, {
+          key: 'account-auth', t: t, account: account, request: request, base: base,
+          onClose: () => setAccountAuth(false),
+          onDone: (data) => {
+            setAccountAuth(false)
+            if (data !== null && data !== undefined) setAccount(data)
+            pushToast({ text: t('account.ok'), tone: 'ok', icon: 'check', ttl: 3000 })
+          },
+        }))
       }
       if (dialog !== null && dialog.kind === 'clone') {
         overlays.push(E(CloneDialog, {
@@ -10211,7 +10542,7 @@ function Workbench(props) {
       '.git4idea-cs-action{display:flex;align-items:center;gap:6px;width:100%;height:24px;padding:0 8px;flex:none;border:none;border-radius:var(--dsw-radius-sm,8px);background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;font-size:12px;text-align:left;cursor:pointer}',
       '.git4idea-cs-action:hover:not([aria-disabled="true"]){background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
       '.git4idea-cs-action[aria-disabled="true"]{opacity:.4;cursor:default}',
-      '.git4idea-cs-action-count{margin-left:auto;color:var(--dsw-alias-label-tertiary);font-size:11px;font-variant-numeric:tabular-nums}',
+      '.git4idea-cs-action-count{margin-left:0;color:var(--dsw-alias-label-primary);font-size:12px;font-weight:600;font-variant-numeric:tabular-nums}',
     ].concat(EXTRA_RULES).join('\n')
 
     /* ============================== plugin ============================== */
@@ -13394,6 +13725,7 @@ function Workbench(props) {
       /* Frame-level confirms sit outside every panel root; without the token
          scope their card had no surface and showed the page through it. */
       '.git4idea-overlay',
+      '.git4idea-account-seat',
     ].join(',')
     const G4_DARK_SCOPE = [
       'body[data-ds-dark-theme] .git4idea-root',
@@ -13404,6 +13736,7 @@ function Workbench(props) {
       'body[data-ds-dark-theme] .git4idea-chooser-seat',
       'body[data-ds-dark-theme] .git4idea-chooser-backdrop',
       'body[data-ds-dark-theme] .git4idea-overlay',
+      'body[data-ds-dark-theme] .git4idea-account-seat',
     ].join(',')
 
     const G4_THEME_CSS = [
@@ -13713,6 +14046,47 @@ function Workbench(props) {
       '.git4idea-conflict-mid{background:var(--g4-diff-mod)}',
       '.git4idea-conflict-mark{font-size:11px;font-weight:600;letter-spacing:.04em}',
       '.git4idea-conflict-menu{border:1px solid var(--g4-border);border-radius:8px;background:var(--g4-overlay);box-shadow:var(--g4-shadow);padding:5px}',
+
+      /* ---- account ---- */
+      '.git4idea-account-btn{display:inline-flex;align-items:center;gap:6px;height:28px;min-width:0;max-width:190px;padding:0 7px 0 4px;border:1px solid var(--g4-border);border-radius:999px;background:transparent;color:var(--g4-text);font:inherit;font-size:13px;font-weight:500;cursor:pointer}',
+      '.git4idea-account-btn:hover{background:var(--g4-hover);border-color:var(--g4-border-strong)}',
+      '.git4idea-account-btn:focus-visible{outline:2px solid var(--g4-brand);outline-offset:1px}',
+      '.git4idea-account-avatar{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--g4-brand-subtle);color:var(--g4-brand-text);font-size:11px;font-weight:600;flex:none}',
+      '.git4idea-account-avatar-lg{width:32px;height:32px;font-size:14px}',
+      '.git4idea-account-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:132px}',
+      '.git4idea-account-seat{position:fixed;z-index:89;width:304px;box-sizing:border-box}',
+      '.git4idea-account-menu{width:100%;box-sizing:border-box;padding:6px;border:1px solid var(--g4-border);border-radius:12px;background:var(--g4-overlay);box-shadow:var(--g4-shadow)}',
+      '.git4idea-account-identity{display:flex;align-items:flex-start;gap:10px;padding:10px 10px 8px;min-width:0}',
+      '.git4idea-account-text{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:0;flex:1}',
+      '.git4idea-account-title{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:600;color:var(--g4-text)}',
+      '.git4idea-account-mail{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--g4-text-2)}',
+      '.git4idea-account-scope{display:inline-flex;align-items:center;height:20px;margin-top:3px;padding:0 6px;border-radius:6px;background:var(--g4-raised);color:var(--g4-text-3);font-size:11px;line-height:1}',
+      '.git4idea-account-sep{height:1px;margin:4px 8px;background:var(--g4-border)}',
+      '.git4idea-account-action{display:flex;align-items:center;gap:9px;width:100%;height:34px;padding:0 10px;border:0;border-radius:6px;background:transparent;color:var(--g4-text);font:inherit;font-size:13px;text-align:left;cursor:pointer}',
+      '.git4idea-account-action:hover{background:var(--g4-hover)}',
+      '.git4idea-account-dialog{width:500px;min-width:0;max-width:100%;min-height:min(350px,100%);padding:0;gap:0}',
+      '.git4idea-account-head{display:flex;align-items:center;gap:8px;min-height:48px;padding:0 12px 0 18px;border-bottom:1px solid var(--g4-border);flex:none}',
+      '.git4idea-account-head .git4idea-dialog-title{flex:1;min-width:0}',
+      '.git4idea-account-close{width:28px;height:28px}',
+      '.git4idea-account-tabs{display:flex;margin:14px 18px 0;flex:none}',
+      '.git4idea-account-tabs .git4idea-seg-item{flex:1;height:30px;display:inline-flex;align-items:center;justify-content:center}',
+      '.git4idea-account-tabs .git4idea-seg-item:disabled{opacity:.5;cursor:default}',
+      '.git4idea-account-pane{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;flex:1;padding:14px 18px;min-height:0}',
+      '.git4idea-account-pane-token{align-items:stretch;justify-content:flex-start;gap:10px}',
+      '.git4idea-account-globe{display:flex;align-items:center;justify-content:center;color:var(--g4-text-3);margin-top:4px}',
+      '.git4idea-account-copy{max-width:360px;margin:0;text-align:center;color:var(--g4-text-2);font-size:13px;line-height:1.6}',
+      '.git4idea-account-note{margin:0;padding:6px 10px;border-radius:8px;background:var(--g4-warning-bg);color:var(--g4-warning);font-size:12px;line-height:1.5}',
+      '.git4idea-account-field{display:flex;flex-direction:column;gap:6px;min-width:0}',
+      '.git4idea-account-endpoint{margin:14px 18px 0;flex:none}',
+      '.git4idea-account-label{color:var(--g4-text-2);font-size:12px}',
+      '.git4idea-account-input{width:100%;box-sizing:border-box;height:34px}',
+      '.git4idea-account-hint{margin:0;color:var(--g4-text-3);font-size:12px;line-height:1.5}',
+      '.git4idea-account-link{color:var(--g4-brand-text);text-decoration:none}',
+      '.git4idea-account-link:hover{text-decoration:underline}',
+      '.git4idea-account-error{margin:0 18px 10px;padding:8px 10px;border-radius:8px;background:var(--g4-danger-bg);color:var(--g4-danger);font-size:12px;line-height:1.5;word-break:break-word}',
+      '.git4idea-account-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:12px 18px;border-top:1px solid var(--g4-border);flex:none;margin-top:auto}',
+      '.git4idea-account-primary{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:96px;height:32px;padding:0 14px;font-size:13px}',
+      '.git4idea-account-primary .git4idea-spin{color:currentColor}',
 
       /* ---- notifications ---- */
       '.git4idea-toast{padding:10px 10px 10px 14px;gap:8px;border-radius:10px;border:1px solid var(--g4-border);background:var(--g4-overlay);box-shadow:var(--g4-shadow);font-size:13px;color:var(--g4-text)}',
