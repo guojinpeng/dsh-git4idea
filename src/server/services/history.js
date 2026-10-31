@@ -238,9 +238,11 @@ export async function diff(payload) {
     /* git quotes and C-escapes backslash paths inside the diff header (and
        git ≥2.55 spells the a/ side with the real path instead of /dev/null);
        passing forward slashes keeps the header unquoted, so the rewrite below
-       can match it verbatim. POSIX is a no-op. */
+       can match it verbatim. core.quotepath=false is required for non-ASCII
+       paths: without it git octal-escapes the name and the rewrite misses it.
+       POSIX is a no-op. */
     const headerPath = absolute.split(path.sep).join('/')
-    const result = await runGit(root, ['diff', '--no-color', '--no-ext-diff', '-U3', '--no-index', '--', '/dev/null', headerPath])
+    const result = await runGit(root, ['-c', 'core.quotepath=false', 'diff', '--no-color', '--no-ext-diff', '-U3', '--no-index', '--', '/dev/null', headerPath])
     if (result.code !== 0 && result.code !== 1) {
       const detail = result.stderr.trim() === '' ? result.stdout.trim() : result.stderr.trim()
       throw new PanelError('git-failed', 'git diff --no-index failed: ' + (detail === '' ? 'exit ' + result.code : detail), 409)
