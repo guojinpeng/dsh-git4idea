@@ -74,4 +74,11 @@
         + '--dsw-alias-bg-mask-1:rgba(0,0,0,.55);--dsw-alias-bg-scrim:rgba(0,0,0,.55);'
         + '--dsw-static-neutral-bluish-875:#232324;--dsw-static-neutral-bluish-850:#2c2c2e;--dsw-static-neutral-bluish-800:#2b2d31;--dsw-static-neutral-bluish-75:var(--g4-sunken);'
         + '}',
+      /* Native control popups (the remote <select> list) take their colours from
+         `color-scheme`, not from the tokens above. The browser draws that popup
+         outside the panel subtree, so the declaration goes on body: Chrome then
+         follows the app theme instead of the OS theme (m00916). The push
+         destination list is plugin DOM for the same reason (m00978). */
+      'body{color-scheme:light}',
+      'body[data-ds-dark-theme]{color-scheme:dark}',
     ].join('\n')

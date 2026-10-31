@@ -162,14 +162,14 @@ window.__ModuleLoader__.load({
       'account.tokenPlaceholder': 'ghp_xxxxxxxxxxxxxxxxxxxx',
       'account.tokenHint': '请使用 Git 服务生成的令牌,需要仓库读写权限。',
       'account.tokenLink': '前往 GitHub Settings 生成 Token',
-      'account.tokenOnly': 'Token 仅用于本次认证,不会保存。',
+      'account.tokenOnly': 'Token 会交给 Git 凭据助手保存。',
       'account.tokenRequired': '请输入 Token。',
       'account.login': '在浏览器中登录...',
       'account.useToken': '使用 Token',
       'account.cancel': '取消',
       'account.close': '关闭',
       'account.failed': '无法完成 Git 认证。',
-      'account.ok': 'Git 认证成功。',
+      'account.ok': 'Git 凭据已保存。',
       'repo.workspace': '工作区',
       'repo.nested': '子仓库',
       'repo.none': '当前工作区不是 Git 仓库',
@@ -595,6 +595,7 @@ window.__ModuleLoader__.load({
       'push.remote': '远程',
       'push.localBranch': '本地分支',
       'push.remoteBranch': '远程分支',
+      'push.pickBranch': '选择远程分支',
       'push.newBranch': '新建',
       'push.existingBranch': '已存在',
       'push.remoteUnknown': '无法确认',
@@ -672,14 +673,14 @@ window.__ModuleLoader__.load({
       'account.tokenPlaceholder': 'ghp_xxxxxxxxxxxxxxxxxxxx',
       'account.tokenHint': 'Use a token from your Git host. It needs read and write access to the repository.',
       'account.tokenLink': 'Create a token in GitHub Settings',
-      'account.tokenOnly': 'The token is used for this sign-in only and is not stored.',
+      'account.tokenOnly': 'The token is saved by the Git credential helper.',
       'account.tokenRequired': 'Enter a token.',
       'account.login': 'Sign in with the browser...',
       'account.useToken': 'Use token',
       'account.cancel': 'Cancel',
       'account.close': 'Close',
       'account.failed': 'Git authentication failed.',
-      'account.ok': 'Git authentication succeeded.',
+      'account.ok': 'Git credentials saved.',
       'repo.workspace': 'workspace',
       'repo.nested': 'nested',
       'repo.none': 'This workspace is not a Git repository',
@@ -1105,6 +1106,7 @@ window.__ModuleLoader__.load({
       'push.remote': 'Remote',
       'push.localBranch': 'Local branch',
       'push.remoteBranch': 'Remote branch',
+      'push.pickBranch': 'Select a remote branch',
       'push.newBranch': 'New',
       'push.existingBranch': 'Exists',
       'push.remoteUnknown': 'Cannot confirm',
@@ -5518,7 +5520,7 @@ window.__ModuleLoader__.load({
        Row heights are FIXED constants — the CSS pins each row kind to an exact
        height, so a prefix-sum index plus binary search locates the first
        visible item without measuring. */
-    const HISTORY_ROW_H = 28 /* .git4idea-commit: height 26 + 2×1px padding */
+    const HISTORY_ROW_H = 30 /* .git4idea-commit: the Islands skin pins height:30px */
     const ITEM_HEIGHTS = { group: 21, folder: 16, row: 24 }
     const WINDOW_OVERSCAN = 6
 
@@ -5682,6 +5684,15 @@ window.__ModuleLoader__.load({
        rows. Refs show as IDEA-style tag icons after the subject; their names
        live in the hover tooltip, so the subject keeps the room. */
     const MAX_ROW_REFS = 4
+    /* The graph keeps GraphCell's 26px cell (the skin's row is 30px tall); the
+       lane pitch follows from that height. The graph paints absolutely, so the
+       subject reserves exactly the width of THIS row's lanes (same formula as
+       GraphCell) and starts after them: a narrow pane clips under the pinned
+       columns instead of shrinking the lanes, and no text ever paints over a
+       wire. */
+    const HISTORY_GRAPH_HEIGHT = 26
+    const HISTORY_LANE_WIDTH = GRAPH_NODE_WIDTH * (HISTORY_GRAPH_HEIGHT / GRAPH_ROW_UNIT)
+    const commitSubjectOffset = (row) => 8 + Math.min(Math.max(1, row.width), GRAPH_MAX_LANES) * HISTORY_LANE_WIDTH + 6
     const CommitRow = memo(function CommitRow(props) {
       const commit = props.commit
       const refs = refDecorations(commit.refs)
@@ -5697,8 +5708,12 @@ window.__ModuleLoader__.load({
         /* Column order (m01737 #4, mirroring the IDE log): graph, message,
            ref icons, author, then the absolute timestamp. The relative "4d"
            column is gone — it made every row read differently by the hour. */
-        E(GraphCell, { row: props.row, height: 26 }),
-        E('span', { className: 'git4idea-commit-subject', 'data-tip': commit.subject }, commit.subject),
+        E(GraphCell, { row: props.row, height: HISTORY_GRAPH_HEIGHT }),
+        E('span', {
+          className: 'git4idea-commit-subject',
+          style: { marginLeft: String(commitSubjectOffset(props.row)) + 'px' },
+          'data-tip': commit.subject,
+        }, commit.subject),
         refs.length === 0 ? null : E('span', {
           className: 'git4idea-ref-stack',
           /* One tooltip for the whole cluster, names top-to-bottom in the same
@@ -5713,9 +5728,13 @@ window.__ModuleLoader__.load({
             className: 'git4idea-ref-icon git4idea-ref-' + decoration.kind,
           }, E(Icon, { name: 'tagOutline', size: 14 }))),
           hiddenRefs > 0 ? E('span', { className: 'git4idea-ref-count' }, '+' + String(hiddenRefs)) : null),
-        E('span', { className: 'git4idea-commit-fill' }),
-        E('span', { className: 'git4idea-commit-author', 'data-tip': commit.author }, commit.author),
-        E('span', { className: 'git4idea-commit-date' }, shortDate(commit.date)))
+        /* Author and date are ONE pinned group on the right edge, and it paints
+           its own opaque surface: the graph and the subject scroll under it,
+           so a narrow pane keeps the lanes readable instead of squeezing the
+           columns. */
+        E('span', { className: 'git4idea-commit-meta' },
+          E('span', { className: 'git4idea-commit-author', 'data-tip': commit.author }, commit.author),
+          E('span', { className: 'git4idea-commit-date' }, shortDate(commit.date))))
     }, (prev, next) => prev.commit === next.commit && prev.row === next.row && prev.selected === next.selected && prev.t === next.t)
 
     function sinceThreshold(key) {
@@ -6749,7 +6768,7 @@ function Workbench(props) {
       const raw = String(value === undefined || value === null ? '' : value).trim()
       try {
         const host = new URL(/^[a-z][a-z0-9+.-]*:\/\//i.test(raw) ? raw : 'https://' + raw).hostname.toLowerCase()
-        return host === 'github.com' || host.endsWith('.github.com')
+        return host === 'github.com' || host.startsWith('github.') || host.endsWith('.github.com')
       } catch (error) {
         void error
         return false
@@ -6796,28 +6815,57 @@ function Workbench(props) {
 
     function AccountAuthDialog(props) {
       const online = props.account !== null && props.account !== undefined && props.account.online === true
-      const [tab, setTab] = useState(online === true ? 'online' : 'token')
-      const [endpoint, setEndpoint] = useState(props.account !== null && props.account !== undefined && typeof props.account.endpoint === 'string'
+      const initialEndpoint = props.account !== null && props.account !== undefined && typeof props.account.endpoint === 'string'
         ? props.account.endpoint
-        : 'https://github.com')
+        : 'https://github.com'
+      /* GCM's sign-in command serves GitHub and GitHub Enterprise only, so the
+         online tab exists only for a GitHub host; every other host defaults to
+         the token tab instead of failing inside GCM. */
+      const [tab, setTab] = useState(online === true && accountGithubHost(initialEndpoint) ? 'online' : 'token')
+      const [endpoint, setEndpoint] = useState(initialEndpoint)
       const [token, setToken] = useState('')
       const [busy, setBusy] = useState(false)
       const [error, setError] = useState('')
       const inputRef = useRef(null)
+      const githubHost = accountGithubHost(endpoint)
+      const onlineReady = online === true && githubHost
 
       useEffect(() => {
         if (tab !== 'token' || inputRef.current === null) return
         inputRef.current.focus()
       }, [tab])
 
+      useEffect(() => {
+        /* Only a non-GitHub host removes the online pane. A missing GCM just
+           disables its action, so that pane still explains why. */
+        if (tab === 'online' && githubHost !== true) setTab('token')
+      }, [tab, githubHost])
+
+      /* Closing the dialog while the browser flow runs must not trap the
+         panel: the host keeps waiting for GCM (up to its own timeout), so the
+         close button stays live. A result that lands after the close still
+         updates the account, but it must not close a dialog the user has
+         reopened meanwhile. */
+      const closedRef = useRef(false)
+
       const fail = (reason) => {
+        if (closedRef.current === true) return
         const text = reason === null || reason === undefined ? '' : String(reason.message === undefined ? reason : reason.message)
         setError(props.t('account.failed') + (text === '' ? '' : ' ' + text))
       }
 
       const finish = (data) => {
         setBusy(false)
+        if (closedRef.current === true) {
+          props.onLate(data === null || data === undefined ? null : data)
+          return
+        }
         props.onDone(data === null || data === undefined ? null : data)
+      }
+
+      const close = () => {
+        closedRef.current = true
+        props.onClose()
       }
 
       const endpointValue = () => {
@@ -6864,8 +6912,7 @@ function Workbench(props) {
         type: 'button',
         className: 'git4idea-icon-btn git4idea-account-close',
         'aria-label': props.t('account.close'),
-        onClick: busy === true ? undefined : props.onClose,
-        disabled: busy,
+        onClick: close,
       }, E(Icon, { name: 'close', size: 16 }))
 
       const onlinePane = E('div', { className: 'git4idea-account-pane' },
@@ -6890,7 +6937,7 @@ function Workbench(props) {
           })),
         E('p', { className: 'git4idea-account-hint' },
           props.t('account.tokenHint') + ' ',
-          accountGithubHost(endpoint) ? E('a', {
+          githubHost ? E('a', {
             className: 'git4idea-account-link',
             href: 'https://github.com/settings/tokens',
             target: '_blank',
@@ -6898,13 +6945,13 @@ function Workbench(props) {
           }, props.t('account.tokenLink')) : null),
         E('p', { className: 'git4idea-account-hint' }, props.t('account.tokenOnly')))
 
-      const canRun = (online === true || tab === 'token') && endpoint.trim() !== ''
+      const canRun = endpoint.trim() !== '' && (tab === 'token' || onlineReady === true)
       return E('div', { className: 'git4idea-overlay' },
         E('div', { className: 'git4idea-dialog git4idea-account-dialog' },
           E('div', { className: 'git4idea-account-head' },
             E('div', { className: 'git4idea-dialog-title' }, props.t('account.title')),
             closeButton),
-          E('div', { className: 'git4idea-seg git4idea-account-tabs' },
+          githubHost ? E('div', { className: 'git4idea-seg git4idea-account-tabs' },
             E('button', {
               type: 'button', className: 'git4idea-seg-item', 'data-active': tab === 'online' ? 'true' : 'false',
               disabled: busy, onClick: () => { setTab('online'); setError('') },
@@ -6912,7 +6959,7 @@ function Workbench(props) {
             E('button', {
               type: 'button', className: 'git4idea-seg-item', 'data-active': tab === 'token' ? 'true' : 'false',
               disabled: busy, onClick: () => { setTab('token'); setError('') },
-            }, props.t('account.token'))),
+            }, props.t('account.token'))) : null,
           E('label', { className: 'git4idea-account-field git4idea-account-endpoint' },
             E('span', { className: 'git4idea-account-label' }, props.t('account.endpointLabel')),
             E('input', {
@@ -6928,7 +6975,7 @@ function Workbench(props) {
           tab === 'online' ? onlinePane : tokenPane,
           error === '' ? null : E('div', { className: 'git4idea-account-error', role: 'alert' }, error),
           E('div', { className: 'git4idea-account-actions' },
-            E('button', { type: 'button', className: 'git4idea-btn', disabled: busy, onClick: props.onClose }, props.t('account.cancel')),
+            E('button', { type: 'button', className: 'git4idea-btn', onClick: close }, props.t('account.cancel')),
             E('button', {
               type: 'button',
               className: 'git4idea-btn git4idea-btn-primary git4idea-account-primary',
@@ -7326,8 +7373,13 @@ function Workbench(props) {
         return () => window.removeEventListener('resize', measure)
       }, [repoRoot, columns, compact])
 
-      const guard = useCallback(async (work) => {
-        setBusy(true)
+      /* `quiet` runs a READ-ONLY round without flipping the busy flag: the
+         rail dims every non-view button while busy, and a manual refresh used
+         to blink that whole bar twice per click. The refresh icon spins on its
+         own state, so the wait stays visible. */
+      const guard = useCallback(async (work, opts) => {
+        const quiet = opts !== null && typeof opts === 'object' && opts.quiet === true
+        if (quiet !== true) setBusy(true)
         setError(null)
         try {
           return await work()
@@ -7335,7 +7387,7 @@ function Workbench(props) {
           setError(caught instanceof Error ? caught.message : String(caught))
           return undefined
         } finally {
-          setBusy(false)
+          if (quiet !== true) setBusy(false)
         }
       }, [])
 
@@ -7471,7 +7523,7 @@ function Workbench(props) {
       useEffect(() => { void loadAccount() }, [loadAccount])
 
       /* ---- branch browsing (v0.19.3, IDEA-style) ----
-         Double-clicking a tree branch no longer checks it out: it walks THAT
+         Clicking a tree branch does not check it out: it walks THAT
          branch's log (browseRev = '' keeps the HEAD view). The LAST browsed
          branch is remembered, so 2-then-1 lands 1's list on the merge commit
          that carried 2 into 1 ('merge-point') — 1's newer commits stay one
@@ -7503,9 +7555,9 @@ function Workbench(props) {
          MANUAL refresh passes it: the network call is the slow part, so the
          automatic refreshes (12s poll, post-action, mount) stay off it, and a
          failed fetch degrades silently — a refresh must not turn into an
-         error notification just because the network is down. While it runs the rail
-         icon spins: fetching is allowed to take a moment, and the spin says
-         the wait is real while blocking a second click. */
+         error notification just because the network is down. While it runs the
+         rail icon spins and the button is disabled: fetching is allowed to take
+         a moment, and a second fetch must not start on top of it. */
       /* Declared before refresh (hooks dep TDZ rule): the manual refresh
          fetches only when a remote exists. */
       const remoteReady = branches !== null && Array.isArray(branches.remotes) && branches.remotes.length > 0
@@ -7548,16 +7600,21 @@ function Workbench(props) {
                HEAD page: the next mount opens on HEAD and would otherwise be
                seeded with another branch's log. */
             if (browseRevRef.current === '') writePaintPage(repoRoot, { summary: summaryData, branches: branchesData, commits: page.commits, hasMore: page.hasMore })
-          })
+          }, { quiet: withFetch === true })
         } finally {
           if (withFetch === true) setRefreshSpinning(false)
         }
       }, [guard, loadSummary, loadBranches, loadCommits, repoRoot, remoteReady, base, pushToast, t])
 
-      /* Double-click a branch (or the HEAD row): browse its history. The merge
-         anchor comes from the PREVIOUSLY browsed branch — 'merge-point' finds
-         the newest merge that carried it into the one now opened, and the
-         history list scrolls there once (null = no relationship, top). */
+      /* Click a branch (or the HEAD row): browse its history. The merge anchor
+         comes from the PREVIOUSLY browsed branch — 'merge-point' finds the
+         newest merge that carried it into the one now opened, and the history
+         list scrolls there once (null = no relationship, top). The log request
+         reads browseRevRef, so the list must be reloaded here: the branch
+         click used to change the ref without a request, and the pane kept the
+         previous branch's rows. The anchor is set only AFTER that load: while
+         the rows still belong to the previous branch, a set anchor would make
+         the list auto-load toward it with the new rev, racing the load. */
       const browseBranch = useCallback(async (entry) => {
         const name = String(entry.name)
         const previous = lastBrowseRef.current
@@ -7566,13 +7623,16 @@ function Workbench(props) {
         setMergeAnchor(null)
         browseRevRef.current = name
         setBrowseRev(name)
+        let anchor = null
         if (previous !== null) {
           try {
             const data = await request('merge-point', Object.assign({}, base, { from: previous, to: name }))
-            if (data !== null && typeof data === 'object' && typeof data.hash === 'string' && data.hash !== '') setMergeAnchor(data.hash)
+            if (data !== null && typeof data === 'object' && typeof data.hash === 'string' && data.hash !== '') anchor = data.hash
           } catch (error) { void error }
         }
-      }, [base, request])
+        await guard(() => loadCommits(0), { quiet: true })
+        if (anchor !== null) setMergeAnchor(anchor)
+      }, [base, request, guard, loadCommits])
       /* A repository switch forgets the browsing context entirely. */
       useEffect(() => {
         lastBrowseRef.current = null
@@ -9098,6 +9158,8 @@ function Workbench(props) {
         }
         else if (spec.id === 'refresh') {
           entry.spinning = refreshSpinning === true
+          // A fetch can take seconds; the spin alone does not stop a second click.
+          entry.disabled = refreshSpinning === true
           entry.run = () => { void refreshAll() }
         }
         else if (spec.id === 'expandAll') entry.run = () => setBranchFoldSignal({ mode: 'expand', at: Date.now() })
@@ -9334,7 +9396,13 @@ function Workbench(props) {
           onMerge: (entry) => { setChooserSeat(null); void run('merge', { branch: entry.name }) },
           onRename: (entry) => { setChooserSeat(null); setDialog({ kind: 'renameBranch', from: entry.name }) },
           onDelete: (entry, kind) => { setChooserSeat(null); deleteBranchEntries([{ kind: kind, name: entry.name, entry: entry }]) },
-          onCommit: () => { setChooserSeat(null); setDialog({ kind: 'commitMsg' }) },
+          /* Opening the branch menu is not a commit trigger: the entry must
+             raise the real commit surface (file picks + message), the same one
+             the toolbar's commit button opens. */
+          onCommit: () => {
+            setChooserSeat(null)
+            commitDialog.set({ sessionId: (scope || {}).sessionId, cwd: cwd, repoRoot: repoRoot })
+          },
           onPush: () => { setChooserSeat(null); openPushDialog() },
         })))
       }
@@ -9357,6 +9425,12 @@ function Workbench(props) {
           onClose: () => setAccountAuth(false),
           onDone: (data) => {
             setAccountAuth(false)
+            if (data !== null && data !== undefined) setAccount(data)
+            pushToast({ text: t('account.ok'), tone: 'ok', icon: 'check', ttl: 3000 })
+          },
+          /* The dialog was closed while GCM still ran; the credential may have
+             landed since. Never close a dialog the user has reopened. */
+          onLate: (data) => {
             if (data !== null && data !== undefined) setAccount(data)
             pushToast({ text: t('account.ok'), tone: 'ok', icon: 'check', ttl: 3000 })
           },
@@ -9875,11 +9949,18 @@ function Workbench(props) {
       '.git4idea-push-map-branch{max-width:30%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dsw-alias-label-primary)}',
       '.git4idea-push-map-arrow{color:var(--dsw-alias-label-tertiary)}',
       '.git4idea-push-map-remote{flex:none;max-width:180px}',
-      '.git4idea-push-map-dest{flex:none;width:240px;max-width:36vw}',
-      /* The destination field carries a datalist for suggestions. Chromium draws
-         its own picker arrow inside the field; the list still opens on typing
-         and on ArrowDown, so the arrow goes (m02021). */
-      '.git4idea-push-map-dest::-webkit-calendar-picker-indicator{display:none}',
+      /* The destination control (m00978): a 28px field per the design (§6.12,
+         §6.19) with the plugin's own chevron and list, so no native popup can
+         paint itself in the host scheme. */
+      '.git4idea-push-dest-field{position:relative;display:inline-flex;align-items:center;flex:none;width:240px;max-width:36vw}',
+      '.git4idea-push-dest-field .git4idea-push-map-dest{flex:1;min-width:0;padding-right:26px}',
+      '.git4idea-push-dest-toggle{position:absolute;right:2px;top:50%;transform:translateY(-50%);display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;padding:0;border:0;border-radius:calc(var(--dsw-radius-sm,8px) - 2px);background:transparent;color:var(--dsw-alias-label-tertiary);cursor:pointer}',
+      '.git4idea-push-dest-toggle:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
+      '.git4idea-push-dest-toggle:disabled{cursor:default;opacity:.4}',
+      /* The list drops under the field: the base menu sizes itself against its
+         containing block (max-height calc(100% - 8px)), which is the field. */
+      '.git4idea-menu.git4idea-push-dest-menu{position:absolute;top:calc(100% + 4px);left:0;right:0;min-width:0;max-height:260px;z-index:5}',
+      '.git4idea-push-dest-on{background:var(--dsw-alias-interactive-bg-hover)}',
       '.git4idea-push-map-state{flex:none;padding:1px 6px;border-radius:999px;corner-shape:round;background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary);font-size:11px}',
       '.git4idea-push-map-force{color:var(--dsw-alias-label-primary)}',
       '.git4idea-push-map-check{display:inline-flex;align-items:center;justify-content:center;min-width:20px;padding:2px 4px}',
@@ -10040,21 +10121,23 @@ function Workbench(props) {
          scroll container is offset by the search field — same rule as
          .git4idea-history above). */
       '.git4idea-tree{display:flex;flex-direction:column;min-height:0;flex:1;position:relative}',
-      '.git4idea-tree-scroll{flex:1;overflow:auto;padding-bottom:6px}',
+      '.git4idea-tree-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:6px}',
       '.git4idea-section{display:flex;flex-direction:column}',
-      '.git4idea-section-head{display:flex;align-items:center;gap:4px;width:100%;padding:3px 8px;border:none;background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;cursor:pointer;text-align:left}',
+      // width:auto (not 100%): the head is a stretched flex item, so its padding
+      // and margin from the Islands skin live INSIDE the pane. width:100% made a
+      // content-box head 36px wider than the tree scroller and produced the
+      // horizontal scrollbar reported on m00562.
+      '.git4idea-section-head{display:flex;align-items:center;gap:4px;width:auto;box-sizing:border-box;border:none;background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;cursor:pointer;text-align:left}',
       '.git4idea-section-head-static{cursor:default;padding-left:20px}',
       '.git4idea-section-head:hover{color:var(--dsw-alias-label-primary)}',
-      // The header became a DIV (it now holds buttons), and a div is content-box
-      // while a button is border-box: without this, width:100% plus its own padding
-      // overflowed the pane by 16px and clipped the last toolbar icon (reported on
-      // v0.3.8).
-      '.git4idea-changes-head{cursor:default;gap:2px;box-sizing:border-box}',
+      '.git4idea-changes-head{cursor:default;gap:2px}',
       '.git4idea-section-toggle{display:flex;align-items:center;gap:4px;flex:1;min-width:0;padding:0;border:none;background:transparent;color:inherit;font:inherit;cursor:pointer;text-align:left}',
       '.git4idea-folder{display:flex;flex-direction:column}',
       '.git4idea-branch-folder{display:flex;flex-direction:column}',
       '.git4idea-row-picked{background:var(--dsw-alias-interactive-bg-active,var(--dsw-alias-interactive-bg-hover));color:var(--dsw-alias-label-primary);box-shadow:inset 2px 0 0 var(--dsw-alias-brand-primary)}',
-      '.git4idea-folder-head{display:flex;align-items:center;gap:6px;width:100%;padding:1px 8px 1px 4px;height:14px;border:none;background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;font-size:11px;cursor:pointer;text-align:left}',
+      /* width:auto for the same reason as .git4idea-section-head: a stretched
+         flex item keeps its padding inside the tree scroller. */
+      '.git4idea-folder-head{display:flex;align-items:center;gap:6px;width:auto;box-sizing:border-box;padding:1px 8px 1px 4px;height:14px;border:none;background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;font-size:11px;cursor:pointer;text-align:left}',
       '.git4idea-folder-head:hover{color:var(--dsw-alias-label-primary)}',
       '.git4idea-folder-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
       '.git4idea-count{margin-left:auto;opacity:.6;font-weight:400}',
@@ -10097,8 +10180,11 @@ function Workbench(props) {
          against this wrapper — the scroll container below is offset by the
          filter bar, and painting from the wrong rect was the v0.19.2 drift. */
       '.git4idea-history{display:flex;flex-direction:column;min-height:0;flex:1;position:relative}',
-      '.git4idea-history-scroll{flex:1;overflow:auto}',
-      '.git4idea-commit{display:flex;align-items:center;gap:6px;padding:1px 8px 1px 0;cursor:pointer;height:26px;overflow:hidden}',
+      '.git4idea-history-scroll{flex:1;overflow-y:auto;overflow-x:hidden}',
+      /* The row is a positioning context: the graph paints in an absolute layer
+         and the author/date group is pinned to the right edge, so neither column
+         shrinks the lanes and the pane never needs a horizontal scrollbar. */
+      '.git4idea-commit{position:relative;display:flex;align-items:center;gap:6px;padding:0 10px 0 0;cursor:pointer;height:30px;overflow:hidden}',
       '.git4idea-commit:hover{background:var(--dsw-alias-interactive-bg-hover)}',
       /* Same theme-aware gray mix as .git4idea-row-selected (see it). */
       '.git4idea-commit-selected{background:color-mix(in srgb,var(--dsw-alias-interactive-bg-active,var(--dsw-alias-interactive-bg-hover)) 58%,var(--dsw-static-neutral-bluish-75,var(--dsw-alias-bg-layer-3)) 42%);color:var(--dsw-alias-label-primary);box-shadow:inset 2px 0 0 var(--dsw-alias-brand-primary)}',
@@ -10112,10 +10198,17 @@ function Workbench(props) {
       /* Nested rows indent inline (26px base + 12px per tree depth) — the CSS
          class only marks them for tests/probes. */
       '.git4idea-graph{flex:none}',
-      '.git4idea-commit-date{color:var(--dsw-alias-label-tertiary);flex:none;width:106px;text-align:right;font-variant-numeric:tabular-nums}',
-      '.git4idea-commit-author{color:var(--dsw-alias-label-secondary);flex:none;width:96px;overflow:hidden;text-overflow:ellipsis}',
+      '.git4idea-commit > .git4idea-graph{position:absolute;left:0;top:0;bottom:0;margin:auto 0;pointer-events:none}',
+      /* Author + date on the right edge in one opaque group: the graph and a
+         long subject scroll UNDER it, so a narrow pane keeps both readable
+         (m00593: the old fixed 96px left-aligned author plus flex fill is what
+         left the wide empty gap). */
+      '.git4idea-commit-meta{position:absolute;right:8px;top:0;bottom:0;z-index:1;display:flex;align-items:center;gap:8px;padding-left:8px;background:var(--g4-surface)}',
+      '.git4idea-commit:hover .git4idea-commit-meta{background-image:linear-gradient(var(--g4-hover),var(--g4-hover))}',
+      '.git4idea-commit-selected .git4idea-commit-meta,.git4idea-commit-selected:hover .git4idea-commit-meta{background:inherit;background-image:none}',
+      '.git4idea-commit-date{color:var(--dsw-alias-label-tertiary);flex:none;white-space:nowrap;font-variant-numeric:tabular-nums}',
+      '.git4idea-commit-author{color:var(--dsw-alias-label-secondary);flex:0 1 auto;min-width:0;max-width:96px;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
       '.git4idea-commit-subject{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
-      '.git4idea-commit-fill{flex:1 1 0;min-width:0}',
       /* Refs are IDEA-style tag glyphs after the subject: no pill, no name. They
          overlap like a deck (negative margin) so four refs cost ~34px, and the
          names live in the cluster tooltip. */
@@ -12473,6 +12566,13 @@ function Workbench(props) {
       const [remote, setRemote] = useState('')
       const [destination, setDestination] = useState('')
       const [checking, setChecking] = useState(false)
+      /* The destination list is plugin DOM, not a datalist: Chromium paints the
+         native datalist popup with the host colour scheme, so the list stayed
+         black inside the light card and color-scheme did not reach it (m00978). */
+      const [destOpen, setDestOpen] = useState(false)
+      const [destIndex, setDestIndex] = useState(-1)
+      const destField = useRef(null)
+      const destOpenRef = useRef(false)
       /* The state flag alone cannot stop two clicks in the same frame (setBusy
          lands after the render), so the in-flight check is synchronous. */
       const pushing = useRef(false)
@@ -12536,11 +12636,28 @@ function Workbench(props) {
         return () => { alive = false }
         // eslint-disable-next-line react-hooks/exhaustive-deps
       }, [selected])
+      useEffect(() => { destOpenRef.current = destOpen }, [destOpen])
       useEffect(() => {
-        const onKey = (event) => { if (event.key === 'Escape') props.onClose() }
+        const onKey = (event) => {
+          if (event.key !== 'Escape') return
+          /* Esc closes the open list first and the card on the next press
+             (design §7.1); the ref holds the state the handler was registered with. */
+          if (destOpenRef.current === true) { setDestOpen(false); return }
+          props.onClose()
+        }
         document.addEventListener('keydown', onKey)
         return () => { document.removeEventListener('keydown', onKey) }
       }, [])
+      useEffect(() => {
+        if (destOpen !== true) return undefined
+        const onDown = (event) => {
+          const field = destField.current
+          if (field !== null && field.contains(event.target)) return
+          setDestOpen(false)
+        }
+        document.addEventListener('pointerdown', onDown, true)
+        return () => { document.removeEventListener('pointerdown', onDown, true) }
+      }, [destOpen])
       /* m05303: `find` returns undefined for a hash that left the list (the
          branch moved between two previews). The card guards on null, so
          undefined fell through and the header read commit.shortHash — the
@@ -12568,6 +12685,29 @@ function Workbench(props) {
         const next = event.target.value
         setRemote(next)
         if (data !== null) void loadPreview(data.branch, next, '', true)
+      }
+      const destOptions = data === null ? [] : data.remoteBranches
+      const chooseDestination = (name) => {
+        setDestOpen(false)
+        setDestination(name)
+        if (data === null) return
+        if (name === data.remoteBranch && remote === data.remote) return
+        void loadPreview(data.branch, remote, name, true)
+      }
+      /* The typed text stays the source of truth: the list only offers what the
+         remote already has and a picked row runs the same check as a typed name. */
+      const openDestinationList = () => {
+        if (data === null || data.remotes.length === 0) return
+        setDestIndex(destOptions.indexOf(destination))
+        setDestOpen(true)
+      }
+      const moveDestinationIndex = (step) => {
+        const count = destOptions.length
+        if (count === 0) return
+        setDestIndex((previous) => {
+          if (previous < 0 || previous >= count) return step > 0 ? 0 : count - 1
+          return (previous + step + count) % count
+        })
       }
       const destinationKnown = data !== null && checking === false && remote === data.remote && destination === data.remoteBranch
       const destinationState = destinationKnown !== true
@@ -12647,21 +12787,82 @@ function Workbench(props) {
             onChange: changeRemote,
           }, data.remotes.map((name) => E('option', { key: name, value: name }, name))),
           E('span', { className: 'git4idea-push-map-arrow' }, ':'),
-          E('input', {
-            className: 'git4idea-input git4idea-push-map-dest',
-            value: destination,
-            list: 'git4idea-push-destinations',
-            placeholder: t('push.remoteBranch'),
-            'aria-label': t('push.remoteBranch'),
-            'data-git4idea-push-dest': '',
-            disabled: data.remotes.length === 0,
-            onChange: (event) => { setDestination(event.target.value) },
-            onBlur: settleDestination,
-            onKeyDown: (event) => {
-              if (event.key === 'Enter') { event.preventDefault(); event.currentTarget.blur() }
+          E('div', { className: 'git4idea-push-dest-field', ref: destField },
+            E('input', {
+              className: 'git4idea-input git4idea-push-map-dest',
+              value: destination,
+              placeholder: t('push.remoteBranch'),
+              'aria-label': t('push.remoteBranch'),
+              'aria-haspopup': 'listbox',
+              'aria-expanded': destOpen === true ? 'true' : 'false',
+              'data-git4idea-push-dest': '',
+              disabled: data.remotes.length === 0,
+              /* Typing wins over the list: the typed name is what the check
+                 runs, so an open list would only hide that. */
+              onChange: (event) => { setDestination(event.target.value); setDestOpen(false) },
+              onBlur: settleDestination,
+              onKeyDown: (event) => {
+                const count = destOptions.length
+                if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                  event.preventDefault()
+                  if (destOpen !== true) {
+                    if (count === 0) return
+                    setDestIndex(event.key === 'ArrowDown' ? 0 : count - 1)
+                    setDestOpen(true)
+                    return
+                  }
+                  moveDestinationIndex(event.key === 'ArrowDown' ? 1 : -1)
+                  return
+                }
+                if (event.key === 'Escape') {
+                  if (destOpen === true) { event.preventDefault(); setDestOpen(false) }
+                  return
+                }
+                if (event.key === 'Enter') {
+                  event.preventDefault()
+                  if (destOpen === true && destIndex >= 0 && destIndex < count) {
+                    chooseDestination(destOptions[destIndex])
+                    return
+                  }
+                  setDestOpen(false)
+                  event.currentTarget.blur()
+                }
+              },
+            }),
+            E('button', {
+              type: 'button',
+              className: 'git4idea-push-dest-toggle',
+              'aria-label': t('push.pickBranch'),
+              'data-tip': t('push.pickBranch'),
+              'aria-haspopup': 'listbox',
+              'aria-expanded': destOpen === true ? 'true' : 'false',
+              disabled: data.remotes.length === 0,
+              /* Keep the focus (and the typed text) on the input; pointerdown
+                 would otherwise blur and settle the destination. */
+              onMouseDown: (event) => { event.preventDefault() },
+              onClick: () => { if (destOpen === true) setDestOpen(false); else openDestinationList() },
+              onKeyDown: (event) => {
+                if (event.key === 'Escape' && destOpen === true) { event.preventDefault(); setDestOpen(false) }
+              },
+            }, E(Icon, { name: 'chevronDown', size: 12 })),
+            destOpen === true && destOptions.length > 0 ? E('div', {
+              className: 'git4idea-menu git4idea-push-dest-menu',
+              role: 'listbox',
+              'aria-label': t('push.remoteBranch'),
+            }, E('div', { className: 'git4idea-menu-scroll' }, destOptions.map((name, index) => E('button', {
+              key: name,
+              type: 'button',
+              role: 'option',
+              'aria-selected': name === destination ? 'true' : 'false',
+              className: 'git4idea-menu-item'
+                + (name === destination ? ' git4idea-menu-item-active' : '')
+                + (index === destIndex ? ' git4idea-push-dest-on' : ''),
+              onMouseDown: (event) => { event.preventDefault() },
+              onMouseEnter: () => { setDestIndex(index) },
+              onClick: () => { chooseDestination(name) },
             },
-          }),
-          E('datalist', { id: 'git4idea-push-destinations' }, data.remoteBranches.map((name) => E('option', { key: name, value: name }))),
+            E('span', { className: 'git4idea-menu-icon' }, E(Icon, { name: name === destination ? 'check' : 'branch', size: 16 })),
+            E('span', { className: 'git4idea-menu-label' }, name))))) : null),
           /* A destination check is a real wait (ls-remote): hold the slot with a
              spinner instead of dropping the label and looking finished. */
           checking === true
@@ -13785,6 +13986,13 @@ function Workbench(props) {
         + '--dsw-alias-bg-mask-1:rgba(0,0,0,.55);--dsw-alias-bg-scrim:rgba(0,0,0,.55);'
         + '--dsw-static-neutral-bluish-875:#232324;--dsw-static-neutral-bluish-850:#2c2c2e;--dsw-static-neutral-bluish-800:#2b2d31;--dsw-static-neutral-bluish-75:var(--g4-sunken);'
         + '}',
+      /* Native control popups (the remote <select> list) take their colours from
+         `color-scheme`, not from the tokens above. The browser draws that popup
+         outside the panel subtree, so the declaration goes on body: Chrome then
+         follows the app theme instead of the OS theme (m00916). The push
+         destination list is plugin DOM for the same reason (m00978). */
+      'body{color-scheme:light}',
+      'body[data-ds-dark-theme]{color-scheme:dark}',
     ].join('\n')
 /* ============================ components ============================ */
     /* Visual layer only. Layout rules stay in styles.js; this file restyles
@@ -13843,6 +14051,11 @@ function Workbench(props) {
       '.git4idea-input:hover{background:var(--g4-raised)}',
       '.git4idea-input:focus{background:var(--g4-surface);border-color:var(--g4-brand);box-shadow:0 0 0 2px var(--g4-brand-subtle)}',
       '.git4idea-input-compact{height:28px;padding:0 9px}',
+      /* The push destination control follows the 28px control height (§6.12). */
+      '.git4idea-push-dest-field,.git4idea-push-dest-field .git4idea-push-map-dest{height:28px}',
+      '.git4idea-push-dest-toggle{color:var(--g4-text-3)}',
+      '.git4idea-push-dest-toggle:hover:not(:disabled){background:var(--g4-hover);color:var(--g4-text)}',
+      '.git4idea-push-dest-toggle:disabled{color:var(--g4-text-3)}',
 '.git4idea-input-area{height:auto;min-height:112px;padding:8px 10px;line-height:1.55;resize:vertical;font-family:inherit}',
       '.git4idea-filters{padding:4px 12px 8px;gap:6px;border-bottom:1px solid var(--g4-border)}',
       '.git4idea-filter-textwrap{gap:4px}',
@@ -13884,8 +14097,8 @@ function Workbench(props) {
       '.git4idea-commit-selected,.git4idea-commit-selected:hover{background:var(--g4-selected);color:var(--g4-text);box-shadow:none}',
       '.git4idea-commit-subject{color:var(--g4-text);font-size:13px}',
       '.git4idea-commit-selected .git4idea-commit-subject{font-weight:500}',
-      '.git4idea-commit-author{width:96px;color:var(--g4-text-2);font-size:12px}',
-      '.git4idea-commit-date{width:106px;color:var(--g4-text-3);font-size:12px;font-variant-numeric:tabular-nums}',
+      '.git4idea-commit-author{max-width:96px;color:var(--g4-text-2);font-size:12px}',
+      '.git4idea-commit-date{color:var(--g4-text-3);font-size:12px;font-variant-numeric:tabular-nums;white-space:nowrap}',
       '.git4idea-graph{color:var(--g4-text-3)}',
       '.git4idea-load-more{color:var(--g4-text-3);font-size:12px}',
 
@@ -13937,7 +14150,6 @@ function Workbench(props) {
       '.git4idea-btn-danger{background:var(--g4-danger);border-color:transparent;color:#fff}',
       '.git4idea-btn-danger:hover:not(:disabled){background:color-mix(in srgb,var(--g4-danger) 86%,#000)}',
       '.git4idea-btn-small.git4idea-btn-primary{height:26px;padding:0 12px}',
-      '.git4idea-commit-fill{color:var(--g4-text-3);font-size:11px}',
 
       /* ---- segmented control ---- */
       '.git4idea-seg{padding:2px;gap:2px;border-radius:8px;background:var(--g4-raised)}',
@@ -14011,6 +14223,8 @@ function Workbench(props) {
       '.git4idea-menu-item{height:30px;padding:0 10px;gap:9px;border-radius:6px;font-size:13px;color:var(--g4-text)}',
       '.git4idea-menu-item:hover:not(:disabled){background:var(--g4-hover)}',
       '.git4idea-menu-item-active{color:var(--g4-brand-text)}',
+      '.git4idea-push-dest-menu .git4idea-menu-item{height:24px;padding:0 8px;gap:8px;font-size:13px}',
+      '.git4idea-push-dest-on{background:var(--g4-hover)}',
       '.git4idea-menu-danger,.git4idea-menu-danger .git4idea-menu-label{color:var(--g4-danger)}',
       '.git4idea-menu-chevron{opacity:.5}',
       '.git4idea-menu-header{padding:6px 10px 4px;color:var(--g4-text-3);font-size:11px;font-weight:600;letter-spacing:.02em}',

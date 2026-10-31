@@ -236,6 +236,13 @@
       const [remote, setRemote] = useState('')
       const [destination, setDestination] = useState('')
       const [checking, setChecking] = useState(false)
+      /* The destination list is plugin DOM, not a datalist: Chromium paints the
+         native datalist popup with the host colour scheme, so the list stayed
+         black inside the light card and color-scheme did not reach it (m00978). */
+      const [destOpen, setDestOpen] = useState(false)
+      const [destIndex, setDestIndex] = useState(-1)
+      const destField = useRef(null)
+      const destOpenRef = useRef(false)
       /* The state flag alone cannot stop two clicks in the same frame (setBusy
          lands after the render), so the in-flight check is synchronous. */
       const pushing = useRef(false)
@@ -299,11 +306,28 @@
         return () => { alive = false }
         // eslint-disable-next-line react-hooks/exhaustive-deps
       }, [selected])
+      useEffect(() => { destOpenRef.current = destOpen }, [destOpen])
       useEffect(() => {
-        const onKey = (event) => { if (event.key === 'Escape') props.onClose() }
+        const onKey = (event) => {
+          if (event.key !== 'Escape') return
+          /* Esc closes the open list first and the card on the next press
+             (design §7.1); the ref holds the state the handler was registered with. */
+          if (destOpenRef.current === true) { setDestOpen(false); return }
+          props.onClose()
+        }
         document.addEventListener('keydown', onKey)
         return () => { document.removeEventListener('keydown', onKey) }
       }, [])
+      useEffect(() => {
+        if (destOpen !== true) return undefined
+        const onDown = (event) => {
+          const field = destField.current
+          if (field !== null && field.contains(event.target)) return
+          setDestOpen(false)
+        }
+        document.addEventListener('pointerdown', onDown, true)
+        return () => { document.removeEventListener('pointerdown', onDown, true) }
+      }, [destOpen])
       /* m05303: `find` returns undefined for a hash that left the list (the
          branch moved between two previews). The card guards on null, so
          undefined fell through and the header read commit.shortHash — the
@@ -331,6 +355,29 @@
         const next = event.target.value
         setRemote(next)
         if (data !== null) void loadPreview(data.branch, next, '', true)
+      }
+      const destOptions = data === null ? [] : data.remoteBranches
+      const chooseDestination = (name) => {
+        setDestOpen(false)
+        setDestination(name)
+        if (data === null) return
+        if (name === data.remoteBranch && remote === data.remote) return
+        void loadPreview(data.branch, remote, name, true)
+      }
+      /* The typed text stays the source of truth: the list only offers what the
+         remote already has and a picked row runs the same check as a typed name. */
+      const openDestinationList = () => {
+        if (data === null || data.remotes.length === 0) return
+        setDestIndex(destOptions.indexOf(destination))
+        setDestOpen(true)
+      }
+      const moveDestinationIndex = (step) => {
+        const count = destOptions.length
+        if (count === 0) return
+        setDestIndex((previous) => {
+          if (previous < 0 || previous >= count) return step > 0 ? 0 : count - 1
+          return (previous + step + count) % count
+        })
       }
       const destinationKnown = data !== null && checking === false && remote === data.remote && destination === data.remoteBranch
       const destinationState = destinationKnown !== true
@@ -410,21 +457,82 @@
             onChange: changeRemote,
           }, data.remotes.map((name) => E('option', { key: name, value: name }, name))),
           E('span', { className: 'git4idea-push-map-arrow' }, ':'),
-          E('input', {
-            className: 'git4idea-input git4idea-push-map-dest',
-            value: destination,
-            list: 'git4idea-push-destinations',
-            placeholder: t('push.remoteBranch'),
-            'aria-label': t('push.remoteBranch'),
-            'data-git4idea-push-dest': '',
-            disabled: data.remotes.length === 0,
-            onChange: (event) => { setDestination(event.target.value) },
-            onBlur: settleDestination,
-            onKeyDown: (event) => {
-              if (event.key === 'Enter') { event.preventDefault(); event.currentTarget.blur() }
+          E('div', { className: 'git4idea-push-dest-field', ref: destField },
+            E('input', {
+              className: 'git4idea-input git4idea-push-map-dest',
+              value: destination,
+              placeholder: t('push.remoteBranch'),
+              'aria-label': t('push.remoteBranch'),
+              'aria-haspopup': 'listbox',
+              'aria-expanded': destOpen === true ? 'true' : 'false',
+              'data-git4idea-push-dest': '',
+              disabled: data.remotes.length === 0,
+              /* Typing wins over the list: the typed name is what the check
+                 runs, so an open list would only hide that. */
+              onChange: (event) => { setDestination(event.target.value); setDestOpen(false) },
+              onBlur: settleDestination,
+              onKeyDown: (event) => {
+                const count = destOptions.length
+                if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                  event.preventDefault()
+                  if (destOpen !== true) {
+                    if (count === 0) return
+                    setDestIndex(event.key === 'ArrowDown' ? 0 : count - 1)
+                    setDestOpen(true)
+                    return
+                  }
+                  moveDestinationIndex(event.key === 'ArrowDown' ? 1 : -1)
+                  return
+                }
+                if (event.key === 'Escape') {
+                  if (destOpen === true) { event.preventDefault(); setDestOpen(false) }
+                  return
+                }
+                if (event.key === 'Enter') {
+                  event.preventDefault()
+                  if (destOpen === true && destIndex >= 0 && destIndex < count) {
+                    chooseDestination(destOptions[destIndex])
+                    return
+                  }
+                  setDestOpen(false)
+                  event.currentTarget.blur()
+                }
+              },
+            }),
+            E('button', {
+              type: 'button',
+              className: 'git4idea-push-dest-toggle',
+              'aria-label': t('push.pickBranch'),
+              'data-tip': t('push.pickBranch'),
+              'aria-haspopup': 'listbox',
+              'aria-expanded': destOpen === true ? 'true' : 'false',
+              disabled: data.remotes.length === 0,
+              /* Keep the focus (and the typed text) on the input; pointerdown
+                 would otherwise blur and settle the destination. */
+              onMouseDown: (event) => { event.preventDefault() },
+              onClick: () => { if (destOpen === true) setDestOpen(false); else openDestinationList() },
+              onKeyDown: (event) => {
+                if (event.key === 'Escape' && destOpen === true) { event.preventDefault(); setDestOpen(false) }
+              },
+            }, E(Icon, { name: 'chevronDown', size: 12 })),
+            destOpen === true && destOptions.length > 0 ? E('div', {
+              className: 'git4idea-menu git4idea-push-dest-menu',
+              role: 'listbox',
+              'aria-label': t('push.remoteBranch'),
+            }, E('div', { className: 'git4idea-menu-scroll' }, destOptions.map((name, index) => E('button', {
+              key: name,
+              type: 'button',
+              role: 'option',
+              'aria-selected': name === destination ? 'true' : 'false',
+              className: 'git4idea-menu-item'
+                + (name === destination ? ' git4idea-menu-item-active' : '')
+                + (index === destIndex ? ' git4idea-push-dest-on' : ''),
+              onMouseDown: (event) => { event.preventDefault() },
+              onMouseEnter: () => { setDestIndex(index) },
+              onClick: () => { chooseDestination(name) },
             },
-          }),
-          E('datalist', { id: 'git4idea-push-destinations' }, data.remoteBranches.map((name) => E('option', { key: name, value: name }))),
+            E('span', { className: 'git4idea-menu-icon' }, E(Icon, { name: name === destination ? 'check' : 'branch', size: 16 })),
+            E('span', { className: 'git4idea-menu-label' }, name))))) : null),
           /* A destination check is a real wait (ls-remote): hold the slot with a
              spinner instead of dropping the label and looking finished. */
           checking === true

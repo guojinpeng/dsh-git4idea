@@ -11,7 +11,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { execFileSync } from 'node:child_process'
-import { account, accountToken, endpointParts } from '../src/server/services/account.js'
+import { account, accountToken, accountWeb, endpointParts } from '../src/server/services/account.js'
 
 let repo = ''
 let logDir = ''
@@ -86,9 +86,17 @@ test('a valid token reaches the configured helper through stdin, not argv', asyn
   const token = 'ghp_account_test_token'
   const data = await accountToken({ cwd: repo, token: token })
   assert.equal(data.scope, 'local')
+  /* No endpoint in the payload: the origin (git.internal, set above) keys the
+     helper entry, not the github.com fallback. */
   const stored = readFileSync(storeFile, 'utf8')
-  assert.match(stored, /@github\.com/)
+  assert.match(stored, /@git\.internal/)
   assert.match(stored, new RegExp(token))
+})
+
+test('online sign-in refuses a non-GitHub host before it reaches GCM', async () => {
+  await assert.rejects(
+    () => accountWeb({ cwd: repo, endpoint: 'https://gitlab.example.com' }),
+    /GitHub hosts only/)
 })
 
 test('an intranet endpoint keys the token for that host and port', async () => {
@@ -103,4 +111,12 @@ test('an invalid endpoint is rejected before the helper sees the token', async (
   await assert.rejects(
     () => accountToken({ cwd: repo, token: 'some_token', endpoint: 'ftp://git.internal' }),
     /endpoint must be an http or https URL/)
+})
+
+test('a local origin leaves the endpoint empty instead of claiming github.com', async () => {
+  git('remote', 'set-url', 'origin', 'file:///srv/repo.git')
+  assert.equal((await account({ cwd: repo })).endpoint, '')
+  git('remote', 'set-url', 'origin', 'C:/repos/local.git')
+  assert.equal((await account({ cwd: repo })).endpoint, '')
+  git('remote', 'set-url', 'origin', 'git@git.internal:team/repo.git')
 })

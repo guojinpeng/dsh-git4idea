@@ -55,6 +55,11 @@
       '.git4idea-input:hover{background:var(--g4-raised)}',
       '.git4idea-input:focus{background:var(--g4-surface);border-color:var(--g4-brand);box-shadow:0 0 0 2px var(--g4-brand-subtle)}',
       '.git4idea-input-compact{height:28px;padding:0 9px}',
+      /* The push destination control follows the 28px control height (§6.12). */
+      '.git4idea-push-dest-field,.git4idea-push-dest-field .git4idea-push-map-dest{height:28px}',
+      '.git4idea-push-dest-toggle{color:var(--g4-text-3)}',
+      '.git4idea-push-dest-toggle:hover:not(:disabled){background:var(--g4-hover);color:var(--g4-text)}',
+      '.git4idea-push-dest-toggle:disabled{color:var(--g4-text-3)}',
 '.git4idea-input-area{height:auto;min-height:112px;padding:8px 10px;line-height:1.55;resize:vertical;font-family:inherit}',
       '.git4idea-filters{padding:4px 12px 8px;gap:6px;border-bottom:1px solid var(--g4-border)}',
       '.git4idea-filter-textwrap{gap:4px}',
@@ -96,8 +101,8 @@
       '.git4idea-commit-selected,.git4idea-commit-selected:hover{background:var(--g4-selected);color:var(--g4-text);box-shadow:none}',
       '.git4idea-commit-subject{color:var(--g4-text);font-size:13px}',
       '.git4idea-commit-selected .git4idea-commit-subject{font-weight:500}',
-      '.git4idea-commit-author{width:96px;color:var(--g4-text-2);font-size:12px}',
-      '.git4idea-commit-date{width:106px;color:var(--g4-text-3);font-size:12px;font-variant-numeric:tabular-nums}',
+      '.git4idea-commit-author{max-width:96px;color:var(--g4-text-2);font-size:12px}',
+      '.git4idea-commit-date{color:var(--g4-text-3);font-size:12px;font-variant-numeric:tabular-nums;white-space:nowrap}',
       '.git4idea-graph{color:var(--g4-text-3)}',
       '.git4idea-load-more{color:var(--g4-text-3);font-size:12px}',
 
@@ -149,7 +154,6 @@
       '.git4idea-btn-danger{background:var(--g4-danger);border-color:transparent;color:#fff}',
       '.git4idea-btn-danger:hover:not(:disabled){background:color-mix(in srgb,var(--g4-danger) 86%,#000)}',
       '.git4idea-btn-small.git4idea-btn-primary{height:26px;padding:0 12px}',
-      '.git4idea-commit-fill{color:var(--g4-text-3);font-size:11px}',
 
       /* ---- segmented control ---- */
       '.git4idea-seg{padding:2px;gap:2px;border-radius:8px;background:var(--g4-raised)}',
@@ -223,6 +227,8 @@
       '.git4idea-menu-item{height:30px;padding:0 10px;gap:9px;border-radius:6px;font-size:13px;color:var(--g4-text)}',
       '.git4idea-menu-item:hover:not(:disabled){background:var(--g4-hover)}',
       '.git4idea-menu-item-active{color:var(--g4-brand-text)}',
+      '.git4idea-push-dest-menu .git4idea-menu-item{height:24px;padding:0 8px;gap:8px;font-size:13px}',
+      '.git4idea-push-dest-on{background:var(--g4-hover)}',
       '.git4idea-menu-danger,.git4idea-menu-danger .git4idea-menu-label{color:var(--g4-danger)}',
       '.git4idea-menu-chevron{opacity:.5}',
       '.git4idea-menu-header{padding:6px 10px 4px;color:var(--g4-text-3);font-size:11px;font-weight:600;letter-spacing:.02em}',

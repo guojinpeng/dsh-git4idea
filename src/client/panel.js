@@ -387,8 +387,13 @@
         return () => window.removeEventListener('resize', measure)
       }, [repoRoot, columns, compact])
 
-      const guard = useCallback(async (work) => {
-        setBusy(true)
+      /* `quiet` runs a READ-ONLY round without flipping the busy flag: the
+         rail dims every non-view button while busy, and a manual refresh used
+         to blink that whole bar twice per click. The refresh icon spins on its
+         own state, so the wait stays visible. */
+      const guard = useCallback(async (work, opts) => {
+        const quiet = opts !== null && typeof opts === 'object' && opts.quiet === true
+        if (quiet !== true) setBusy(true)
         setError(null)
         try {
           return await work()
@@ -396,7 +401,7 @@
           setError(caught instanceof Error ? caught.message : String(caught))
           return undefined
         } finally {
-          setBusy(false)
+          if (quiet !== true) setBusy(false)
         }
       }, [])
 
@@ -532,7 +537,7 @@
       useEffect(() => { void loadAccount() }, [loadAccount])
 
       /* ---- branch browsing (v0.19.3, IDEA-style) ----
-         Double-clicking a tree branch no longer checks it out: it walks THAT
+         Clicking a tree branch does not check it out: it walks THAT
          branch's log (browseRev = '' keeps the HEAD view). The LAST browsed
          branch is remembered, so 2-then-1 lands 1's list on the merge commit
          that carried 2 into 1 ('merge-point') — 1's newer commits stay one
@@ -564,9 +569,9 @@
          MANUAL refresh passes it: the network call is the slow part, so the
          automatic refreshes (12s poll, post-action, mount) stay off it, and a
          failed fetch degrades silently — a refresh must not turn into an
-         error notification just because the network is down. While it runs the rail
-         icon spins: fetching is allowed to take a moment, and the spin says
-         the wait is real while blocking a second click. */
+         error notification just because the network is down. While it runs the
+         rail icon spins and the button is disabled: fetching is allowed to take
+         a moment, and a second fetch must not start on top of it. */
       /* Declared before refresh (hooks dep TDZ rule): the manual refresh
          fetches only when a remote exists. */
       const remoteReady = branches !== null && Array.isArray(branches.remotes) && branches.remotes.length > 0
@@ -609,16 +614,21 @@
                HEAD page: the next mount opens on HEAD and would otherwise be
                seeded with another branch's log. */
             if (browseRevRef.current === '') writePaintPage(repoRoot, { summary: summaryData, branches: branchesData, commits: page.commits, hasMore: page.hasMore })
-          })
+          }, { quiet: withFetch === true })
         } finally {
           if (withFetch === true) setRefreshSpinning(false)
         }
       }, [guard, loadSummary, loadBranches, loadCommits, repoRoot, remoteReady, base, pushToast, t])
 
-      /* Double-click a branch (or the HEAD row): browse its history. The merge
-         anchor comes from the PREVIOUSLY browsed branch — 'merge-point' finds
-         the newest merge that carried it into the one now opened, and the
-         history list scrolls there once (null = no relationship, top). */
+      /* Click a branch (or the HEAD row): browse its history. The merge anchor
+         comes from the PREVIOUSLY browsed branch — 'merge-point' finds the
+         newest merge that carried it into the one now opened, and the history
+         list scrolls there once (null = no relationship, top). The log request
+         reads browseRevRef, so the list must be reloaded here: the branch
+         click used to change the ref without a request, and the pane kept the
+         previous branch's rows. The anchor is set only AFTER that load: while
+         the rows still belong to the previous branch, a set anchor would make
+         the list auto-load toward it with the new rev, racing the load. */
       const browseBranch = useCallback(async (entry) => {
         const name = String(entry.name)
         const previous = lastBrowseRef.current
@@ -627,13 +637,16 @@
         setMergeAnchor(null)
         browseRevRef.current = name
         setBrowseRev(name)
+        let anchor = null
         if (previous !== null) {
           try {
             const data = await request('merge-point', Object.assign({}, base, { from: previous, to: name }))
-            if (data !== null && typeof data === 'object' && typeof data.hash === 'string' && data.hash !== '') setMergeAnchor(data.hash)
+            if (data !== null && typeof data === 'object' && typeof data.hash === 'string' && data.hash !== '') anchor = data.hash
           } catch (error) { void error }
         }
-      }, [base, request])
+        await guard(() => loadCommits(0), { quiet: true })
+        if (anchor !== null) setMergeAnchor(anchor)
+      }, [base, request, guard, loadCommits])
       /* A repository switch forgets the browsing context entirely. */
       useEffect(() => {
         lastBrowseRef.current = null
@@ -2159,6 +2172,8 @@
         }
         else if (spec.id === 'refresh') {
           entry.spinning = refreshSpinning === true
+          // A fetch can take seconds; the spin alone does not stop a second click.
+          entry.disabled = refreshSpinning === true
           entry.run = () => { void refreshAll() }
         }
         else if (spec.id === 'expandAll') entry.run = () => setBranchFoldSignal({ mode: 'expand', at: Date.now() })
@@ -2395,7 +2410,13 @@
           onMerge: (entry) => { setChooserSeat(null); void run('merge', { branch: entry.name }) },
           onRename: (entry) => { setChooserSeat(null); setDialog({ kind: 'renameBranch', from: entry.name }) },
           onDelete: (entry, kind) => { setChooserSeat(null); deleteBranchEntries([{ kind: kind, name: entry.name, entry: entry }]) },
-          onCommit: () => { setChooserSeat(null); setDialog({ kind: 'commitMsg' }) },
+          /* Opening the branch menu is not a commit trigger: the entry must
+             raise the real commit surface (file picks + message), the same one
+             the toolbar's commit button opens. */
+          onCommit: () => {
+            setChooserSeat(null)
+            commitDialog.set({ sessionId: (scope || {}).sessionId, cwd: cwd, repoRoot: repoRoot })
+          },
           onPush: () => { setChooserSeat(null); openPushDialog() },
         })))
       }
@@ -2418,6 +2439,12 @@
           onClose: () => setAccountAuth(false),
           onDone: (data) => {
             setAccountAuth(false)
+            if (data !== null && data !== undefined) setAccount(data)
+            pushToast({ text: t('account.ok'), tone: 'ok', icon: 'check', ttl: 3000 })
+          },
+          /* The dialog was closed while GCM still ran; the credential may have
+             landed since. Never close a dialog the user has reopened. */
+          onLate: (data) => {
             if (data !== null && data !== undefined) setAccount(data)
             pushToast({ text: t('account.ok'), tone: 'ok', icon: 'check', ttl: 3000 })
           },

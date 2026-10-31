@@ -2183,6 +2183,20 @@ test('the push dialog previews its commits and the file card floats (m02986)', (
   assert.match(client, /const pushing = useRef\(false\)/, 'the in-flight guard is synchronous (m05311)')
   assert.match(client, /if \(pushing\.current === true \|\| data === null \|\| destinationKnown !== true\) return/, 'a second click cannot start a second push')
 
+  // m00978: the destination list is plugin DOM. Chromium drew the native
+  // datalist popup in the host scheme — a black list inside the light card —
+  // and ignored color-scheme, so the field draws its own rows (§6.15, §6.19).
+  assert.doesNotMatch(client, /list: 'git4idea-push-destinations'/, 'the field binds no native datalist')
+  assert.doesNotMatch(client, /<datalist|E\('datalist'/, 'no datalist element is rendered')
+  assert.match(client, /'aria-haspopup': 'listbox',\n\s+'aria-expanded': destOpen === true \? 'true' : 'false',/, 'the field announces its list')
+  assert.match(client, /const destOptions = data === null \? \[\] : data\.remoteBranches/, 'the list offers the remote branches')
+  assert.match(client, /const chooseDestination = \(name\) => \{/, 'a picked row runs the same remote check')
+  assert.match(client, /onClick: \(\) => \{ chooseDestination\(name\) \},/, 'a row picks its name')
+  assert.match(client, /event\.key === 'ArrowDown' \|\| event\.key === 'ArrowUp'/, 'arrow keys move through the list')
+  assert.match(client, /if \(destOpenRef\.current === true\) \{ setDestOpen\(false\); return \}/, 'the first Esc closes the list only')
+  assert.match(cssRule('.git4idea-menu.git4idea-push-dest-menu'), /max-height:260px/, 'the list sizes against the field, not the card')
+  assert.match(cssRule('.git4idea-push-dest-menu .git4idea-menu-item'), /height:24px/, 'rows follow the 24px menu item (§6.15)')
+
   // Four push verbs all raise the same card; only the panel fallback survives.
   assert.equal((client.match(/run: \(\) => openPushDialog\(\)/g) || []).length, 3, 'palette and both menus share one verb')
   assert.match(client, /if \(remoteReady !== true \|\| blocked === true\) return\n            openPushDialog\(\)/, 'the toolbar button runs the same verb')

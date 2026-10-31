@@ -5,7 +5,7 @@
 import { badRequest } from './../core/errors.js'
 import { runGit, git } from './../core/git.js'
 import { requireRef, requireMessage, cwdOf, optionalPaths } from './../core/payload.js'
-import { repoRootOf } from './../core/repo.js'
+import { operationOf, parsePorcelain, repoRootOf } from './../core/repo.js'
 import { pushUndo, snapshotForUndo, snapshotState } from './../core/undo.js'
 
 
@@ -50,6 +50,21 @@ export async function discard(payload) {
 }
 
 
+/* A staged rename is one change row but two paths. `--only` with the new name
+   alone commits the addition and leaves the old name's deletion in the index,
+   so the commit also names the source of every staged rename the picks touch. */
+async function renameSourcesOf(root, picked) {
+  const result = await runGit(root, ['status', '--porcelain=v1', '-z'])
+  if (result.code !== 0) return []
+  const sources = []
+  for (const entry of parsePorcelain(result.stdout)) {
+    if (entry.x !== 'R' || entry.origPath === undefined) continue
+    if (picked.has(entry.path) && picked.has(entry.origPath) !== true) sources.push(entry.origPath)
+  }
+  return sources
+}
+
+
 export async function commit(payload) {
   const cwd = cwdOf(payload)
   const root = await repoRootOf(cwd, payload)
@@ -59,6 +74,13 @@ export async function commit(payload) {
   const args = ['commit', '-m', message]
   if (payload.amend === true) args.push('--amend')
   if (payload.signoff === true) args.push('--signoff')
+  /* The dialog's ticks decide the commit. --only leaves staged content for the
+     paths the user did not tick in the index, instead of committing it. A
+     multi-step operation (merge, rebase, ...) forbids a partial commit: there
+     the whole index must go in, which is exactly what git requires. */
+  if (paths.length > 0 && await operationOf(root) === null) {
+    args.push('--only', '--', ...paths, ...await renameSourcesOf(root, new Set(paths)))
+  }
   const out = await git(root, args)
   const result = { output: out.trim() }
   if (payload.push === true) {

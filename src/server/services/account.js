@@ -10,13 +10,18 @@ import { repoRootOf } from './../core/repo.js'
 
 /* Who git says you are here, and how a sign-in can reach the Git host.
 
-   The plugin stores nothing. A token goes straight to the configured
+   The plugin owns no credential file. A token goes straight to the configured
    credential helper through `git credential approve` on stdin, so it never
-   appears in argv (which the console log records) and never in a file we own.
-   The browser flow asks Git Credential Manager to do its own OAuth dance.
+   appears in argv (which the console log records). The helper MAY persist it,
+   which is why the dialog says the token is saved by the helper, and why the
+   success message claims storage, not a verified authentication. The browser
+   flow asks Git Credential Manager to do its own OAuth dance (GitHub hosts
+   only: GCM has no GitLab login).
 
    The endpoint is editable because many repositories live on an intranet host.
-   It defaults to the origin remote of the repository. */
+   It defaults to the origin remote of the repository, and to github.com only
+   when the repository has no origin. A remote that names no HTTP host (a local
+   path or a file URL) leaves the endpoint empty. */
 
 const GCM_TIMEOUT_MS = 5000
 const TOKEN_MAX = 512
@@ -47,6 +52,9 @@ export function endpointParts(value) {
 function endpointFromRemote(raw) {
   const text = typeof raw === 'string' ? raw.trim() : ''
   if (text === '') return DEFAULT_ENDPOINT
+  /* A local path or file URL names no HTTP host. Guard the Windows drive letter
+     first: the scp-style pattern below would read "C:" as host "C". */
+  if (/^[A-Za-z]:[\\/]/.test(text) || /^file:/i.test(text)) return ''
   if (/^https?:\/\//i.test(text)) {
     const parts = endpointParts(text)
     if (parts !== null) return parts.url
@@ -57,16 +65,22 @@ function endpointFromRemote(raw) {
   if (scp !== null) return 'https://' + scp[1]
   const ssh = /^ssh:\/\/(?:[^@/]+@)?([^/:]+)/i.exec(text)
   if (ssh !== null) return 'https://' + ssh[1]
-  return DEFAULT_ENDPOINT
+  return ''
 }
 
 
-function endpointOfPayload(payload) {
+async function endpointOfPayload(root, payload) {
   const provided = typeof payload.endpoint === 'string' ? payload.endpoint.trim() : ''
-  if (provided === '') return endpointParts(DEFAULT_ENDPOINT)
-  const parts = endpointParts(provided)
+  const parts = endpointParts(provided === '' ? await endpointOfRepo(root) : provided)
   if (parts === null) throw badRequest('endpoint must be an http or https URL')
   return parts
+}
+
+
+/* GCM's only sign-in command talks to GitHub and GitHub Enterprise hosts. */
+function isGithubEndpoint(parts) {
+  const host = new URL(parts.url).hostname.toLowerCase()
+  return host === 'github.com' || host.startsWith('github.') || host.endsWith('.github.com')
 }
 
 
@@ -120,7 +134,10 @@ export async function account(payload) {
 export async function accountWeb(payload) {
   const cwd = cwdOf(payload)
   const root = await repoRootOf(cwd, payload)
-  const endpoint = endpointOfPayload(payload)
+  const endpoint = await endpointOfPayload(root, payload)
+  if (isGithubEndpoint(endpoint) !== true) {
+    throw badRequest('online sign-in is available for GitHub hosts only; use a token')
+  }
   if (await onlineOf(root) !== true) {
     throw new PanelError('auth-unavailable', 'Git Credential Manager is not available', 409)
   }
@@ -142,7 +159,7 @@ export async function accountToken(payload) {
   if (token === '') throw badRequest('token is required')
   if (token.length > TOKEN_MAX) throw badRequest('token is too long')
   if (/[\s\u0000-\u001f\u007f]/.test(token)) throw badRequest('token contains invalid characters')
-  const endpoint = endpointOfPayload(payload)
+  const endpoint = await endpointOfPayload(root, payload)
   const helper = await valueOf(root, ['config', '--get-all', 'credential.helper'])
   if (helper === '') {
     throw new PanelError('auth-no-helper', 'no git credential helper is configured', 409)

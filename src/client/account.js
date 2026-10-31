@@ -21,7 +21,7 @@
       const raw = String(value === undefined || value === null ? '' : value).trim()
       try {
         const host = new URL(/^[a-z][a-z0-9+.-]*:\/\//i.test(raw) ? raw : 'https://' + raw).hostname.toLowerCase()
-        return host === 'github.com' || host.endsWith('.github.com')
+        return host === 'github.com' || host.startsWith('github.') || host.endsWith('.github.com')
       } catch (error) {
         void error
         return false
@@ -68,28 +68,57 @@
 
     function AccountAuthDialog(props) {
       const online = props.account !== null && props.account !== undefined && props.account.online === true
-      const [tab, setTab] = useState(online === true ? 'online' : 'token')
-      const [endpoint, setEndpoint] = useState(props.account !== null && props.account !== undefined && typeof props.account.endpoint === 'string'
+      const initialEndpoint = props.account !== null && props.account !== undefined && typeof props.account.endpoint === 'string'
         ? props.account.endpoint
-        : 'https://github.com')
+        : 'https://github.com'
+      /* GCM's sign-in command serves GitHub and GitHub Enterprise only, so the
+         online tab exists only for a GitHub host; every other host defaults to
+         the token tab instead of failing inside GCM. */
+      const [tab, setTab] = useState(online === true && accountGithubHost(initialEndpoint) ? 'online' : 'token')
+      const [endpoint, setEndpoint] = useState(initialEndpoint)
       const [token, setToken] = useState('')
       const [busy, setBusy] = useState(false)
       const [error, setError] = useState('')
       const inputRef = useRef(null)
+      const githubHost = accountGithubHost(endpoint)
+      const onlineReady = online === true && githubHost
 
       useEffect(() => {
         if (tab !== 'token' || inputRef.current === null) return
         inputRef.current.focus()
       }, [tab])
 
+      useEffect(() => {
+        /* Only a non-GitHub host removes the online pane. A missing GCM just
+           disables its action, so that pane still explains why. */
+        if (tab === 'online' && githubHost !== true) setTab('token')
+      }, [tab, githubHost])
+
+      /* Closing the dialog while the browser flow runs must not trap the
+         panel: the host keeps waiting for GCM (up to its own timeout), so the
+         close button stays live. A result that lands after the close still
+         updates the account, but it must not close a dialog the user has
+         reopened meanwhile. */
+      const closedRef = useRef(false)
+
       const fail = (reason) => {
+        if (closedRef.current === true) return
         const text = reason === null || reason === undefined ? '' : String(reason.message === undefined ? reason : reason.message)
         setError(props.t('account.failed') + (text === '' ? '' : ' ' + text))
       }
 
       const finish = (data) => {
         setBusy(false)
+        if (closedRef.current === true) {
+          props.onLate(data === null || data === undefined ? null : data)
+          return
+        }
         props.onDone(data === null || data === undefined ? null : data)
+      }
+
+      const close = () => {
+        closedRef.current = true
+        props.onClose()
       }
 
       const endpointValue = () => {
@@ -136,8 +165,7 @@
         type: 'button',
         className: 'git4idea-icon-btn git4idea-account-close',
         'aria-label': props.t('account.close'),
-        onClick: busy === true ? undefined : props.onClose,
-        disabled: busy,
+        onClick: close,
       }, E(Icon, { name: 'close', size: 16 }))
 
       const onlinePane = E('div', { className: 'git4idea-account-pane' },
@@ -162,7 +190,7 @@
           })),
         E('p', { className: 'git4idea-account-hint' },
           props.t('account.tokenHint') + ' ',
-          accountGithubHost(endpoint) ? E('a', {
+          githubHost ? E('a', {
             className: 'git4idea-account-link',
             href: 'https://github.com/settings/tokens',
             target: '_blank',
@@ -170,13 +198,13 @@
           }, props.t('account.tokenLink')) : null),
         E('p', { className: 'git4idea-account-hint' }, props.t('account.tokenOnly')))
 
-      const canRun = (online === true || tab === 'token') && endpoint.trim() !== ''
+      const canRun = endpoint.trim() !== '' && (tab === 'token' || onlineReady === true)
       return E('div', { className: 'git4idea-overlay' },
         E('div', { className: 'git4idea-dialog git4idea-account-dialog' },
           E('div', { className: 'git4idea-account-head' },
             E('div', { className: 'git4idea-dialog-title' }, props.t('account.title')),
             closeButton),
-          E('div', { className: 'git4idea-seg git4idea-account-tabs' },
+          githubHost ? E('div', { className: 'git4idea-seg git4idea-account-tabs' },
             E('button', {
               type: 'button', className: 'git4idea-seg-item', 'data-active': tab === 'online' ? 'true' : 'false',
               disabled: busy, onClick: () => { setTab('online'); setError('') },
@@ -184,7 +212,7 @@
             E('button', {
               type: 'button', className: 'git4idea-seg-item', 'data-active': tab === 'token' ? 'true' : 'false',
               disabled: busy, onClick: () => { setTab('token'); setError('') },
-            }, props.t('account.token'))),
+            }, props.t('account.token'))) : null,
           E('label', { className: 'git4idea-account-field git4idea-account-endpoint' },
             E('span', { className: 'git4idea-account-label' }, props.t('account.endpointLabel')),
             E('input', {
@@ -200,7 +228,7 @@
           tab === 'online' ? onlinePane : tokenPane,
           error === '' ? null : E('div', { className: 'git4idea-account-error', role: 'alert' }, error),
           E('div', { className: 'git4idea-account-actions' },
-            E('button', { type: 'button', className: 'git4idea-btn', disabled: busy, onClick: props.onClose }, props.t('account.cancel')),
+            E('button', { type: 'button', className: 'git4idea-btn', onClick: close }, props.t('account.cancel')),
             E('button', {
               type: 'button',
               className: 'git4idea-btn git4idea-btn-primary git4idea-account-primary',

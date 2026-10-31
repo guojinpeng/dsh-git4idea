@@ -561,7 +561,7 @@
        Row heights are FIXED constants — the CSS pins each row kind to an exact
        height, so a prefix-sum index plus binary search locates the first
        visible item without measuring. */
-    const HISTORY_ROW_H = 28 /* .git4idea-commit: height 26 + 2×1px padding */
+    const HISTORY_ROW_H = 30 /* .git4idea-commit: the Islands skin pins height:30px */
     const ITEM_HEIGHTS = { group: 21, folder: 16, row: 24 }
     const WINDOW_OVERSCAN = 6
 
@@ -725,6 +725,15 @@
        rows. Refs show as IDEA-style tag icons after the subject; their names
        live in the hover tooltip, so the subject keeps the room. */
     const MAX_ROW_REFS = 4
+    /* The graph keeps GraphCell's 26px cell (the skin's row is 30px tall); the
+       lane pitch follows from that height. The graph paints absolutely, so the
+       subject reserves exactly the width of THIS row's lanes (same formula as
+       GraphCell) and starts after them: a narrow pane clips under the pinned
+       columns instead of shrinking the lanes, and no text ever paints over a
+       wire. */
+    const HISTORY_GRAPH_HEIGHT = 26
+    const HISTORY_LANE_WIDTH = GRAPH_NODE_WIDTH * (HISTORY_GRAPH_HEIGHT / GRAPH_ROW_UNIT)
+    const commitSubjectOffset = (row) => 8 + Math.min(Math.max(1, row.width), GRAPH_MAX_LANES) * HISTORY_LANE_WIDTH + 6
     const CommitRow = memo(function CommitRow(props) {
       const commit = props.commit
       const refs = refDecorations(commit.refs)
@@ -740,8 +749,12 @@
         /* Column order (m01737 #4, mirroring the IDE log): graph, message,
            ref icons, author, then the absolute timestamp. The relative "4d"
            column is gone — it made every row read differently by the hour. */
-        E(GraphCell, { row: props.row, height: 26 }),
-        E('span', { className: 'git4idea-commit-subject', 'data-tip': commit.subject }, commit.subject),
+        E(GraphCell, { row: props.row, height: HISTORY_GRAPH_HEIGHT }),
+        E('span', {
+          className: 'git4idea-commit-subject',
+          style: { marginLeft: String(commitSubjectOffset(props.row)) + 'px' },
+          'data-tip': commit.subject,
+        }, commit.subject),
         refs.length === 0 ? null : E('span', {
           className: 'git4idea-ref-stack',
           /* One tooltip for the whole cluster, names top-to-bottom in the same
@@ -756,9 +769,13 @@
             className: 'git4idea-ref-icon git4idea-ref-' + decoration.kind,
           }, E(Icon, { name: 'tagOutline', size: 14 }))),
           hiddenRefs > 0 ? E('span', { className: 'git4idea-ref-count' }, '+' + String(hiddenRefs)) : null),
-        E('span', { className: 'git4idea-commit-fill' }),
-        E('span', { className: 'git4idea-commit-author', 'data-tip': commit.author }, commit.author),
-        E('span', { className: 'git4idea-commit-date' }, shortDate(commit.date)))
+        /* Author and date are ONE pinned group on the right edge, and it paints
+           its own opaque surface: the graph and the subject scroll under it,
+           so a narrow pane keeps the lanes readable instead of squeezing the
+           columns. */
+        E('span', { className: 'git4idea-commit-meta' },
+          E('span', { className: 'git4idea-commit-author', 'data-tip': commit.author }, commit.author),
+          E('span', { className: 'git4idea-commit-date' }, shortDate(commit.date))))
     }, (prev, next) => prev.commit === next.commit && prev.row === next.row && prev.selected === next.selected && prev.t === next.t)
 
     function sinceThreshold(key) {

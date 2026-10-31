@@ -394,6 +394,53 @@ test('stage, unstage and commit move files through the index', async () => {
   assert.match(committed.body.data.output, /check commit/)
 })
 
+test('commit carries only the ticked paths and keeps other staged files', async () => {
+  const local = mkdtempSync(join(tmpdir(), 'dsh-git4idea-partial-'))
+  const run = (...args) => execFileSync('git', args, { cwd: local, encoding: 'utf8' })
+  try {
+    run('init', '-q', '-b', 'main')
+    run('config', 'core.autocrlf', 'false')
+    run('config', 'user.name', 'Check')
+    run('config', 'user.email', 'check@example.com')
+    writeFileSync(join(local, 'kept.txt'), 'one\n')
+    writeFileSync(join(local, 'staged.txt'), 'one\n')
+    run('add', '-A')
+    run('commit', '-q', '-m', 'seed')
+    writeFileSync(join(local, 'kept.txt'), 'one\ntwo\n')
+    writeFileSync(join(local, 'staged.txt'), 'one\ntwo\n')
+    run('add', 'staged.txt')
+    const committed = await call('commit', { cwd: local, message: 'kept only', paths: ['kept.txt'] })
+    assert.equal(committed.body.ok, true)
+    assert.deepEqual(run('show', '--name-only', '--format=', 'HEAD').trim().split('\n'), ['kept.txt'])
+    /* The unticked staged file stays in the index for the next commit. */
+    assert.deepEqual(run('diff', '--cached', '--name-only').trim().split('\n'), ['staged.txt'])
+  } finally {
+    rmSync(local, { recursive: true, force: true })
+  }
+})
+
+test('a picked staged rename carries its deleted source', async () => {
+  const local = mkdtempSync(join(tmpdir(), 'dsh-git4idea-rename-'))
+  const run = (...args) => execFileSync('git', args, { cwd: local, encoding: 'utf8' })
+  try {
+    run('init', '-q', '-b', 'main')
+    run('config', 'core.autocrlf', 'false')
+    run('config', 'user.name', 'Check')
+    run('config', 'user.email', 'check@example.com')
+    writeFileSync(join(local, 'a.txt'), 'one\n')
+    run('add', '-A')
+    run('commit', '-q', '-m', 'seed')
+    run('mv', 'a.txt', 'b.txt')
+    const committed = await call('commit', { cwd: local, message: 'rename', paths: ['b.txt'] })
+    assert.equal(committed.body.ok, true)
+    /* Both halves land in the commit, so the next status is clean. */
+    assert.deepEqual(run('ls-tree', '-r', '--name-only', 'HEAD').trim().split('\n'), ['b.txt'])
+    assert.equal(run('status', '--porcelain').trim(), '')
+  } finally {
+    rmSync(local, { recursive: true, force: true })
+  }
+})
+
 test('branch and tag lifecycle works and compare reports the delta', async () => {
   const created = await call('checkout', { cwd: repo, branch: 'tmp-check', create: true })
   assert.equal(created.body.data.created, true)

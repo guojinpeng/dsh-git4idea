@@ -209,11 +209,18 @@
       '.git4idea-push-map-branch{max-width:30%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dsw-alias-label-primary)}',
       '.git4idea-push-map-arrow{color:var(--dsw-alias-label-tertiary)}',
       '.git4idea-push-map-remote{flex:none;max-width:180px}',
-      '.git4idea-push-map-dest{flex:none;width:240px;max-width:36vw}',
-      /* The destination field carries a datalist for suggestions. Chromium draws
-         its own picker arrow inside the field; the list still opens on typing
-         and on ArrowDown, so the arrow goes (m02021). */
-      '.git4idea-push-map-dest::-webkit-calendar-picker-indicator{display:none}',
+      /* The destination control (m00978): a 28px field per the design (§6.12,
+         §6.19) with the plugin's own chevron and list, so no native popup can
+         paint itself in the host scheme. */
+      '.git4idea-push-dest-field{position:relative;display:inline-flex;align-items:center;flex:none;width:240px;max-width:36vw}',
+      '.git4idea-push-dest-field .git4idea-push-map-dest{flex:1;min-width:0;padding-right:26px}',
+      '.git4idea-push-dest-toggle{position:absolute;right:2px;top:50%;transform:translateY(-50%);display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;padding:0;border:0;border-radius:calc(var(--dsw-radius-sm,8px) - 2px);background:transparent;color:var(--dsw-alias-label-tertiary);cursor:pointer}',
+      '.git4idea-push-dest-toggle:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
+      '.git4idea-push-dest-toggle:disabled{cursor:default;opacity:.4}',
+      /* The list drops under the field: the base menu sizes itself against its
+         containing block (max-height calc(100% - 8px)), which is the field. */
+      '.git4idea-menu.git4idea-push-dest-menu{position:absolute;top:calc(100% + 4px);left:0;right:0;min-width:0;max-height:260px;z-index:5}',
+      '.git4idea-push-dest-on{background:var(--dsw-alias-interactive-bg-hover)}',
       '.git4idea-push-map-state{flex:none;padding:1px 6px;border-radius:999px;corner-shape:round;background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary);font-size:11px}',
       '.git4idea-push-map-force{color:var(--dsw-alias-label-primary)}',
       '.git4idea-push-map-check{display:inline-flex;align-items:center;justify-content:center;min-width:20px;padding:2px 4px}',
@@ -374,21 +381,23 @@
          scroll container is offset by the search field — same rule as
          .git4idea-history above). */
       '.git4idea-tree{display:flex;flex-direction:column;min-height:0;flex:1;position:relative}',
-      '.git4idea-tree-scroll{flex:1;overflow:auto;padding-bottom:6px}',
+      '.git4idea-tree-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:6px}',
       '.git4idea-section{display:flex;flex-direction:column}',
-      '.git4idea-section-head{display:flex;align-items:center;gap:4px;width:100%;padding:3px 8px;border:none;background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;cursor:pointer;text-align:left}',
+      // width:auto (not 100%): the head is a stretched flex item, so its padding
+      // and margin from the Islands skin live INSIDE the pane. width:100% made a
+      // content-box head 36px wider than the tree scroller and produced the
+      // horizontal scrollbar reported on m00562.
+      '.git4idea-section-head{display:flex;align-items:center;gap:4px;width:auto;box-sizing:border-box;border:none;background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;cursor:pointer;text-align:left}',
       '.git4idea-section-head-static{cursor:default;padding-left:20px}',
       '.git4idea-section-head:hover{color:var(--dsw-alias-label-primary)}',
-      // The header became a DIV (it now holds buttons), and a div is content-box
-      // while a button is border-box: without this, width:100% plus its own padding
-      // overflowed the pane by 16px and clipped the last toolbar icon (reported on
-      // v0.3.8).
-      '.git4idea-changes-head{cursor:default;gap:2px;box-sizing:border-box}',
+      '.git4idea-changes-head{cursor:default;gap:2px}',
       '.git4idea-section-toggle{display:flex;align-items:center;gap:4px;flex:1;min-width:0;padding:0;border:none;background:transparent;color:inherit;font:inherit;cursor:pointer;text-align:left}',
       '.git4idea-folder{display:flex;flex-direction:column}',
       '.git4idea-branch-folder{display:flex;flex-direction:column}',
       '.git4idea-row-picked{background:var(--dsw-alias-interactive-bg-active,var(--dsw-alias-interactive-bg-hover));color:var(--dsw-alias-label-primary);box-shadow:inset 2px 0 0 var(--dsw-alias-brand-primary)}',
-      '.git4idea-folder-head{display:flex;align-items:center;gap:6px;width:100%;padding:1px 8px 1px 4px;height:14px;border:none;background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;font-size:11px;cursor:pointer;text-align:left}',
+      /* width:auto for the same reason as .git4idea-section-head: a stretched
+         flex item keeps its padding inside the tree scroller. */
+      '.git4idea-folder-head{display:flex;align-items:center;gap:6px;width:auto;box-sizing:border-box;padding:1px 8px 1px 4px;height:14px;border:none;background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;font-size:11px;cursor:pointer;text-align:left}',
       '.git4idea-folder-head:hover{color:var(--dsw-alias-label-primary)}',
       '.git4idea-folder-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
       '.git4idea-count{margin-left:auto;opacity:.6;font-weight:400}',
@@ -431,8 +440,11 @@
          against this wrapper — the scroll container below is offset by the
          filter bar, and painting from the wrong rect was the v0.19.2 drift. */
       '.git4idea-history{display:flex;flex-direction:column;min-height:0;flex:1;position:relative}',
-      '.git4idea-history-scroll{flex:1;overflow:auto}',
-      '.git4idea-commit{display:flex;align-items:center;gap:6px;padding:1px 8px 1px 0;cursor:pointer;height:26px;overflow:hidden}',
+      '.git4idea-history-scroll{flex:1;overflow-y:auto;overflow-x:hidden}',
+      /* The row is a positioning context: the graph paints in an absolute layer
+         and the author/date group is pinned to the right edge, so neither column
+         shrinks the lanes and the pane never needs a horizontal scrollbar. */
+      '.git4idea-commit{position:relative;display:flex;align-items:center;gap:6px;padding:0 10px 0 0;cursor:pointer;height:30px;overflow:hidden}',
       '.git4idea-commit:hover{background:var(--dsw-alias-interactive-bg-hover)}',
       /* Same theme-aware gray mix as .git4idea-row-selected (see it). */
       '.git4idea-commit-selected{background:color-mix(in srgb,var(--dsw-alias-interactive-bg-active,var(--dsw-alias-interactive-bg-hover)) 58%,var(--dsw-static-neutral-bluish-75,var(--dsw-alias-bg-layer-3)) 42%);color:var(--dsw-alias-label-primary);box-shadow:inset 2px 0 0 var(--dsw-alias-brand-primary)}',
@@ -446,10 +458,17 @@
       /* Nested rows indent inline (26px base + 12px per tree depth) — the CSS
          class only marks them for tests/probes. */
       '.git4idea-graph{flex:none}',
-      '.git4idea-commit-date{color:var(--dsw-alias-label-tertiary);flex:none;width:106px;text-align:right;font-variant-numeric:tabular-nums}',
-      '.git4idea-commit-author{color:var(--dsw-alias-label-secondary);flex:none;width:96px;overflow:hidden;text-overflow:ellipsis}',
+      '.git4idea-commit > .git4idea-graph{position:absolute;left:0;top:0;bottom:0;margin:auto 0;pointer-events:none}',
+      /* Author + date on the right edge in one opaque group: the graph and a
+         long subject scroll UNDER it, so a narrow pane keeps both readable
+         (m00593: the old fixed 96px left-aligned author plus flex fill is what
+         left the wide empty gap). */
+      '.git4idea-commit-meta{position:absolute;right:8px;top:0;bottom:0;z-index:1;display:flex;align-items:center;gap:8px;padding-left:8px;background:var(--g4-surface)}',
+      '.git4idea-commit:hover .git4idea-commit-meta{background-image:linear-gradient(var(--g4-hover),var(--g4-hover))}',
+      '.git4idea-commit-selected .git4idea-commit-meta,.git4idea-commit-selected:hover .git4idea-commit-meta{background:inherit;background-image:none}',
+      '.git4idea-commit-date{color:var(--dsw-alias-label-tertiary);flex:none;white-space:nowrap;font-variant-numeric:tabular-nums}',
+      '.git4idea-commit-author{color:var(--dsw-alias-label-secondary);flex:0 1 auto;min-width:0;max-width:96px;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
       '.git4idea-commit-subject{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
-      '.git4idea-commit-fill{flex:1 1 0;min-width:0}',
       /* Refs are IDEA-style tag glyphs after the subject: no pill, no name. They
          overlap like a deck (negative margin) so four refs cost ~34px, and the
          names live in the cluster tooltip. */
