@@ -3,7 +3,8 @@
       installClientErrorHook()
       const style = document.createElement('style')
       style.setAttribute('data-dsh-git4idea', '')
-      style.textContent = CSS
+      /* Tokens first, unchanged layout rules next, the Islands skin last. */
+      style.textContent = G4_THEME_CSS + '\n' + CSS + '\n' + G4_COMPONENTS_CSS
       document.head.appendChild(style)
       ctx.effect(() => () => { style.remove() }, 'dsh-git4idea: panel styles')
 

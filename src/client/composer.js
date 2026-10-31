@@ -171,6 +171,26 @@
       },
     }
 
+    /* Destructive confirms raised by the composer pill follow the same rule:
+       the pill sits in a dock container with `contain: layout`, so a card
+       mounted beside it is clipped to the composer strip (reported against the
+       branch-delete confirm). The shell overlay slot owns this store instead. */
+    const confirmDialog = {
+      entry: null,
+      hosted: false,
+      listeners: new Set(),
+      set(entry) {
+        confirmDialog.entry = entry
+        for (const listener of Array.from(confirmDialog.listeners)) {
+          try { listener() } catch (error) { void error }
+        }
+      },
+      subscribe(listener) {
+        confirmDialog.listeners.add(listener)
+        return () => { confirmDialog.listeners.delete(listener) }
+      },
+    }
+
     function CenteredPrompt(props) {
       const [value, setValue] = useState(props.initialValue === undefined ? '' : props.initialValue)
       const [busy, setBusy] = useState(false)
@@ -215,6 +235,35 @@
               type: 'button', className: 'git4idea-btn git4idea-btn-primary',
               disabled: ready === false, onClick: submit,
             }, props.okLabel))))
+    }
+
+    function ConfirmDialogHost(props) {
+      const [entry, setEntry] = useState(confirmDialog.entry)
+      useEffect(() => {
+        const sync = () => setEntry(confirmDialog.entry)
+        sync()
+        const off = confirmDialog.subscribe(sync)
+        confirmDialog.hosted = true
+        return () => { confirmDialog.hosted = false; off() }
+      }, [])
+      if (entry === null) return null
+      return E(ConfirmDialog, {
+        key: entry.key === undefined ? 'confirm' : entry.key,
+        t: props.t,
+        title: entry.title,
+        text: entry.text,
+        okLabel: entry.okLabel,
+        cancelLabel: entry.cancelLabel,
+        checkbox: entry.checkbox,
+        onCancel: () => {
+          confirmDialog.set(null)
+          if (entry.onCancel !== undefined) entry.onCancel()
+        },
+        onConfirm: (checked) => {
+          confirmDialog.set(null)
+          entry.onConfirm(checked)
+        },
+      })
     }
 
     function PromptDialogHost(props) {

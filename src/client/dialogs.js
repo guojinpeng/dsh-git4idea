@@ -70,7 +70,8 @@
           t: props.t,
           onClose: () => { conflictDialog.set(null) },
         })),
-        E(PromptDialogHost, null))
+        E(PromptDialogHost, null),
+        E(ConfirmDialogHost, { t: props.t }))
     }
 
     /* The card is the panel's commit layer, rebuilt without the panel: every
@@ -300,6 +301,9 @@
          out. { entry, kind, x, y } — offsets inside the popover root. */
       const [csMenu, setCsMenu] = useState(null)
       const [csBusy, setCsBusy] = useState('')
+      /* The branch chooser's delete verb uses the same confirm card as the
+         panel: a local branch offers force delete, a remote one names the
+         remote it pushes the deletion to. */
       const rootRef = useRef(null)
       /* Measured to place the row flyout: the popover's right edge decides
          whether it opens to the right or flips to the left of the popover. */
@@ -501,6 +505,11 @@
       if (data === null || (data.isRepo !== true && (data.repos === undefined || data.repos.length === 0))) return null
       const branchName = summary !== null && typeof summary.branch === 'string' && summary.branch !== '' ? summary.branch : null
       const detached = summary !== null && summary.detached === true
+      /* The same dirty count the top bar commits with: the branch menu's 提交
+         verb must say how much work it would carry before it opens. */
+      const pending = summary === null || summary.changes === undefined ? 0
+        : summary.changes.staged.length + summary.changes.unstaged.length
+          + summary.changes.untracked.length + summary.changes.conflicted.length
 
       /* Split out of openBranchMenu so a fetch can refresh the refs WITHOUT
          closing the popover (m02697 #4). A warm page (panel or prewarm) fills the
@@ -683,18 +692,71 @@
           } finally { setCheckingOut('') }
         })()
       }
+      /* A local branch delete is the one popover verb with a handle: the host
+         keeps the ref for a while and undoApply recreates it. The notice and its
+         undo button live in the frame stack, so the popover may close first. */
+      const csUndoDelete = async (id) => {
+        if (repoRoot === null) return
+        try {
+          const data = await request('undoApply', { cwd: cwd, repoRoot: repoRoot, id: id })
+          toastCenter.dropUndo(id)
+          await loadBranches()
+          setTick((value) => value + 1)
+          const label = data !== null && data !== undefined && typeof data.label === 'string' ? data.label : ''
+          notifyOk(t('toast.restored') + (label === '' ? '' : ' · ' + label))
+        } catch (caught) { notifyFail(caught) }
+      }
+      const csDeleteLocal = async (entry, force) => {
+        if (repoRoot === null || csBusy !== '') return
+        setCsBusy('branchDelete')
+        setCsMenu(null)
+        setMenu(null)
+        try {
+          const data = await request('branchDelete', {
+            cwd: cwd, repoRoot: repoRoot, name: entry.name, confirm: true, force: force === true,
+          })
+          await loadBranches()
+          setTick((value) => value + 1)
+          if (data === null || data === undefined || data.undo === undefined) {
+            notifyOk(fill(t('toast.branchDeleted'), { name: entry.name }))
+          } else {
+            toastCenter.push({
+              text: fill(t('toast.branchDeleted'), { name: entry.name }),
+              icon: 'trash', tone: 'warn',
+              undoId: data.undo.id, actionLabel: t('toast.undo'),
+              onAction: () => { void csUndoDelete(data.undo.id) },
+            })
+          }
+        } catch (caught) { notifyFail(caught) } finally { setCsBusy('') }
+      }
       const csDelete = (entry, kind) => {
         if (kind === 'tags') { void csCall('tagDelete', { name: entry.name }); return }
         if (kind === 'remote') {
           const slash = entry.name.indexOf('/')
-          void csCall('branchDeleteRemote', {
-            remote: slash >= 0 ? entry.name.slice(0, slash) : entry.name,
-            branch: slash >= 0 ? entry.name.slice(slash + 1) : entry.name,
-            confirm: true,
+          confirmDialog.set({
+            key: 'cs-delete|' + entry.name,
+            title: t('confirm.title'),
+            text: fill(t('confirm.deleteRemoteBranch'), {
+              remote: slash >= 0 ? entry.name.slice(0, slash) : entry.name,
+              branch: slash >= 0 ? entry.name.slice(slash + 1) : entry.name,
+            }),
+            okLabel: t('confirm.ok'), cancelLabel: t('confirm.cancel'),
+            onConfirm: () => { void csCall('branchDeleteRemote', {
+              remote: slash >= 0 ? entry.name.slice(0, slash) : entry.name,
+              branch: slash >= 0 ? entry.name.slice(slash + 1) : entry.name,
+              confirm: true,
+            }) },
           })
           return
         }
-        void csCall('branchDelete', { name: entry.name, confirm: true })
+        confirmDialog.set({
+          key: 'cs-delete|' + entry.name,
+          title: t('confirm.title'),
+          text: fill(t('delete.confirm'), { name: entry.name }),
+          okLabel: t('confirm.ok'), cancelLabel: t('confirm.cancel'),
+          checkbox: { label: t('confirm.forceDelete'), defaultChecked: true },
+          onConfirm: (force) => { void csDeleteLocal(entry, force) },
+        })
       }
       /* Row menu (m01737 #5, floated beside the popover since m02697 #2): a
          click SELECTS the row and shows the IDEA verb list next to the chooser,
@@ -955,14 +1017,12 @@
           E('button', {
             type: 'button', className: 'git4idea-cs-opbtn git4idea-cs-go', 'data-tip': t('operation.advanceHint'),
             onClick: openConflictOverview,
-          }, E('span', { className: 'git4idea-cs-advance' },
-            E(Icon, { name: 'chevronRight', size: 10 }),
-            E(Icon, { name: 'chevronRight', size: 10 }))),
+          }, E(Icon, { name: 'arrowRight', size: 14 })),
           E('button', {
             type: 'button', className: 'git4idea-cs-opbtn git4idea-cs-stop', 'data-tip': t('operation.abortHint'),
             'aria-disabled': csBusy !== '' ? 'true' : 'false',
             onClick: () => { if (csBusy === '') void abortOperation() },
-          }, E(Icon, { name: 'close', size: 11 }))) : branchName !== null ? E('button', {
+          }, E(Icon, { name: 'close', size: 14 }))) : branchName !== null ? E('button', {
           type: 'button',
           className: 'git4idea-cs-pill',
           'data-tip': t('composer.branchHint'),
@@ -1018,7 +1078,8 @@
                  not as a footer. */
               E('div', { className: 'git4idea-cs-actions' },
                 E('button', { type: 'button', className: 'git4idea-cs-action', 'data-tip': t('changes.commit'), onClick: openCommitDialog },
-                  E(Icon, { name: 'commit', size: 12 }), E('span', null, t('changes.commit'))),
+                  E(Icon, { name: 'commit', size: 12 }), E('span', null, t('changes.commit')),
+                  pending > 0 ? E('span', { className: 'git4idea-cs-action-count' }, String(pending)) : null),
                 E('button', {
                   type: 'button', className: 'git4idea-cs-action', 'data-tip': t('toolbar.push'),
                   'aria-disabled': repoRoot === null || csBusy !== '' ? 'true' : 'false',

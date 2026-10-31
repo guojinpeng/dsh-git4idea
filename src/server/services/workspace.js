@@ -214,7 +214,11 @@ export async function pushPreview(payload) {
   const requestedDest = typeof payload.remoteBranch === 'string' && payload.remoteBranch.trim() !== ''
     ? requireRef(payload.remoteBranch.trim(), 'remoteBranch').replace(/^refs\/heads\//, '')
     : ''
-  const remoteInfo = detached ? { ok: false, heads: new Map() } : await remoteHeadsOf(root, remote)
+  /* The card paints from local refs first: `quick` skips the network round trip
+     to ls-remote, which can block for the full timeout. The client opens the
+     card with this flag, then refreshes it with the authoritative answer. */
+  const quick = payload.quick === true
+  const remoteInfo = detached || quick ? { ok: false, heads: new Map() } : await remoteHeadsOf(root, remote)
   const remoteBranches = remoteInfo.ok
     ? [...remoteInfo.heads.keys()].sort()
     : (remote === null ? [] : await localRemoteBranchesOf(root, remote))

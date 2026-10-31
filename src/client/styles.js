@@ -216,6 +216,7 @@
       '.git4idea-push-map-dest::-webkit-calendar-picker-indicator{display:none}',
       '.git4idea-push-map-state{flex:none;padding:1px 6px;border-radius:999px;corner-shape:round;background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary);font-size:11px}',
       '.git4idea-push-map-force{color:var(--dsw-alias-label-primary)}',
+      '.git4idea-push-map-check{display:inline-flex;align-items:center;justify-content:center;min-width:20px;padding:2px 4px}',
       '.git4idea-push-body{flex:1;min-height:0;display:flex;overflow:hidden}',
       '.git4idea-push-commits{width:calc((100% - 1px)*2/5);flex:none;display:flex;flex-direction:column;overflow:auto;padding:4px;border-right:1px solid var(--dsw-alias-border-l2)}',
       '.git4idea-push-commit{display:flex;align-items:center;gap:8px;width:100%;flex:none;padding:4px 6px;border:0;border-radius:calc(var(--dsw-radius-sm,8px) - 2px);background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer}',
@@ -312,15 +313,15 @@
          and the two verbs that operation accepts (open the overview, abort). */
       '.git4idea-cs-op{display:inline-flex;align-items:center;gap:4px;min-width:0}',
       '.git4idea-cs-alert{display:inline-flex;align-items:center;flex:none}',
-      '.git4idea-cs-opbtn{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;padding:0;border:none;border-radius:var(--dsw-radius-sm,8px);background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;cursor:pointer;flex:none;transition:filter .12s ease, transform .12s ease}',
-      '.git4idea-cs-opbtn:hover:not([aria-disabled=true]){filter:brightness(1.1)}',
+      '.git4idea-cs-opbtn{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;padding:0;border:1px solid transparent;border-radius:var(--dsw-radius-sm,8px);background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;cursor:pointer;flex:none;transition:background-color .12s ease, color .12s ease, transform .12s ease}',
+      '.git4idea-cs-opbtn:hover:not([aria-disabled=true]){background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
       '.git4idea-cs-opbtn:active:not([aria-disabled=true]){transform:scale(.94)}',
+      '.git4idea-cs-opbtn:focus-visible{outline:2px solid var(--dsw-alias-brand-primary,var(--dsw-alias-state-business-primary));outline-offset:1px}',
       '.git4idea-cs-opbtn[aria-disabled=true]{opacity:.45;cursor:default}',
-      '.git4idea-cs-advance{display:inline-flex;align-items:center;gap:0}',
-      /* The two verbs read as buttons, not glyphs (m00849 #1): green accepts
-         the operation, red aborts it, with white icons on the state colors. */
-      '.git4idea-cs-opbtn.git4idea-cs-go{background:var(--dsw-alias-state-success-primary);color:var(--dsw-static-neutral-bluish-00,#fff);box-shadow:0 1px 2px rgba(0,0,0,.18)}',
-      '.git4idea-cs-opbtn.git4idea-cs-stop{background:var(--dsw-alias-state-error-primary);color:var(--dsw-static-neutral-bluish-00,#fff);box-shadow:0 1px 2px rgba(0,0,0,.18)}',
+      /* The two verbs are quiet icon buttons: only the glyph carries the state
+         tone, so they sit in the same visual family as the toolbar buttons. */
+      '.git4idea-cs-opbtn.git4idea-cs-go{color:var(--dsw-alias-state-success-primary)}',
+      '.git4idea-cs-opbtn.git4idea-cs-stop{color:var(--dsw-alias-state-error-primary)}',
       /* An unfinished merge/rebase/cherry-pick/revert turns its chip into the
          finish/abort/skip controls instead of hiding them in the "..." menu. */
       '.git4idea-opgroup{display:inline-flex;align-items:center;gap:4px;flex:none}',
@@ -674,7 +675,8 @@
       '.git4idea-path-bar{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:0 2px 2px}',
       '.git4idea-path-clear{border:none;background:transparent;color:var(--dsw-alias-state-business-primary,var(--dsw-alias-link));font:inherit;font-size:12px;padding:2px 4px;cursor:pointer}',
       '.git4idea-path-twist{width:14px;height:14px;flex:none;display:inline-flex;align-items:center;justify-content:center;border:none;background:transparent;color:var(--dsw-alias-label-tertiary);padding:0;cursor:pointer}',
-      '.git4idea-path-twist-open svg{transform:rotate(90deg)}',
+      '.git4idea-path-twist svg{transform:rotate(-90deg)}',
+      '.git4idea-path-twist-open svg{transform:none}',
       '.git4idea-path-pick{display:flex;align-items:center;gap:5px;flex:1;min-width:0;cursor:pointer}',
       '.git4idea-path-cb{margin:0;flex:none;width:12px;height:12px}',
       '.git4idea-path-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
@@ -686,7 +688,6 @@
          never pushes it past the panel edge. */
       '.git4idea-chooser-seat .git4idea-cs-menu{position:static;bottom:auto;left:auto;max-width:none;width:100%;min-width:0}',
       '.git4idea-cs-empty{padding:22px 12px;text-align:center;color:var(--dsw-alias-label-tertiary);font-size:12px}',
-      '.git4idea-cs-tool-busy svg{animation:git4idea-spin-rotate .9s linear infinite}',
       '/* Round 2 #5: the seat is the containing block, so the flyout stays on the\n         row it belongs to and the offset math survives contain:layout. */',
       '.git4idea-chooser-seat .git4idea-cs-flyout{position:absolute;z-index:120}',
       /* ---- immersive conversation seat (issue #8 round 3) ---- */
@@ -875,6 +876,7 @@
       '.git4idea-cs-action{display:flex;align-items:center;gap:6px;width:100%;height:24px;padding:0 8px;flex:none;border:none;border-radius:var(--dsw-radius-sm,8px);background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;font-size:12px;text-align:left;cursor:pointer}',
       '.git4idea-cs-action:hover:not([aria-disabled="true"]){background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
       '.git4idea-cs-action[aria-disabled="true"]{opacity:.4;cursor:default}',
+      '.git4idea-cs-action-count{margin-left:auto;color:var(--dsw-alias-label-tertiary);font-size:11px;font-variant-numeric:tabular-nums}',
     ].concat(EXTRA_RULES).join('\n')
 
     /* ============================== plugin ============================== */

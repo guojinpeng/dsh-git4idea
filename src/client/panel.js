@@ -521,12 +521,16 @@
          that carried 2 into 1 ('merge-point') — 1's newer commits stay one
          wheel-scroll away, nothing is truncated. */
       const [browseRev, setBrowseRev] = useState('')
+      /* The refresh path closes over `browseRev`, so a delete that clears the
+         state still reloads the log for the branch that just left. This ref is
+         the value the request path reads; delete handlers clear it first. */
+      const browseRevRef = useRef('')
       const [mergeAnchor, setMergeAnchor] = useState(null)
       const lastBrowseRef = useRef(null)
       const loadCommits = useCallback(async (skip, overridePath) => {
         const activePath = overridePath === undefined ? pathFilter : overridePath
         const payload = Object.assign({}, base, { skip: skip === undefined ? 0 : skip, limit: 120 })
-        if (browseRev !== '') payload.rev = browseRev
+        if (browseRevRef.current !== '') payload.rev = browseRevRef.current
         const paths = Array.isArray(activePath) === true
           ? activePath.filter((entry) => typeof entry === 'string' && entry !== '')
           : typeof activePath === 'string' && activePath !== '' ? [activePath] : []
@@ -535,7 +539,7 @@
         setCommits((previous) => (skip === undefined || skip === 0 ? data.commits : previous.concat(data.commits)))
         setHasMore(data.hasMore)
         return data
-      }, [base, pathFilter, browseRev])
+      }, [base, pathFilter])
 
       /* `fetchRemote` turns the refresh into what the rail button means: "see
          whether the remote has anything new to pull" — a `git fetch --prune`
@@ -587,12 +591,12 @@
                snapshot. A branch-browsing page (browseRev) must not evict the
                HEAD page: the next mount opens on HEAD and would otherwise be
                seeded with another branch's log. */
-            if (browseRev === '') writePaintPage(repoRoot, { summary: summaryData, branches: branchesData, commits: page.commits, hasMore: page.hasMore })
+            if (browseRevRef.current === '') writePaintPage(repoRoot, { summary: summaryData, branches: branchesData, commits: page.commits, hasMore: page.hasMore })
           })
         } finally {
           if (withFetch === true) setRefreshSpinning(false)
         }
-      }, [guard, loadSummary, loadBranches, loadCommits, repoRoot, remoteReady, base, browseRev, pushToast, t])
+      }, [guard, loadSummary, loadBranches, loadCommits, repoRoot, remoteReady, base, pushToast, t])
 
       /* Double-click a branch (or the HEAD row): browse its history. The merge
          anchor comes from the PREVIOUSLY browsed branch — 'merge-point' finds
@@ -604,6 +608,7 @@
         if (previous === name) return
         lastBrowseRef.current = name
         setMergeAnchor(null)
+        browseRevRef.current = name
         setBrowseRev(name)
         if (previous !== null) {
           try {
@@ -615,9 +620,24 @@
       /* A repository switch forgets the browsing context entirely. */
       useEffect(() => {
         lastBrowseRef.current = null
+        browseRevRef.current = ''
         setBrowseRev('')
         setMergeAnchor(null)
       }, [repoRoot])
+      /* A deleted branch cannot stay the browsed revision: `git log <name>`
+         then fails with "ambiguous argument" and the history pane reports an
+         error for a ref the tree no longer shows. Fall back to HEAD as soon as
+         a branch reload proves the ref is gone. */
+      useEffect(() => {
+        if (browseRev === '' || branches === null) return
+        const names = branches.local.concat(branches.remote).concat(branches.tags)
+          .map((item) => String(item.name))
+        if (names.indexOf(browseRev) >= 0) return
+        lastBrowseRef.current = null
+        browseRevRef.current = ''
+        setMergeAnchor(null)
+        setBrowseRev('')
+      }, [branches, browseRev])
 
       useEffect(() => {
         if (repoRoot === null) return undefined
@@ -1145,7 +1165,10 @@
         for (const item of entries) {
           if (item.kind === 'local') locals.push(item.name)
           else if (item.kind === 'tag') tags.push(item.name)
-          else {
+          else if (item.kind === 'remote') {
+            /* Only a REF KNOWN TO BE REMOTE may reach git push --delete. An
+               untyped row used to fall into this branch and a local name with
+               no slash became {remote:name, branch:name}. */
             const slash = item.name.indexOf('/')
             remotes.push({
               remote: slash >= 0 ? item.name.slice(0, slash) : item.name,
@@ -1159,8 +1182,12 @@
       /* Batch local delete with the same undo toast the single delete has.
          Plain function on purpose (invariant 12): a useCallback here would
          evaluate `undoAction` in its dep array — declared further below. */
-      const deleteBranches = async (names) => {
-        const data = await run('branchDelete', { names: names, confirm: true }, { quiet: true })
+      const deleteBranches = async (names, force) => {
+        /* Clear the browsed revision BEFORE the run refreshes: `refresh` reloads
+           the log for `browseRev`, and a branch that no longer exists makes
+           `git log` fail with "ambiguous argument". */
+        if (browseRev !== '' && names.indexOf(browseRev) >= 0) { browseRevRef.current = ''; setBrowseRev(''); setMergeAnchor(null) }
+        const data = await run('branchDelete', { names: names, force: force === true, confirm: true }, { quiet: true })
         if (data === undefined) return
         if (data.undo === undefined) return
         pushToast({
@@ -1420,8 +1447,12 @@
         /* v0.3.1 (#N2): the path filter's two entries end in the same value —
            a typed path is one pathspec, the tree picker returns many. */
         if (state.kind === 'pathFilter') {
-          const typed = typeof value === 'string' ? value.trim() : ''
-          setPathFilter(typed === '' ? [] : [typed])
+          /* One path per line: a pasted block becomes several pathspecs, so a
+             multi-folder filter needs no second trip through the tree. */
+          const typed = typeof value === 'string'
+            ? value.split(/\r?\n/).map((line) => line.trim()).filter((line) => line !== '')
+            : []
+          setPathFilter(typed)
           return
         }
         if (state.kind === 'pathTree') {
@@ -1447,13 +1478,14 @@
       const undoAction = useCallback(async (id) => {
         const data = await guard(() => request('undoApply', Object.assign({}, base, { id: id })))
         if (data === undefined) return
-        setToasts((list) => list.filter((item) => item.undoId !== id))
+        toastCenter.dropUndo(id)
         await refresh()
         pushToast({ text: t('toast.restored') + ' · ' + data.label, icon: 'check', tone: 'ok', ttl: 6000 })
       }, [base, guard, refresh, pushToast, t])
 
-      const deleteBranch = useCallback(async (name) => {
-        const data = await run('branchDelete', { name: name, confirm: true }, { quiet: true })
+      const deleteBranch = useCallback(async (name, force) => {
+        if (browseRev === name) { browseRevRef.current = ''; setBrowseRev(''); setMergeAnchor(null) }
+        const data = await run('branchDelete', { name: name, force: force === true, confirm: true }, { quiet: true })
         if (data === undefined) return
         if (data.undo === undefined) return
         pushToast({
@@ -1464,7 +1496,7 @@
           actionLabel: t('toast.undo'),
           onAction: () => { void undoAction(data.undo.id) },
         })
-      }, [run, pushToast, undoAction, t])
+      }, [run, pushToast, undoAction, t, browseRev])
 
       const dropStash = useCallback(async (ref) => {
         const data = await run('stashDrop', { ref: ref, confirm: true }, { quiet: true })
@@ -2267,9 +2299,11 @@
           /* A remote start prefills the short name, exactly as the composer
              chooser does (v0.3.1 #2): origin/ludan suggests "ludan". */
           initialValue: dialog.kind === 'renameBranch' ? dialog.from
-            : dialog.kind === 'pathFilter' ? (pathFilter.length === 1 ? pathFilter[0] : '')
+            : dialog.kind === 'pathFilter' ? pathFilter.join('\n')
               : dialog.kind === 'newBranch' && dialog.track === true && typeof dialog.from === 'string' && dialog.from.indexOf('/') > 0 ? dialog.from.slice(dialog.from.indexOf('/') + 1)
                 : '',
+          multiline: dialog.kind === 'pathFilter',
+          hint: dialog.kind === 'pathFilter' ? t('prompt.pathHint') : undefined,
           okLabel: t('confirm.ok'), cancelLabel: t('confirm.cancel'),
           onCancel: () => setDialog(null),
           onSubmit: (value) => { void submitDialog(dialog, value) },
@@ -2305,7 +2339,7 @@
             ? { left: String(chooserSeat.x) + 'px', bottom: String(chooserSeat.bottom) + 'px', width: String(chooserSeat.width) + 'px' }
             : { left: String(chooserSeat.x) + 'px', top: String(chooserSeat.top) + 'px', width: String(chooserSeat.width) + 'px' },
         }, E(BranchChooser, {
-          t: t, branches: branches, fetching: refreshSpinning,
+          t: t, branches: branches, fetching: refreshSpinning, dirty: dirty,
           onClose: () => setChooserSeat(null),
           /* Round 2 #5: the tool icon means 提取 — it must reach the remote, not
              re-read the local refs (the rail's refresh does the same). The card
@@ -2319,7 +2353,7 @@
           onNewBranchAtHead: () => { setChooserSeat(null); setDialog({ kind: 'newBranch' }) },
           onMerge: (entry) => { setChooserSeat(null); void run('merge', { branch: entry.name }) },
           onRename: (entry) => { setChooserSeat(null); setDialog({ kind: 'renameBranch', from: entry.name }) },
-          onDelete: (entry) => { setChooserSeat(null); deleteBranchEntries([entry]) },
+          onDelete: (entry, kind) => { setChooserSeat(null); deleteBranchEntries([{ kind: kind, name: entry.name, entry: entry }]) },
           onCommit: () => { setChooserSeat(null); setDialog({ kind: 'commitMsg' }) },
           onPush: () => { setChooserSeat(null); openPushDialog() },
         })))
@@ -2439,8 +2473,9 @@
           text: fill(guarded ? t('confirm.protected') : t('delete.confirm'), { name: dialog.name }),
           requireText: guarded ? dialog.name : undefined,
           okLabel: t('confirm.ok'), cancelLabel: t('confirm.cancel'),
+          checkbox: { label: t('confirm.forceDelete'), defaultChecked: true },
           onCancel: () => setDialog(null),
-          onConfirm: () => { const name = dialog.name; setDialog(null); void deleteBranch(name) },
+          onConfirm: (force) => { const name = dialog.name; setDialog(null); void deleteBranch(name, force) },
         }))
       }
       if (dialog !== null && dialog.kind === 'stashDrop') {
@@ -2470,14 +2505,15 @@
           text: fill(t('confirm.deleteRefs'), { b: dialog.locals.length, r: dialog.remotes.length, g: dialog.tags.length })
             + (listText === '' ? '' : ' ' + listText),
           requireText: guardedName === undefined ? undefined : guardedName,
+          checkbox: dialog.locals.length === 0 ? undefined : { label: t('confirm.forceDelete'), defaultChecked: true },
           okLabel: t('confirm.ok'), cancelLabel: t('confirm.cancel'),
           onCancel: () => setDialog(null),
-          onConfirm: () => {
+          onConfirm: (force) => {
             const locals = dialog.locals
             const tags = dialog.tags
             const remotes = dialog.remotes
             setDialog(null)
-            if (locals.length > 0) void deleteBranches(locals)
+            if (locals.length > 0) void deleteBranches(locals, force)
             if (tags.length > 0) void run('tagDelete', { names: tags })
             const byRemote = new Map()
             for (const item of remotes) {
@@ -2598,6 +2634,15 @@
           showTabs: repoState !== null && repoRoot !== null,
           openMenuAt: openMenuAt,
           notifyOk: notifyOk,
+          pickDirectory: async () => {
+            let workspace = null
+            try { workspace = props.ctx === undefined || props.ctx === null ? null : props.ctx.get('uiWorkspace') } catch (error) { void error }
+            if (workspace === null || workspace === undefined || typeof workspace.pickDirectory !== 'function') return undefined
+            try {
+              const picked = await workspace.pickDirectory()
+              return typeof picked === 'string' && picked !== '' ? picked : null
+            } catch (error) { void error; return undefined }
+          },
         }, logBody),
         overlays)
     }

@@ -334,7 +334,7 @@
                 onClick: () => setFoldedDirs((previous) => Object.assign({}, previous, { [id]: previous[id] !== true })),
               },
                 E('span', { className: 'git4idea-chevron' + (open ? ' git4idea-chevron-open' : '') }, E(Icon, { name: 'chevron', size: 10 })),
-                E('span', { className: 'git4idea-row-icon git4idea-tone-accent' }, E(Icon, { name: 'folder', size: 10 })),
+                E('span', { className: 'git4idea-row-icon git4idea-tone-accent' }, E(Icon, { name: 'folder', size: 14 })),
                 E('span', { className: 'git4idea-folder-name' }, node.path.slice(typeof parentLen === 'number' ? parentLen : 0).join('/')),
                 E('span', { className: 'git4idea-count' }, String(forest.countOf(node)))),
             })
@@ -345,24 +345,9 @@
               for (const item of sortedOf(node.files)) out.push({ kind: 'row', key: key + ':' + item.path, h: ITEM_HEIGHTS.row, node: entryRow(key, item, depth) })
             }
           }
-          /* Files sitting at the group ROOT get their own (root) head, sorted
-             first — the flat grouping used to give them a localized head too. */
-          if (forest.rootFiles.length > 0) {
-            const rootId = key + '|/'
-            const rootOpen = foldedDirs[rootId] !== true
-            out.push({
-              kind: 'folder', key: 'folder:' + rootId, h: ITEM_HEIGHTS.folder,
-              node: E('button', {
-                type: 'button', className: 'git4idea-folder-head',
-                onClick: () => setFoldedDirs((previous) => Object.assign({}, previous, { [rootId]: previous[rootId] !== true })),
-              },
-                E('span', { className: 'git4idea-chevron' + (rootOpen ? ' git4idea-chevron-open' : '') }, E(Icon, { name: 'chevron', size: 10 })),
-                E('span', { className: 'git4idea-row-icon git4idea-tone-accent' }, E(Icon, { name: 'folder', size: 10 })),
-                E('span', { className: 'git4idea-folder-name' }, t('changes.rootDir')),
-                E('span', { className: 'git4idea-count' }, String(forest.rootFiles.length))),
-            })
-            if (rootOpen === true) for (const item of sortedOf(forest.rootFiles)) out.push({ kind: 'row', key: key + ':' + item.path, h: ITEM_HEIGHTS.row, node: entryRow(key, item, 0) })
-          }
+          /* Root-level files need no synthetic folder: they sit directly
+             under the group head, before the real folders. */
+          for (const item of sortedOf(forest.rootFiles)) out.push({ kind: 'row', key: key + ':' + item.path, h: ITEM_HEIGHTS.row, node: entryRow(key, item, 0) })
           for (const node of forest.roots) renderFolder(node, 0)
         }
         const emitGroup = (key, title, entries) => {
@@ -1278,7 +1263,6 @@
     }
 
     function CommitFileList(props) {
-      const t = props.t
       const files = Array.isArray(props.files) ? props.files : []
       const byPath = (a, b) => a.path.localeCompare(b.path)
       /* Controlled when the caller owns the fold map (the fold buttons live in
@@ -1318,7 +1302,7 @@
           onClick: () => { toggle(id) },
         },
           E('span', { className: 'git4idea-chevron' + (open ? ' git4idea-chevron-open' : '') }, E(Icon, { name: 'chevron', size: 10 })),
-          E('span', { className: 'git4idea-row-icon git4idea-tone-accent' }, E(Icon, { name: 'folder', size: 10 })),
+          E('span', { className: 'git4idea-row-icon git4idea-tone-accent' }, E(Icon, { name: 'folder', size: 14 })),
           E('span', { className: 'git4idea-folder-name' }, label),
           E('span', { className: 'git4idea-count' }, String(count))))
         return open
@@ -1332,11 +1316,7 @@
         for (const child of forest.sortedChildren(node)) walk(child, depth + 1, node.path.length)
         for (const file of node.files.slice().sort(byPath)) fileRow(file, depth + 1)
       }
-      if (forest.rootFiles.length > 0) {
-        if (folderRow('commitFiles|/', t('changes.rootDir'), forest.rootFiles.length, 0) === true) {
-          for (const file of forest.rootFiles.slice().sort(byPath)) fileRow(file, 1)
-        }
-      }
+      for (const file of forest.rootFiles.slice().sort(byPath)) fileRow(file, 0)
       for (const node of forest.roots) walk(node, 0, 0)
       return rows
     }

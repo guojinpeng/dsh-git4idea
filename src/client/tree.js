@@ -120,14 +120,18 @@
             }
           }
           collect(forestOf(locals), '')
-          collect(forestOf(remotes.map((entry) => Object.assign({}, entry, { remote: true })), remoteNameOf), 'remote')
+          collect(forestOf(remotes, remoteNameOf), 'remote')
         }
         setFoldedFolders(dirs)
       }, [foldSignal])
       const branches = props.branches
       const needle = filter.trim().toLowerCase()
       const match = (name) => needle === '' || String(name).toLowerCase().indexOf(needle) >= 0
+      /* Mark remote rows ONCE: branchSelKeyOf() reads this flag, and the
+         picks, the render, and the survival filter must all use the same
+         remote:/local: namespace (a raw remote entry used to key as local:). */
       const remotes = (branches === null ? [] : branches.remote).filter((entry) => match(entry.name))
+        .map((entry) => Object.assign({}, entry, { remote: true }))
       const tags = (branches === null ? [] : branches.tags).filter((entry) => match(entry.name))
       const favorites = Array.isArray(props.favorites) ? props.favorites : []
       // Favorited branches float to the top of the local list; the stable sort
@@ -288,7 +292,7 @@
       flatLeaves(forestOf(locals), '', 0, visibleLeaves)
       /* Same tree, same prefix namespace the section renders with — Shift-ranges
          and Ctrl+A must walk the EXACT order rows are shown in. */
-      flatLeaves(forestOf(remotes.map((entry) => Object.assign({}, entry, { remote: true })), remoteNameOf), 'remote', 0, visibleLeaves)
+      flatLeaves(forestOf(remotes, remoteNameOf), 'remote', 0, visibleLeaves)
       for (const entry of tags) visibleLeaves.push({ entry: entry, label: undefined, depth: 0 })
       visibleRef.current = visibleLeaves
       const entryBySelKey = new Map()
@@ -404,7 +408,7 @@
           }, t('branches.head')),
           favorites.length === 0 ? null : section('favorites', t('branches.favorites'), locals.filter((entry) => favorites.indexOf(entry.name) >= 0), (entry) => entry),
           section('local', t('branches.local'), locals, (entry) => entry, true),
-          section('remote', t('branches.remote'), remotes, (entry) => Object.assign({}, entry, { remote: true }), true, 'remote', remoteNameOf),
+          section('remote', t('branches.remote'), remotes, (entry) => entry, true, 'remote', remoteNameOf),
           section('tags', t('branches.tags'), tags, (entry) => Object.assign({}, entry, { tag: true }))),
         E(MarqueeBox, { box: treeMarquee.box }))
     }
@@ -450,7 +454,7 @@
           kind === 'remote' ? null : {
             id: 'delete', icon: 'trash', tone: 'danger', danger: true, label: t('action.delete'),
             disabled: entry.head === true,
-            run: () => props.onDelete(entry),
+            run: () => props.onDelete(entry, kind),
           },
         ]
         return items.filter((item) => item !== null)
@@ -545,14 +549,16 @@
             }),
             E('button', {
               type: 'button',
-              className: 'git4idea-cs-tool' + (props.fetching === true ? ' git4idea-cs-tool-busy' : ''),
+              className: 'git4idea-cs-tool',
               'data-tip': t('toolbar.fetch'),
               'aria-busy': props.fetching === true ? 'true' : 'false',
+              'aria-disabled': props.fetching === true ? 'true' : 'false',
               onClick: () => { if (props.onFetch !== undefined && props.fetching !== true) props.onFetch() },
             }, E(Icon, { name: 'fetch', size: 13 }))),
           E('div', { className: 'git4idea-cs-actions' },
             E('button', { type: 'button', className: 'git4idea-cs-action', 'data-tip': t('changes.commit'), onClick: () => props.onCommit() },
-              E(Icon, { name: 'commit', size: 12 }), E('span', null, t('changes.commit'))),
+              E(Icon, { name: 'commit', size: 12 }), E('span', null, t('changes.commit')),
+              props.dirty > 0 ? E('span', { className: 'git4idea-cs-action-count' }, String(props.dirty)) : null),
             E('button', { type: 'button', className: 'git4idea-cs-action', 'data-tip': t('toolbar.push'), onClick: () => props.onPush() },
               E(Icon, { name: 'push', size: 12 }), E('span', null, t('toolbar.push'))),
             E('button', { type: 'button', className: 'git4idea-cs-action', 'data-tip': t('toolbar.newBranch'), onClick: () => props.onNewBranchAtHead() },

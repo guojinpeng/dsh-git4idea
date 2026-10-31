@@ -116,41 +116,15 @@ window.__ModuleLoader__.load({
        the last column: without the cap a branchy repository pushed the graph
        wider than the panel and shoved the subject column out of view. */
     const GRAPH_MAX_LANES = 7
-    /* IDEA's DefaultColorGenerator seeds a hue from the lane index and then
-       forces the theme's saturation/brightness; Rebased runs the log at
-       0.6/0.6, the muted olive/teal/purple sequence of the IDE. */
-    const LANE_COLORS = buildLaneColors()
-
-    function buildLaneColors() {
-      const colors = []
-      for (let index = 0; index < 12; index += 1) {
-        const r = (Math.abs((index * 200 + 30) % 100) + 70) / 255
-        const g = (Math.abs((index * 130 + 50) % 100) + 70) / 255
-        const b = (Math.abs((index * 90 + 100) % 100) + 70) / 255
-        const max = Math.max(r, g, b)
-        const min = Math.min(r, g, b)
-        const delta = max - min
-        let hue = 0
-        if (delta > 0) {
-          if (max === r) hue = ((g - b) / delta) % 6
-          else if (max === g) hue = (b - r) / delta + 2
-          else hue = (r - g) / delta + 4
-          hue = (hue * 60 + 360) % 360
-        }
-        colors.push(hsbToCss(hue, 0.6, 0.6))
-      }
-      return colors
-    }
-
-    function hsbToCss(hue, saturation, brightness) {
-      const chroma = brightness * saturation
-      const x = chroma * (1 - Math.abs(((hue / 60) % 2) - 1))
-      const m = brightness - chroma
-      const sector = Math.floor(hue / 60) % 6
-      const rgb = [[chroma, x, 0], [x, chroma, 0], [0, chroma, x], [0, x, chroma], [x, 0, chroma], [chroma, 0, x]][sector]
-      const hex = (value) => Math.round((value + m) * 255).toString(16).padStart(2, '0')
-      return '#' + hex(rgb[0]) + hex(rgb[1]) + hex(rgb[2])
-    }
+    /* Eight categorical lane colours from the Islands palette. The values are
+       CSS variables so the log follows the light/dark skin; the hex fallbacks
+       keep the graph readable if a host strips the panel's custom properties. */
+    const LANE_COLORS = [
+      'var(--g4-graph-1,#3871e1)', 'var(--g4-graph-2,#338555)',
+      'var(--g4-graph-3,#cf7659)', 'var(--g4-graph-4,#8060db)',
+      'var(--g4-graph-5,#c54e58)', 'var(--g4-graph-6,#31827b)',
+      'var(--g4-graph-7,#a56906)', 'var(--g4-graph-8,#73767c)',
+    ]
     const AUTO_REFRESH_MS = 12000
     const REPO_KEY = 'dsh-git4idea.repo.v1'
     const COMPACT_MAX_WIDTH = 400
@@ -161,4 +135,3 @@ window.__ModuleLoader__.load({
        icon of a branch on the same level. */
     const BRANCH_INDENT_BASE = 34
     const BRANCH_INDENT_STEP = 14
-

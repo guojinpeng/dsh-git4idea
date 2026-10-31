@@ -4,7 +4,8 @@
  * Why this file exists: the DSH client half is ONE module — window.__ModuleLoader__
  * gives each plugin a single factory and resolves only frozen platform modules, so
  * the client code cannot use relative ESM imports. To keep the source readable it
- * lives as ordered fragments in src/client/ and this tool concatenates them into
+ * lives as ordered fragments in src/client/ (subdirectories allowed) and this tool
+ * concatenates them into
  * src/client.js, the file the host loads. FRAGMENT_ORDER pins the order; the
  * fragment file names carry no ordering. The fragments are verbatim slices of the
  * bundle: regeneration is byte-identical.
@@ -26,6 +27,7 @@ export const CLIENT_FILE = join(ROOT, 'src', 'client.js')
 export const FRAGMENT_ORDER = [
   'head.js',
   'locale.js',
+  'ui/icons.js',
   'core.js',
   'diff.js',
   'tree.js',
@@ -37,11 +39,13 @@ export const FRAGMENT_ORDER = [
   'dialogs.js',
   'preview.js',
   'conflict.js',
+  'ui/theme.js',
+  'ui/components.js',
   'app.js',
 ]
 
 export function fragmentNames() {
-  const present = readdirSync(FRAGMENT_DIR).filter((name) => name.endsWith('.js'))
+  const present = walkFragments(FRAGMENT_DIR, '')
   const unlisted = present.filter((name) => FRAGMENT_ORDER.includes(name) === false).sort()
   const missing = FRAGMENT_ORDER.filter((name) => present.includes(name) === false)
   if (unlisted.length > 0 || missing.length > 0) {
@@ -50,6 +54,18 @@ export function fragmentNames() {
       + (missing.length > 0 ? ' (missing: ' + missing.join(', ') + ')' : ''))
   }
   return FRAGMENT_ORDER.slice()
+}
+
+function walkFragments(directory, prefix) {
+  const names = []
+  for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    if (entry.isDirectory()) {
+      names.push(...walkFragments(join(directory, entry.name), prefix + entry.name + '/'))
+    } else if (entry.name.endsWith('.js')) {
+      names.push(prefix + entry.name)
+    }
+  }
+  return names
 }
 
 export function bundleOf(names) {

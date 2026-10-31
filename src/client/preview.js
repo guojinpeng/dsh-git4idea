@@ -52,10 +52,8 @@
         : (seed.hash !== undefined && seed.hash !== null
           ? String(seed.hash).slice(0, 7) + (seed.subject ? ' ' + seed.subject : '')
           : String(seed.path))
-      /* Header controls mirror the base's own diff tab: a refresh button
-         (worktree diffs change under staging/discard), plus a copy button —
-         the official card's toolbar already covers wrap/copy inside the body;
-         these two act on the WHOLE preview. */
+      /* Copy and refresh act on the WHOLE preview: the diff body's own tools
+         only switch view modes. Both live in the diff tool row. */
       const copyPatch = () => {
         try {
           void navigator.clipboard.writeText(state.patch).then(() => {
@@ -82,37 +80,28 @@
           sidebarRight.openResource(address)
         } catch (error) { void error }
       }
-      const copyButton = E('button', { type: 'button', className: 'git4idea-preview-btn', 'aria-label': t('diff.copy'), 'data-tip': t('diff.copy'), onClick: copyPatch },
-        E(Icon, { name: copied === true ? 'check' : 'copy', size: 13 }))
-      const refreshButton = E('button', { type: 'button', className: 'git4idea-preview-btn', 'aria-label': t('toolbar.refresh'), 'data-tip': t('toolbar.refresh'), onClick: () => { setRefreshTick((n) => n + 1) } },
-        E(Icon, { name: 'refresh', size: 13 }))
       const closeButton = props.onClose === undefined ? null : E('button', {
         type: 'button', className: 'git4idea-preview-btn', 'aria-label': t('toast.close'), 'data-tip': t('toast.close'),
         onClick: props.onClose,
       }, E(Icon, { name: 'close', size: 13 }))
-      /* v0.3.1: the commit layer already prints the file name in the diff's own
-         header, so a second title strip made the top of the pane look doubled.
-         With mergeHead the head disappears and copy/refresh/close join the diff
-         tool row, in its size and style. */
+      /* The card head keeps only the close button. Copy, refresh and (when the
+         head is merged away) close ride the diff tool row with the view
+         switches, so the title strip never carries a second action group. */
       const merged = props.mergeHead === true
-      const mergedTools = merged !== true || seed === null
+      const copyTool = E(LineDiffTool, { key: 'copy', tool: 'copy', label: t('diff.copy'), onClick: copyPatch }, E(Icon, { name: copied === true ? 'check' : 'copy', size: 13 }))
+      const refreshTool = E(LineDiffTool, { key: 'refresh', tool: 'refresh', label: t('toolbar.refresh'), onClick: () => { setRefreshTick((n) => n + 1) } }, E(Icon, { name: 'refresh', size: 13 }))
+      const closeTool = closeButton === null ? null : E(LineDiffTool, { key: 'close', tool: 'close', label: t('toast.close'), onClick: props.onClose }, E(Icon, { name: 'close', size: 13 }))
+      const diffTools = seed === null
         ? undefined
-        : [
-            E(LineDiffTool, { key: 'copy', tool: 'copy', label: t('diff.copy'), onClick: copyPatch }, E(Icon, { name: copied === true ? 'check' : 'copy', size: 13 })),
-            E(LineDiffTool, { key: 'refresh', tool: 'refresh', label: t('toolbar.refresh'), onClick: () => { setRefreshTick((n) => n + 1) } }, E(Icon, { name: 'refresh', size: 13 })),
-            closeButton === null ? null : E(LineDiffTool, { key: 'close', tool: 'close', label: t('toast.close'), onClick: props.onClose }, E(Icon, { name: 'close', size: 13 })),
-          ].filter((node) => node !== null)
+        : (merged === true ? [copyTool, refreshTool, closeTool] : [copyTool, refreshTool]).filter((node) => node !== null)
       return E('div', { className: 'git4idea-preview-root' },
         merged === true
           ? null
           : E('div', { className: 'git4idea-preview-head' },
             E('span', { className: 'git4idea-preview-title', 'data-tip': title }, title === '' ? t('preview.title') : title),
-            /* m04913: the close button rides the action row, so the × sits on the
-               same line as copy/refresh at the far right of the head. */
-            E('div', { className: 'git4idea-preview-actions' },
-              seed === null ? null : copyButton,
-              seed === null ? null : refreshButton,
-              closeButton)),
+            /* m04913: the close button is the head's only action. Copy and
+               refresh moved into the diff tool row below. */
+            E('div', { className: 'git4idea-preview-actions' }, closeButton)),
         seed === null
           ? E('div', { className: 'git4idea-preview-body' }, E('div', { className: 'git4idea-empty' }, t('preview.hint')))
           : state.error !== null
@@ -121,7 +110,7 @@
                 patch: state.patch,
                 loading: state.loading,
                 t: t,
-                extraTools: mergedTools,
+                extraTools: diffTools,
                 /* worktree seeds carry the file path: the review's open-file
                    tool jumps to the host's whole-file preview. */
                 onOpenFile: seed.path !== undefined && seed.path !== null && seed.path !== '' ? openInFilePreview : undefined,
@@ -252,7 +241,11 @@
       const pushing = useRef(false)
       const loadSeq = useRef(0)
       const messageOf = (caught) => (caught instanceof Error ? caught.message : String(caught))
-      const loadPreview = async (branch, remoteName, remoteBranch) => {
+      /* `quick` paints the card from local refs immediately (the host skips
+         ls-remote); the same call then refreshes it in the background with the
+         authoritative remote answer, so a slow remote never hides the card. */
+      const loadPreview = async (branch, remoteName, remoteBranch, quick) => {
+        const fast = quick === true
         const seq = loadSeq.current + 1
         loadSeq.current = seq
         setChecking(true)
@@ -261,6 +254,7 @@
           if (branch !== '') payload.branch = branch
           if (remoteName !== '') payload.remote = remoteName
           if (remoteBranch !== '') payload.remoteBranch = remoteBranch
+          if (fast === true) payload.quick = true
           const next = pushPreviewOf(await request('push-preview', payload))
           if (seq !== loadSeq.current) return
           setData(next)
@@ -270,14 +264,21 @@
             ? previous
             : (next.commits.length === 0 ? null : next.commits[0].hash)))
           setSelectedPath(null)
+          if (fast === true) void loadPreview(branch, remoteName, remoteBranch, false)
         } catch (caught) {
-          if (seq === loadSeq.current) { notifyFail(caught) }
+          if (seq === loadSeq.current) {
+            /* A failed quick pass has no follow-up to clear the spinner. */
+            if (fast === true) setChecking(false)
+            notifyFail(caught)
+          }
         } finally {
-          if (seq === loadSeq.current) setChecking(false)
+          /* The follow-up owns the spinner from here; clearing it on the quick
+             pass would flash the destination state back to unknown. */
+          if (seq === loadSeq.current && fast !== true) setChecking(false)
         }
       }
       useEffect(() => {
-        void loadPreview(initialBranch, initialRemote, '')
+        void loadPreview(initialBranch, initialRemote, '', true)
         return () => { loadSeq.current += 1 }
         // eslint-disable-next-line react-hooks/exhaustive-deps
       }, [])
@@ -324,12 +325,12 @@
         const typed = destination.trim()
         if (typed === '') { setDestination(data.remoteBranch); return }
         if (typed === data.remoteBranch && remote === data.remote) return
-        void loadPreview(data.branch, remote, typed)
+        void loadPreview(data.branch, remote, typed, true)
       }
       const changeRemote = (event) => {
         const next = event.target.value
         setRemote(next)
-        if (data !== null) void loadPreview(data.branch, next, '')
+        if (data !== null) void loadPreview(data.branch, next, '', true)
       }
       const destinationKnown = data !== null && checking === false && remote === data.remote && destination === data.remoteBranch
       const destinationState = destinationKnown !== true
@@ -424,7 +425,14 @@
             },
           }),
           E('datalist', { id: 'git4idea-push-destinations' }, data.remoteBranches.map((name) => E('option', { key: name, value: name }))),
-          destinationState === '' ? null : E('span', { className: 'git4idea-push-map-state' }, destinationState),
+          /* A destination check is a real wait (ls-remote): hold the slot with a
+             spinner instead of dropping the label and looking finished. */
+          checking === true
+            ? E('span', {
+                className: 'git4idea-push-map-state git4idea-push-map-check',
+                role: 'status', 'aria-label': t('status.loading'), 'data-tip': t('status.loading'),
+              }, E('span', { className: 'git4idea-spin' }, E(Icon, { name: 'refresh', size: 11 })))
+            : destinationState === '' ? null : E('span', { className: 'git4idea-push-map-state' }, destinationState),
           force === true ? E('span', { className: 'git4idea-push-map-state git4idea-push-map-force' }, t('push.force')) : null),
         E('div', { className: 'git4idea-push-body' },
           E('div', { className: 'git4idea-push-commits' },

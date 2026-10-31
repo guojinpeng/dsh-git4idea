@@ -829,6 +829,15 @@ test('client half offers an undo toast and a safe confirm', () => {
   }
   // Destructive dialogs must not open with focus on the red button.
   assert.match(client, /cancelRef\.current\.focus\(\)/, 'confirm dialog must focus cancel')
+  // The composer's local delete answers in the frame toast stack and keeps its
+  // undo handle; undoing it reloads the branch list the popover shows.
+  assert.match(client, /const csDeleteLocal = async/)
+  assert.match(client, /const csUndoDelete = async/)
+  assert.match(client, /undoId: data\.undo\.id, actionLabel: t\('toast\.undo'\)/)
+  assert.match(client, /await loadBranches\(\)/, 'undo reloads the session branch list')
+  // A frame-level confirm lives outside every panel root, so it must carry the
+  // token scope itself; without it the card had no surface and went transparent.
+  assert.match(client, /'\.git4idea-overlay',/, 'the overlay defines the skin tokens')
 })
 
 test('a discard is reversible through the same undo stack', () => {
@@ -995,10 +1004,20 @@ test('the client half is fragments plus one generated bundle (m05309)', () => {
   // the fragments byte-for-byte. Equality keeps "edited a fragment" and "edited
   // the bundle" from drifting apart.
   const order = [
-    'head.js', 'locale.js', 'core.js', 'diff.js', 'tree.js', 'changes.js',
-    'workbench.js', 'panel.js', 'styles.js', 'composer.js', 'dialogs.js', 'preview.js', 'conflict.js', 'app.js',
+    'head.js', 'locale.js', 'ui/icons.js', 'core.js', 'diff.js', 'tree.js', 'changes.js',
+    'workbench.js', 'panel.js', 'styles.js', 'composer.js', 'dialogs.js', 'preview.js', 'conflict.js',
+    'ui/theme.js', 'ui/components.js', 'app.js',
   ]
-  const names = readdirSync(join(root, 'src', 'client')).filter((name) => name.endsWith('.js')).sort()
+  const names = []
+  const walk = (rel) => {
+    for (const entry of readdirSync(join(root, 'src', 'client', rel), { withFileTypes: true })) {
+      const next = rel === '' ? entry.name : rel + '/' + entry.name
+      if (entry.isDirectory()) walk(next)
+      else if (entry.name.endsWith('.js')) names.push(next)
+    }
+  }
+  walk('')
+  names.sort()
   assert.deepEqual(names, order.slice().sort(), 'every fragment is listed exactly once')
   const joined = order.map((name) => read('src/client/' + name)).join('')
   assert.equal(joined, client, 'src/client.js must equal the concatenated fragments')
@@ -1755,9 +1774,9 @@ test('the remote branch tree folds by path like the local one (v0.19.9)', () => 
   // namespace (its folder state stays independent of the local one), and the
   // visible-leaves mirror walks the SAME tree so Shift-ranges and Ctrl+A
   // follow the rendered order exactly.
-  assert.match(client, /section\('remote', t\('branches\.remote'\), remotes, \(entry\) => Object\.assign\(\{\}, entry, \{ remote: true \}\), true, 'remote', remoteNameOf\)/,
+  assert.match(client, /section\('remote', t\('branches\.remote'\), remotes, \(entry\) => entry, true, 'remote', remoteNameOf\)/,
     'the remote section renders through the grouped tree under the remote namespace')
-  assert.match(client, /flatLeaves\(forestOf\(remotes\.map\(\(entry\) => Object\.assign\(\{\}, entry, \{ remote: true \}\)\), remoteNameOf\), 'remote', 0, visibleLeaves\)/,
+  assert.match(client, /flatLeaves\(forestOf\(remotes, remoteNameOf\), 'remote', 0, visibleLeaves\)/,
     'the selection mirror walks the same namespaced tree')
   assert.match(client, /const forestOf = \(entries, nameOf\) =>/, 'forestOf accepts a name override')
   assert.match(client, /rowsOf\(forestOf\(entries\.map\(\(entry\) => decorate\(entry\)\), nameOf\), ns \|\| '', 0\)/,
@@ -1902,6 +1921,17 @@ test('the popover floats the IDEA row verbs and fetch keeps it open (m02697)', (
   // Fetch must refresh the list in place, not dismiss the chooser.
   assert.match(client, /await csCall\('fetch', \{ prune: true \}, \{ keepOpen: true \}\)/, 'fetch keeps the popover open')
   assert.match(client, /await loadBranches\(\)/, 'fetch reloads the refs it just refreshed')
+})
+
+test('both branch menus count pending changes on their commit verb (m02223)', () => {
+  // The verb looked identical with 0 or 33 dirty files. It now carries the
+  // same count as the top bar, in the session popover and the panel chooser.
+  assert.match(client, /const pending = summary === null \|\| summary\.changes === undefined \? 0/)
+  assert.equal((client.match(/'git4idea-cs-action-count'/g) || []).length, 2, 'both commit verbs show the count')
+  assert.match(client, /pending > 0 \? E\('span', \{ className: 'git4idea-cs-action-count' \}/, 'the popover reads the summary')
+  assert.match(client, /props\.dirty > 0 \? E\('span', \{ className: 'git4idea-cs-action-count' \}/, 'the panel chooser reads the row count')
+  assert.match(client, /dirty: dirty,/, 'the panel passes its count to the chooser')
+  assert.match(cssRule('.git4idea-cs-action-count'), /margin-left:auto/, 'the count sits at the row end')
 })
 
 test('a local branch row also updates, pushes and renames that branch (m03873)', () => {

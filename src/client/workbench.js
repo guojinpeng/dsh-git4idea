@@ -69,6 +69,16 @@ function WorktreeDialog(props) {
   const [dirPrompt, setDirPrompt] = useState(false)
   const target = name.trim() === '' ? '' : worktreeJoin(dir.trim(), name.trim())
   const ready = name.trim() !== '' && dir.trim() !== '' && base !== '' && (create === false || branch.trim() !== '')
+  /* The host owns the folder chooser: the plugin asks the workspace service for
+     one directory and keeps the text field as the manual fallback. An old host
+     without that service reports undefined, and the dialog falls back to the
+     text prompt. */
+  const pickDir = async () => {
+    if (typeof props.pickDirectory !== 'function') { setDirPrompt(true); return }
+    const picked = await props.pickDirectory()
+    if (typeof picked === 'string' && picked !== '') { setDir(picked); return }
+    if (picked === undefined) setDirPrompt(true)
+  }
   const pickBase = (value) => {
     setBase(value)
     if (nameTouched === false) setName(worktreeDefaultName(props.repoRoot, value))
@@ -115,8 +125,8 @@ function WorktreeDialog(props) {
         }),
         E('button', {
           type: 'button', className: 'git4idea-icon-btn', 'data-tip': t('worktree.pickDir'),
-          onClick: () => setDirPrompt(true),
-        }, E(Icon, { name: 'folder', size: 13 }))),
+          onClick: () => { void pickDir() },
+        }, E(Icon, { name: 'folder', size: 16 }))),
       E('div', { className: 'git4idea-wt-hint' }, t('worktree.target') + ' ' + (target === '' ? '—' : target)),
       E('div', { className: 'git4idea-dialog-actions' },
         E('button', { type: 'button', className: 'git4idea-btn', onClick: props.onCancel }, t('confirm.cancel')),
@@ -334,6 +344,7 @@ function Workbench(props) {
     E('div', { className: 'git4idea-workbench-body', style: hiddenStyle('worktree') }, worktreePane),
     creating === true ? E(WorktreeDialog, {
       t: t, branches: props.branches, branch: branch, repoRoot: props.repoRoot,
+      pickDirectory: props.pickDirectory,
       onCancel: () => setCreating(false), onSubmit: (payload) => { void createWorktree(payload) },
     }) : null,
     removing === null ? null : E(ConfirmDialog, {
