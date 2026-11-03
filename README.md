@@ -2,6 +2,10 @@
 
 DSH 插件。它在 DeepSeek Harness 中提供一个 IDE 风格的 Git 工具窗口：分支树、提交图谱、变更与暂存、提交详情、差异视图、控制台和工作树。
 
+![Git4idea Git 面板：分支树、提交图谱与提交详情](https://raw.githubusercontent.com/guojinpeng/dsh-git4idea/main/docs/images/01-git-graph.png)
+
+分支树、提交图谱、AI 提交信息与三栏冲突解决，都在对话旁边完成。更多效果图：[变更与 AI 提交](https://github.com/guojinpeng/dsh-git4idea/blob/main/docs/images/02-changes-ai.png) · [三栏冲突](https://github.com/guojinpeng/dsh-git4idea/blob/main/docs/images/03-conflict.png)。
+
 ## 入口
 
 - **会话标签行**：在“对话 / 轨迹”旁增加 Git 页。该页常开。
